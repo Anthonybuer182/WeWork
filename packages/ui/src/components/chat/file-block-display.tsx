@@ -13,7 +13,7 @@ import {
   EyeOff,
   ExternalLink,
 } from 'lucide-react';
-import { cn, isPreviewableInRightPanel } from '@/lib/utils';
+import { cn, isPreviewableInRightPanel, openWithSystemApp } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
 import type { FileBlock } from '@pi/types';
 
@@ -81,6 +81,7 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
   const [expanded, setExpanded] = useState(false);
   const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
   const setMemoryPreview = useUIStore((s) => s.setMemoryPreview);
+  const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const displayName = block.fileName || block.content || 'Unknown file';
   const Icon = getFileIcon(block.mimeType, block.fileName);
   const showPreview = PRESENTABLE_TEXT_TYPES.has(block.mimeType) && block.data;
@@ -142,7 +143,27 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {opensRightPanel && (
-            <ExternalLink className="h-3.5 w-3.5 text-blue-500" />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (canOpenInPanel && block.workspacePath) {
+                  openWithSystemApp(block.workspacePath, activeWorkspaceId ?? undefined);
+                } else if (hasMemoryData && block.data) {
+                  const a = document.createElement('a');
+                  a.href = `data:${block.mimeType};base64,${block.data}`;
+                  a.download = displayName;
+                  a.style.display = 'none';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }
+              }}
+              className="p-1 rounded hover:bg-muted"
+              title="Open with system app"
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-blue-500" />
+            </button>
           )}
           {!opensRightPanel && expandable && (
             expanded
