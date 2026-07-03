@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { useUIStore } from '@/stores/ui-store';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { openWithSystemApp } from '@/lib/utils';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 function PDFPageCanvas({
   pdfDoc,
@@ -22,6 +23,8 @@ function PDFPageCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
   const renderedRef = useRef(false);
+  const onRenderedRef = useRef(onRendered);
+  onRenderedRef.current = onRendered;
 
   useEffect(() => {
     if (!pdfDoc || renderedRef.current) return;
@@ -32,6 +35,7 @@ function PDFPageCanvas({
       if (!canvas) return;
       try {
         const page = await pdfDoc!.getPage(pageNum);
+        if (cancelled) return;
         const viewport = page.getViewport({ scale: 1.5 });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
@@ -39,7 +43,7 @@ function PDFPageCanvas({
         await renderTaskRef.current.promise;
         if (!cancelled) {
           renderedRef.current = true;
-          onRendered();
+          onRenderedRef.current();
         }
       } catch (err) {
         if (err instanceof Error && err.name === 'RenderingCancelledException') return;
@@ -52,7 +56,7 @@ function PDFPageCanvas({
       cancelled = true;
       renderTaskRef.current?.cancel();
     };
-  }, [pdfDoc, pageNum, onRendered]);
+  }, [pdfDoc, pageNum]);
 
   return (
     <canvas
