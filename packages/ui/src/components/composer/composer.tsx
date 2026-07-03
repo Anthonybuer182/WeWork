@@ -507,6 +507,10 @@ export function Composer() {
 
       function flushBlockUpdates() {
         pendingRaf = false;
+        // Guard: if streaming has already ended (onSuccess ran), don't
+        // re-populate streamingBlocks — this prevents a late rAF callback
+        // from restoring stale blocks after clearStreamingBlocks().
+        if (!useComposerStore.getState().isStreaming) return;
         setStreamingBlocks(rafBlocks.current);
       }
 
@@ -564,11 +568,7 @@ export function Composer() {
         clearEditingMessage();
       }
 
-      // Promote the streaming data into the query cache as a single assistant message.
-      // Steers and follow-ups are sent directly via sdk.chat.steer()/followUp() during
-      // streaming, which the SDK injects at tool-turn boundaries / after completion.
-      // Note: file blocks are rendered at the end by renderBlocks() in message-bubble,
-      // so no manual reordering is needed here.
+      // Capture streaming data before clearing state.
       const blocks = state.streamingBlocks.map((b) => {
         if (b.type === 'tool_call' && b.toolCallId) {
           const ms = state.toolTimings.get(b.toolCallId);
@@ -582,6 +582,20 @@ export function Composer() {
         .map((b) => b.content)
         .join('');
 
+      const streamingUsage = state.streamingUsage;
+
+      // Clear streaming state BEFORE writing to cache to prevent a race
+      // condition where setQueryData triggers a re-render while isStreaming
+      // is still true and streamingBlocks still has data, causing the
+      // ChatTimeline to show both a cached message and a streaming message
+      // (duplicate assistant bubble with avatar).
+      clearStreamingBlocks();
+      setIsStreaming(false);
+      isActuallyStreaming.current = false;
+
+      // Now promote the captured streaming data into the query cache as a
+      // single assistant message. At this point isStreaming is false, so
+      // ChatTimeline will only show the storedMessages (no streaming ghost).
       const now = new Date().toISOString();
       const assistantMsg = {
         id: `msg-${activeSessionId}-${Date.now()}`,
@@ -591,7 +605,7 @@ export function Composer() {
         modelId: config?.defaultModelId ?? 'unknown',
         content,
         blocks,
-        usage: state.streamingUsage ?? undefined,
+        usage: streamingUsage ?? undefined,
         createdAt: now,
         updatedAt: now,
       };
@@ -604,9 +618,6 @@ export function Composer() {
         };
       });
 
-      clearStreamingBlocks();
-      setIsStreaming(false);
-      isActuallyStreaming.current = false;
       queryClient.invalidateQueries({ queryKey: ['files'] });
 
       // Auto-preview the last generated file in the right panel
@@ -651,13 +662,15 @@ export function Composer() {
         return;
       }
       // Rollback optimistic user message
+      // Clear streaming state first to prevent the same race condition
+      // as onSuccess (duplicate streaming ghost alongside rollback).
+      clearStreamingBlocks();
+      setIsStreaming(false);
+      isActuallyStreaming.current = false;
       if (context?.previousSession) {
         queryClient.setQueryData(['session', activeSessionId], context.previousSession);
       }
       setStreamError(error.message || 'Failed to send message');
-      clearStreamingBlocks();
-      setIsStreaming(false);
-      isActuallyStreaming.current = false;
     },
     onSettled: () => {
       // Clear attachments after mutation completes (success or error),
