@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Attachment, ContentBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming, ToolTiming } from '@pi/types';
+import type { Attachment, ContentBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming, ToolTiming, Quote } from '@pi/types';
 
 interface ComposerState {
   value: string;
@@ -11,6 +11,7 @@ interface ComposerState {
   slashQuery: string;
   mentionQuery: string;
   pendingAttachments: Attachment[];
+  pendingQuotes: Quote[];
   uploadProgress: Record<string, number>;
   streamingBlocks: ContentBlock[];
   streamingUsage: TokenUsage | null;
@@ -50,6 +51,9 @@ interface ComposerState {
   setUploadProgress: (id: string, progress: number) => void;
   clearUploadProgress: () => void;
   clearAttachments: () => void;
+  addQuote: (quote: Quote) => void;
+  removeQuote: (id: string) => void;
+  clearQuotes: () => void;
   addStreamingBlock: (block: ContentBlock) => void;
   updateStreamingBlock: (id: string, updates: Partial<ContentBlock>) => void;
   clearStreamingBlocks: () => void;
@@ -84,6 +88,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   slashQuery: '',
   mentionQuery: '',
   pendingAttachments: [],
+  pendingQuotes: [],
   uploadProgress: {},
   streamingBlocks: [],
   streamingUsage: null,
@@ -127,6 +132,9 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
     set((s) => ({ uploadProgress: { ...s.uploadProgress, [id]: progress } })),
   clearUploadProgress: () => set({ uploadProgress: {} }),
   clearAttachments: () => set({ pendingAttachments: [], uploadProgress: {} }),
+  addQuote: (quote) => set((s) => ({ pendingQuotes: [...s.pendingQuotes, quote] })),
+  removeQuote: (id) => set((s) => ({ pendingQuotes: s.pendingQuotes.filter((q) => q.id !== id) })),
+  clearQuotes: () => set({ pendingQuotes: [] }),
   addStreamingBlock: (block) =>
     set((s) => {
       const idx = s.streamingBlocks.findIndex((b) => b.id === block.id);
@@ -176,6 +184,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
       slashQuery: '',
       mentionQuery: '',
       pendingAttachments: [],
+      pendingQuotes: [],
       uploadProgress: {},
       streamingBlocks: [],
       streamingUsage: null,

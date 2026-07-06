@@ -319,7 +319,7 @@ export function XlsxPreview() {
       )}
 
       {/* Table */}
-      <div className="flex-1 overflow-auto bg-white">
+      <div className="flex-1 overflow-auto bg-white" data-sheet-name={activeSheet.name}>
         {activeSheet && activeSheet.rows.length > 0 ? (
           <SheetView sheet={activeSheet} />
         ) : (

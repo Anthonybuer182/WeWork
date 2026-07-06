@@ -2,9 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import * as pdfjsLib from 'pdfjs-dist';
-import { FileText, Text, Eye, ExternalLink, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { FileText, Text, Eye, ExternalLink, ZoomIn, ZoomOut, Maximize2, Quote as QuoteIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUIStore } from '@/stores/ui-store';
+import { useComposerStore } from '@/stores/composer-store';
+import { createQuote } from '@/lib/quote-helpers';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { openWithSystemApp } from '@/lib/utils';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -281,6 +283,23 @@ export function PDFPreview() {
     }
   }, []);
 
+  const addQuote = useComposerStore((s) => s.addQuote);
+
+  const handleQuotePage = useCallback(async () => {
+    if (!activePreviewFilePath || !pdfDocRef.current) return;
+    let text = pageTexts.get(activePage);
+    if (!text) {
+      try {
+        const page = await pdfDocRef.current.getPage(activePage);
+        const content = await page.getTextContent();
+        text = content.items.map((item) => 'str' in item ? item.str : '').join(' ').trim();
+      } catch {
+        text = '';
+      }
+    }
+    if (text) addQuote(createQuote(text, activePreviewFilePath, 'pdf-canvas', { pageNumber: activePage }));
+  }, [activePage, activePreviewFilePath, pageTexts, addQuote]);
+
   // Keyboard navigation
   useEffect(() => {
     if (mode !== 'preview' || loading) return;
@@ -425,6 +444,10 @@ export function PDFPreview() {
                 title="Fit width"
               >
                 <Maximize2 className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleQuotePage} className="h-7 text-xs gap-1.5" title="Quote this page to chat">
+                <QuoteIcon className="h-3 w-3" />
+                Quote Page
               </Button>
               <div className="w-px h-4 bg-border mx-1" />
               <span className="text-xs text-muted-foreground mr-2 tabular-nums">

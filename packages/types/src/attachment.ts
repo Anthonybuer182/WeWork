@@ -15,3 +15,25 @@ export interface Attachment {
   data?: string;
   createdAt: string;
 }
+
+export type QuoteSource =
+  | 'markdown' | 'html' | 'pdf-canvas' | 'pdf-text'
+  | 'docx' | 'xlsx' | 'pptx' | 'code-editor';
+
+export interface QuoteMeta {
+  startLine?: number;
+  endLine?: number;
+  pageNumber?: number;
+  slideNumber?: number;
+  sheetName?: string;
+}
+
+export interface Quote {
+  id: string;
+  filePath: string;
+  fileName: string;
+  source: QuoteSource;
+  content: string;
+  meta: QuoteMeta;
+  createdAt: string;
+}

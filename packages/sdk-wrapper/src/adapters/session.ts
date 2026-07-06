@@ -113,12 +113,167 @@ function stripAttachmentSections(text: string, cwd?: string): { content: string;
   return { content: content.trim(), files };
 }
 
+/**
+ * Strip the quoted-context sections that the composer appends to the prompt
+ * (via formatQuotesForPrompt) before sending, so the displayed user content
+ * matches what the user actually typed. Reconstructs quote blocks so the
+ * quote cards render consistently on reload.
+ *
+ * Format produced by formatQuotesForPrompt:
+ *   \n\n--- Quoted Context ---\n
+ *   File: <name> | Lines: x-y | Page: z | Slide: n | Sheet: <name>\n
+ *   ```<ext>\n<content>\n```  (code-editor source)
+ *   — or —
+ *   > <content with each line prefixed by "> ">
+ *   \n\n<next section>\n
+ *   --- End Quoted Context ---
+ *
+ * IMPORTANT: must be called BEFORE stripAttachmentSections, because the
+ * quote header `File: <name> | ...` followed by a code fence would
+ * otherwise be matched by the attachment text-file regex.
+ */
+function stripQuoteSections(text: string, cwd?: string): {
+  content: string;
+  quotes: Array<{
+    content: string;
+    fileName: string;
+    filePath: string;
+    source: string;
+    startLine?: number;
+    endLine?: number;
+    pageNumber?: number;
+    slideNumber?: number;
+    sheetName?: string;
+  }>;
+} {
+  const quotes: Array<{
+    content: string;
+    fileName: string;
+    filePath: string;
+    source: string;
+    startLine?: number;
+    endLine?: number;
+    pageNumber?: number;
+    slideNumber?: number;
+    sheetName?: string;
+  }> = [];
+
+  // Infer QuoteSource from file extension
+  const inferSource = (fileName: string, isCodeFence: boolean): string => {
+    if (isCodeFence) return 'code-editor';
+    const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+    const map: Record<string, string> = {
+      md: 'markdown',
+      html: 'html',
+      docx: 'docx',
+      xlsx: 'xlsx',
+      pptx: 'pptx',
+      pdf: 'pdf-text',
+    };
+    return map[ext] ?? 'markdown';
+  };
+
+  // Resolve full file path from cwd + fileName
+  const resolvePath = (fileName: string): string => {
+    if (cwd) {
+      const candidate = path.resolve(cwd, fileName);
+      try {
+        if (existsSync(candidate)) return candidate;
+      } catch { /* ignore */ }
+    }
+    return fileName;
+  };
+
+  let content = text;
+
+  content = content.replace(
+    /\n*--- Quoted Context ---\n([\s\S]*?)\n--- End Quoted Context ---/g,
+    (_m, inner: string) => {
+      // Individual quote sections are separated by blank lines (\n\n)
+      const sections = inner.split(/\n\n/);
+      for (const section of sections) {
+        if (!section.trim()) continue;
+
+        // Header is the first line; body is everything after it
+        const newlineIdx = section.indexOf('\n');
+        if (newlineIdx === -1) continue;
+        const headerLine = section.slice(0, newlineIdx);
+        const body = section.slice(newlineIdx + 1);
+
+        // Parse header: "File: name | Lines: 1-10 | Page: 3 | Slide: 5 | Sheet: Data"
+        const parts = headerLine.split(' | ');
+        let fileName = '';
+        let startLine: number | undefined;
+        let endLine: number | undefined;
+        let pageNumber: number | undefined;
+        let slideNumber: number | undefined;
+        let sheetName: string | undefined;
+
+        for (const part of parts) {
+          const trimmed = part.trim();
+          if (trimmed.startsWith('File: ')) {
+            fileName = trimmed.slice(6).trim();
+          } else if (trimmed.startsWith('Lines: ')) {
+            const linesMatch = trimmed.slice(7).match(/(\d+)-(\d+)/);
+            if (linesMatch) {
+              startLine = Number(linesMatch[1]);
+              endLine = Number(linesMatch[2]);
+            }
+          } else if (trimmed.startsWith('Page: ')) {
+            pageNumber = Number(trimmed.slice(6));
+          } else if (trimmed.startsWith('Slide: ')) {
+            slideNumber = Number(trimmed.slice(7));
+          } else if (trimmed.startsWith('Sheet: ')) {
+            sheetName = trimmed.slice(7).trim();
+          }
+        }
+
+        if (!fileName) continue;
+
+        // Parse body: code fence (```ext\n...\n```) or blockquote (> ...)
+        let quoteContent = '';
+        let isCodeFence = false;
+        const fenceMatch = body.match(/^```[\w]*\n([\s\S]*?)\n```$/);
+        if (fenceMatch) {
+          quoteContent = fenceMatch[1];
+          isCodeFence = true;
+        } else if (body.startsWith('> ')) {
+          // Strip "> " or ">" prefix from each line
+          quoteContent = body
+            .split('\n')
+            .map((line) => line.replace(/^>\s?/, ''))
+            .join('\n');
+        }
+
+        quotes.push({
+          content: quoteContent,
+          fileName,
+          filePath: resolvePath(fileName),
+          source: inferSource(fileName, isCodeFence),
+          startLine,
+          endLine,
+          pageNumber,
+          slideNumber,
+          sheetName,
+        });
+      }
+      return '';
+    },
+  );
+
+  return { content: content.trim(), quotes };
+}
+
 function agentMessageToBlocks(msg: any, cwd?: string): ContentBlock[] {
   const blocks: ContentBlock[] = [];
 
   if (msg.role === 'user') {
     if (typeof msg.content === 'string') {
-      const { content, files } = stripAttachmentSections(msg.content, cwd);
+      // Strip quote sections FIRST (before attachment sections) because
+      // the quote header "File: name | ..." followed by a code fence
+      // would otherwise be matched by the attachment text-file regex.
+      const { content: afterQuotes, quotes } = stripQuoteSections(msg.content, cwd);
+      const { content, files } = stripAttachmentSections(afterQuotes, cwd);
       blocks.push({
         id: `b-${msg.timestamp || Date.now()}`,
         type: 'text',
@@ -135,10 +290,26 @@ function agentMessageToBlocks(msg: any, cwd?: string): ContentBlock[] {
           workspacePath: f.workspacePath,
         });
       }
+      for (const q of quotes) {
+        blocks.push({
+          id: `b-quote-${msg.timestamp || Date.now()}-${q.fileName}`,
+          type: 'quote',
+          content: q.content,
+          fileName: q.fileName,
+          filePath: q.filePath,
+          source: q.source,
+          startLine: q.startLine,
+          endLine: q.endLine,
+          pageNumber: q.pageNumber,
+          slideNumber: q.slideNumber,
+          sheetName: q.sheetName,
+        });
+      }
     } else if (Array.isArray(msg.content)) {
       for (const c of msg.content as any[]) {
         if (c.type === 'text') {
-          const { content, files } = stripAttachmentSections(c.text || '', cwd);
+          const { content: afterQuotes, quotes } = stripQuoteSections(c.text || '', cwd);
+          const { content, files } = stripAttachmentSections(afterQuotes, cwd);
           blocks.push({
             id: `b-text-${msg.timestamp || Date.now()}-${blocks.length}`,
             type: 'text',
@@ -153,6 +324,21 @@ function agentMessageToBlocks(msg: any, cwd?: string): ContentBlock[] {
               fileName: f.fileName,
               fileSize: f.fileSize,
               workspacePath: f.workspacePath,
+            });
+          }
+          for (const q of quotes) {
+            blocks.push({
+              id: `b-quote-${msg.timestamp || Date.now()}-${blocks.length}-${q.fileName}`,
+              type: 'quote',
+              content: q.content,
+              fileName: q.fileName,
+              filePath: q.filePath,
+              source: q.source,
+              startLine: q.startLine,
+              endLine: q.endLine,
+              pageNumber: q.pageNumber,
+              slideNumber: q.slideNumber,
+              sheetName: q.sheetName,
             });
           }
         } else if (c.type === 'image') {

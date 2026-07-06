@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { Message, ContentBlock, ThinkingBlock as ThinkingBlockType, ToolCallBlock, ToolResultBlock, ImageBlock, FileBlock, AssistantMessage, TokenUsage, ContextUsageInfo, MessageTiming } from '@pi/types';
+import type { Message, ContentBlock, ThinkingBlock as ThinkingBlockType, ToolCallBlock, ToolResultBlock, ImageBlock, FileBlock, QuoteBlock as QuoteBlockType, AssistantMessage, TokenUsage, ContextUsageInfo, MessageTiming } from '@pi/types';
 import { cn } from '@/lib/utils';
 import { UserIcon, Bot, Clock, Zap, FileText, Copy, Pencil, Check, X } from 'lucide-react';
 import { ThinkingBlock } from './thinking-block';
@@ -8,6 +8,7 @@ import { MarkdownContent } from './markdown-content';
 import { renderTokenizedText } from '@/lib/token-parser';
 import { ImageBlockDisplay } from './image-block-display';
 import { FileBlockDisplay } from './file-block-display';
+import { QuoteBlockDisplay } from './quote-block-display';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -86,6 +87,11 @@ function renderBlocks(blocks: ContentBlock[], isStreaming: boolean, toolTimings:
       case 'image':
         elements.push(
           <ImageBlockDisplay key={block.id} block={block as ImageBlock} isStreaming={isStreaming} />,
+        );
+        break;
+      case 'quote':
+        elements.push(
+          <QuoteBlockDisplay key={block.id} block={block as QuoteBlockType} />,
         );
         break;
       default:
@@ -175,7 +181,7 @@ export function MessageBubble({
     ? message.blocks.filter((b) => b.type === 'text')
     : [];
   const userMediaBlocks = isUser && hasBlocks
-    ? message.blocks.filter((b) => b.type === 'image' || b.type === 'file')
+    ? message.blocks.filter((b) => b.type === 'image' || b.type === 'file' || b.type === 'quote')
     : [];
   const hasUserMedia = userMediaBlocks.length > 0;
 

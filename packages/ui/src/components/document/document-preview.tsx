@@ -10,6 +10,7 @@ import { ImagePreview } from './image-preview';
 import { VideoPreview } from './video-preview';
 import { EmptyPreview } from './empty-preview';
 import { MemoryFilePreview } from './memory-file-preview';
+import { QuoteToChatWrapper } from './quote-to-chat-wrapper';
 
 const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'ico', 'avif'];
 const VIDEO_EXTS = ['mp4', 'webm', 'mov', 'm4v', 'ogv', 'mkv', 'avi', '3gp'];
@@ -26,12 +27,12 @@ export function DocumentPreview() {
   if (!filePath) return <EmptyPreview />;
 
   if (filePath.startsWith('__memory__/')) return <MemoryFilePreview />;
-  if (filePath.endsWith('.md')) return <MarkdownPreview />;
-  if (filePath.endsWith('.html')) return <HTMLPreview />;
-  if (filePath.endsWith('.docx')) return <DocxPreview />;
-  if (filePath.endsWith('.xlsx')) return <XlsxPreview />;
-  if (filePath.endsWith('.pptx')) return <PptxPreview />;
-  if (filePath.endsWith('.pdf')) return <PDFPreview />;
+  if (filePath.endsWith('.md')) return <QuoteToChatWrapper source="markdown"><MarkdownPreview /></QuoteToChatWrapper>;
+  if (filePath.endsWith('.html')) return <QuoteToChatWrapper source="html"><HTMLPreview /></QuoteToChatWrapper>;
+  if (filePath.endsWith('.docx')) return <QuoteToChatWrapper source="docx"><DocxPreview /></QuoteToChatWrapper>;
+  if (filePath.endsWith('.xlsx')) return <QuoteToChatWrapper source="xlsx"><XlsxPreview /></QuoteToChatWrapper>;
+  if (filePath.endsWith('.pptx')) return <QuoteToChatWrapper source="pptx"><PptxPreview /></QuoteToChatWrapper>;
+  if (filePath.endsWith('.pdf')) return <QuoteToChatWrapper source="pdf-text"><PDFPreview /></QuoteToChatWrapper>;
 
   const ext = getExt(filePath);
   if (IMAGE_EXTS.includes(ext)) return <ImagePreview />;

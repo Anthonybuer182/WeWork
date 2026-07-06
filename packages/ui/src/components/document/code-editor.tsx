@@ -4,9 +4,11 @@ import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { Button } from '@/components/ui/button';
-import { FileCode, Save, Check, Loader2 } from 'lucide-react';
+import { FileCode, Save, Check, Loader2, Quote as QuoteIcon } from 'lucide-react';
 import Editor, { loader } from '@monaco-editor/react';
 import type { OnMount } from '@monaco-editor/react';
+import { useComposerStore } from '@/stores/composer-store';
+import { createQuote } from '@/lib/quote-helpers';
 
 // Point Monaco to local node_modules CDN
 loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
@@ -54,6 +56,21 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
     saveMutation.mutate();
   }, [saveMutation]);
 
+  const addQuote = useComposerStore((s) => s.addQuote);
+
+  const handleQuoteSelection = useCallback(() => {
+    if (!editorRef.current || !activePreviewFilePath) return;
+    const selection = editorRef.current.getSelection();
+    if (!selection || selection.isEmpty()) return;
+    const text = editorRef.current.getModel()?.getValueInRange(selection) ?? '';
+    if (text.trim()) {
+      addQuote(createQuote(text, activePreviewFilePath, 'code-editor', {
+        startLine: selection.startLineNumber,
+        endLine: selection.endLineNumber,
+      }));
+    }
+  }, [activePreviewFilePath, addQuote]);
+
   const handleEditorChange = useCallback((value: string | undefined) => {
     const newContent = value ?? '';
     setEditorContent(newContent);
@@ -69,7 +86,14 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
       keybindings: [2048 | 49], // CtrlCmd + S
       run: () => handleSave(),
     });
-  }, [handleSave]);
+    // Ctrl+Shift+Q / Cmd+Shift+Q to quote selection to chat
+    editor.addAction({
+      id: 'quote-to-chat',
+      label: 'Quote Selection to Chat',
+      keybindings: [2048 | 1024 | 45], // CtrlCmd | Shift | Q
+      run: () => handleQuoteSelection(),
+    });
+  }, [handleSave, handleQuoteSelection]);
 
   if (!activePreviewFilePath) return null;
   if (isLoading) return <LoadingSpinner message="Loading file..." />;
@@ -85,6 +109,10 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
         {isDirty && (
           <span className="h-1.5 w-1.5 rounded-full bg-orange-400" title="Unsaved changes" />
         )}
+        <Button variant="ghost" size="sm" onClick={handleQuoteSelection} className="h-6 gap-1 text-xs" title="Quote selection to chat (Cmd+Shift+Q)">
+          <QuoteIcon className="h-3 w-3" />
+          Quote
+        </Button>
         {headerActions}
         <Button
           variant="ghost"
