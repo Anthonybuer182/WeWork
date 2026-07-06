@@ -25,6 +25,10 @@ const PREVIEWABLE_EXTENSIONS = new Set([
   '.html', '.htm',
   '.docx', '.xlsx', '.pptx',
   '.pdf',
+  // Images
+  '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp', '.ico', '.avif',
+  // Videos
+  '.mp4', '.webm', '.mov', '.m4v', '.ogv', '.mkv', '.avi', '.3gp',
 ]);
 
 /** Returns true if the file can be opened and edited as text */

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, File, FileCode, FileText, FileImage, Folder, FolderOpen, Loader2 } from 'lucide-react';
+import { ChevronRight, File, FileCode, FileText, FileImage, FileVideo, Folder, FolderOpen, Loader2 } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { cn } from '@/lib/utils';
@@ -24,8 +24,10 @@ function getFileIcon(name: string, isDirectory: boolean) {
       return <FileCode className="h-3.5 w-3.5 shrink-0 text-yellow-400" />;
     case 'md': case 'txt': case 'log':
       return <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
-    case 'png': case 'jpg': case 'jpeg': case 'gif': case 'svg': case 'webp': case 'ico':
+    case 'png': case 'jpg': case 'jpeg': case 'gif': case 'svg': case 'webp': case 'ico': case 'bmp': case 'avif':
       return <FileImage className="h-3.5 w-3.5 shrink-0 text-green-400" />;
+    case 'mp4': case 'webm': case 'mov': case 'm4v': case 'ogv': case 'mkv': case 'avi': case '3gp':
+      return <FileVideo className="h-3.5 w-3.5 shrink-0 text-purple-400" />;
     default:
       return <File className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
   }

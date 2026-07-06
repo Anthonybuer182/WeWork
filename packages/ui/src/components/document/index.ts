@@ -6,4 +6,6 @@ export { DocxPreview } from './docx-preview';
 export { XlsxPreview } from './xlsx-preview';
 export { PptxPreview } from './pptx-preview';
 export { PDFPreview } from './pdf-preview';
+export { ImagePreview } from './image-preview';
+export { VideoPreview } from './video-preview';
 export { EmptyPreview } from './empty-preview';
