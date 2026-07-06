@@ -683,15 +683,20 @@ export function Composer() {
       });
 
       queryClient.invalidateQueries({ queryKey: ['files'] });
-      // Invalidate per-file preview queries so the right panel refreshes
-      // after the AI modifies files. react-query uses prefix matching, so
-      // ['file'] matches ['file', workspaceId, path] and ['office'] matches
-      // ['office', workspaceId, path].
-      queryClient.invalidateQueries({ queryKey: ['file'] });
-      queryClient.invalidateQueries({ queryKey: ['office'] });
 
       // Auto-preview the last generated file in the right panel
       const fileBlocks = blocks.filter((b) => b.type === 'file');
+
+      // Only invalidate per-file preview queries when the AI actually used
+      // tools or produced file blocks — a pure-text response can't have
+      // modified any files, so we skip the refetch to avoid unnecessary
+      // network/disk I/O on the currently previewed file.
+      const hasToolCalls = blocks.some((b) => b.type === 'tool_call');
+      if (hasToolCalls || fileBlocks.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ['file'] });
+        queryClient.invalidateQueries({ queryKey: ['office'] });
+      }
+
       if (fileBlocks.length > 0) {
         const lastFile = fileBlocks[fileBlocks.length - 1];
         if (lastFile.workspacePath && isPreviewableInRightPanel(lastFile.workspacePath)) {
