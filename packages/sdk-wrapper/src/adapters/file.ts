@@ -174,7 +174,11 @@ async function parseXlsx(buffer: Buffer): Promise<XlsxContent> {
     const mergeModel = (worksheet as any).model?.merges;
     if (Array.isArray(mergeModel)) {
       for (const merge of mergeModel) {
-        if (merge && merge.top !== undefined && merge.left !== undefined && merge.bottom !== undefined && merge.right !== undefined) {
+        if (typeof merge === 'string') {
+          // Format: "A2:C9" - parse Excel address range
+          const parsed = parseExcelRange(merge);
+          if (parsed) merges.push(parsed);
+        } else if (merge && merge.top !== undefined && merge.left !== undefined && merge.bottom !== undefined && merge.right !== undefined) {
           merges.push({ top: merge.top, left: merge.left, bottom: merge.bottom, right: merge.right });
         }
       }
@@ -209,6 +213,25 @@ async function parseXlsx(buffer: Buffer): Promise<XlsxContent> {
   }
 
   return { type: 'xlsx', sheets };
+}
+
+function parseExcelRange(range: string): { top: number; left: number; bottom: number; right: number } | null {
+  // Parse Excel address range like "A2:C9" into { top: 2, left: 1, bottom: 9, right: 3 }
+  const match = range.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/i);
+  if (!match) return null;
+  const left = excelColToNumber(match[1]);
+  const right = excelColToNumber(match[3]);
+  const top = parseInt(match[2]);
+  const bottom = parseInt(match[4]);
+  return { top, left, bottom, right };
+}
+
+function excelColToNumber(col: string): number {
+  let result = 0;
+  for (let i = 0; i < col.length; i++) {
+    result = result * 26 + (col.toUpperCase().charCodeAt(i) - 64);
+  }
+  return result;
 }
 
 function extractFreeze(worksheet: any): XlsxSheet['freeze'] | undefined {

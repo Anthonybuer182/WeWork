@@ -76,7 +76,7 @@ function cellStyle(cell: XlsxCell, defaultFont?: { name?: string; size?: number 
       };
       style.verticalAlign = vAlignMap[cell.alignment.vertical] ?? 'middle';
     }
-    if (cell.alignment.wrapText) style.whiteSpace = 'normal';
+    if (cell.alignment.wrapText) style.whiteSpace = 'pre-wrap';
     // Note: textRotation is handled in the cell rendering, not here,
     // because it should rotate the text, not the entire cell.
     if (cell.alignment.textRotation === 255) {
@@ -211,13 +211,14 @@ function SheetView({ sheet }: { sheet: XlsxSheet }) {
                 const colSpan = mergeInfo ? mergeInfo.merge.right - mergeInfo.merge.left + 1 : 1;
                 const rowSpan = mergeInfo ? mergeInfo.merge.bottom - mergeInfo.merge.top + 1 : 1;
 
+                const hasWrap = cell.alignment?.wrapText;
                 return (
                   <td
                     key={colIdx}
                     style={style}
                     colSpan={colSpan > 1 ? colSpan : undefined}
                     rowSpan={rowSpan > 1 ? rowSpan : undefined}
-                    className="overflow-hidden text-ellipsis px-2 py-1"
+                    className={hasWrap ? 'px-2 py-1' : 'overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1'}
                     title={cell.value}
                   >
                     {cell.alignment?.textRotation && cell.alignment.textRotation !== 255 ? (
