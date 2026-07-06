@@ -38,6 +38,7 @@
     "ag-grid-react": "^35.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "docx-preview": "^0.3.7",
     "highlight.js": "^11.11.1",
     "lucide-react": "^0.468.0",
     "mermaid": "^11.12.0",

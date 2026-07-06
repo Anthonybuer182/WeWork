@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
@@ -6,79 +6,12 @@ import { Eye, FileText, AlignLeft, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { openWithSystemApp } from '@/lib/utils';
+import { renderAsync } from 'docx-preview';
 
 interface TocEntry {
   id: string;
   level: number;
   text: string;
-}
-
-function extractHeadings(html: string): TocEntry[] {
-  const headings: TocEntry[] = [];
-  const regex = /<h([1-6])[^>]*>(.*?)<\/h\1>/gi;
-  let id = 0;
-  let match;
-  while ((match = regex.exec(html)) !== null) {
-    const level = parseInt(match[1]);
-    const text = match[2].replace(/<[^>]*>/g, '').trim();
-    if (text) {
-      headings.push({ id: `docx-h-${id++}`, level, text });
-    }
-  }
-  return headings;
-}
-
-function addHeadingIds(html: string, headings: TocEntry[]): string {
-  let result = html;
-  let idx = 0;
-  return result.replace(/<h([1-6])([^>]*)>/gi, (match, level, attrs) => {
-    const entry = headings[idx++];
-    if (entry) {
-      return `<h${level}${attrs} id="${entry.id}">`;
-    }
-    return match;
-  });
-}
-
-function wrapContentHtml(html: string, title: string): string {
-  const headings = extractHeadings(html);
-  const htmlWithIds = addHeadingIds(html, headings);
-
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:800px;margin:0 auto;padding:20px;line-height:1.6;color:#1a1a1a}
-table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}img{max-width:100%}
-h1,h2,h3,h4,h5,h6{scroll-margin-top:20px}
-</style>
-<script>
-  const headings = ${JSON.stringify(headings.map((h) => h.id))};
-  // Report visible heading to parent
-  const observer = new IntersectionObserver((entries) => {
-    let best = null;
-    for (const e of entries) {
-      if (e.isIntersecting && (!best || e.intersectionRatio > best.ratio)) {
-        best = { id: e.target.id, ratio: e.intersectionRatio };
-      }
-    }
-    if (best) {
-      parent.postMessage({ type: 'docx-heading', headingId: best.id }, '*');
-    }
-  }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
-  setTimeout(() => {
-    headings.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-  }, 100);
-  // Listen for scroll requests from parent
-  window.addEventListener('message', (e) => {
-    if (e.data?.type === 'docx-scroll-to') {
-      const el = document.getElementById(e.data.headingId);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  });
-</script>
-</head><body>${htmlWithIds}</body></html>`;
 }
 
 export function DocxPreview() {
@@ -87,7 +20,13 @@ export function DocxPreview() {
   const activePreviewFilePath = useUIStore((s) => s.activePreviewFilePath);
   const [mode, setMode] = useState<'preview' | 'text'>('preview');
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [headings, setHeadings] = useState<TocEntry[]>([]);
+  const [textContent, setTextContent] = useState('');
+  const [rendering, setRendering] = useState(true);
+  const [renderError, setRenderError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const renderedRef = useRef(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['office', activeWorkspaceId, activePreviewFilePath],
@@ -95,28 +34,122 @@ export function DocxPreview() {
     enabled: !!activeWorkspaceId && !!activePreviewFilePath && activePreviewFilePath.endsWith('.docx'),
   });
 
-  // Listen for heading visibility changes from iframe
+  // Render DOCX using docx-preview
   useEffect(() => {
-    const handler = (e: MessageEvent) => {
-      if (e.data?.type === 'docx-heading' && e.data.headingId) {
-        setActiveHeadingId(e.data.headingId);
+    if (!data || data.doc.type !== 'docx' || !containerRef.current) return;
+    if (renderedRef.current) return;
+
+    const docxData = data.doc.data;
+    let cancelled = false;
+    setRendering(true);
+    setRenderError(null);
+
+    let headingObserver: IntersectionObserver | undefined;
+
+    async function renderDocx() {
+      try {
+        const base64Data = docxData;
+        // Decode base64 to binary string then to Uint8Array
+        const binaryStr = atob(base64Data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+        const blob = new Blob([bytes], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
+
+        // Clear container
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
+        }
+
+        await renderAsync(blob, containerRef.current!, undefined, {
+          className: 'docx-container',
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+          breakPages: true,
+          experimental: true,
+          useBase64URL: true,
+        });
+
+        if (cancelled) return;
+
+        // Extract headings from rendered DOM
+        const extractedHeadings: TocEntry[] = [];
+        const headingSelector = 'h1, h2, h3, h4, h5, h6';
+        const headingElements = containerRef.current?.querySelectorAll(headingSelector);
+        headingElements?.forEach((el, idx) => {
+          const level = parseInt(el.tagName[1]);
+          const text = el.textContent?.trim() ?? '';
+          if (text) {
+            const id = `docx-h-${idx}`;
+            el.id = id;
+            extractedHeadings.push({ id, level, text });
+          }
+        });
+        setHeadings(extractedHeadings);
+
+        // Extract text content for text mode - preserve paragraph breaks
+        const paragraphs = containerRef.current?.querySelectorAll('p, h1, h2, h3, h4, h5, h6, div.docx-pagebreak, table');
+        let text = '';
+        paragraphs?.forEach((el) => {
+          const t = el.textContent?.trim();
+          if (t) text += t + '\n';
+        });
+        setTextContent(text || containerRef.current?.textContent?.trim() || '');
+
+        // Set up intersection observer for active heading tracking
+        if (extractedHeadings.length > 0 && scrollContainerRef.current) {
+          headingObserver = new IntersectionObserver(
+            (entries) => {
+              let best: { id: string; ratio: number } | null = null;
+              for (const entry of entries) {
+                if (entry.isIntersecting && (!best || entry.intersectionRatio > best.ratio)) {
+                  best = { id: (entry.target as HTMLElement).id, ratio: entry.intersectionRatio };
+                }
+              }
+              if (best) {
+                setActiveHeadingId(best.id);
+              }
+            },
+            { root: scrollContainerRef.current, threshold: [0, 0.25, 0.5, 0.75, 1] },
+          );
+          extractedHeadings.forEach((h) => {
+            const el = containerRef.current?.querySelector(`#${h.id}`);
+            if (el) headingObserver!.observe(el);
+          });
+        }
+
+        renderedRef.current = true;
+        setRendering(false);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('DOCX render error:', err);
+        setRenderError(err instanceof Error ? err.message : 'Failed to render document');
+        setRendering(false);
       }
+    }
+
+    renderDocx();
+
+    return () => {
+      cancelled = true;
+      headingObserver?.disconnect();
     };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-  }, []);
+  }, [data]);
+
+  // Reset rendered flag when file changes
+  useEffect(() => {
+    renderedRef.current = false;
+    setHeadings([]);
+    setTextContent('');
+    setActiveHeadingId(null);
+  }, [activePreviewFilePath]);
 
   const scrollToHeading = useCallback((headingId: string) => {
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'docx-scroll-to', headingId },
-      '*',
-    );
+    const el = containerRef.current?.querySelector(`#${headingId}`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
-
-  const headings = useMemo(() => {
-    if (!data || data.doc.type !== 'docx') return [];
-    return extractHeadings(data.doc.html);
-  }, [data]);
 
   if (!activePreviewFilePath) return null;
   if (isLoading) return <LoadingSpinner message="Loading document..." />;
@@ -134,7 +167,16 @@ export function DocxPreview() {
     );
   }
 
-  const doc = data.doc;
+  if (renderError) {
+    return (
+      <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+        <div className="flex flex-col items-center gap-2">
+          <FileText className="h-8 w-8 text-destructive" />
+          <span className="text-destructive">{renderError}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -198,19 +240,26 @@ export function DocxPreview() {
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-4">
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto bg-neutral-200 dark:bg-neutral-800 p-4">
           {mode === 'preview' ? (
-            <iframe
-              ref={iframeRef}
-              className="w-full h-full border-0 bg-white rounded"
-              srcDoc={wrapContentHtml(doc.html, fileName)}
-              title="Document Preview"
-              sandbox="allow-scripts"
-            />
+            <div className="flex justify-center relative">
+              <div
+                ref={containerRef}
+                className="docx-container bg-white shadow-xl mx-auto"
+                style={{ minHeight: '100%' }}
+              />
+              {rendering && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+                </div>
+              )}
+            </div>
           ) : (
-            <pre className="text-sm whitespace-pre-wrap font-sans text-foreground leading-relaxed">
-              {doc.text}
-            </pre>
+            <div className="max-w-3xl mx-auto bg-white shadow-sm rounded-lg p-6">
+              <pre className="text-sm whitespace-pre-wrap font-sans text-foreground leading-relaxed">
+                {textContent || 'No text content.'}
+              </pre>
+            </div>
           )}
         </div>
       </div>
