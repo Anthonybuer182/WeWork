@@ -132,6 +132,8 @@ export interface PptxTableCell {
   fontSize?: number;
   color?: string;
   bold?: boolean;
+  italic?: boolean;
+  fontFamily?: string;
   align?: 'left' | 'center' | 'right';
 }
 
@@ -153,6 +155,8 @@ export interface PptxShape {
   height: number;
   // Text shapes
   paragraphs?: PptxParagraph[];
+  // Text body margins (EMU) from <a:bodyPr> lIns/tIns/rIns/bIns
+  textMargin?: { left: number; top: number; right: number; bottom: number };
   // Image shapes
   image?: { data: string; mimeType: string };
   // Rotation in degrees
@@ -173,7 +177,7 @@ export interface PptxShape {
 
 export interface PptxSlide {
   index: number;
-  background?: { type: 'solid'; color: string } | { type: 'gradient'; stops: { color: string; position: number }[] };
+  background?: { type: 'solid'; color: string } | { type: 'gradient'; stops: { color: string; position: number }[]; gradientAngle?: number };
   shapes: PptxShape[];
   notes: string;
 }

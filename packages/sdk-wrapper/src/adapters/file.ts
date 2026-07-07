@@ -492,6 +492,43 @@ function parseThemeColors(zip: AdmZip): Map<string, string> {
   return themeMap;
 }
 
+/** Parse the first background fill from the theme's bgFillStyleLst as the default slide background */
+function parseThemeDefaultBackground(zip: AdmZip, themeColors: Map<string, string>): PptxSlide['background'] | undefined {
+  const themeEntry = zip.getEntry('ppt/theme/theme1.xml');
+  if (!themeEntry) return undefined;
+
+  const xml = themeEntry.getData().toString('utf-8');
+  const fmtSchemeMatch = xml.match(/<a:fmtScheme[^>]*>([\s\S]*?)<\/a:fmtScheme>/);
+  if (!fmtSchemeMatch) return undefined;
+
+  const bgFillMatch = fmtSchemeMatch[1].match(/<a:bgFillStyleLst>([\s\S]*?)<\/a:bgFillStyleLst>/);
+  if (!bgFillMatch) return undefined;
+
+  const fills = bgFillMatch[1];
+  // Try solid fill first
+  const solidFillMatch = fills.match(/<a:solidFill>([\s\S]*?)<\/a:solidFill>/);
+  if (solidFillMatch) {
+    let color = resolveColor(solidFillMatch[1], themeColors);
+    // If the fill uses an unresolvable scheme color (e.g., phClr), fall back
+    // to the theme's dk2 color which is typically the dark slide background.
+    if (!color && solidFillMatch[1].includes('schemeClr')) {
+      color = themeColors.get('dk2') ?? themeColors.get('accent1') ?? '44546A';
+    }
+    if (color) return { type: 'solid', color };
+  }
+  // Try gradient fill
+  const gradFillMatch = fills.match(/<a:gradFill[^>]*>([\s\S]*?)<\/a:gradFill>/);
+  if (gradFillMatch) {
+    const stops = parseGradientStops(gradFillMatch[1], themeColors);
+    const linMatch = gradFillMatch[1].match(/<a:lin[^>]*ang="(\d+)"/);
+    if (stops.length > 0) {
+      return { type: 'gradient', stops, gradientAngle: linMatch ? parseInt(linMatch[1]) / 60000 : undefined };
+    }
+  }
+
+  return undefined;
+}
+
 /** System color name to hex mapping */
 const SYS_COLOR_MAP: Record<string, string> = {
   windowText: '000000', window: 'FFFFFF', grayText: '808080',
@@ -583,6 +620,9 @@ function parsePptx(buffer: Buffer): PptxContent {
   // Parse theme colors for schemeClr resolution
   const themeColors = parseThemeColors(zip);
 
+  // Parse theme default background (from bgFillStyleLst in fmtScheme)
+  const themeDefaultBackground = parseThemeDefaultBackground(zip, themeColors);
+
   // Read presentation.xml for slide dimensions and default text styles
   let slideWidth = 9144000; // default 10in
   let slideHeight = 6858000; // default 7.5in
@@ -630,7 +670,7 @@ function parsePptx(buffer: Buffer): PptxContent {
   for (const entry of slideEntries) {
     const index = parseInt(entry.entryName.match(/slide(\d+)/)?.[1] ?? '0');
     const xml = entry.getData().toString('utf-8');
-    const slide = parseSlideXml(xml, index, zip, entries, themeColors, globalDefaultFontSize);
+    const slide = parseSlideXml(xml, index, zip, entries, themeColors, globalDefaultFontSize, themeDefaultBackground);
     slide.notes = notesMap.get(index) ?? '';
     slides.push(slide);
   }
@@ -638,34 +678,40 @@ function parsePptx(buffer: Buffer): PptxContent {
   return { type: 'pptx', slideWidth, slideHeight, slides };
 }
 
-function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], themeColors: Map<string, string>, globalDefaultFontSize?: number): PptxSlide {
+/** Parse background from slide or layout XML (from <p:bg>) */
+function parseBackground(xml: string, themeColors: Map<string, string>): PptxSlide['background'] | undefined {
+  const bgMatch = xml.match(/<p:bg[^>]*>([\s\S]*?)<\/p:bg>/);
+  if (!bgMatch) return undefined;
+  const bgXml = bgMatch[1];
+  // Solid fill - use resolveColor for theme color support
+  const solidColor = resolveColor(bgXml, themeColors);
+  if (solidColor && bgXml.includes('solidFill')) {
+    return { type: 'solid', color: solidColor };
+  }
+  // Gradient fill
+  const gradMatch = bgXml.match(/<a:gradFill[^>]*>([\s\S]*?)<\/a:gradFill>/);
+  if (gradMatch) {
+    const stops = parseGradientStops(gradMatch[1], themeColors);
+    const linMatch = gradMatch[1].match(/<a:lin[^>]*ang="(\d+)"/);
+    if (stops.length > 0) {
+      return { type: 'gradient', stops, gradientAngle: linMatch ? parseInt(linMatch[1]) / 60000 : undefined };
+    }
+  }
+  return undefined;
+}
+
+function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], themeColors: Map<string, string>, globalDefaultFontSize?: number, themeDefaultBackground?: PptxSlide['background']): PptxSlide {
   const shapes: PptxShape[] = [];
 
   // Parse background
-  let background: PptxSlide['background'];
-  const bgMatch = xml.match(/<p:bg[^>]*>([\s\S]*?)<\/p:bg>/);
-  if (bgMatch) {
-    const bgXml = bgMatch[1];
-    // Solid fill - use resolveColor for theme color support
-    const solidColor = resolveColor(bgXml, themeColors);
-    if (solidColor && bgXml.includes('solidFill')) {
-      background = { type: 'solid', color: solidColor };
-    }
-    // Gradient fill
-    const gradMatch = bgXml.match(/<a:gradFill[^>]*>([\s\S]*?)<\/a:gradFill>/);
-    if (gradMatch) {
-      const stops = parseGradientStops(gradMatch[1], themeColors);
-      if (stops.length > 0) {
-        background = { type: 'gradient', stops };
-      }
-    }
-  }
+  let background = parseBackground(xml, themeColors);
 
   // Parse relationships file to resolve image references
   const slideRelsPath = `ppt/slides/_rels/slide${index}.xml.rels`;
   const relsEntry = entries.find((e) => e.entryName === slideRelsPath);
   const relsMap = new Map<string, string>(); // rId -> target path
-  let layoutPlaceholderMap: Map<string, {x: number; y: number; cx: number; cy: number}> | undefined;
+  let layoutPlaceholderMap: Map<string, {x: number; y: number; cx: number; cy: number; fill?: PptxShapeFill; outline?: PptxShapeOutline; textDefaults?: Map<number, Partial<PptxTextRun>>}> | undefined;
+  let layoutBackground: PptxSlide['background'];
   if (relsEntry) {
     const relsXml = relsEntry.getData().toString('utf-8');
     const relRegex = /<Relationship\s+Id="([^"]+)"[^>]*Target="([^"]+)"/g;
@@ -681,7 +727,9 @@ function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], 
       const layoutPath = `ppt/slideLayouts/${layoutName}`;
       const layoutEntry = entries.find((e) => e.entryName === layoutPath);
       if (layoutEntry) {
-        layoutPlaceholderMap = parseLayoutPlaceholders(layoutEntry.getData().toString('utf-8'));
+        const layoutXml = layoutEntry.getData().toString('utf-8');
+        layoutPlaceholderMap = parseLayoutPlaceholders(layoutXml, themeColors);
+        layoutBackground = parseBackground(layoutXml, themeColors);
       }
     }
   }
@@ -722,12 +770,20 @@ function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], 
     if (tableShape) shapes.push(tableShape);
   }
 
+  // Background cascade: slide bg → layout bg → theme default bg
+  if (!background && layoutBackground) {
+    background = layoutBackground;
+  }
+  if (!background && themeDefaultBackground) {
+    background = themeDefaultBackground;
+  }
+
   return { index, background, shapes, notes: '' };
 }
 
 /** Parse slide layout XML to extract placeholder positions keyed by "type:idx" */
-function parseLayoutPlaceholders(layoutXml: string): Map<string, {x: number; y: number; cx: number; cy: number}> {
-  const map = new Map<string, {x: number; y: number; cx: number; cy: number}>();
+function parseLayoutPlaceholders(layoutXml: string, themeColors: Map<string, string>): Map<string, {x: number; y: number; cx: number; cy: number; fill?: PptxShapeFill; outline?: PptxShapeOutline; textDefaults?: Map<number, Partial<PptxTextRun>>}> {
+  const map = new Map<string, {x: number; y: number; cx: number; cy: number; fill?: PptxShapeFill; outline?: PptxShapeOutline; textDefaults?: Map<number, Partial<PptxTextRun>>}>();
   const spRegex = /<p:sp[^>]*>([\s\S]*?)<\/p:sp>/g;
   let spMatch: RegExpExecArray | null;
   while ((spMatch = spRegex.exec(layoutXml)) !== null) {
@@ -740,17 +796,71 @@ function parseLayoutPlaceholders(layoutXml: string): Map<string, {x: number; y: 
     const extMatch = xfrmMatch[1].match(/<a:ext\s+cx="(\d+)"\s+cy="(\d+)"/);
     if (!offMatch || !extMatch) continue;
     const key = `${phMatch[1]}:${phMatch[2]}`;
+
+    // Parse shape properties (fill, outline) from <p:spPr>
+    let fill: PptxShapeFill | undefined;
+    let outline: PptxShapeOutline | undefined;
+    const spPrMatch = spXml.match(/<p:spPr[^>]*>([\s\S]*?)<\/p:spPr>/);
+    if (spPrMatch) {
+      fill = parseShapeFill(spPrMatch[1], themeColors);
+      outline = parseShapeOutline(spPrMatch[1], themeColors);
+    }
+
+    // Parse list style defaults from <p:txBody><a:lstStyle>
+    let textDefaults: Map<number, Partial<PptxTextRun>> | undefined;
+    const txBodyMatch = spXml.match(/<p:txBody[^>]*>([\s\S]*?)<\/p:txBody>/);
+    if (txBodyMatch) {
+      const lstStyleMatch = txBodyMatch[1].match(/<a:lstStyle[^>]*>([\s\S]*?)<\/a:lstStyle>/);
+      if (lstStyleMatch) {
+        textDefaults = parseLayoutTextDefaults(lstStyleMatch[1], themeColors);
+      }
+    }
+
     map.set(key, {
       x: parseInt(offMatch[1]),
       y: parseInt(offMatch[2]),
       cx: parseInt(extMatch[1]),
       cy: parseInt(extMatch[2]),
+      fill,
+      outline,
+      textDefaults,
     });
   }
   return map;
 }
 
-function parseTextShape(spXml: string, themeColors: Map<string, string>, globalDefaultFontSize?: number, layoutPlaceholderMap?: Map<string, {x: number; y: number; cx: number; cy: number}>): PptxShape | null {
+/** Parse layout list style defaults (lvl1pPr through lvl9pPr's defRPr) */
+function parseLayoutTextDefaults(lstStyleXml: string, themeColors: Map<string, string>): Map<number, Partial<PptxTextRun>> {
+  const defaults = new Map<number, Partial<PptxTextRun>>();
+  for (let lvl = 1; lvl <= 9; lvl++) {
+    const lvlMatch = lstStyleXml.match(new RegExp(`<a:lvl${lvl}pPr[^>]*>([\\s\\S]*?)<\/a:lvl${lvl}pPr>`));
+    if (!lvlMatch) continue;
+    const defRPrMatch = lvlMatch[1].match(/<a:defRPr[^>]*>([\s\S]*?)<\/a:defRPr>/);
+    if (!defRPrMatch) continue;
+    const defRPrXml = defRPrMatch[0];
+    const entry: Partial<PptxTextRun> = {};
+    const szMatch = defRPrXml.match(/sz="(\d+)"/);
+    if (szMatch) entry.fontSize = parseInt(szMatch[1]) / 100;
+    const bMatch = defRPrXml.match(/b="(\d)"/);
+    if (bMatch) entry.bold = bMatch[1] === '1';
+    const iMatch = defRPrXml.match(/i="(\d)"/);
+    if (iMatch) entry.italic = iMatch[1] === '1';
+    const uMatch = defRPrXml.match(/u="(\w+)"/);
+    if (uMatch && uMatch[1] !== 'none') entry.underline = true;
+    const strikeMatch = defRPrXml.match(/strike="(\w+)"/);
+    if (strikeMatch && strikeMatch[1] !== 'noStrike') entry.strikethrough = true;
+    const dColor = resolveColor(defRPrXml, themeColors);
+    if (dColor) entry.color = dColor;
+    const latinMatch = defRPrXml.match(/<a:latin\s+typeface="([^"]+)"/);
+    if (latinMatch) entry.fontFamily = latinMatch[1];
+    if (Object.keys(entry).length > 0) {
+      defaults.set(lvl, entry);
+    }
+  }
+  return defaults;
+}
+
+function parseTextShape(spXml: string, themeColors: Map<string, string>, globalDefaultFontSize?: number, layoutPlaceholderMap?: Map<string, {x: number; y: number; cx: number; cy: number; fill?: PptxShapeFill; outline?: PptxShapeOutline; textDefaults?: Map<number, Partial<PptxTextRun>>}>): PptxShape | null {
   // Extract position and size
   let xfrmMatch = spXml.match(/<a:xfrm[^>]*>([\s\S]*?)<\/a:xfrm>/);
 
@@ -807,25 +917,62 @@ function parseTextShape(spXml: string, themeColors: Map<string, string>, globalD
     outline = parseShapeOutline(spPrXml, themeColors);
   }
 
+  // Inherit fill and outline from layout placeholder if not explicitly set on this shape
+  if (layoutPlaceholderMap) {
+    const phMatch = spXml.match(/<p:ph[^>]*type="([^"]+)"[^>]*idx="(\d+)"/);
+    if (phMatch) {
+      const phKey = `${phMatch[1]}:${phMatch[2]}`;
+      const layoutPh = layoutPlaceholderMap.get(phKey);
+      if (layoutPh) {
+        if (!fill && layoutPh.fill) fill = layoutPh.fill;
+        if (!outline && layoutPh.outline) outline = layoutPh.outline;
+      }
+    }
+  }
+
   // Parse text body
   const txBodyMatch = spXml.match(/<p:txBody[^>]*>([\s\S]*?)<\/p:txBody>/);
   if (!txBodyMatch) {
     return { type: 'text', x, y, width, height, paragraphs: [], rotation, fill, outline, geometry };
   }
 
-  // Parse text anchor (vertical alignment) from <a:bodyPr>
+  // Parse text anchor (vertical alignment) and text margins from <a:bodyPr>
   const bodyPrMatch = txBodyMatch[1].match(/<a:bodyPr[^>]*>/);
   let textAnchor: PptxShape['textAnchor'] | undefined;
+  let textMargin: PptxShape['textMargin'] | undefined;
   if (bodyPrMatch) {
-    const anchorMatch = bodyPrMatch[0].match(/anchor="(t|ctr|b)"/);
+    const bodyPrTag = bodyPrMatch[0];
+    const anchorMatch = bodyPrTag.match(/anchor="(t|ctr|b)"/);
     if (anchorMatch) {
       textAnchor = anchorMatch[1] === 't' ? 'top' : anchorMatch[1] === 'ctr' ? 'middle' : 'bottom';
     }
+    // Parse text body margins (EMU)
+    const lInsMatch = bodyPrTag.match(/lIns="(\d+)"/);
+    const tInsMatch = bodyPrTag.match(/tIns="(\d+)"/);
+    const rInsMatch = bodyPrTag.match(/rIns="(\d+)"/);
+    const bInsMatch = bodyPrTag.match(/bIns="(\d+)"/);
+    if (lInsMatch || tInsMatch || rInsMatch || bInsMatch) {
+      textMargin = {
+        left: lInsMatch ? parseInt(lInsMatch[1]) : undefined as any,
+        top: tInsMatch ? parseInt(tInsMatch[1]) : undefined as any,
+        right: rInsMatch ? parseInt(rInsMatch[1]) : undefined as any,
+        bottom: bInsMatch ? parseInt(bInsMatch[1]) : undefined as any,
+      };
+    }
   }
 
-  const paragraphs = parseParagraphs(txBodyMatch[1], themeColors, globalDefaultFontSize);
+  // Look up layout-level text defaults for this placeholder
+  let layoutTextDefaults: Map<number, Partial<PptxTextRun>> | undefined;
+  if (layoutPlaceholderMap) {
+    const phMatch2 = spXml.match(/<p:ph[^>]*type="([^"]+)"[^>]*idx="(\d+)"/);
+    if (phMatch2) {
+      layoutTextDefaults = layoutPlaceholderMap.get(`${phMatch2[1]}:${phMatch2[2]}`)?.textDefaults;
+    }
+  }
 
-  return { type: 'text', x, y, width, height, paragraphs, rotation, fill, outline, geometry, textAnchor };
+  const paragraphs = parseParagraphs(txBodyMatch[1], themeColors, globalDefaultFontSize, layoutTextDefaults);
+
+  return { type: 'text', x, y, width, height, paragraphs, rotation, fill, outline, geometry, textAnchor, textMargin };
 }
 
 /** Parse gradient stops from gradFill XML, resolving theme colors */
@@ -900,7 +1047,7 @@ function parseShapeOutline(spPrXml: string, themeColors: Map<string, string>): P
   return outline;
 }
 
-function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>, globalDefaultFontSize?: number): PptxParagraph[] {
+function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>, globalDefaultFontSize?: number, layoutTextDefaults?: Map<number, Partial<PptxTextRun>>): PptxParagraph[] {
   const paragraphs: PptxParagraph[] = [];
   const pRegex = /<a:p[^>]*>([\s\S]*?)<\/a:p>/g;
   let pMatch: RegExpExecArray | null;
@@ -974,6 +1121,15 @@ function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>, gl
         if (dColor) defaultRun.color = dColor;
         const dLatinMatch = defRPrXml.match(/<a:latin\s+typeface="([^"]+)"/);
         if (dLatinMatch) defaultRun.fontFamily = dLatinMatch[1];
+      }
+    }
+
+    // Apply layout-level text defaults as fallback when no paragraph-level defRPr
+    if (!defaultRun && layoutTextDefaults) {
+      const lvl = paragraph.level ?? 1;
+      const lvlDefaults = layoutTextDefaults.get(lvl) || layoutTextDefaults.get(1);
+      if (lvlDefaults) {
+        defaultRun = { ...lvlDefaults };
       }
     }
 
@@ -1155,8 +1311,11 @@ function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZ
     }
     const shape = parseTextShape(spXml, themeColors, globalDefaultFontSize);
     if (shape) {
-      shape.x = groupX + (shape.x - chOffX) * scaleX;
-      shape.y = groupY + (shape.y - chOffY) * scaleY;
+      // Keep children in group-local coordinate space.
+      // The renderer positions the group div at (groupX, groupY), then
+      // children are positioned relative to the group div.
+      shape.x = (shape.x - chOffX) * scaleX;
+      shape.y = (shape.y - chOffY) * scaleY;
       shape.width = shape.width * scaleX;
       shape.height = shape.height * scaleY;
       children.push(shape);
@@ -1169,8 +1328,8 @@ function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZ
   while ((picMatch = picRegex.exec(grpXml)) !== null) {
     const shape = parsePicShape(picMatch[1], relsMap, zip);
     if (shape) {
-      shape.x = groupX + (shape.x - chOffX) * scaleX;
-      shape.y = groupY + (shape.y - chOffY) * scaleY;
+      shape.x = (shape.x - chOffX) * scaleX;
+      shape.y = (shape.y - chOffY) * scaleY;
       shape.width = shape.width * scaleX;
       shape.height = shape.height * scaleY;
       children.push(shape);
@@ -1254,19 +1413,23 @@ function parseTableShape(gfXml: string, themeColors: Map<string, string>, global
       let fontSize: number | undefined;
       let color: string | undefined;
       let bold: boolean | undefined;
+      let italic: boolean | undefined;
+      let fontFamily: string | undefined;
       let align: 'left' | 'center' | 'right' | undefined;
       if (parsedParagraphs.length > 0 && parsedParagraphs[0].runs.length > 0) {
         const run = parsedParagraphs[0].runs[0];
         fontSize = run.fontSize;
         color = run.color;
         bold = run.bold;
+        italic = run.italic;
+        fontFamily = run.fontFamily;
       }
       if (parsedParagraphs.length > 0 && parsedParagraphs[0].alignment) {
         const algn = parsedParagraphs[0].alignment;
         align = (algn === 'left' || algn === 'center' || algn === 'right') ? algn : 'left';
       }
 
-      cells.push({ text, colSpan, rowSpan, fill, fontSize, color, bold, align });
+      cells.push({ text, colSpan, rowSpan, fill, fontSize, color, bold, italic, fontFamily, align });
     }
 
     if (cells.length > 0) {

@@ -76,13 +76,15 @@ function fillStyle(fill?: PptxShape['fill']): React.CSSProperties {
 /** Convert shape outline to CSS border properties */
 function outlineStyle(outline?: PptxShape['outline']): React.CSSProperties {
   if (!outline) return {};
-  const widthPx = outline.width ? Math.max(1, outline.width / 9525) : 1; // EMU to px
+  if (outline.dashStyle === 'none') return {};
+  const widthPx = outline.width ? Math.max(0, outline.width / 9525) : 0; // EMU to px
+  if (widthPx <= 0) return {};
   const color = outline.color ? `#${outline.color}` : '#000000';
   const dash = outline.dashStyle === 'dash' ? 'dashed'
     : outline.dashStyle === 'dot' ? 'dotted'
     : outline.dashStyle === 'dashDot' ? 'dashed' // CSS doesn't support dashdot, use dashed
     : 'solid';
-  return { border: `${widthPx}px ${dash} ${color}` };
+  return { border: `${Math.max(0.5, widthPx)}px ${dash} ${color}` };
 }
 
 function SlideBackground({ slide }: { slide: PptxSlide }) {
@@ -101,7 +103,8 @@ function SlideBackground({ slide }: { slide: PptxSlide }) {
     const gradient = slide.background.stops
       .map((stop) => `#${stop.color} ${Math.round(stop.position * 100)}%`)
       .join(', ');
-    return <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${gradient})` }} />;
+    const cssAngle = slide.background.gradientAngle != null ? (slide.background.gradientAngle + 90) % 360 : 90;
+    return <div className="absolute inset-0" style={{ background: `linear-gradient(${cssAngle}deg, ${gradient})` }} />;
   }
 
   return null;
@@ -109,16 +112,22 @@ function SlideBackground({ slide }: { slide: PptxSlide }) {
 
 function TextShape({ shape }: { shape: PptxShape }) {
   const baseStyle = shapeStyle(shape);
-  // Use min-height instead of fixed height to prevent text line clipping.
-  // The slide container's overflow:hidden will clip at the slide boundary.
+  // Use text body margins (EMU → px) when available, otherwise PPTX defaults:
+  // left/right: 91440 EMU = 0.1in ≈ 9.6px, top/bottom: 45720 EMU = 0.05in ≈ 4.8px
+  const defaultPad = { left: 91440, top: 45720, right: 91440, bottom: 45720 };
+  const margin = shape.textMargin ?? defaultPad;
+  const padT = emuToPx(margin.top ?? defaultPad.top);
+  const padR = emuToPx(margin.right ?? defaultPad.right);
+  const padB = emuToPx(margin.bottom ?? defaultPad.bottom);
+  const padL = emuToPx(margin.left ?? defaultPad.left);
+
   const style: React.CSSProperties = {
     ...baseStyle,
-    minHeight: baseStyle.height,
-    height: 'auto',
+    padding: `${padT}px ${padR}px ${padB}px ${padL}px`,
     ...fillStyle(shape.fill),
     ...outlineStyle(shape.outline),
     ...geometryStyle(shape.geometry),
-    overflow: 'visible',
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
   };
@@ -150,8 +159,9 @@ function TextShape({ shape }: { shape: PptxShape }) {
 function ParagraphView({ para }: { para: PptxParagraph }) {
   const style: React.CSSProperties = {
     margin: 0,
-    padding: '2px 4px',
+    padding: 0,
     textAlign: para.alignment ?? 'left',
+    whiteSpace: 'pre-wrap',
   };
 
   // Add indentation for list levels
@@ -213,7 +223,7 @@ function ImageShape({ shape }: { shape: PptxShape }) {
 
   const style: React.CSSProperties = {
     ...shapeStyle(shape),
-    objectFit: 'fill',
+    objectFit: 'contain',
   };
 
   if (shape.rotation) {
@@ -283,6 +293,8 @@ function TableShape({ shape }: { shape: PptxShape }) {
                   fontSize: cell.fontSize ? `${cell.fontSize}pt` : undefined,
                   color: cell.color ? `#${cell.color}` : undefined,
                   fontWeight: cell.bold ? 'bold' : undefined,
+                  fontStyle: cell.italic ? 'italic' : undefined,
+                  fontFamily: cell.fontFamily ?? undefined,
                 };
                 if (cell.fill) {
                   cellStyle.backgroundColor = `#${cell.fill}`;
@@ -367,6 +379,13 @@ function SlideView({
 function MiniTextShape({ shape }: { shape: PptxShape }) {
   const baseStyle = shapeStyle(shape);
   const minH = baseStyle.height;
+  const defaultPad = { left: 91440, top: 45720, right: 91440, bottom: 45720 };
+  const margin = shape.textMargin ?? defaultPad;
+  const padT = emuToPx(margin.top ?? defaultPad.top);
+  const padR = emuToPx(margin.right ?? defaultPad.right);
+  const padB = emuToPx(margin.bottom ?? defaultPad.bottom);
+  const padL = emuToPx(margin.left ?? defaultPad.left);
+
   const style: React.CSSProperties = {
     ...baseStyle,
     minHeight: minH,
@@ -377,7 +396,7 @@ function MiniTextShape({ shape }: { shape: PptxShape }) {
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    padding: '2px 4px',
+    padding: `${padT}px ${padR}px ${padB}px ${padL}px`,
   };
 
   if (shape.textAnchor === 'middle') {
@@ -450,7 +469,7 @@ function MiniShapeList({ shapes }: { shapes: PptxShape[] }) {
               key={i}
               src={`data:${shape.image.mimeType};base64,${shape.image.data}`}
               alt=""
-              style={{ ...shapeStyle(shape), objectFit: 'fill' }}
+              style={{ ...shapeStyle(shape), objectFit: 'contain' }}
             />
           );
         }
