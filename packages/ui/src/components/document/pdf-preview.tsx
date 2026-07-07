@@ -42,9 +42,13 @@ function PDFPageCanvas({
         const page = await pdfDoc!.getPage(pageNum);
         if (cancelled) return;
         const viewport = page.getViewport({ scale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        renderTaskRef.current = page.render({ canvas, viewport });
+        const outputScale = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = 'auto';
+        const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined;
+        renderTaskRef.current = page.render({ canvas, viewport, transform });
         await renderTaskRef.current.promise;
         if (!cancelled) {
           onRenderedRef.current();

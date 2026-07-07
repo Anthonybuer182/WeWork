@@ -89,10 +89,75 @@
   @apply bg-emerald-500/10 text-emerald-600 border-emerald-500/20;
 }
 
+/* Dark mode token badges */
 .dark .token-slash {
   @apply bg-blue-400/15 text-blue-400 border-blue-400/20;
 }
 
 .dark .token-mention {
   @apply bg-emerald-400/15 text-emerald-400 border-emerald-400/20;
+}
+
+/* ===== DOCX Preview Styles ===== */
+/* Wrapper around all pages */
+.docx-container-wrapper {
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Individual page - simulate Word page appearance */
+.docx-container-wrapper .docx-container {
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 2px;
+  max-width: 100%;
+  box-sizing: border-box;
+  color: #000000 !important;
+  font-family: 'Calibri', 'Arial', 'Helvetica', sans-serif !important;
+  font-size: 11pt !important;
+  line-height: 1.5;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+}
+
+/* Ensure tables don't overflow page width */
+.docx-container-wrapper .docx-container table {
+  max-width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.docx-container-wrapper .docx-container table td,
+.docx-container-wrapper .docx-container table th {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Images should be responsive */
+.docx-container-wrapper .docx-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent text overflow from page boundaries */
+.docx-container-wrapper .docx-container > div,
+.docx-container-wrapper .docx-container > section,
+.docx-container-wrapper .docx-container > article {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Page break styling */
+.docx-pagebreak {
+  page-break-after: always;
+  break-after: page;
+}
+
+/* Dark mode: keep page content white background */
+.dark .docx-container-wrapper .docx-container {
+  background: #ffffff !important;
+  color: #000000 !important;
 }

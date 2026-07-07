@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
-import { Download, ExternalLink } from 'lucide-react';
+import { Download, ExternalLink, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { openWithSystemApp } from '@/lib/utils';
@@ -115,12 +115,12 @@ function SheetView({ sheet }: { sheet: XlsxSheet }) {
   }, [rows]);
 
   return (
-    <table className="border-collapse text-xs table-fixed" style={{ minWidth: '100%' }}>
+    <table className="border-collapse text-xs table-auto" style={{ minWidth: '100%' }}>
       <colgroup>
         {/* Row number column */}
         <col style={{ width: 40 }} />
         {columns.map((col, i) => (
-          <col key={i} style={{ width: col.width ? `${col.width * 7}px` : '120px' }} />
+          <col key={i} style={{ width: col.width ? `${Math.max(col.width * 7.5 + 5, 50)}px` : undefined }} />
         ))}
       </colgroup>
       <thead>
@@ -135,7 +135,7 @@ function SheetView({ sheet }: { sheet: XlsxSheet }) {
             <th
               key={i}
               className="border border-border bg-muted/50 sticky top-0 z-20 text-center font-medium text-muted-foreground"
-              style={{ width: columns[i]?.width ? `${columns[i].width! * 7}px` : '120px' }}
+              style={{ width: columns[i]?.width ? `${Math.max(columns[i].width! * 7.5 + 5, 50)}px` : undefined }}
             >
               {columnLetter(i)}
             </th>
@@ -201,7 +201,7 @@ function SheetView({ sheet }: { sheet: XlsxSheet }) {
                   // Calculate left offset: row number column (40px) + sum of previous frozen column widths
                   let leftOffset = 40;
                   for (let fc = 0; fc < colIdx; fc++) {
-                    leftOffset += columns[fc]?.width ? columns[fc].width! * 7 : 120;
+                    leftOffset += columns[fc]?.width ? Math.max(columns[fc].width! * 7.5 + 5, 50) : 80;
                   }
                   style.position = 'sticky';
                   style.left = `${leftOffset}px`;
@@ -218,7 +218,7 @@ function SheetView({ sheet }: { sheet: XlsxSheet }) {
                     style={style}
                     colSpan={colSpan > 1 ? colSpan : undefined}
                     rowSpan={rowSpan > 1 ? rowSpan : undefined}
-                    className={hasWrap ? 'px-2 py-1' : 'overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1'}
+                    className={hasWrap ? 'px-2 py-1 whitespace-pre-wrap break-words' : 'px-2 py-1 break-words'}
                     title={cell.value}
                   >
                     {cell.alignment?.textRotation && cell.alignment.textRotation !== 255 ? (
@@ -255,6 +255,7 @@ export function XlsxPreview() {
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const activePreviewFilePath = useUIStore((s) => s.activePreviewFilePath);
   const [activeSheetName, setActiveSheetName] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['office', activeWorkspaceId, activePreviewFilePath],
@@ -288,15 +289,38 @@ export function XlsxPreview() {
         <span className="text-xs text-muted-foreground truncate flex-1 mr-2">
           {fileName}
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => openWithSystemApp(activePreviewFilePath!, activeWorkspaceId!)}
-          className="h-7 text-xs gap-1.5"
-          title="Open with system app"
-        >
-          <ExternalLink className="h-3 w-3" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
+            className="h-7 w-7 p-0"
+            title="Zoom out"
+          >
+            <ZoomOut className="h-3 w-3" />
+          </Button>
+          <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setZoom((z) => Math.min(3, z + 0.25))}
+            className="h-7 w-7 p-0"
+            title="Zoom in"
+          >
+            <ZoomIn className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openWithSystemApp(activePreviewFilePath!, activeWorkspaceId!)}
+            className="h-7 text-xs gap-1.5"
+            title="Open with system app"
+          >
+            <ExternalLink className="h-3 w-3" />
+          </Button>
+        </div>
       </div>
 
       {/* Sheet tabs */}
@@ -319,7 +343,7 @@ export function XlsxPreview() {
       )}
 
       {/* Table */}
-      <div className="flex-1 overflow-auto bg-white" data-sheet-name={activeSheet.name}>
+      <div className="flex-1 overflow-auto bg-white" data-sheet-name={activeSheet.name} style={{ zoom }}>
         {activeSheet && activeSheet.rows.length > 0 ? (
           <SheetView sheet={activeSheet} />
         ) : (

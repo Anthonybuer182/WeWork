@@ -2,19 +2,26 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
-import { Presentation, ExternalLink } from 'lucide-react';
+import { Presentation, ExternalLink, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { openWithSystemApp } from '@/lib/utils';
 import type { PptxSlide, PptxShape, PptxParagraph, PptxTextRun, PptxTableCell, PptxTable } from '@pi/sdk-wrapper';
 
-function shapeStyle(shape: PptxShape, slideWidth: number, slideHeight: number): React.CSSProperties {
+/** EMU to pixel conversion (1 EMU = 1/9525 px at 96 DPI) */
+const EMU_PER_PX = 9525;
+
+function emuToPx(emu: number): number {
+  return emu / EMU_PER_PX;
+}
+
+function shapeStyle(shape: PptxShape): React.CSSProperties {
   return {
     position: 'absolute',
-    left: `${(shape.x / slideWidth) * 100}%`,
-    top: `${(shape.y / slideHeight) * 100}%`,
-    width: `${(shape.width / slideWidth) * 100}%`,
-    height: `${(shape.height / slideHeight) * 100}%`,
+    left: `${emuToPx(shape.x)}px`,
+    top: `${emuToPx(shape.y)}px`,
+    width: `${emuToPx(shape.width)}px`,
+    height: `${emuToPx(shape.height)}px`,
   };
 }
 
@@ -100,13 +107,18 @@ function SlideBackground({ slide }: { slide: PptxSlide }) {
   return null;
 }
 
-function TextShape({ shape, slideWidth, slideHeight }: { shape: PptxShape; slideWidth: number; slideHeight: number }) {
+function TextShape({ shape }: { shape: PptxShape }) {
+  const baseStyle = shapeStyle(shape);
+  // Use min-height instead of fixed height to prevent text line clipping.
+  // The slide container's overflow:hidden will clip at the slide boundary.
   const style: React.CSSProperties = {
-    ...shapeStyle(shape, slideWidth, slideHeight),
+    ...baseStyle,
+    minHeight: baseStyle.height,
+    height: 'auto',
     ...fillStyle(shape.fill),
     ...outlineStyle(shape.outline),
     ...geometryStyle(shape.geometry),
-    overflow: 'hidden',
+    overflow: 'visible',
     display: 'flex',
     flexDirection: 'column',
   };
@@ -196,11 +208,11 @@ function RunView({ run }: { run: PptxTextRun }) {
   return <span style={style}>{run.text}</span>;
 }
 
-function ImageShape({ shape, slideWidth, slideHeight }: { shape: PptxShape; slideWidth: number; slideHeight: number }) {
+function ImageShape({ shape }: { shape: PptxShape }) {
   if (!shape.image) return null;
 
   const style: React.CSSProperties = {
-    ...shapeStyle(shape, slideWidth, slideHeight),
+    ...shapeStyle(shape),
     objectFit: 'fill',
   };
 
@@ -219,9 +231,9 @@ function ImageShape({ shape, slideWidth, slideHeight }: { shape: PptxShape; slid
   );
 }
 
-function GroupShape({ shape, slideWidth, slideHeight }: { shape: PptxShape; slideWidth: number; slideHeight: number }) {
+function GroupShape({ shape }: { shape: PptxShape }) {
   const style: React.CSSProperties = {
-    ...shapeStyle(shape, slideWidth, slideHeight),
+    ...shapeStyle(shape),
   };
 
   if (shape.rotation) {
@@ -232,19 +244,19 @@ function GroupShape({ shape, slideWidth, slideHeight }: { shape: PptxShape; slid
   return (
     <div style={style}>
       {shape.children?.map((child, i) => (
-        <ShapeView key={i} shape={child} slideWidth={slideWidth} slideHeight={slideHeight} />
+        <ShapeView key={i} shape={child} />
       ))}
     </div>
   );
 }
 
-function TableShape({ shape, slideWidth, slideHeight }: { shape: PptxShape; slideWidth: number; slideHeight: number }) {
+function TableShape({ shape }: { shape: PptxShape }) {
   if (!shape.table) return null;
   const table = shape.table;
   const totalColWidth = table.columns.reduce((sum, col) => sum + col.width, 0);
 
   const containerStyle: React.CSSProperties = {
-    ...shapeStyle(shape, slideWidth, slideHeight),
+    ...shapeStyle(shape),
     overflow: 'hidden',
   };
 
@@ -294,33 +306,54 @@ function TableShape({ shape, slideWidth, slideHeight }: { shape: PptxShape; slid
   );
 }
 
-function ShapeView({ shape, slideWidth, slideHeight }: { shape: PptxShape; slideWidth: number; slideHeight: number }) {
-  if (shape.type === 'image') return <ImageShape shape={shape} slideWidth={slideWidth} slideHeight={slideHeight} />;
-  if (shape.type === 'group') return <GroupShape shape={shape} slideWidth={slideWidth} slideHeight={slideHeight} />;
-  if (shape.type === 'table') return <TableShape shape={shape} slideWidth={slideWidth} slideHeight={slideHeight} />;
-  return <TextShape shape={shape} slideWidth={slideWidth} slideHeight={slideHeight} />;
+function ShapeView({ shape }: { shape: PptxShape }) {
+  if (shape.type === 'image') return <ImageShape shape={shape} />;
+  if (shape.type === 'group') return <GroupShape shape={shape} />;
+  if (shape.type === 'table') return <TableShape shape={shape} />;
+  return <TextShape shape={shape} />;
 }
 
 function SlideView({
   slide,
   slideWidth,
   slideHeight,
+  scale,
 }: {
   slide: PptxSlide;
   slideWidth: number;
   slideHeight: number;
+  scale: number;
 }) {
-  const aspectRatio = slideWidth / slideHeight;
+  const nativeWidth = emuToPx(slideWidth);
+  const nativeHeight = emuToPx(slideHeight);
+  // Add a 2px buffer to prevent sub-pixel clipping from transform:scale()
+  const wrapperWidth = Math.ceil(nativeWidth * scale) + 2;
+  const wrapperHeight = Math.ceil(nativeHeight * scale) + 2;
 
   return (
     <div
-      className="relative w-full bg-white shadow-xl rounded-sm overflow-hidden mx-auto"
-      style={{ aspectRatio: `${aspectRatio}`, maxWidth: '900px' }}
+      style={{
+        width: `${wrapperWidth}px`,
+        height: `${wrapperHeight}px`,
+        overflow: 'visible',
+        paddingBottom: '0px',
+      }}
+      className="mx-auto"
     >
-      <SlideBackground slide={slide} />
-      {slide.shapes.map((shape, i) => (
-        <ShapeView key={i} shape={shape} slideWidth={slideWidth} slideHeight={slideHeight} />
-      ))}
+      <div
+        className="relative bg-white shadow-xl rounded-sm overflow-hidden"
+        style={{
+          width: `${nativeWidth}px`,
+          height: `${nativeHeight}px`,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+        }}
+      >
+        <SlideBackground slide={slide} />
+        {slide.shapes.map((shape, i) => (
+          <ShapeView key={i} shape={shape} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -334,108 +367,117 @@ function MiniSlideView({
   slideWidth: number;
   slideHeight: number;
 }) {
-  const aspectRatio = slideWidth / slideHeight;
+  const nativeWidth = emuToPx(slideWidth);
+  const nativeHeight = emuToPx(slideHeight);
+  const thumbScale = Math.min(140 / nativeWidth, 1);
+  // Add a 2px buffer to prevent sub-pixel clipping from transform:scale()
+  const wrapperWidth = Math.ceil(nativeWidth * thumbScale) + 2;
+  const wrapperHeight = Math.ceil(nativeHeight * thumbScale) + 2;
 
   return (
     <div
-      className="relative w-full bg-white rounded-sm overflow-hidden border"
-      style={{ aspectRatio: `${aspectRatio}` }}
+      style={{
+        width: `${wrapperWidth}px`,
+        height: `${wrapperHeight}px`,
+        overflow: 'visible',
+      }}
+      className="mx-auto"
     >
-      <SlideBackground slide={slide} />
-      {/* Render simplified shapes for thumbnail */}
-      {slide.shapes.map((shape, i) => {
-        const baseStyle = shapeStyle(shape, slideWidth, slideHeight);
+      <div
+        className="relative bg-white rounded-sm overflow-hidden border"
+        style={{
+          width: `${nativeWidth}px`,
+          height: `${nativeHeight}px`,
+          transform: `scale(${thumbScale})`,
+          transformOrigin: 'top left',
+        }}
+      >
+        <SlideBackground slide={slide} />
+        {/* Render simplified shapes for thumbnail */}
+        {slide.shapes.map((shape, i) => {
+          const baseStyle = shapeStyle(shape);
 
-        // Image shapes
-        if (shape.type === 'image' && shape.image) {
-          return (
-            <img
-              key={i}
-              src={`data:${shape.image.mimeType};base64,${shape.image.data}`}
-              alt=""
-              style={{ ...baseStyle, objectFit: 'fill' }}
-            />
-          );
-        }
+          // Image shapes
+          if (shape.type === 'image' && shape.image) {
+            return (
+              <img
+                key={i}
+                src={`data:${shape.image.mimeType};base64,${shape.image.data}`}
+                alt=""
+                style={{ ...baseStyle, objectFit: 'fill' }}
+              />
+            );
+          }
 
-        // Group shapes: render children recursively
-        if (shape.type === 'group' && shape.children) {
-          return (
-            <div key={i} style={baseStyle}>
-              {shape.children.map((child, ci) => {
-                const childStyle = shapeStyle(child, slideWidth, slideHeight);
-                if (child.type === 'image' && child.image) {
+          // Group shapes: render children recursively
+          if (shape.type === 'group' && shape.children) {
+            return (
+              <div key={i} style={baseStyle}>
+                {shape.children.map((child, ci) => {
+                  const childStyle = shapeStyle(child);
+                  if (child.type === 'image' && child.image) {
+                    return (
+                      <img
+                        key={ci}
+                        src={`data:${child.image.mimeType};base64,${child.image.data}`}
+                        alt=""
+                        style={{ ...childStyle, objectFit: 'fill' }}
+                      />
+                    );
+                  }
+                  // Render child shapes as colored blocks only (no text in thumbnails)
+                  const fillBg = fillStyle(child.fill);
+                  const outlineBg = outlineStyle(child.outline);
+                  if (!fillBg.backgroundColor && !fillBg.background && !outlineBg.border) return null;
                   return (
-                    <img
+                    <div
                       key={ci}
-                      src={`data:${child.image.mimeType};base64,${child.image.data}`}
-                      alt=""
-                      style={{ ...childStyle, objectFit: 'fill' }}
+                      className="absolute"
+                      style={{
+                        ...childStyle,
+                        ...fillBg,
+                        ...outlineBg,
+                        ...geometryStyle(child.geometry),
+                      }}
                     />
                   );
-                }
-                // Apply fill to child shapes in thumbnail
-                const fillBg = fillStyle(child.fill);
-                const text = child.paragraphs
-                  ?.map((p) => p.runs.map((r) => r.text).join(''))
-                  .join(' ');
-                return (
-                  <div
-                    key={ci}
-                    className="absolute overflow-hidden text-[6px] leading-tight"
-                    style={{
-                      ...childStyle,
-                      ...fillBg,
-                      color: child.paragraphs?.[0]?.runs[0]?.color
-                        ? `#${child.paragraphs[0].runs[0].color}`
-                        : undefined,
-                    }}
-                  >
-                    {text}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        }
+                })}
+              </div>
+            );
+          }
 
-        // Table shapes: render as colored blocks
-        if (shape.type === 'table' && shape.table) {
+          // Table shapes: render as colored blocks
+          if (shape.type === 'table' && shape.table) {
+            return (
+              <div
+                key={i}
+                style={{
+                  ...baseStyle,
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                }}
+              />
+            );
+          }
+
+          // Text shapes: render as colored blocks only (no text in thumbnails)
+          const fillBg = fillStyle(shape.fill);
+          const outlineBg = outlineStyle(shape.outline);
+          if (!fillBg.backgroundColor && !fillBg.background && !outlineBg.border) return null;
           return (
             <div
               key={i}
+              className="absolute"
               style={{
                 ...baseStyle,
-                backgroundColor: '#f0f0f0',
-                border: '1px solid #ccc',
+                ...fillBg,
+                ...outlineBg,
+                ...geometryStyle(shape.geometry),
               }}
             />
           );
-        }
-
-        // Text shapes with fill
-        const fillBg = fillStyle(shape.fill);
-        const text = shape.paragraphs
-          ?.map((p) => p.runs.map((r) => r.text).join(''))
-          .join(' ');
-        if (!text && !fillBg.backgroundColor && !fillBg.background) return null;
-        return (
-          <div
-            key={i}
-            className="absolute overflow-hidden text-[6px] leading-tight"
-            style={{
-              ...baseStyle,
-              ...fillBg,
-              ...geometryStyle(shape.geometry),
-              color: shape.paragraphs?.[0]?.runs[0]?.color
-                ? `#${shape.paragraphs[0].runs[0].color}`
-                : undefined,
-            }}
-          >
-            {text}
-          </div>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 }
@@ -447,12 +489,34 @@ export function PptxPreview() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [activeIdx, setActiveIdx] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const [autoScale, setAutoScale] = useState(1);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['office', activeWorkspaceId, activePreviewFilePath],
     queryFn: () => sdk.file.readOffice(activeWorkspaceId!, activePreviewFilePath!),
     enabled: !!activeWorkspaceId && !!activePreviewFilePath && activePreviewFilePath.endsWith('.pptx'),
   });
+
+  // ResizeObserver: auto-scale slides to fit container width
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || !data || data.doc.type !== 'pptx') return;
+
+    const nativeSlideWidth = emuToPx(data.doc.slideWidth);
+
+    const updateScale = () => {
+      const containerWidth = container.clientWidth - 32; // p-4 = 16px * 2
+      if (nativeSlideWidth > 0) {
+        setAutoScale(Math.min(containerWidth / nativeSlideWidth, 1));
+      }
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [data]);
 
   const scrollToSlide = useCallback((index: number) => {
     const el = slideRefs.current.get(index);
@@ -517,15 +581,38 @@ export function PptxPreview() {
         <span className="text-xs text-muted-foreground mr-2 tabular-nums">
           {activeIdx + 1} / {slides.length}
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => openWithSystemApp(activePreviewFilePath!, activeWorkspaceId!)}
-          className="h-7 text-xs gap-1.5"
-          title="Open with system app"
-        >
-          <ExternalLink className="h-3 w-3" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
+            className="h-7 w-7 p-0"
+            title="Zoom out"
+          >
+            <ZoomOut className="h-3 w-3" />
+          </Button>
+          <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setZoom((z) => Math.min(3, z + 0.25))}
+            className="h-7 w-7 p-0"
+            title="Zoom in"
+          >
+            <ZoomIn className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openWithSystemApp(activePreviewFilePath!, activeWorkspaceId!)}
+            className="h-7 text-xs gap-1.5"
+            title="Open with system app"
+          >
+            <ExternalLink className="h-3 w-3" />
+          </Button>
+        </div>
       </div>
 
       {/* Main content: thumbnails + slide list */}
@@ -565,9 +652,9 @@ export function PptxPreview() {
               <div className="text-xs text-muted-foreground mb-2">
                 Slide {i + 1} of {slides.length}
               </div>
-              <SlideView slide={slide} slideWidth={slideWidth} slideHeight={slideHeight} />
+              <SlideView slide={slide} slideWidth={slideWidth} slideHeight={slideHeight} scale={autoScale * zoom} />
               {slide.notes && (
-                <div className="mt-2 max-w-[900px] w-full text-xs text-muted-foreground bg-muted/30 rounded p-2">
+                <div className="mt-2 w-full text-xs text-muted-foreground bg-muted/30 rounded p-2">
                   <span className="font-medium">Notes:</span> {slide.notes}
                 </div>
               )}

@@ -583,9 +583,10 @@ function parsePptx(buffer: Buffer): PptxContent {
   // Parse theme colors for schemeClr resolution
   const themeColors = parseThemeColors(zip);
 
-  // Read presentation.xml for slide dimensions
+  // Read presentation.xml for slide dimensions and default text styles
   let slideWidth = 9144000; // default 10in
   let slideHeight = 6858000; // default 7.5in
+  let globalDefaultFontSize: number | undefined;
   const presXmlEntry = entries.find((e) => e.entryName === 'ppt/presentation.xml');
   if (presXmlEntry) {
     const presXml = presXmlEntry.getData().toString('utf-8');
@@ -593,6 +594,15 @@ function parsePptx(buffer: Buffer): PptxContent {
     if (sldSzMatch) {
       slideWidth = parseInt(sldSzMatch[1]);
       slideHeight = parseInt(sldSzMatch[2]);
+    }
+    // Parse defaultTextStyle for global default font size fallback
+    const dtsMatch = presXml.match(/<p:defaultTextStyle[^>]*>([\s\S]*?)<\/p:defaultTextStyle>/);
+    if (dtsMatch) {
+      const lvl1Match = dtsMatch[1].match(/<a:lvl1pPr[^>]*>[\s\S]*?<a:defRPr[^>]*?(?:\/>|>)/);
+      if (lvl1Match) {
+        const szMatch = lvl1Match[0].match(/sz="(\d+)"/);
+        if (szMatch) globalDefaultFontSize = parseInt(szMatch[1]) / 100;
+      }
     }
   }
 
@@ -620,7 +630,7 @@ function parsePptx(buffer: Buffer): PptxContent {
   for (const entry of slideEntries) {
     const index = parseInt(entry.entryName.match(/slide(\d+)/)?.[1] ?? '0');
     const xml = entry.getData().toString('utf-8');
-    const slide = parseSlideXml(xml, index, zip, entries, themeColors);
+    const slide = parseSlideXml(xml, index, zip, entries, themeColors, globalDefaultFontSize);
     slide.notes = notesMap.get(index) ?? '';
     slides.push(slide);
   }
@@ -628,7 +638,7 @@ function parsePptx(buffer: Buffer): PptxContent {
   return { type: 'pptx', slideWidth, slideHeight, slides };
 }
 
-function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], themeColors: Map<string, string>): PptxSlide {
+function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], themeColors: Map<string, string>, globalDefaultFontSize?: number): PptxSlide {
   const shapes: PptxShape[] = [];
 
   // Parse background
@@ -655,12 +665,24 @@ function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], 
   const slideRelsPath = `ppt/slides/_rels/slide${index}.xml.rels`;
   const relsEntry = entries.find((e) => e.entryName === slideRelsPath);
   const relsMap = new Map<string, string>(); // rId -> target path
+  let layoutPlaceholderMap: Map<string, {x: number; y: number; cx: number; cy: number}> | undefined;
   if (relsEntry) {
     const relsXml = relsEntry.getData().toString('utf-8');
     const relRegex = /<Relationship\s+Id="([^"]+)"[^>]*Target="([^"]+)"/g;
     let rm: RegExpExecArray | null;
     while ((rm = relRegex.exec(relsXml)) !== null) {
       relsMap.set(rm[1], rm[2]);
+    }
+    // Find layout relationship and parse placeholder positions for xfrm fallback
+    const layoutMatch = relsXml.match(/<Relationship\s+[^>]*Type="[^"]*slideLayout"[^>]*Target="([^"]+)"/);
+    if (layoutMatch) {
+      const layoutTarget = layoutMatch[1];
+      const layoutName = layoutTarget.split('/').pop()!;
+      const layoutPath = `ppt/slideLayouts/${layoutName}`;
+      const layoutEntry = entries.find((e) => e.entryName === layoutPath);
+      if (layoutEntry) {
+        layoutPlaceholderMap = parseLayoutPlaceholders(layoutEntry.getData().toString('utf-8'));
+      }
     }
   }
 
@@ -669,7 +691,7 @@ function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], 
   let spMatch: RegExpExecArray | null;
   while ((spMatch = spRegex.exec(xml)) !== null) {
     const spXml = spMatch[1];
-    const shape = parseTextShape(spXml, themeColors);
+    const shape = parseTextShape(spXml, themeColors, globalDefaultFontSize, layoutPlaceholderMap);
     if (shape) shapes.push(shape);
   }
 
@@ -687,7 +709,7 @@ function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], 
   let grpMatch: RegExpExecArray | null;
   while ((grpMatch = grpSpRegex.exec(xml)) !== null) {
     const grpXml = grpMatch[1];
-    const groupShape = parseGroupShape(grpXml, relsMap, zip, themeColors);
+    const groupShape = parseGroupShape(grpXml, relsMap, zip, themeColors, globalDefaultFontSize);
     if (groupShape) shapes.push(groupShape);
   }
 
@@ -696,16 +718,56 @@ function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], 
   let gfMatch: RegExpExecArray | null;
   while ((gfMatch = gfRegex.exec(xml)) !== null) {
     const gfXml = gfMatch[1];
-    const tableShape = parseTableShape(gfXml, themeColors);
+    const tableShape = parseTableShape(gfXml, themeColors, globalDefaultFontSize);
     if (tableShape) shapes.push(tableShape);
   }
 
   return { index, background, shapes, notes: '' };
 }
 
-function parseTextShape(spXml: string, themeColors: Map<string, string>): PptxShape | null {
+/** Parse slide layout XML to extract placeholder positions keyed by "type:idx" */
+function parseLayoutPlaceholders(layoutXml: string): Map<string, {x: number; y: number; cx: number; cy: number}> {
+  const map = new Map<string, {x: number; y: number; cx: number; cy: number}>();
+  const spRegex = /<p:sp[^>]*>([\s\S]*?)<\/p:sp>/g;
+  let spMatch: RegExpExecArray | null;
+  while ((spMatch = spRegex.exec(layoutXml)) !== null) {
+    const spXml = spMatch[1];
+    const phMatch = spXml.match(/<p:ph\s+type="([^"]+)"\s+idx="(\d+)"/);
+    if (!phMatch) continue;
+    const xfrmMatch = spXml.match(/<a:xfrm[^>]*>([\s\S]*?)<\/a:xfrm>/);
+    if (!xfrmMatch) continue;
+    const offMatch = xfrmMatch[1].match(/<a:off\s+x="(\d+)"\s+y="(\d+)"/);
+    const extMatch = xfrmMatch[1].match(/<a:ext\s+cx="(\d+)"\s+cy="(\d+)"/);
+    if (!offMatch || !extMatch) continue;
+    const key = `${phMatch[1]}:${phMatch[2]}`;
+    map.set(key, {
+      x: parseInt(offMatch[1]),
+      y: parseInt(offMatch[2]),
+      cx: parseInt(extMatch[1]),
+      cy: parseInt(extMatch[2]),
+    });
+  }
+  return map;
+}
+
+function parseTextShape(spXml: string, themeColors: Map<string, string>, globalDefaultFontSize?: number, layoutPlaceholderMap?: Map<string, {x: number; y: number; cx: number; cy: number}>): PptxShape | null {
   // Extract position and size
-  const xfrmMatch = spXml.match(/<a:xfrm[^>]*>([\s\S]*?)<\/a:xfrm>/);
+  let xfrmMatch = spXml.match(/<a:xfrm[^>]*>([\s\S]*?)<\/a:xfrm>/);
+
+  // If shape has no xfrm, try to inherit from slide layout placeholder
+  if (!xfrmMatch && layoutPlaceholderMap) {
+    const phMatch = spXml.match(/<p:ph\s+type="([^"]+)"\s+idx="(\d+)"/);
+    if (phMatch) {
+      const phKey = `${phMatch[1]}:${phMatch[2]}`;
+      const layoutXfrm = layoutPlaceholderMap.get(phKey);
+      if (layoutXfrm) {
+        // Construct a synthetic xfrm block for consistent parsing
+        const syntheticXfrm = `<a:xfrm><a:off x="${layoutXfrm.x}" y="${layoutXfrm.y}"/><a:ext cx="${layoutXfrm.cx}" cy="${layoutXfrm.cy}"/></a:xfrm>`;
+        xfrmMatch = syntheticXfrm.match(/<a:xfrm[^>]*>([\s\S]*?)<\/a:xfrm>/);
+      }
+    }
+  }
+
   if (!xfrmMatch) return null;
 
   const offMatch = xfrmMatch[1].match(/<a:off\s+x="(-?\d+)"\s+y="(-?\d+)"/);
@@ -761,7 +823,7 @@ function parseTextShape(spXml: string, themeColors: Map<string, string>): PptxSh
     }
   }
 
-  const paragraphs = parseParagraphs(txBodyMatch[1], themeColors);
+  const paragraphs = parseParagraphs(txBodyMatch[1], themeColors, globalDefaultFontSize);
 
   return { type: 'text', x, y, width, height, paragraphs, rotation, fill, outline, geometry, textAnchor };
 }
@@ -838,7 +900,7 @@ function parseShapeOutline(spPrXml: string, themeColors: Map<string, string>): P
   return outline;
 }
 
-function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>): PptxParagraph[] {
+function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>, globalDefaultFontSize?: number): PptxParagraph[] {
   const paragraphs: PptxParagraph[] = [];
   const pRegex = /<a:p[^>]*>([\s\S]*?)<\/a:p>/g;
   let pMatch: RegExpExecArray | null;
@@ -846,14 +908,22 @@ function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>): P
   while ((pMatch = pRegex.exec(txBodyXml)) !== null) {
     const pXml = pMatch[1];
     const paragraph: PptxParagraph = { runs: [] };
+    let defaultRun: Partial<PptxTextRun> | undefined;
 
     // Paragraph properties
     const pPrMatch = pXml.match(/<a:pPr[^>]*>([\s\S]*?)<\/a:pPr>/) || pXml.match(/<a:pPr[^>]*\/>/);
     if (pPrMatch) {
       const pPrXml = pPrMatch[1] || pPrMatch[0];
-      const algnMatch = pPrXml.match(/algn="(left|center|right|justify)"/);
-      if (algnMatch) paragraph.alignment = algnMatch[1] as any;
-      const lvlMatch = pPrXml.match(/lvl="(\d+)"/);
+      // Alignment: support abbreviated values (ctr=center, l=left, r=right, just=justify, dist/thaiDist=justify)
+      // Must search in pPrMatch[0] (the full tag), not pPrXml (inner content), because algn is on the opening tag
+      const algnMatch = pPrMatch[0].match(/algn="([^"]+)"/);
+      if (algnMatch) {
+        const val = algnMatch[1];
+        paragraph.alignment = val === 'ctr' ? 'center' : val === 'l' ? 'left' : val === 'r' ? 'right'
+          : val === 'just' || val === 'dist' || val === 'thaiDist' ? 'justify'
+            : (val === 'left' || val === 'center' || val === 'right' || val === 'justify') ? val : undefined;
+      }
+      const lvlMatch = pPrMatch[0].match(/lvl="(\d+)"/);
       if (lvlMatch) paragraph.level = parseInt(lvlMatch[1]);
 
       // Line spacing: <a:lnSpc><a:spcPct val="150000"/></a:lnSpc>
@@ -884,6 +954,33 @@ function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>): P
           paragraph.bullet = { type: 'autoNum', numType: buAutoNumMatch[1] };
         }
       }
+
+      // Default run properties <a:defRPr> - used as fallback when individual runs lack formatting
+      const defRPrMatch = pPrXml.match(/<a:defRPr[^>]*>([\s\S]*?)<\/a:defRPr>/) || pPrXml.match(/<a:defRPr[^>]*\/>/);
+      if (defRPrMatch) {
+        const defRPrXml = defRPrMatch[0]; // Contains attributes + nested elements
+        defaultRun = {};
+        const dSzMatch = defRPrXml.match(/sz="(\d+)"/);
+        if (dSzMatch) defaultRun.fontSize = parseInt(dSzMatch[1]) / 100;
+        const dBoldMatch = defRPrXml.match(/b="(\d)"/);
+        if (dBoldMatch) defaultRun.bold = dBoldMatch[1] === '1';
+        const dItalicMatch = defRPrXml.match(/i="(\d)"/);
+        if (dItalicMatch) defaultRun.italic = dItalicMatch[1] === '1';
+        const dUnderlineMatch = defRPrXml.match(/u="(\w+)"/);
+        if (dUnderlineMatch && dUnderlineMatch[1] !== 'none') defaultRun.underline = true;
+        const dStrikeMatch = defRPrXml.match(/strike="(\w+)"/);
+        if (dStrikeMatch && dStrikeMatch[1] !== 'noStrike') defaultRun.strikethrough = true;
+        const dColor = resolveColor(defRPrXml, themeColors);
+        if (dColor) defaultRun.color = dColor;
+        const dLatinMatch = defRPrXml.match(/<a:latin\s+typeface="([^"]+)"/);
+        if (dLatinMatch) defaultRun.fontFamily = dLatinMatch[1];
+      }
+    }
+
+    // Apply global default font size from presentation.xml's defaultTextStyle as last-resort fallback
+    if (globalDefaultFontSize !== undefined) {
+      if (!defaultRun) defaultRun = {};
+      if (defaultRun.fontSize === undefined) defaultRun.fontSize = globalDefaultFontSize;
     }
 
     // Text runs <a:r>
@@ -891,7 +988,7 @@ function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>): P
     let rMatch: RegExpExecArray | null;
     while ((rMatch = rRegex.exec(pXml)) !== null) {
       const rXml = rMatch[1];
-      const run = parseTextRun(rXml, themeColors);
+      const run = parseTextRun(rXml, themeColors, defaultRun);
       if (run.text) paragraph.runs.push(run);
     }
 
@@ -908,7 +1005,7 @@ function parseParagraphs(txBodyXml: string, themeColors: Map<string, string>): P
   return paragraphs;
 }
 
-function parseTextRun(rXml: string, themeColors: Map<string, string>): PptxTextRun {
+function parseTextRun(rXml: string, themeColors: Map<string, string>, defaults?: Partial<PptxTextRun>): PptxTextRun {
   const run: PptxTextRun = { text: '' };
 
   // Run properties <a:rPr>
@@ -945,6 +1042,17 @@ function parseTextRun(rXml: string, themeColors: Map<string, string>): PptxTextR
     if (color) run.color = color;
     const latinMatch = rXml.match(/<a:latin\s+typeface="([^"]+)"/);
     if (latinMatch) run.fontFamily = latinMatch[1];
+  }
+
+  // Apply default run properties from <a:defRPr> as fallbacks
+  if (defaults) {
+    if (run.fontSize === undefined && defaults.fontSize !== undefined) run.fontSize = defaults.fontSize;
+    if (run.color === undefined && defaults.color !== undefined) run.color = defaults.color;
+    if (run.bold === undefined && defaults.bold !== undefined) run.bold = defaults.bold;
+    if (run.italic === undefined && defaults.italic !== undefined) run.italic = defaults.italic;
+    if (run.underline === undefined && defaults.underline !== undefined) run.underline = defaults.underline;
+    if (run.strikethrough === undefined && defaults.strikethrough !== undefined) run.strikethrough = defaults.strikethrough;
+    if (run.fontFamily === undefined && defaults.fontFamily !== undefined) run.fontFamily = defaults.fontFamily;
   }
 
   // Text content <a:t>
@@ -1010,7 +1118,7 @@ function parsePicShape(picXml: string, relsMap: Map<string, string>, zip: AdmZip
 }
 
 /** Parse group shape: extract position, child coordinate transform, and nested shapes */
-function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZip, themeColors: Map<string, string>): PptxShape | null {
+function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZip, themeColors: Map<string, string>, globalDefaultFontSize?: number): PptxShape | null {
   const xfrmMatch = grpXml.match(/<a:xfrm[^>]*>([\s\S]*?)<\/a:xfrm>/);
   if (!xfrmMatch) return null;
 
@@ -1039,7 +1147,13 @@ function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZ
   const spRegex = /<p:sp[^>]*>([\s\S]*?)<\/p:sp>/g;
   let spMatch: RegExpExecArray | null;
   while ((spMatch = spRegex.exec(grpXml)) !== null) {
-    const shape = parseTextShape(spMatch[1], themeColors);
+    const spXml = spMatch[1];
+    // Skip template placeholder shapes that have noFill and no outline
+    // (These are WPS/PPT template placeholders that duplicate text from top-level shapes)
+    if (/<a:noFill/.test(spXml) && !/<a:ln\b/.test(spXml)) {
+      continue;
+    }
+    const shape = parseTextShape(spXml, themeColors, globalDefaultFontSize);
     if (shape) {
       shape.x = groupX + (shape.x - chOffX) * scaleX;
       shape.y = groupY + (shape.y - chOffY) * scaleY;
@@ -1067,7 +1181,7 @@ function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZ
 }
 
 /** Parse table shape from <p:graphicFrame> */
-function parseTableShape(gfXml: string, themeColors: Map<string, string>): PptxShape | null {
+function parseTableShape(gfXml: string, themeColors: Map<string, string>, globalDefaultFontSize?: number): PptxShape | null {
   // Extract position from <p:xfrm>
   const xfrmMatch = gfXml.match(/<p:xfrm[^>]*>([\s\S]*?)<\/p:xfrm>/);
   if (!xfrmMatch) return null;
@@ -1120,7 +1234,7 @@ function parseTableShape(gfXml: string, themeColors: Map<string, string>): PptxS
       const txBodyMatch = tcXml.match(/<a:txBody[^>]*>([\s\S]*?)<\/a:txBody>/);
       let parsedParagraphs: PptxParagraph[] = [];
       if (txBodyMatch) {
-        parsedParagraphs = parseParagraphs(txBodyMatch[1], themeColors);
+        parsedParagraphs = parseParagraphs(txBodyMatch[1], themeColors, globalDefaultFontSize);
         text = parsedParagraphs
           .map((p) => p.runs.map((r) => r.text).join(''))
           .join('\n');

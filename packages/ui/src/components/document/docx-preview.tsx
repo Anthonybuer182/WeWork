@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
-import { Eye, FileText, AlignLeft, ExternalLink } from 'lucide-react';
+import { Eye, FileText, AlignLeft, ExternalLink, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { openWithSystemApp } from '@/lib/utils';
@@ -24,6 +24,7 @@ export function DocxPreview() {
   const [textContent, setTextContent] = useState('');
   const [rendering, setRendering] = useState(true);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const renderedRef = useRef(false);
@@ -203,6 +204,32 @@ export function DocxPreview() {
             <AlignLeft className="h-3 w-3" />
             Text
           </Button>
+          {mode === 'preview' && (
+            <>
+              <div className="w-px h-5 bg-border mx-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
+                className="h-7 w-7 p-0"
+                title="Zoom out"
+              >
+                <ZoomOut className="h-3 w-3" />
+              </Button>
+              <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom((z) => Math.min(3, z + 0.25))}
+                className="h-7 w-7 p-0"
+                title="Zoom in"
+              >
+                <ZoomIn className="h-3 w-3" />
+              </Button>
+            </>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -245,8 +272,8 @@ export function DocxPreview() {
             <div className="flex justify-center relative">
               <div
                 ref={containerRef}
-                className="docx-container bg-white shadow-xl mx-auto"
-                style={{ minHeight: '100%' }}
+                className="docx-container mx-auto"
+                style={{ minHeight: '100%', zoom }}
               />
               {rendering && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/50">
