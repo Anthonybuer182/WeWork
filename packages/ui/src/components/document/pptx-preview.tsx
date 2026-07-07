@@ -358,6 +358,163 @@ function SlideView({
   );
 }
 
+/**
+ * Simplified text shape renderer for thumbnails.
+ * Renders actual text content (not just colored blocks) so thumbnails look like
+ * real slide previews. Text is rendered at native size and scaled down by CSS
+ * transform, keeping the layout proportional.
+ */
+function MiniTextShape({ shape }: { shape: PptxShape }) {
+  const baseStyle = shapeStyle(shape);
+  const minH = baseStyle.height;
+  const style: React.CSSProperties = {
+    ...baseStyle,
+    minHeight: minH,
+    height: 'auto',
+    ...fillStyle(shape.fill),
+    ...outlineStyle(shape.outline),
+    ...geometryStyle(shape.geometry),
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '2px 4px',
+  };
+
+  if (shape.textAnchor === 'middle') {
+    style.justifyContent = 'center';
+  } else if (shape.textAnchor === 'bottom') {
+    style.justifyContent = 'flex-end';
+  }
+
+  if (shape.rotation) {
+    style.transform = `rotate(${shape.rotation}deg)`;
+    style.transformOrigin = 'center';
+  }
+
+  return (
+    <div style={style}>
+      {shape.paragraphs?.slice(0, 3).map((para, pi) => {
+        const pStyle: React.CSSProperties = {
+          margin: 0,
+          padding: 0,
+          textAlign: para.alignment ?? 'left',
+          lineHeight: 1.2,
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+        };
+        if (para.level && para.level > 0) {
+          pStyle.marginLeft = `${para.level * 16}px`;
+        }
+
+        let bulletPrefix = '';
+        if (para.bullet) {
+          if (para.bullet.type === 'char' && para.bullet.char) {
+            bulletPrefix = para.bullet.char + ' ';
+          } else if (para.bullet.type === 'autoNum') {
+            bulletPrefix = '\u2022 ';
+          }
+        }
+
+        return (
+          <p key={pi} style={pStyle}>
+            {bulletPrefix && <span>{bulletPrefix}</span>}
+            {para.runs.slice(0, 2).map((run, ri) => {
+              const rStyle: React.CSSProperties = {};
+              if (run.fontSize) rStyle.fontSize = `${run.fontSize}pt`;
+              if (run.color) rStyle.color = `#${run.color}`;
+              if (run.bold) rStyle.fontWeight = 'bold';
+              if (run.italic) rStyle.fontStyle = 'italic';
+              return (
+                <span key={ri} style={rStyle}>
+                  {run.text}
+                </span>
+              );
+            })}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Recursively render shapes for the mini/thumbnail view, showing real text content. */
+function MiniShapeList({ shapes }: { shapes: PptxShape[] }) {
+  return (
+    <>
+      {shapes.map((shape, i) => {
+        // Image shapes
+        if (shape.type === 'image' && shape.image) {
+          return (
+            <img
+              key={i}
+              src={`data:${shape.image.mimeType};base64,${shape.image.data}`}
+              alt=""
+              style={{ ...shapeStyle(shape), objectFit: 'fill' }}
+            />
+          );
+        }
+
+        // Group shapes: recurse into children
+        if (shape.type === 'group' && shape.children) {
+          return (
+            <div key={i} style={shapeStyle(shape)}>
+              <MiniShapeList shapes={shape.children} />
+            </div>
+          );
+        }
+
+        // Table shapes: simplified table with text
+        if (shape.type === 'table' && shape.table) {
+          return (
+            <div
+              key={i}
+              style={{
+                ...shapeStyle(shape),
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+            >
+              {shape.table.rows.slice(0, 4).map((row, ri) => (
+                <div
+                  key={ri}
+                  style={{
+                    display: 'flex',
+                    flex: 1,
+                    height: row.height ? `${row.height / 9525}px` : undefined,
+                  }}
+                >
+                  {row.cells.slice(0, 4).map((cell, ci) => (
+                    <div
+                      key={ci}
+                      style={{
+                        flex: 1,
+                        border: '0.5px solid #ccc',
+                        padding: '1px 2px',
+                        fontSize: '6pt',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        backgroundColor: cell.fill ? `#${cell.fill}` : undefined,
+                      }}
+                    >
+                      {cell.text || '\u00A0'}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        // Text shapes (default): render with actual text content
+        return <MiniTextShape key={i} shape={shape} />;
+      })}
+    </>
+  );
+}
+
 function MiniSlideView({
   slide,
   slideWidth,
@@ -394,89 +551,7 @@ function MiniSlideView({
       >
         <SlideBackground slide={slide} />
         {/* Render simplified shapes for thumbnail */}
-        {slide.shapes.map((shape, i) => {
-          const baseStyle = shapeStyle(shape);
-
-          // Image shapes
-          if (shape.type === 'image' && shape.image) {
-            return (
-              <img
-                key={i}
-                src={`data:${shape.image.mimeType};base64,${shape.image.data}`}
-                alt=""
-                style={{ ...baseStyle, objectFit: 'fill' }}
-              />
-            );
-          }
-
-          // Group shapes: render children recursively
-          if (shape.type === 'group' && shape.children) {
-            return (
-              <div key={i} style={baseStyle}>
-                {shape.children.map((child, ci) => {
-                  const childStyle = shapeStyle(child);
-                  if (child.type === 'image' && child.image) {
-                    return (
-                      <img
-                        key={ci}
-                        src={`data:${child.image.mimeType};base64,${child.image.data}`}
-                        alt=""
-                        style={{ ...childStyle, objectFit: 'fill' }}
-                      />
-                    );
-                  }
-                  // Render child shapes as colored blocks only (no text in thumbnails)
-                  const fillBg = fillStyle(child.fill);
-                  const outlineBg = outlineStyle(child.outline);
-                  if (!fillBg.backgroundColor && !fillBg.background && !outlineBg.border) return null;
-                  return (
-                    <div
-                      key={ci}
-                      className="absolute"
-                      style={{
-                        ...childStyle,
-                        ...fillBg,
-                        ...outlineBg,
-                        ...geometryStyle(child.geometry),
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            );
-          }
-
-          // Table shapes: render as colored blocks
-          if (shape.type === 'table' && shape.table) {
-            return (
-              <div
-                key={i}
-                style={{
-                  ...baseStyle,
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                }}
-              />
-            );
-          }
-
-          // Text shapes: render as colored blocks only (no text in thumbnails)
-          const fillBg = fillStyle(shape.fill);
-          const outlineBg = outlineStyle(shape.outline);
-          if (!fillBg.backgroundColor && !fillBg.background && !outlineBg.border) return null;
-          return (
-            <div
-              key={i}
-              className="absolute"
-              style={{
-                ...baseStyle,
-                ...fillBg,
-                ...outlineBg,
-                ...geometryStyle(shape.geometry),
-              }}
-            />
-          );
-        })}
+        <MiniShapeList shapes={slide.shapes} />
       </div>
     </div>
   );
