@@ -189,10 +189,11 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
                 handleQuoteSelection();
                 setQuoteBtnPos(null);
               }}
-              className="h-7 shadow-md"
+              className="h-7 gap-1.5 shadow-md"
               title="Quote to chat (Cmd+Shift+Q)"
             >
               <QuoteIcon className="h-3 w-3" />
+              Quote
             </Button>
           </div>
         )}

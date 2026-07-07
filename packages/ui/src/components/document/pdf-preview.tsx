@@ -27,7 +27,9 @@ function PDFPageCanvas({
   onRendered: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const textLayerRef = useRef<HTMLDivElement>(null);
   const renderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
+  const viewportWidthRef = useRef(0);
   const onRenderedRef = useRef(onRendered);
   onRenderedRef.current = onRendered;
 
@@ -37,7 +39,8 @@ function PDFPageCanvas({
 
     async function render() {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      const textLayerDiv = textLayerRef.current;
+      if (!canvas || !textLayerDiv) return;
       try {
         const page = await pdfDoc!.getPage(pageNum);
         if (cancelled) return;
@@ -46,10 +49,32 @@ function PDFPageCanvas({
         canvas.width = Math.floor(viewport.width * outputScale);
         canvas.height = Math.floor(viewport.height * outputScale);
         canvas.style.width = `${viewport.width}px`;
-        canvas.style.height = 'auto';
+        canvas.style.height = `${viewport.height}px`;
+        viewportWidthRef.current = viewport.width;
         const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined;
         renderTaskRef.current = page.render({ canvas, viewport, transform });
         await renderTaskRef.current.promise;
+        if (cancelled) return;
+
+        // Render text layer for selectable text (enables Quote functionality)
+        try {
+          const textContent = await page.getTextContent();
+          if (cancelled) return;
+          textLayerDiv.innerHTML = '';
+          textLayerDiv.style.setProperty('--total-scale-factor', String(scale));
+          textLayerDiv.style.setProperty('--scale-round-x', '1px');
+          textLayerDiv.style.setProperty('--scale-round-y', '1px');
+          const textLayer = new pdfjsLib.TextLayer({
+            textContentSource: textContent,
+            container: textLayerDiv,
+            viewport,
+          });
+          await textLayer.render();
+          if (cancelled) return;
+        } catch {
+          // Text layer is optional (e.g., scanned PDFs have no text)
+        }
+
         if (!cancelled) {
           onRenderedRef.current();
         }
@@ -66,12 +91,42 @@ function PDFPageCanvas({
     };
   }, [pdfDoc, pageNum, scale]);
 
+  // Sync text layer scale with canvas display size (maxWidth: 100% may shrink canvas)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const textLayerDiv = textLayerRef.current;
+    if (!canvas || !textLayerDiv) return;
+
+    const updateScale = () => {
+      const naturalWidth = viewportWidthRef.current;
+      if (naturalWidth <= 0) return;
+      const displayWidth = canvas.clientWidth;
+      const scaleFactor = displayWidth / naturalWidth;
+      if (scaleFactor > 0 && Math.abs(scaleFactor - 1) > 0.001) {
+        textLayerDiv.style.transform = `scale(${scaleFactor})`;
+      } else {
+        textLayerDiv.style.transform = '';
+      }
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [scale]);
+
   return (
-    <canvas
-      ref={canvasRef}
-      className="shadow-xl bg-white rounded-sm"
-      style={{ maxWidth: '100%', height: 'auto' }}
-    />
+    <div className="relative shadow-xl bg-white rounded-sm inline-block" style={{ maxWidth: '100%' }}>
+      <canvas
+        ref={canvasRef}
+        style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
+      />
+      <div
+        ref={textLayerRef}
+        className="textLayer"
+        style={{ position: 'absolute', top: 0, left: 0 }}
+      />
+    </div>
   );
 }
 
