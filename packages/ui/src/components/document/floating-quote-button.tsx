@@ -17,19 +17,34 @@ export function FloatingQuoteButton({ onQuote, containerRef }: FloatingQuoteButt
     const doc = containerRef?.current?.ownerDocument ?? document;
     let sel = doc.getSelection();
     let text = sel?.toString().trim() ?? '';
+    let fromIframe = false;
     // If empty, try iframe inside container (HTML preview uses iframe)
     if (!text && containerRef?.current) {
       const iframe = containerRef.current.querySelector('iframe');
       if (iframe?.contentDocument) {
         sel = iframe.contentDocument.getSelection();
         text = sel?.toString().trim() ?? '';
+        fromIframe = true;
       }
     }
     if (!sel || text.length < 2) return null;
     const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
     if (!range) return null;
-    const rect = range.getBoundingClientRect();
+    let rect = range.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) return null;
+    // Convert iframe viewport coordinates to main document coordinates
+    if (fromIframe && containerRef?.current) {
+      const iframe = containerRef.current.querySelector('iframe');
+      if (iframe) {
+        const iframeRect = iframe.getBoundingClientRect();
+        rect = new DOMRect(
+          rect.left + iframeRect.left,
+          rect.top + iframeRect.top,
+          rect.width,
+          rect.height,
+        );
+      }
+    }
     return { text, rect };
   }, [containerRef]);
 
@@ -63,24 +78,41 @@ export function FloatingQuoteButton({ onQuote, containerRef }: FloatingQuoteButt
     doc.addEventListener('selectionchange', debouncedUpdate);
     doc.addEventListener('mouseup', debouncedUpdate);
 
-    // Also listen on iframe's document if present
-    let iframeDoc: Document | null = null;
-    if (containerRef?.current) {
-      const iframe = containerRef.current.querySelector('iframe');
-      if (iframe?.contentDocument) {
-        iframeDoc = iframe.contentDocument;
-        iframeDoc.addEventListener('selectionchange', debouncedUpdate);
-        iframeDoc.addEventListener('mouseup', debouncedUpdate);
+    const containerEl = containerRef?.current;
+
+    // Attach listeners to iframe's document. Re-attach on load since
+    // srcDoc reloads replace the document (losing event listeners).
+    const attachToIframe = (iframe: HTMLIFrameElement) => {
+      const attach = () => {
+        if (iframe.contentDocument) {
+          iframe.contentDocument.addEventListener('selectionchange', debouncedUpdate);
+          iframe.contentDocument.addEventListener('mouseup', debouncedUpdate);
+        }
+      };
+      attach();
+      iframe.addEventListener('load', attach);
+    };
+
+    let currentIframe: HTMLIFrameElement | null = null;
+    const checkIframe = () => {
+      const iframe = containerEl?.querySelector('iframe') ?? null;
+      if (iframe && iframe !== currentIframe) {
+        currentIframe = iframe;
+        attachToIframe(iframe);
       }
+    };
+    checkIframe();
+
+    // Detect when iframe is added/removed (e.g. HTML mode switch)
+    const observer = new MutationObserver(checkIframe);
+    if (containerEl) {
+      observer.observe(containerEl, { childList: true, subtree: true });
     }
 
     return () => {
       doc.removeEventListener('selectionchange', debouncedUpdate);
       doc.removeEventListener('mouseup', debouncedUpdate);
-      if (iframeDoc) {
-        iframeDoc.removeEventListener('selectionchange', debouncedUpdate);
-        iframeDoc.removeEventListener('mouseup', debouncedUpdate);
-      }
+      observer.disconnect();
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [debouncedUpdate, containerRef]);
@@ -98,9 +130,13 @@ export function FloatingQuoteButton({ onQuote, containerRef }: FloatingQuoteButt
     const result = getSelectionText();
     if (!result) return;
     onQuote(result.text);
-    // Clear selection
+    // Clear selection in both main document and iframe
     const doc = containerRef?.current?.ownerDocument ?? document;
     doc.getSelection()?.removeAllRanges();
+    if (containerRef?.current) {
+      const iframe = containerRef.current.querySelector('iframe');
+      iframe?.contentDocument?.getSelection()?.removeAllRanges();
+    }
     setVisible(false);
   }, [getSelectionText, onQuote, containerRef]);
 

@@ -21,6 +21,7 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
 
   const [editorContent, setEditorContent] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [quoteBtnPos, setQuoteBtnPos] = useState<{ top: number; left: number } | null>(null);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const originalContentRef = useRef<string>('');
 
@@ -93,6 +94,36 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
       keybindings: [2048 | 1024 | 45], // CtrlCmd | Shift | Q
       run: () => handleQuoteSelection(),
     });
+
+    // Floating Quote button on text selection
+    const updateFloatingQuote = () => {
+      const sel = editor.getSelection();
+      if (!sel || sel.isEmpty()) {
+        setQuoteBtnPos(null);
+        return;
+      }
+      const visiblePos = editor.getScrolledVisiblePosition(sel.getStartPosition());
+      if (!visiblePos) {
+        setQuoteBtnPos(null);
+        return;
+      }
+      setQuoteBtnPos({
+        top: visiblePos.top - 36,
+        left: visiblePos.left,
+      });
+    };
+    const editorDom = editor.getDomNode();
+    if (editorDom) {
+      editorDom.addEventListener('mouseup', () => {
+        setTimeout(updateFloatingQuote, 10);
+      });
+    }
+    editor.onDidChangeCursorSelection((e) => {
+      if (e.selection.isEmpty()) setQuoteBtnPos(null);
+    });
+    editor.onDidScrollChange(() => {
+      setQuoteBtnPos(null);
+    });
   }, [handleSave, handleQuoteSelection]);
 
   if (!activePreviewFilePath) return null;
@@ -109,10 +140,6 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
         {isDirty && (
           <span className="h-1.5 w-1.5 rounded-full bg-orange-400" title="Unsaved changes" />
         )}
-        <Button variant="ghost" size="sm" onClick={handleQuoteSelection} className="h-6 gap-1 text-xs" title="Quote selection to chat (Cmd+Shift+Q)">
-          <QuoteIcon className="h-3 w-3" />
-          Quote
-        </Button>
         {headerActions}
         <Button
           variant="ghost"
@@ -132,7 +159,7 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
         </Button>
       </div>
       {/* Editor */}
-      <div className="flex-1">
+      <div className="flex-1 relative">
         <Editor
           value={editorContent ?? file.content}
           language={file.language ?? 'plaintext'}
@@ -150,6 +177,25 @@ export function CodeEditor({ headerActions }: { headerActions?: ReactNode }) {
           onMount={handleEditorMount}
           loading={<LoadingSpinner message="Loading editor..." />}
         />
+        {quoteBtnPos && (
+          <div
+            className="absolute z-50"
+            style={{ top: quoteBtnPos.top, left: quoteBtnPos.left, transform: 'translateX(-50%)' }}
+          >
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                handleQuoteSelection();
+                setQuoteBtnPos(null);
+              }}
+              className="h-7 shadow-md"
+              title="Quote to chat (Cmd+Shift+Q)"
+            >
+              <QuoteIcon className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

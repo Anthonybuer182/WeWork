@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
@@ -12,24 +12,12 @@ export function HTMLPreview() {
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const activePreviewFilePath = useUIStore((s) => s.activePreviewFilePath);
   const [mode, setMode] = useState<'preview' | 'source'>('preview');
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const { data: file, isLoading } = useQuery({
     queryKey: ['file', activeWorkspaceId, activePreviewFilePath],
     queryFn: () => sdk.file.read(activeWorkspaceId!, activePreviewFilePath!),
     enabled: !!activeWorkspaceId && !!activePreviewFilePath && activePreviewFilePath.endsWith('.html'),
   });
-
-  useEffect(() => {
-    if (mode === 'preview' && file?.content && iframeRef.current) {
-      const doc = iframeRef.current.contentDocument;
-      if (doc) {
-        doc.open();
-        doc.write(file.content);
-        doc.close();
-      }
-    }
-  }, [file?.content, mode]);
 
   if (!activePreviewFilePath) return null;
   if (isLoading) return <LoadingSpinner message="Loading HTML..." />;
@@ -72,10 +60,10 @@ export function HTMLPreview() {
       </div>
       <div className="flex-1 bg-white">
         <iframe
-          ref={iframeRef}
           className="w-full h-full border-0"
           title="HTML Preview"
           sandbox="allow-scripts allow-same-origin"
+          srcDoc={file?.content ?? ''}
         />
       </div>
     </div>
