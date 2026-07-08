@@ -678,11 +678,22 @@ function parsePptx(buffer: Buffer): PptxContent {
   return { type: 'pptx', slideWidth, slideHeight, slides };
 }
 
-/** Parse background from slide or layout XML (from <p:bg>) */
-function parseBackground(xml: string, themeColors: Map<string, string>): PptxSlide['background'] | undefined {
+/** Parse background from slide or layout XML (from <p:bg>).
+ *  When isLayout=true, ignore pure <a:schemeClr val="bg1"/> backgrounds
+ *  (these are "use default" references, not explicit white selections,
+ *  and using them would hide white text designed for dark theme backgrounds). */
+function parseBackground(xml: string, themeColors: Map<string, string>, isLayout: boolean = false): PptxSlide['background'] | undefined {
   const bgMatch = xml.match(/<p:bg[^>]*>([\s\S]*?)<\/p:bg>/);
   if (!bgMatch) return undefined;
   const bgXml = bgMatch[1];
+
+  // For layout backgrounds, skip pure <a:schemeClr val="bg1"/> references
+  // (these indicate "use default background" and would hide bg1/white text)
+  if (isLayout) {
+    const pureBg1Match = bgXml.match(/<a:solidFill>\s*<a:schemeClr\s+val="bg1"\s*\/>\s*<\/a:solidFill>/);
+    if (pureBg1Match) return undefined;
+  }
+
   // Solid fill - use resolveColor for theme color support
   const solidColor = resolveColor(bgXml, themeColors);
   if (solidColor && bgXml.includes('solidFill')) {
@@ -729,33 +740,54 @@ function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], 
       if (layoutEntry) {
         const layoutXml = layoutEntry.getData().toString('utf-8');
         layoutPlaceholderMap = parseLayoutPlaceholders(layoutXml, themeColors);
-        layoutBackground = parseBackground(layoutXml, themeColors);
+        layoutBackground = parseBackground(layoutXml, themeColors, true);
       }
     }
   }
 
-  // Parse shapes (text shapes: <p:sp>)
+  // Find all <p:grpSp> ranges (including nested) to avoid parsing their children as top-level shapes
+  const groupRanges: Array<[number, number]> = [];
+  const grpTagRegex = /<p:grpSp[^>]*>|<\/p:grpSp>/g;
+  const grpStack: number[] = [];
+  let grpTagMatch: RegExpExecArray | null;
+  while ((grpTagMatch = grpTagRegex.exec(xml)) !== null) {
+    if (grpTagMatch[0].startsWith('<p:grpSp') && !grpTagMatch[0].endsWith('/>')) {
+      grpStack.push(grpTagMatch.index);
+    } else if (grpTagMatch[0] === '</p:grpSp>') {
+      if (grpStack.length > 0) {
+        const start = grpStack.pop()!;
+        groupRanges.push([start, grpTagMatch.index + grpTagMatch[0].length]);
+      }
+    }
+  }
+  const isInGroup = (pos: number) => groupRanges.some(([s, e]) => pos >= s && pos < e);
+
+  // Parse shapes (text shapes: <p:sp>) — skip those inside groups
   const spRegex = /<p:sp[^>]*>([\s\S]*?)<\/p:sp>/g;
   let spMatch: RegExpExecArray | null;
   while ((spMatch = spRegex.exec(xml)) !== null) {
+    if (isInGroup(spMatch.index)) continue;
     const spXml = spMatch[1];
     const shape = parseTextShape(spXml, themeColors, globalDefaultFontSize, layoutPlaceholderMap);
     if (shape) shapes.push(shape);
   }
 
-  // Parse pictures (<p:pic>)
+  // Parse pictures (<p:pic>) — skip those inside groups
   const picRegex = /<p:pic[^>]*>([\s\S]*?)<\/p:pic>/g;
   let picMatch: RegExpExecArray | null;
   while ((picMatch = picRegex.exec(xml)) !== null) {
+    if (isInGroup(picMatch.index)) continue;
     const picXml = picMatch[1];
     const shape = parsePicShape(picXml, relsMap, zip);
     if (shape) shapes.push(shape);
   }
 
-  // Parse group shapes (<p:grpSp>)
+  // Parse group shapes (<p:grpSp>) — only top-level (outermost) groups
   const grpSpRegex = /<p:grpSp[^>]*>([\s\S]*?)<\/p:grpSp>/g;
   let grpMatch: RegExpExecArray | null;
   while ((grpMatch = grpSpRegex.exec(xml)) !== null) {
+    // Only parse outermost groups (not nested inside another group)
+    if (isInGroup(grpMatch.index)) continue;
     const grpXml = grpMatch[1];
     const groupShape = parseGroupShape(grpXml, relsMap, zip, themeColors, globalDefaultFontSize);
     if (groupShape) shapes.push(groupShape);
@@ -771,8 +803,43 @@ function parseSlideXml(xml: string, index: number, zip: AdmZip, entries: any[], 
   }
 
   // Background cascade: slide bg → layout bg → theme default bg
+  // Special case: if layout bg is white but slide has unfilled white text
+  // (not on a colored card), use theme default bg instead
   if (!background && layoutBackground) {
-    background = layoutBackground;
+    const layoutBgIsWhite = layoutBackground.type === 'solid' &&
+      layoutBackground.color?.toUpperCase() === 'FFFFFF';
+    if (layoutBgIsWhite && themeDefaultBackground) {
+      // Recursively check all text (including group children) for white text
+      // that doesn't overlap with a colored card
+      const hasUnfilledWhiteText = (function check(shapeList: PptxShape[]): boolean {
+        for (const sh of shapeList) {
+          if (sh.paragraphs && !sh.fill) {
+            const hasWhite = sh.paragraphs.some(p => p.runs.some(r =>
+              r.text.trim() && r.color?.toUpperCase() === 'FFFFFF'
+            ));
+            if (hasWhite) {
+              // Check if this shape overlaps with a colored sibling card
+              const onCard = shapeList.some(s2 =>
+                s2 !== sh && s2.fill && s2.fill.type === 'solid' &&
+                s2.fill.color && s2.fill.color.toUpperCase() !== 'FFFFFF' &&
+                !(sh.x + sh.width < s2.x || s2.x + s2.width < sh.x ||
+                  sh.y + sh.height < s2.y || s2.y + s2.height < sh.y)
+              );
+              if (!onCard) return true;
+            }
+          }
+          if (sh.children && check(sh.children)) return true;
+        }
+        return false;
+      })(shapes);
+      if (hasUnfilledWhiteText) {
+        background = themeDefaultBackground;
+      } else {
+        background = layoutBackground;
+      }
+    } else {
+      background = layoutBackground;
+    }
   }
   if (!background && themeDefaultBackground) {
     background = themeDefaultBackground;
@@ -1299,21 +1366,36 @@ function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZ
 
   const children: PptxShape[] = [];
 
-  // Parse nested text shapes
+  // Find nested group ranges to avoid parsing their children as direct children
+  const nestedGroupRanges: Array<[number, number]> = [];
+  const nTagRegex = /<p:grpSp[^>]*>|<\/p:grpSp>/g;
+  const nStack: number[] = [];
+  let nTagMatch: RegExpExecArray | null;
+  while ((nTagMatch = nTagRegex.exec(grpXml)) !== null) {
+    if (nTagMatch[0].startsWith('<p:grpSp') && !nTagMatch[0].endsWith('/>')) {
+      nStack.push(nTagMatch.index);
+    } else if (nTagMatch[0] === '</p:grpSp>') {
+      if (nStack.length > 0) {
+        const start = nStack.pop()!;
+        nestedGroupRanges.push([start, nTagMatch.index + nTagMatch[0].length]);
+      }
+    }
+  }
+  const isInNestedGroup = (pos: number) => nestedGroupRanges.some(([s, e]) => pos >= s && pos < e);
+
+  // Parse nested text shapes (skip those inside nested groups)
   const spRegex = /<p:sp[^>]*>([\s\S]*?)<\/p:sp>/g;
   let spMatch: RegExpExecArray | null;
   while ((spMatch = spRegex.exec(grpXml)) !== null) {
+    if (isInNestedGroup(spMatch.index)) continue;
     const spXml = spMatch[1];
-    // Skip template placeholder shapes that have noFill and no outline
-    // (These are WPS/PPT template placeholders that duplicate text from top-level shapes)
+    // Skip template placeholder shapes that have noFill, no outline, and no text
     if (/<a:noFill/.test(spXml) && !/<a:ln\b/.test(spXml)) {
-      continue;
+      const hasText = /<a:t[^>]*>/.test(spXml);
+      if (!hasText) continue;
     }
     const shape = parseTextShape(spXml, themeColors, globalDefaultFontSize);
     if (shape) {
-      // Keep children in group-local coordinate space.
-      // The renderer positions the group div at (groupX, groupY), then
-      // children are positioned relative to the group div.
       shape.x = (shape.x - chOffX) * scaleX;
       shape.y = (shape.y - chOffY) * scaleY;
       shape.width = shape.width * scaleX;
@@ -1322,10 +1404,11 @@ function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZ
     }
   }
 
-  // Parse nested pictures
+  // Parse nested pictures (skip those inside nested groups)
   const picRegex = /<p:pic[^>]*>([\s\S]*?)<\/p:pic>/g;
   let picMatch: RegExpExecArray | null;
   while ((picMatch = picRegex.exec(grpXml)) !== null) {
+    if (isInNestedGroup(picMatch.index)) continue;
     const shape = parsePicShape(picMatch[1], relsMap, zip);
     if (shape) {
       shape.x = (shape.x - chOffX) * scaleX;
@@ -1333,6 +1416,26 @@ function parseGroupShape(grpXml: string, relsMap: Map<string, string>, zip: AdmZ
       shape.width = shape.width * scaleX;
       shape.height = shape.height * scaleY;
       children.push(shape);
+    }
+  }
+
+  // Parse direct child groups (recursively, only outermost nested groups)
+  const nestedGrpSpRegex = /<p:grpSp[^>]*>([\s\S]*?)<\/p:grpSp>/g;
+  let nestedGrpMatch: RegExpExecArray | null;
+  while ((nestedGrpMatch = nestedGrpSpRegex.exec(grpXml)) !== null) {
+    const grpStart = nestedGrpMatch.index;
+    // Only parse direct child groups (not groups nested inside other groups)
+    const isDirectChild = !nestedGroupRanges.some(([s, e]) => s < grpStart && grpStart < e);
+    if (!isDirectChild) continue;
+    const nestedGroupShape = parseGroupShape(nestedGrpMatch[1], relsMap, zip, themeColors, globalDefaultFontSize);
+    if (nestedGroupShape) {
+      // Transform the nested group's position to current group's local space
+      // (children inside the nested group are already in the nested group's local space)
+      nestedGroupShape.x = (nestedGroupShape.x - chOffX) * scaleX;
+      nestedGroupShape.y = (nestedGroupShape.y - chOffY) * scaleY;
+      nestedGroupShape.width = nestedGroupShape.width * scaleX;
+      nestedGroupShape.height = nestedGroupShape.height * scaleY;
+      children.push(nestedGroupShape);
     }
   }
 
