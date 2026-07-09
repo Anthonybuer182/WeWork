@@ -29,11 +29,14 @@
     "pack:mac": "cd apps/desktop && pnpm pack:mac",
     "pack:win": "cd apps/desktop && pnpm pack:win",
     "pack:linux": "cd apps/desktop && pnpm pack:linux",
-    "pack:all": "cd apps/desktop && pnpm pack:all"
+    "pack:all": "cd apps/desktop && pnpm pack:all",
+    "e2e": "pnpm --filter @pi/desktop build && npx playwright test",
+    "e2e:headed": "pnpm --filter @pi/desktop build && npx playwright test --headed"
   },
   "devDependencies": {
     "@earendil-works/pi-agent-core": "^0.78.1",
     "@earendil-works/pi-ai": "^0.78.1",
+    "@playwright/test": "^1.61.1",
     "prettier": "^3.8.3",
     "turbo": "^2.9.16",
     "typescript": "^5.9.3"
