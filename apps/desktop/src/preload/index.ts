@@ -54,6 +54,23 @@ export interface ElectronAPI {
     getPath: (name: string) => Promise<string>;
     getVersion: () => Promise<string>;
   };
+
+  // ── Browser Automation ──
+  browser: {
+    connect: () => Promise<{ connected: boolean; error?: string }>;
+    navigate: (url: string) => Promise<{ url: string; title: string }>;
+    getUrl: () => Promise<{ url: string; title: string }>;
+    screenshot: () => Promise<{ base64: string }>;
+    startRecording: () => Promise<{ started: boolean }>;
+    stopRecording: () => Promise<{ steps: unknown[] }>;
+    saveWorkflow: (name: string, steps: unknown[]) => Promise<{ name: string; saved: boolean }>;
+    listWorkflows: () => Promise<unknown[]>;
+    deleteWorkflow: (name: string) => Promise<{ name: string; deleted: boolean }>;
+    replay: (name: string, variables?: Record<string, string>) => Promise<{ name: string; completed: boolean; stepCount: number }>;
+    onUrlChanged: (callback: (url: string) => void) => void;
+    onRecordingState: (callback: (recording: boolean) => void) => void;
+    onReplayProgress: (callback: (progress: { current: number; total: number; step: unknown }) => void) => void;
+  };
 }
 
 export interface FileStat {
@@ -125,6 +142,28 @@ const electronAPI: ElectronAPI = {
   app: {
     getPath: (name) => ipcRenderer.invoke('pi:app:getPath', name),
     getVersion: () => ipcRenderer.invoke('pi:app:getVersion'),
+  },
+
+  browser: {
+    connect: () => ipcRenderer.invoke('pi:browser:connect'),
+    navigate: (url) => ipcRenderer.invoke('pi:browser:navigate', url),
+    getUrl: () => ipcRenderer.invoke('pi:browser:getUrl'),
+    screenshot: () => ipcRenderer.invoke('pi:browser:screenshot'),
+    startRecording: () => ipcRenderer.invoke('pi:browser:record:start'),
+    stopRecording: () => ipcRenderer.invoke('pi:browser:record:stop'),
+    saveWorkflow: (name, steps) => ipcRenderer.invoke('pi:browser:saveWorkflow', name, steps),
+    listWorkflows: () => ipcRenderer.invoke('pi:browser:listWorkflows'),
+    deleteWorkflow: (name) => ipcRenderer.invoke('pi:browser:deleteWorkflow', name),
+    replay: (name, variables?) => ipcRenderer.invoke('pi:browser:replay', name, variables),
+    onUrlChanged: (callback) => {
+      ipcRenderer.on('pi:browser:urlChanged', (_event, url) => callback(url));
+    },
+    onRecordingState: (callback) => {
+      ipcRenderer.on('pi:browser:recordingState', (_event, recording) => callback(recording));
+    },
+    onReplayProgress: (callback) => {
+      ipcRenderer.on('pi:browser:replayProgress', (_event, progress) => callback(progress));
+    },
   },
 };
 

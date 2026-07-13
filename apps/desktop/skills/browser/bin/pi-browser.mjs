@@ -1,0 +1,270 @@
+#!/usr/bin/env node
+
+/**
+ * pi-browser — CLI tool for browser automation via the Pi Coding Agent.
+ *
+ * This is a thin wrapper that sends HTTP requests to the local BrowserManager
+ * HTTP server (localhost:19223) running in the Electron main process.
+ *
+ * Usage:
+ *   pi-browser navigate <url>
+ *   pi-browser snapshot
+ *   pi-browser click <selector>
+ *   pi-browser fill <selector> <value>
+ *   pi-browser screenshot [--output <path>]
+ *   pi-browser scroll <up|down> [amount]
+ *   pi-browser evaluate <expression>
+ *   pi-browser record start
+ *   pi-browser record stop
+ *   pi-browser replay <name> [--var key=value]...
+ *   pi-browser workflows
+ *   pi-browser save <name> [--steps <json>]
+ *   pi-browser delete <name>
+ *   pi-browser url
+ *   pi-browser health
+ */
+
+const BASE_URL = 'http://127.0.0.1:19223';
+
+// ── HTTP helper ──
+async function request(method, path, body) {
+  const url = `${BASE_URL}${path}`;
+  const options = { method, headers: {} };
+  if (body) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+  try {
+    const res = await fetch(url, options);
+    const text = await res.text();
+    if (!res.ok) {
+      let errMsg;
+      try { errMsg = JSON.parse(text).error; } catch { errMsg = text; }
+      process.stderr.write(`Error: ${errMsg}\n`);
+      process.exit(1);
+    }
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    if (err.code === 'ECONNREFUSED' || err.message?.includes('fetch failed')) {
+      process.stderr.write('Error: Cannot connect to pi-browser server. Is the Pi Coding Agent desktop app running?\n');
+      process.exit(1);
+    }
+    process.stderr.write(`Error: ${err.message}\n`);
+    process.exit(1);
+  }
+}
+
+// ── Output helpers ──
+function outputJSON(data) {
+  process.stdout.write(JSON.stringify(data, null, 2) + '\n');
+}
+
+function outputText(text) {
+  process.stdout.write(text + '\n');
+}
+
+// ── Parse --var key=value arguments ──
+function parseVars(args) {
+  const vars = {};
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--var' && i + 1 < args.length) {
+      const pair = args[i + 1];
+      const eqIdx = pair.indexOf('=');
+      if (eqIdx > 0) {
+        vars[pair.slice(0, eqIdx)] = pair.slice(eqIdx + 1);
+      }
+      i++;
+    }
+  }
+  return vars;
+}
+
+// ── Main CLI ──
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (!command || command === '--help' || command === '-h') {
+    outputText(`pi-browser — Browser automation CLI for Pi Coding Agent
+
+Usage:
+  pi-browser navigate <url>          Navigate to a URL
+  pi-browser snapshot                Get accessibility tree of the page
+  pi-browser click <selector>        Click an element by selector
+  pi-browser fill <selector> <value> Fill an input with a value
+  pi-browser screenshot [--output <path>]  Take a screenshot (base64 or save to file)
+  pi-browser scroll <up|down> [amount]     Scroll the page
+  pi-browser evaluate <expression>   Evaluate JavaScript in the page
+  pi-browser record start            Start recording user interactions
+  pi-browser record stop             Stop recording, return captured steps
+  pi-browser replay <name> [--var key=value]...  Replay a saved workflow
+  pi-browser workflows               List saved workflows
+  pi-browser save <name>             Save recorded steps as a workflow (use --steps for JSON input)
+  pi-browser delete <name>           Delete a saved workflow
+  pi-browser url                     Get current URL and title
+  pi-browser health                  Check server health
+
+Selectors:
+  CSS:                    button#submit, input[name=email]
+  Has-text:               button:has-text("Login")
+  ARIA role:              role=button[name="Submit"]
+  Aria-label:             [aria-label="Search"]
+  Data-testid:            [data-testid="login-btn"]
+
+Workflow Variables:
+  Use {{variableName}} in recorded fill/navigate values.
+  Pass --var key=value during replay to substitute.`);
+    return;
+  }
+
+  switch (command) {
+    case 'navigate': {
+      const url = args[1];
+      if (!url) { outputText('Usage: pi-browser navigate <url>'); process.exit(1); }
+      const result = await request('POST', '/navigate', { url });
+      outputJSON(result);
+      break;
+    }
+
+    case 'snapshot': {
+      const result = await request('GET', '/snapshot');
+      // Output the snapshot text directly (not wrapped in JSON) for readability
+      outputText(result.snapshot || '(empty page)');
+      break;
+    }
+
+    case 'click': {
+      const selector = args[1];
+      if (!selector) { outputText('Usage: pi-browser click <selector>'); process.exit(1); }
+      const result = await request('POST', '/click', { selector });
+      outputJSON(result);
+      break;
+    }
+
+    case 'fill': {
+      const selector = args[1];
+      const value = args[2];
+      if (!selector || value === undefined) {
+        outputText('Usage: pi-browser fill <selector> <value>');
+        process.exit(1);
+      }
+      const result = await request('POST', '/fill', { selector, value });
+      outputJSON(result);
+      break;
+    }
+
+    case 'screenshot': {
+      const outputIdx = args.indexOf('--output');
+      const outputPath = outputIdx >= 0 ? args[outputIdx + 1] : null;
+      const result = await request('GET', '/screenshot');
+      if (outputPath) {
+        const fs = await import('fs');
+        fs.writeFileSync(outputPath, Buffer.from(result.base64, 'base64'));
+        outputText(`Screenshot saved to ${outputPath}`);
+      } else {
+        outputJSON(result);
+      }
+      break;
+    }
+
+    case 'scroll': {
+      const direction = args[1] || 'down';
+      const amount = args[2] ? parseInt(args[2], 10) : 500;
+      if (!['up', 'down'].includes(direction)) {
+        outputText('Usage: pi-browser scroll <up|down> [amount]');
+        process.exit(1);
+      }
+      const result = await request('POST', '/scroll', { direction, amount });
+      outputJSON(result);
+      break;
+    }
+
+    case 'evaluate': {
+      const expression = args.slice(1).join(' ');
+      if (!expression) { outputText('Usage: pi-browser evaluate <expression>'); process.exit(1); }
+      const result = await request('POST', '/evaluate', { expression });
+      outputJSON(result);
+      break;
+    }
+
+    case 'record': {
+      const subcmd = args[1];
+      if (subcmd === 'start') {
+        const result = await request('POST', '/record/start');
+        outputJSON(result);
+      } else if (subcmd === 'stop') {
+        const result = await request('POST', '/record/stop');
+        outputJSON(result);
+      } else {
+        outputText('Usage: pi-browser record <start|stop>');
+        process.exit(1);
+      }
+      break;
+    }
+
+    case 'replay': {
+      const name = args[1];
+      if (!name) { outputText('Usage: pi-browser replay <name> [--var key=value]...'); process.exit(1); }
+      const variables = parseVars(args.slice(2));
+      const result = await request('POST', '/replay', { name, variables });
+      outputJSON(result);
+      break;
+    }
+
+    case 'workflows': {
+      const result = await request('GET', '/workflows');
+      outputJSON(result.workflows || []);
+      break;
+    }
+
+    case 'save': {
+      const name = args[1];
+      if (!name) { outputText('Usage: pi-browser save <name> [--steps <json>]'); process.exit(1); }
+      let steps;
+      const stepsIdx = args.indexOf('--steps');
+      if (stepsIdx >= 0 && args[stepsIdx + 1]) {
+        steps = JSON.parse(args[stepsIdx + 1]);
+      } else {
+        // Read from stdin
+        const chunks = [];
+        for await (const chunk of process.stdin) {
+          chunks.push(chunk);
+        }
+        const input = Buffer.concat(chunks).toString();
+        steps = input ? JSON.parse(input) : [];
+      }
+      const result = await request('POST', '/workflow/save', { name, steps });
+      outputJSON(result);
+      break;
+    }
+
+    case 'delete': {
+      const name = args[1];
+      if (!name) { outputText('Usage: pi-browser delete <name>'); process.exit(1); }
+      const result = await request('DELETE', '/workflow', { name });
+      outputJSON(result);
+      break;
+    }
+
+    case 'url': {
+      const result = await request('GET', '/url');
+      outputJSON(result);
+      break;
+    }
+
+    case 'health': {
+      const result = await request('GET', '/health');
+      outputJSON(result);
+      break;
+    }
+
+    default:
+      outputText(`Unknown command: ${command}\nRun 'pi-browser --help' for usage.`);
+      process.exit(1);
+  }
+}
+
+main().catch((err) => {
+  process.stderr.write(`Fatal: ${err.message}\n`);
+  process.exit(1);
+});

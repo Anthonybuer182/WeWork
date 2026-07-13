@@ -7,8 +7,20 @@ import { existsSync, mkdirSync, readdirSync, cpSync } from 'fs';
 import { exec, execSync } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { BrowserManager, startBrowserHttpServer } from '@main/browser';
+import { registerBrowserIpcHandlers } from '@main/ipc/browser';
 
 let mainWindow: BrowserWindow | null = null;
+
+// BrowserManager instance — shared between IPC handlers and the HTTP server.
+// The HTTP server (port 19223) is the entry point for the pi-browser CLI tool.
+export const browserManager = new BrowserManager();
+
+// Enable Chrome DevTools Protocol so Playwright can connect to the
+// Electron app's own webContents (including <webview> tags) via CDP.
+// The CLI tool (pi-browser) talks to a local HTTP server which drives
+// Playwright — both agent and user see the same browser instance.
+app.commandLine.appendSwitch('remote-debugging-port', '19222');
 
 const gotLock = app.requestSingleInstanceLock();
 
@@ -63,6 +75,9 @@ if (!gotLock) {
     // install.sh is bash-based, macOS/Linux only
     if (process.platform === 'win32') return;
 
+    // Install pi-browser CLI (bundled with the app, just needs a symlink)
+    ensurePiBrowserBinary();
+
     try {
       execSync('command -v officecli', { stdio: 'ignore' });
       return; // Already in PATH
@@ -79,7 +94,50 @@ if (!gotLock) {
     });
   }
 
-  app.whenReady().then(() => {
+  /**
+   * Install the pi-browser CLI by symlinking the bundled .mjs script
+   * into ~/.local/bin. The script is a thin Node.js wrapper that calls
+   * the local HTTP server in the main process.
+   */
+  function ensurePiBrowserBinary(): void {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+
+    const binSource = app.isPackaged
+      ? join(process.resourcesPath, 'skills', 'browser', 'bin', 'pi-browser.mjs')
+      : join(__dirname, '..', '..', 'skills', 'browser', 'bin', 'pi-browser.mjs');
+
+    if (!existsSync(binSource)) {
+      console.warn('[pi-browser] Source not found:', binSource);
+      return;
+    }
+
+    const installDir = join(process.env.HOME ?? '', '.local', 'bin');
+    const installTarget = join(installDir, 'pi-browser');
+
+    // Already installed and pointing to the right place
+    try {
+      if (existsSync(installTarget)) {
+        const link = execSync(`readlink "${installTarget}" 2>/dev/null || echo ""`, { encoding: 'utf-8' }).trim();
+        if (link === binSource) return; // Already linked correctly
+      }
+    } catch {
+      // readlink failed, proceed with install
+    }
+
+    try {
+      mkdirSync(installDir, { recursive: true });
+      execSync(`chmod +x "${binSource}"`);
+      execSync(`rm -f "${installTarget}"`);
+      execSync(`ln -s "${binSource}" "${installTarget}"`);
+      execSync(`chmod +x "${installTarget}"`);
+      console.log('[pi-browser] Installed to', installTarget);
+    } catch (err) {
+      console.error('[pi-browser] Install failed:', err);
+    }
+  }
+
+  app.whenReady().then(async () => {
     const settingsManager = SettingsManager.create(app.getPath('home'));
 
     migrateSkills();
@@ -89,6 +147,11 @@ if (!gotLock) {
     mainWindow = createMainWindow();
     registerIpcHandlers(settingsManager);
     registerNativeIpcHandlers();
+    registerBrowserIpcHandlers(browserManager);
+
+    // Start the browser automation HTTP server (for pi-browser CLI).
+    // The BrowserManager connects to CDP lazily when the webview is ready.
+    startBrowserHttpServer(browserManager, 19223);
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {

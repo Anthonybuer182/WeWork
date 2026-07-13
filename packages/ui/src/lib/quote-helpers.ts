@@ -40,7 +40,13 @@ export function extractMetaFromSelection(): QuoteMeta {
 export function formatQuotesForPrompt(quotes: Quote[]): string {
   if (!quotes.length) return '';
   const sections = quotes.map((q) => {
-    const ctx: string[] = [`File: ${q.fileName}`];
+    const ctx: string[] = [];
+    if (q.source === 'browser') {
+      // Browser quotes use the URL as filePath
+      ctx.push(`URL: ${q.filePath}`);
+    } else {
+      ctx.push(`File: ${q.fileName}`);
+    }
     if (q.meta.startLine && q.meta.endLine) ctx.push(`Lines: ${q.meta.startLine}-${q.meta.endLine}`);
     if (q.meta.pageNumber) ctx.push(`Page: ${q.meta.pageNumber}`);
     if (q.meta.slideNumber) ctx.push(`Slide: ${q.meta.slideNumber}`);

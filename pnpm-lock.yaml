@@ -44,6 +44,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.62.8
         version: 5.101.0(react@19.2.7)
+      playwright-core:
+        specifier: ^1.61.1
+        version: 1.61.1
       react:
         specifier: ^19.0.0
         version: 19.2.7

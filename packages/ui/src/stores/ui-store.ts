@@ -16,12 +16,14 @@ interface UIState {
   sidebarOpen: boolean;
   rightPanelOpen: boolean;
   rightPanelWidth: number;
-  rightPanelActiveTab: 'preview' | 'settings';
+  rightPanelActiveTab: 'preview' | 'settings' | 'browser';
   compactMode: boolean;
   selectedSkills: string[];
   connectionStatus: ConnectionStatus;
   searchQuery: string;
   memoryPreviews: Record<string, MemoryPreview>;
+  browserUrl: string;
+  isRecording: boolean;
 
   setActiveWorkspace: (id: string | null) => void;
   setActiveSession: (id: string | null) => void;
@@ -36,6 +38,8 @@ interface UIState {
   setSearchQuery: (query: string) => void;
   setMemoryPreview: (id: string, info: MemoryPreview) => void;
   clearMemoryPreview: (id: string) => void;
+  setBrowserUrl: (url: string) => void;
+  setRecording: (recording: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -53,6 +57,8 @@ export const useUIStore = create<UIState>()(
       connectionStatus: 'connecting',
       searchQuery: '',
       memoryPreviews: {},
+      browserUrl: 'about:blank',
+      isRecording: false,
 
       setActiveWorkspace: (id) => set({ activeWorkspaceId: id, activeSessionId: null }),
       setActiveSession: (id) => set({ activeSessionId: id }),
@@ -60,7 +66,7 @@ export const useUIStore = create<UIState>()(
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
-      setRightPanelTab: (tab) => set({ rightPanelActiveTab: tab === 'settings' ? 'settings' : 'preview' }),
+      setRightPanelTab: (tab) => set({ rightPanelActiveTab: tab === 'settings' ? 'settings' : tab === 'browser' ? 'browser' : 'preview' }),
       setCompactMode: (compact) => set({ compactMode: compact }),
       toggleSkill: (skillId) =>
         set((s) => ({
@@ -78,6 +84,8 @@ export const useUIStore = create<UIState>()(
           delete next[id];
           return { memoryPreviews: next };
         }),
+      setBrowserUrl: (url) => set({ browserUrl: url }),
+      setRecording: (recording) => set({ isRecording: recording }),
     }),
     {
       name: 'pi-ui-storage',

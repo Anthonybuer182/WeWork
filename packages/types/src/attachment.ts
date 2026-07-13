@@ -18,7 +18,7 @@ export interface Attachment {
 
 export type QuoteSource =
   | 'markdown' | 'html' | 'pdf-canvas' | 'pdf-text'
-  | 'docx' | 'xlsx' | 'pptx' | 'code-editor';
+  | 'docx' | 'xlsx' | 'pptx' | 'code-editor' | 'browser';
 
 export interface QuoteMeta {
   startLine?: number;
