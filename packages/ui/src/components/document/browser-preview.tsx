@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { BrowserQuoteButton } from './browser-quote-button';
 import { WorkflowDialog, type WorkflowStep } from './workflow-dialog';
 import { WorkflowSelector, type Workflow } from './workflow-selector';
+import { useUIStore } from '@/stores/ui-store';
 
 /** Minimal webview element interface. */
 interface WebviewElement extends HTMLElement {
@@ -37,6 +38,7 @@ interface BrowserAPI {
   listWorkflows: () => Promise<Workflow[]>;
   deleteWorkflow: (name: string) => Promise<{ name: string; deleted: boolean }>;
   replay: (name: string, variables?: Record<string, string>) => Promise<{ name: string; completed: boolean; stepCount: number }>;
+  setViewport: (width: number, height: number) => Promise<void>;
   onUrlChanged: (callback: (url: string) => void) => void;
   onRecordingState: (callback: (recording: boolean) => void) => void;
   onReplayProgress: (callback: (progress: { current: number; total: number }) => void) => void;
@@ -46,8 +48,14 @@ function getBrowserAPI(): BrowserAPI | undefined {
   return (window as unknown as { electronAPI?: { browser?: BrowserAPI } }).electronAPI?.browser;
 }
 
+/** Detect if running inside Electron (where <webview> is available). */
+function isElectron(): boolean {
+  return typeof (window as unknown as { electronAPI?: unknown }).electronAPI !== 'undefined';
+}
+
 export function BrowserPreview() {
   const webviewRef = useRef<WebviewElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [url, setUrl] = useState('about:blank');
   const [urlInput, setUrlInput] = useState('');
   const [connected, setConnected] = useState(false);
@@ -56,22 +64,89 @@ export function BrowserPreview() {
   const [recordedSteps, setRecordedSteps] = useState<WorkflowStep[]>([]);
   const [replayProgress, setReplayProgress] = useState<{ current: number; total: number } | null>(null);
   const api = getBrowserAPI();
+  const inElectron = isElectron();
+  const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
+
+  // ── Track container height via ResizeObserver ──
+  const [containerHeight, setContainerHeight] = useState(600);
+
+  useEffect(() => {
+    const container = document.querySelector('.browser-preview-container');
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerHeight(entry.contentRect.height);
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // ── Sync viewport width/height to the webview ──
+  useEffect(() => {
+    if (!api || !inElectron || !connected) return;
+
+    const debounceMs = 300;
+    const timer = setTimeout(() => {
+      const width = Math.round(rightPanelWidth);
+      const height = Math.round(containerHeight);
+      api.setViewport(width, height).catch((err) => {
+        console.warn('[BrowserPreview] setViewport failed:', err);
+      });
+    }, debounceMs);
+
+    return () => clearTimeout(timer);
+  }, [api, inElectron, connected, rightPanelWidth, containerHeight]);
+
+  // ── Track connected state in a ref to break callback dependency chain ──
+  const connectedRef = useRef(false);
+  const connectRetryCountRef = useRef(0);
+  const MAX_CONNECT_RETRIES = 5;
 
   // ── Connect to CDP when webview is ready ──
+  // Uses connectedRef instead of connected state to keep identity stable
   const connectToCDP = useCallback(async () => {
-    if (!api || connected) return;
+    if (!api || connectedRef.current) return;
     try {
       const result = await api.connect();
       if (result.connected) {
+        connectedRef.current = true;
         setConnected(true);
+        connectRetryCountRef.current = 0;
         console.log('[BrowserPreview] CDP connected');
       } else {
+        connectRetryCountRef.current++;
         console.error('[BrowserPreview] CDP connect failed:', result.error);
+        if (connectRetryCountRef.current < MAX_CONNECT_RETRIES) {
+          setTimeout(() => connectToCDPRef.current(), 1000);
+        }
       }
     } catch (err) {
+      connectRetryCountRef.current++;
       console.error('[BrowserPreview] CDP connect error:', err);
+      if (connectRetryCountRef.current < MAX_CONNECT_RETRIES) {
+        setTimeout(() => connectToCDPRef.current(), 1000);
+      }
     }
-  }, [api, connected]);
+  }, [api]);
+
+  // ── Stale closure workaround: keep a ref to connectToCDP ──
+  const connectToCDPRef = useRef(connectToCDP);
+  useEffect(() => {
+    connectToCDPRef.current = connectToCDP;
+  }, [connectToCDP]);
+
+  // ── Kick off connection when api becomes available ──
+  useEffect(() => {
+    if (api && !connectedRef.current) {
+      connectToCDPRef.current();
+    }
+  }, [api]);
+
+  // Refs to hold webview listener references for cleanup
+  const navListenerRef = useRef<(() => void) | null>(null);
+  const domReadyListenerRef = useRef<(() => void) | null>(null);
 
   // ── Set up event listeners ──
   useEffect(() => {
@@ -98,8 +173,18 @@ export function BrowserPreview() {
     api.onReplayProgress(handleReplayProgress);
   }, [api]);
 
-  // ── Handle webview element when it's mounted ──
+  // ── Handle webview element when it's mounted (Electron only) ──
+  // Stable identity — uses refs to avoid dependency on `connected` or `connectToCDP`
   const setWebviewRef = useCallback((node: WebviewElement | null) => {
+    // Clean up old listeners before setting new ref
+    const prev = webviewRef.current;
+    if (prev && prev !== node) {
+      prev.removeEventListener('did-navigate', navListenerRef.current as EventListener);
+      prev.removeEventListener('did-navigate-in-page', navListenerRef.current as EventListener);
+      prev.removeEventListener('did-finish-load', navListenerRef.current as EventListener);
+      prev.removeEventListener('dom-ready', domReadyListenerRef.current as EventListener);
+    }
+
     webviewRef.current = node;
     if (!node) return;
 
@@ -109,6 +194,7 @@ export function BrowserPreview() {
       setUrl(currentUrl);
       setUrlInput(currentUrl);
     };
+    navListenerRef.current = navListener;
 
     node.addEventListener('did-navigate', navListener as EventListener);
     node.addEventListener('did-navigate-in-page', navListener as EventListener);
@@ -116,13 +202,21 @@ export function BrowserPreview() {
 
     // Connect to CDP after webview DOM is ready
     const domReadyListener = () => {
-      setTimeout(connectToCDP, 300);
+      setTimeout(() => connectToCDPRef.current(), 300);
     };
+    domReadyListenerRef.current = domReadyListener;
     node.addEventListener('dom-ready', domReadyListener as EventListener);
 
     // Also try connecting immediately (in case dom-ready already fired)
-    setTimeout(connectToCDP, 500);
-  }, [connectToCDP]);
+    setTimeout(() => connectToCDPRef.current(), 500);
+  }, []);
+
+  // ── For web mode: mark as "connected" immediately (no CDP needed) ──
+  useEffect(() => {
+    if (!inElectron && !connected) {
+      setConnected(true);
+    }
+  }, [inElectron, connected]);
 
   // ── URL bar navigation ──
   const handleNavigate = useCallback(async () => {
@@ -143,16 +237,34 @@ export function BrowserPreview() {
       } catch (err) {
         console.error('Navigate failed:', err);
       }
-    } else {
+    } else if (inElectron) {
       // Fallback: use webview directly
       await webviewRef.current?.loadURL(targetUrl);
+    } else {
+      // Web mode: navigate iframe
+      setUrl(targetUrl);
+      if (iframeRef.current) {
+        iframeRef.current.src = targetUrl;
+      }
     }
-  }, [urlInput, api]);
+  }, [urlInput, api, inElectron]);
 
-  // ── Webview controls ──
-  const handleBack = () => webviewRef.current?.goBack();
-  const handleForward = () => webviewRef.current?.goForward();
-  const handleReload = () => webviewRef.current?.reload();
+  // ── Webview/iframe controls (Electron only for back/forward) ──
+  const handleBack = () => {
+    webviewRef.current?.goBack();
+  };
+  const handleForward = () => {
+    webviewRef.current?.goForward();
+  };
+  const handleReload = () => {
+    if (inElectron) {
+      webviewRef.current?.reload();
+    } else {
+      if (iframeRef.current) {
+        iframeRef.current.src = iframeRef.current.src;
+      }
+    }
+  };
   const handleOpenExternal = () => {
     if (url && url !== 'about:blank') {
       window.open(url, '_blank');
@@ -203,23 +315,27 @@ export function BrowserPreview() {
     <div className="flex flex-col h-full">
       {/* ── Toolbar ── */}
       <div className="flex items-center gap-1 border-b px-2 py-1.5">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleBack}>
-              <ArrowLeft className="h-3.5 w-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Back</TooltipContent>
-        </Tooltip>
+        {inElectron && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleBack}>
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Back</TooltipContent>
+            </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleForward}>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Forward</TooltipContent>
-        </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleForward}>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Forward</TooltipContent>
+            </Tooltip>
+          </>
+        )}
 
         <Tooltip>
           <TooltipTrigger asChild>
@@ -247,38 +363,42 @@ export function BrowserPreview() {
           <TooltipContent>Open in browser</TooltipContent>
         </Tooltip>
 
-        <div className="w-px h-5 bg-border mx-0.5" />
+        {inElectron && (
+          <>
+            <div className="w-px h-5 bg-border mx-0.5" />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={recording ? 'destructive' : 'ghost'}
-              size="sm"
-              className="h-7 gap-1.5"
-              onClick={handleRecordToggle}
-            >
-              {recording ? (
-                <>
-                  <Square className="h-3 w-3 fill-current" />
-                  Stop
-                </>
-              ) : (
-                <>
-                  <Circle className="h-3 w-3 fill-current" />
-                  Record
-                </>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{recording ? 'Stop recording' : 'Start recording'}</TooltipContent>
-        </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={recording ? 'destructive' : 'ghost'}
+                  size="sm"
+                  className="h-7 gap-1.5"
+                  onClick={handleRecordToggle}
+                >
+                  {recording ? (
+                    <>
+                      <Square className="h-3 w-3 fill-current" />
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <Circle className="h-3 w-3 fill-current" />
+                      Record
+                    </>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{recording ? 'Stop recording' : 'Start recording'}</TooltipContent>
+            </Tooltip>
 
-        <WorkflowSelector
-          onReplay={handleReplay}
-          onDelete={handleDeleteWorkflow}
-          fetchWorkflows={handleListWorkflows}
-          replayProgress={replayProgress}
-        />
+            <WorkflowSelector
+              onReplay={handleReplay}
+              onDelete={handleDeleteWorkflow}
+              fetchWorkflows={handleListWorkflows}
+              replayProgress={replayProgress}
+            />
+          </>
+        )}
       </div>
 
       {/* ── Status bar ── */}
@@ -298,18 +418,28 @@ export function BrowserPreview() {
         </div>
       )}
 
-      {/* ── Webview ── */}
-      <div className="relative flex-1 overflow-hidden">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <webview
-          ref={setWebviewRef as any}
-          src="about:blank"
-          className="w-full h-full"
-          style={{ display: 'inline-flex', width: '100%', height: '100%' }}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          {...({ allowpopups: 'true' } as any)}
-        />
-        <BrowserQuoteButton webviewRef={webviewRef} />
+      {/* ── Webview (Electron) or Iframe (Web) ── */}
+      <div className="browser-preview-container relative flex-1 overflow-hidden">
+        {inElectron ? (
+          <>
+            <webview
+              ref={setWebviewRef as any}
+              src="about:blank"
+              className="w-full h-full"
+              style={{ display: 'inline-flex', width: '100%', height: '100%' }}
+              {...({ allowpopups: 'true' } as any)}
+            />
+            <BrowserQuoteButton webviewRef={webviewRef} />
+          </>
+        ) : (
+          <iframe
+            ref={iframeRef}
+            src={url}
+            className="w-full h-full border-0"
+            title="Browser Preview"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+          />
+        )}
 
         {!connected && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 pointer-events-none">

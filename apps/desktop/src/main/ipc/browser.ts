@@ -63,6 +63,11 @@ export function registerBrowserIpcHandlers(browserManager: BrowserManager): void
     return await browserManager.replay(name, variables ?? {});
   });
 
+  // ── Viewport ──
+  ipcMain.handle('pi:browser:setViewport', async (_event, width: number, height: number) => {
+    await browserManager.setDeviceMetrics(width, height);
+  });
+
   // ── Events (main → renderer) ──
   // Register callbacks that forward to all renderer windows
   browserManager.onUrlChanged((url) => {

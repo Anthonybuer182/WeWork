@@ -21,6 +21,7 @@ import { ChatTimeline } from '@pi/ui';
 import { Composer } from '@pi/ui';
 import { UsageBar } from '@pi/ui';
 import { DocumentPreview } from '@pi/ui';
+import { BrowserPreview } from '@pi/ui';
 import { ErrorBoundary } from '@pi/ui';
 import { FileTree } from '@pi/ui';
 import { Separator } from '@pi/ui';
@@ -101,6 +102,7 @@ function AppContent() {
           rightPanel={
             <RightPanel>
               {rightPanelActiveTab === 'preview' && <DocumentPreview />}
+              {rightPanelActiveTab === 'browser' && <BrowserPreview />}
               {rightPanelActiveTab === 'settings' && <ProviderSettings />}
             </RightPanel>
           }

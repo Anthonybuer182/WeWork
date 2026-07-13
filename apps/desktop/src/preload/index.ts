@@ -67,6 +67,7 @@ export interface ElectronAPI {
     listWorkflows: () => Promise<unknown[]>;
     deleteWorkflow: (name: string) => Promise<{ name: string; deleted: boolean }>;
     replay: (name: string, variables?: Record<string, string>) => Promise<{ name: string; completed: boolean; stepCount: number }>;
+    setViewport: (width: number, height: number) => Promise<void>;
     onUrlChanged: (callback: (url: string) => void) => void;
     onRecordingState: (callback: (recording: boolean) => void) => void;
     onReplayProgress: (callback: (progress: { current: number; total: number; step: unknown }) => void) => void;
@@ -155,6 +156,7 @@ const electronAPI: ElectronAPI = {
     listWorkflows: () => ipcRenderer.invoke('pi:browser:listWorkflows'),
     deleteWorkflow: (name) => ipcRenderer.invoke('pi:browser:deleteWorkflow', name),
     replay: (name, variables?) => ipcRenderer.invoke('pi:browser:replay', name, variables),
+    setViewport: (width, height) => ipcRenderer.invoke('pi:browser:setViewport', width, height),
     onUrlChanged: (callback) => {
       ipcRenderer.on('pi:browser:urlChanged', (_event, url) => callback(url));
     },

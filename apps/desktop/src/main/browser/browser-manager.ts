@@ -1,11 +1,8 @@
-import { chromium, type Page, type Browser, type Frame } from 'playwright-core';
+import { webContents } from 'electron';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { RECORDING_SCRIPT, RECORDING_MESSAGE_PREFIX } from './recording-script';
-
-/** CDP endpoint — Electron's remote-debugging-port. */
-const CDP_ENDPOINT = 'http://localhost:19222';
 
 /** A single recorded workflow step. */
 export interface WorkflowStep {
@@ -40,19 +37,18 @@ type RecordingStateCallback = (recording: boolean) => void;
 type ReplayProgressCallback = (current: number, total: number, step: WorkflowStep) => void;
 
 /**
- * BrowserManager — manages Playwright connection to the Electron webview,
+ * BrowserManager — manages the Electron webview via the debugger API,
  * browser automation, and recording/replay of workflows.
  *
- * The manager maintains a persistent CDP connection so both the agent
- * (via CLI → HTTP API) and the user (via webview) interact with the
- * same browser instance.
+ * Uses Electron's webContents.debugger API instead of Playwright's
+ * page enumeration because Playwright's connectOverCDP does not expose
+ * `type: "webview"` CDP targets (Electron 38).
  */
 export class BrowserManager {
-  private browser: Browser | null = null;
-  private page: Page | null = null;
+  private webviewWc: Electron.WebContents | null = null;
+  private debuggerAttached = false;
   private recording = false;
   private recordedSteps: WorkflowStep[] = [];
-  private consoleHandler: ((msg: { text: () => string }) => void) | null = null;
   private urlChangedCallbacks: UrlChangedCallback[] = [];
   private recordingStateCallbacks: RecordingStateCallback[] = [];
   private replayProgressCallbacks: ReplayProgressCallback[] = [];
@@ -62,236 +58,305 @@ export class BrowserManager {
     this.workflowsDir = workflowsDir ?? join(homedir(), '.pi', 'agent', 'workflows');
   }
 
-  /** Connect to the Electron app's Chromium via CDP and find the webview page. */
+  /** ——— Connection ——— */
+
+  /** Connect to the Electron webview via the debugger API. */
   async connect(): Promise<void> {
-    this.browser = await chromium.connectOverCDP(CDP_ENDPOINT);
+    // Find the webview webContents in all Electron views
+    const allWc = webContents.getAllWebContents();
+    const wv = allWc.find((wc) => wc.getType() === 'webview');
 
-    // Find the webview page. Electron webviews appear as separate pages
-    // in the CDP session. We look for pages whose URL doesn't match the
-    // main app window (which is the renderer).
-    await this.findWebviewPage();
-
-    if (!this.page) {
+    if (!wv) {
       throw new Error('No webview page found. Ensure the Browser tab is open.');
     }
 
-    // Set up URL change monitoring
-    this.page.on('framenavigated', (frame: Frame) => {
-      if (frame === this.page!.mainFrame()) {
-        const url = frame.url();
-        this.urlChangedCallbacks.forEach((cb) => cb(url));
+    this.webviewWc = wv;
+
+    // Attach the debugger (Electron's debugger API handles CDP messaging)
+    try {
+      wv.debugger.attach('1.3');
+      this.debuggerAttached = true;
+    } catch (err) {
+      // If already attached by something else, try continuing
+      if (err instanceof Error && err.message.includes('already attached')) {
+        this.debuggerAttached = true;
+      } else {
+        throw err;
       }
-    });
+    }
 
-    console.log('[BrowserManager] Connected to webview page');
-  }
+    // Listen for CDP events (not command responses — those use the Promise from sendCommand)
+    wv.debugger.on('message', (_event, method: string, params: Record<string, unknown>) => {
+      if (method === 'Runtime.consoleAPICalled') {
+        this.handleConsoleMessage(params);
+      }
 
-  /** Find the webview page from all CDP contexts. */
-  private async findWebviewPage(): Promise<void> {
-    if (!this.browser) return;
-
-    const contexts = this.browser.contexts();
-    for (const context of contexts) {
-      const pages = context.pages();
-      for (const page of pages) {
-        const url = page.url();
-        // The webview page will have a URL that's not the app's renderer URL
-        // (which is either a file:// or http://localhost:vite-port URL)
-        // Webview pages typically have about:blank or external URLs
-        if (!url.includes('localhost') && !url.startsWith('file://') && !url.includes('pi-coding-agent')) {
-          this.page = page;
-          return;
+      if (method === 'Page.frameNavigated' && params?.frame) {
+        const frame = params.frame as { url?: string };
+        const url = frame.url || '';
+        if (url && !url.startsWith('about:')) {
+          this.urlChangedCallbacks.forEach((cb) => cb(url));
         }
       }
-    }
-
-    // If no webview page found, try the first non-main page
-    for (const context of contexts) {
-      const pages = context.pages();
-      if (pages.length > 1) {
-        // Second page is likely the webview
-        this.page = pages[1];
-        return;
-      }
-    }
-  }
-
-  /** Set the active webview page (called when webview is created/changed). */
-  async setPage(page: Page): Promise<void> {
-    // Clean up old page listeners
-    if (this.page && this.consoleHandler) {
-      this.page.off('console', this.consoleHandler);
-    }
-
-    this.page = page;
-
-    this.page.on('framenavigated', (frame: Frame) => {
-      if (frame === this.page!.mainFrame()) {
-        const url = frame.url();
-        this.urlChangedCallbacks.forEach((cb) => cb(url));
-      }
     });
 
-    // Re-attach recording handler if recording
-    if (this.recording && this.consoleHandler) {
-      this.page.on('console', this.consoleHandler);
+    // Enable necessary CDP domains
+    await this.sendCommand('Page.enable');
+    await this.sendCommand('Runtime.enable');
+    await this.sendCommand('Accessibility.enable');
+
+    console.log('[BrowserManager] Connected to webview via debugger API');
+  }
+
+  /** ——— CDP communication ——— */
+
+  /**
+   * Send a CDP command via Electron's debugger API.
+   * Electron automatically manages CDP message IDs and routes responses.
+   */
+  private sendCommand(method: string, params: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    if (!this.webviewWc || !this.debuggerAttached) {
+      return Promise.reject(new Error('Debugger not attached'));
     }
+
+    // Wrap with timeout
+    const timeoutMs = 30000;
+    return Promise.race([
+      this.webviewWc.debugger.sendCommand(method, params),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`CDP command "${method}" timed out`)), timeoutMs)
+      ),
+    ]) as Promise<Record<string, unknown>>;
   }
 
-  /** Register a callback for URL changes. */
-  onUrlChanged(cb: UrlChangedCallback): void {
-    this.urlChangedCallbacks.push(cb);
-  }
-
-  /** Register a callback for recording state changes. */
-  onRecordingState(cb: RecordingStateCallback): void {
-    this.recordingStateCallbacks.push(cb);
-  }
-
-  /** Register a callback for replay progress. */
-  onReplayProgress(cb: ReplayProgressCallback): void {
-    this.replayProgressCallbacks.push(cb);
-  }
-
-  /** Ensure we're connected and have a page. */
-  private ensurePage(): Page {
-    if (!this.page) {
-      throw new Error('Browser not connected. Open the Browser tab first.');
-    }
-    return this.page;
-  }
+  /** ——— Core browser operations ——— */
 
   /** Navigate to a URL. */
   async navigate(url: string): Promise<{ url: string; title: string }> {
-    const page = this.ensurePage();
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    return {
-      url: page.url(),
-      title: await page.title(),
-    };
+    await this.sendCommand('Page.navigate', { url });
+    // Wait for page to load (simple delay approach)
+    await this.waitForPageLoad();
+    const title = await this.getTitle();
+    const currentUrl = await this.getCurrentUrl();
+    return { url: currentUrl, title };
   }
 
-  /** Get the current URL and title. */
+  /** Get the current URL. */
   async getUrl(): Promise<{ url: string; title: string }> {
-    const page = this.ensurePage();
-    return {
-      url: page.url(),
-      title: await page.title(),
-    };
+    const [url, title] = await Promise.all([this.getCurrentUrl(), this.getTitle()]);
+    return { url, title };
   }
+
+  /** Get the current page title via CDP. */
+  private async getTitle(): Promise<string> {
+    try {
+      const result = await this.sendCommand('Runtime.evaluate', {
+        expression: 'document.title',
+        returnByValue: true,
+      });
+      return (result?.result as { value?: string })?.value ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** Get the current page URL via CDP. */
+  private async getCurrentUrl(): Promise<string> {
+    try {
+      const result = await this.sendCommand('Runtime.evaluate', {
+        expression: 'window.location.href',
+        returnByValue: true,
+      });
+      return (result?.result as { value?: string })?.value ?? 'about:blank';
+    } catch {
+      return 'about:blank';
+    }
+  }
+
+  /** Wait for the page to finish loading (domcontentloaded). */
+  private async waitForPageLoad(timeoutMs = 15000): Promise<void> {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const result = await this.sendCommand('Runtime.evaluate', {
+          expression: 'document.readyState',
+          returnByValue: true,
+        });
+        const state = (result?.result as { value?: string })?.value;
+        if (state === 'complete' || state === 'interactive') {
+          // Extra small delay for rendering
+          await new Promise((r) => setTimeout(r, 500));
+          return;
+        }
+      } catch {
+        // Ignore evaluation errors during load
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    throw new Error('Page load timed out');
+  }
+
+  /** ——— Snapshot / accessibility ——— */
 
   /** Take an accessibility snapshot and format it as a text tree with refs. */
   async getSnapshot(): Promise<string> {
-    const page = this.ensurePage();
+    try {
+      // Use DOM-based snapshot (more reliable than AXTree)
+      const result = await this.sendCommand('Runtime.evaluate', {
+        expression: `(function() {
+          function buildNode(el, depth, ref) {
+            var indent = '  '.repeat(depth);
+            var tag = el.tagName ? el.tagName.toLowerCase() : 'unknown';
+            var role = el.getAttribute('role') || '';
+            var ariaLabel = el.getAttribute('aria-label') || '';
+            var text = (el.textContent || '').trim().slice(0, 50);
+            var name = ariaLabel || text;
 
-    // Use page.evaluate to extract a simplified DOM tree with role/name info.
-    // This replaces the deprecated page.accessibility.snapshot() API.
-    const tree = await page.evaluate(() => {
-      function buildNode(el: Element, depth: number, ref: string): string {
-        const indent = '  '.repeat(depth);
-        const tag = el.tagName.toLowerCase();
-        const role = el.getAttribute('role') ?? '';
-        const ariaLabel = el.getAttribute('aria-label') ?? '';
-        const text = (el.textContent ?? '').trim().slice(0, 50);
-        const name = ariaLabel || text;
+            var cs = window.getComputedStyle(el);
+            if (cs.display === 'none' || cs.visibility === 'hidden') return '';
 
-        // Skip non-interactive, non-visible elements
-        const computedStyle = window.getComputedStyle(el);
-        if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
-          return '';
-        }
+            var nodeRef = ref + (depth + 1);
+            var line = indent + '[' + nodeRef + '] ';
+            if (role) line += role;
+            else line += tag;
+            if (name) line += ': "' + name + '"';
 
-        const nodeRef = ref + (depth + 1);
-        let line = `${indent}[${nodeRef}] `;
-        if (role) {
-          line += `${role}`;
-        } else {
-          line += tag;
-        }
-        if (name) {
-          line += `: "${name}"`;
-        }
+            var childLines = [];
+            var children = el.children;
+            for (var i = 0; i < children.length && i < 50; i++) {
+              var childRef = nodeRef + '.' + (i + 1) + '.';
+              var childLine = buildNode(children[i], depth + 1, childRef);
+              if (childLine) childLines.push(childLine);
+            }
 
-        const childLines: string[] = [];
-        const children = el.children;
-        for (let i = 0; i < children.length; i++) {
-          const childRef = nodeRef + '.' + (i + 1) + '.';
-          const childLine = buildNode(children[i], depth + 1, childRef);
-          if (childLine) childLines.push(childLine);
-        }
+            return [line].concat(childLines).join('\\n');
+          }
 
-        return [line, ...childLines].join('\n');
-      }
+          var body = document.body;
+          if (!body) return '(empty page)';
+          return buildNode(body, 0, '');
+        })()`,
+        returnByValue: true,
+      });
 
-      const body = document.body;
-      if (!body) return '(empty page)';
-      return buildNode(body, 0, '');
-    });
-
-    return tree;
+      return (result?.result as { value?: string })?.value ?? '(empty page)';
+    } catch {
+      return '(snapshot unavailable)';
+    }
   }
+
+  /** ——— Interaction ——— */
 
   /** Click an element by selector. */
   async click(selector: string): Promise<{ selector: string; clicked: boolean }> {
-    const page = this.ensurePage();
-    await page.locator(selector).first().click({ timeout: 10000 });
-    return { selector, clicked: true };
+    const escapedSelector = selector.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const result = await this.sendCommand('Runtime.evaluate', {
+      expression: `(function(){
+        var el = document.querySelector('${escapedSelector}');
+        if (el) { el.scrollIntoView({block:'center'}); el.click(); return true; }
+        return false;
+      })()`,
+      returnByValue: true,
+    });
+    const clicked = (result?.result as { value?: boolean })?.value ?? false;
+    return { selector, clicked };
   }
 
-  /** Fill an input by selector. */
+  /** Fill an input by selector. Uses the native value setter to support React/Vue controlled inputs. */
   async fill(selector: string, value: string): Promise<{ selector: string; value: string }> {
-    const page = this.ensurePage();
-    await page.locator(selector).first().fill(value, { timeout: 10000 });
+    const escapedSelector = selector.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const escapedValue = value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    await this.sendCommand('Runtime.evaluate', {
+      expression: `(function(){
+        var el = document.querySelector('${escapedSelector}');
+        if (!el) return;
+        el.focus();
+
+        // Use native value setter for React/Vue controlled inputs
+        var tag = el.tagName && el.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea') {
+          var nativeSetter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype, 'value'
+          );
+          if (nativeSetter && nativeSetter.set) {
+            nativeSetter.set.call(el, '${escapedValue}');
+          } else {
+            el.value = '${escapedValue}';
+          }
+        } else if (el.isContentEditable) {
+          el.textContent = '${escapedValue}';
+        } else {
+          el.value = '${escapedValue}';
+        }
+
+        el.dispatchEvent(new Event('input', {bubbles: true}));
+        el.dispatchEvent(new Event('change', {bubbles: true}));
+      })()`,
+      returnByValue: true,
+    });
     return { selector, value };
   }
 
   /** Take a screenshot and return base64. */
   async screenshot(): Promise<{ base64: string }> {
-    const page = this.ensurePage();
-    const buffer = await page.screenshot({ type: 'png' });
-    return { base64: buffer.toString('base64') };
+    const result = await this.sendCommand('Page.captureScreenshot', {
+      format: 'png',
+    });
+    return { base64: (result?.data as string) ?? '' };
   }
 
   /** Scroll the page. */
   async scroll(direction: 'up' | 'down', amount = 500): Promise<{ direction: string; amount: number }> {
-    const page = this.ensurePage();
     const dy = direction === 'down' ? amount : -amount;
-    await page.evaluate(`window.scrollBy(0, ${dy})`);
+    await this.sendCommand('Runtime.evaluate', {
+      expression: `window.scrollBy(0, ${dy})`,
+      returnByValue: true,
+    });
     return { direction, amount };
   }
 
   /** Evaluate a JavaScript expression in the page. */
   async evaluate(expression: string): Promise<{ result: unknown }> {
-    const page = this.ensurePage();
-    const result = await page.evaluate(expression);
-    return { result };
+    const result = await this.sendCommand('Runtime.evaluate', {
+      expression,
+      returnByValue: true,
+    });
+    return { result: (result?.result as { value?: unknown })?.value };
   }
 
-  // ── Recording ──
+  /** ——— Recording ——— */
+
+  /** Handle console messages from the webview (for recording). */
+  private handleConsoleMessage(params: Record<string, unknown>): void {
+    if (!this.recording) return;
+
+    const args = params?.args as Array<{ type?: string; value?: string }> | undefined;
+    if (!args || args.length === 0) return;
+
+    const text = args.map((a) => a.value ?? '').join(' ');
+    if (text.startsWith(RECORDING_MESSAGE_PREFIX)) {
+      try {
+        const step = JSON.parse(text.slice(RECORDING_MESSAGE_PREFIX.length));
+        this.recordedSteps.push(step);
+      } catch {
+        // Ignore malformed messages
+      }
+    }
+  }
 
   /** Start recording user interactions. */
   async startRecording(): Promise<{ started: boolean }> {
-    const page = this.ensurePage();
     this.recording = true;
     this.recordedSteps = [];
 
-    // Set up console handler to capture recording messages
-    this.consoleHandler = (msg) => {
-      const text = msg.text();
-      if (text.startsWith(RECORDING_MESSAGE_PREFIX)) {
-        try {
-          const step = JSON.parse(text.slice(RECORDING_MESSAGE_PREFIX.length));
-          this.recordedSteps.push(step);
-        } catch {
-          // Ignore malformed messages
-        }
-      }
-    };
-
-    page.on('console', this.consoleHandler);
+    // Enable console and runtime domains
+    await this.sendCommand('Runtime.enable', {});
 
     // Inject the recording script
-    await page.evaluate(RECORDING_SCRIPT);
+    await this.sendCommand('Runtime.evaluate', {
+      expression: RECORDING_SCRIPT,
+      returnByValue: true,
+    });
 
     this.recordingStateCallbacks.forEach((cb) => cb(true));
     console.log('[BrowserManager] Recording started');
@@ -300,20 +365,14 @@ export class BrowserManager {
 
   /** Stop recording and return captured steps. */
   async stopRecording(): Promise<{ steps: WorkflowStep[] }> {
-    const page = this.ensurePage();
-
-    // Remove the recording script (cleanup)
-    await page.evaluate(() => {
-      // The script set window.__piBrowserRecording; we can't fully undo the
-      // event listeners without a page reload, but we stop collecting.
-      (window as unknown as Record<string, unknown>).__piBrowserRecording = false;
-    }).catch(() => {
+    // Set flag to stop recording in the injected script
+    try {
+      await this.sendCommand('Runtime.evaluate', {
+        expression: '(function(){ window.__piBrowserRecording = false; })()',
+        returnByValue: true,
+      });
+    } catch {
       // Ignore errors if page navigated away
-    });
-
-    if (this.consoleHandler) {
-      page.off('console', this.consoleHandler);
-      this.consoleHandler = null;
     }
 
     this.recording = false;
@@ -328,7 +387,7 @@ export class BrowserManager {
     return this.recording;
   }
 
-  // ── Workflow management ──
+  /** ——— Workflow management ——— */
 
   /** Save a workflow to disk. */
   async saveWorkflow(name: string, steps: WorkflowStep[]): Promise<{ name: string; saved: boolean }> {
@@ -410,7 +469,6 @@ export class BrowserManager {
 
   /** Replay a saved workflow with optional variable substitutions. */
   async replay(name: string, variables: Record<string, string> = {}): Promise<{ name: string; completed: boolean; stepCount: number }> {
-    const page = this.ensurePage();
     const filepath = join(this.workflowsDir, `${name}.json`);
     if (!existsSync(filepath)) {
       throw new Error(`Workflow "${name}" not found`);
@@ -435,28 +493,28 @@ export class BrowserManager {
         switch (step.type) {
           case 'navigate':
             if (stepUrl) {
-              await page.goto(stepUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+              await this.sendCommand('Page.navigate', { url: stepUrl });
+              await this.waitForPageLoad();
             }
             break;
           case 'click':
             if (stepSelector) {
-              await page.locator(stepSelector).first().click({ timeout: 10000 });
+              await this.click(stepSelector);
             }
             break;
           case 'fill':
             if (stepSelector && stepValue !== undefined) {
-              await page.locator(stepSelector).first().fill(stepValue, { timeout: 10000 });
+              await this.fill(stepSelector, stepValue);
             }
             break;
           case 'scroll':
             if (step.direction && step.amount) {
-              const dy = step.direction === 'down' ? step.amount : -step.amount;
-              await page.evaluate(`window.scrollBy(0, ${dy})`);
+              await this.scroll(step.direction, step.amount);
             }
             break;
         }
         // Small delay between steps for stability
-        await page.waitForTimeout(300);
+        await new Promise((r) => setTimeout(r, 300));
       } catch (err) {
         console.error(`[BrowserManager] Replay step ${i + 1}/${total} failed:`, err);
         // Continue with next step rather than aborting entirely
@@ -470,12 +528,47 @@ export class BrowserManager {
     return { name, completed: true, stepCount: total };
   }
 
-  /** Disconnect from CDP. */
+  /** ——— Events ——— */
+
+  /** Register a callback for URL changes. */
+  onUrlChanged(cb: UrlChangedCallback): void {
+    this.urlChangedCallbacks.push(cb);
+  }
+
+  /** Register a callback for recording state changes. */
+  onRecordingState(cb: RecordingStateCallback): void {
+    this.recordingStateCallbacks.push(cb);
+  }
+
+  /** Register a callback for replay progress. */
+  onReplayProgress(cb: ReplayProgressCallback): void {
+    this.replayProgressCallbacks.push(cb);
+  }
+
+  /** ——— Viewport ——— */
+
+  /** Override the webview's device metrics to match the panel width. */
+  async setDeviceMetrics(width: number, height: number): Promise<void> {
+    await this.sendCommand('Emulation.setDeviceMetricsOverride', {
+      width: Math.round(width),
+      height: Math.round(height),
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+  }
+
+  /** ——— Cleanup ——— */
+
+  /** Disconnect the debugger. */
   async disconnect(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-      this.page = null;
+    if (this.webviewWc && this.debuggerAttached) {
+      try {
+        this.webviewWc.debugger.detach();
+      } catch {
+        // Ignore detach errors
+      }
+      this.debuggerAttached = false;
     }
+    this.webviewWc = null;
   }
 }
