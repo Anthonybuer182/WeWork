@@ -11,8 +11,24 @@ Browser automation CLI for the Pi Coding Agent desktop app. Control the built-in
 
 - The desktop app runs a local HTTP server on `127.0.0.1:19223`
 - `pi-browser` CLI sends requests to this server
-- The server drives a Playwright-connected Chromium (the app's own `<webview>`)
+- The server drives the app's `<webview>` via Chrome DevTools Protocol
 - Both agent and user see the **same browser instance** — all actions are visible in real time
+
+## Quick Start: The 3-Step Workflow
+
+**Always follow this pattern for browser automation:**
+
+```bash
+# 1. Navigate to the page
+pi-browser navigate https://example.com
+
+# 2. Get the interactive elements snapshot (shows ref IDs)
+pi-browser snapshot
+
+# 3. Use the ref ID to click/fill — most reliable
+pi-browser click [3]
+pi-browser fill [5] 'user@example.com'
+```
 
 ## Commands
 
@@ -25,8 +41,19 @@ pi-browser navigate https://example.com
 # Get the current URL and page title
 pi-browser url
 
-# Get accessibility tree of the page (for understanding page structure)
+# Get interactive elements tree with ref IDs (PRIMARY way to understand the page)
 pi-browser snapshot
+
+# Get text content of the entire page
+pi-browser text
+
+# Get text content of a specific element
+pi-browser text [3]
+pi-browser text 'button:has-text("Save")'
+
+# Get an attribute value of an element
+pi-browser attribute [3] href
+pi-browser attribute 'a:has-text("Docs")' href
 
 # Take a screenshot (returns base64, or save to file)
 pi-browser screenshot
@@ -44,13 +71,35 @@ pi-browser evaluate "document.querySelectorAll('a').length"
 ### Interaction
 
 ```bash
-# Click an element
+# Click an element — supports [N] refs, text selectors, CSS
+pi-browser click [3]
 pi-browser click 'button:has-text("Login")'
+pi-browser click 'text="Sign In"'
+pi-browser click 'role=button[name="Submit"]'
 pi-browser click '[data-testid="submit-btn"]'
 
 # Fill an input field
+pi-browser fill [5] 'user@example.com'
 pi-browser fill 'input[name="email"]' 'user@example.com'
 pi-browser fill '#search-box' 'cats'
+
+# Hover over an element (triggers hover menus, tooltips)
+pi-browser hover [3]
+pi-browser hover 'nav a:has-text("Products")'
+
+# Select an option in a dropdown
+pi-browser select [7] 'United States'
+pi-browser select 'select[name="country"]' 'US'
+
+# Press a keyboard key
+pi-browser press Enter
+pi-browser press Tab
+pi-browser press Escape
+pi-browser press ArrowDown
+
+# Wait for an element to appear (default timeout 10s)
+pi-browser wait '[data-testid="results"]'
+pi-browser wait 'div.loading' 5000
 ```
 
 ### Recording & Replaying Workflows
@@ -65,7 +114,6 @@ pi-browser record start
 pi-browser record stop
 
 # Save recorded steps as a named workflow
-# Steps come from stdin (pipe from record stop)
 pi-browser record stop | pi-browser save "GitHub Login"
 
 # List saved workflows
@@ -78,26 +126,46 @@ pi-browser replay "GitHub Login" --var username=myuser --var password=mypass
 pi-browser delete "GitHub Login"
 ```
 
-## Selector Guide
+## Selectors
 
-The CLI uses Playwright selectors. Choose the most specific one available:
+Multiple selector formats are supported. **Use ref IDs from snapshot whenever possible** — they're the most reliable.
 
-| Type | Example | When to use |
-|------|---------|-------------|
-| **data-testid** | `[data-testid="login-btn"]` | Best — most stable |
-| **id** | `#email-input` | Good if ID is semantic (not auto-generated) |
-| **aria-label** | `[aria-label="Search"]` | Good for icon buttons |
-| **has-text** | `button:has-text("Sign In")` | Good for buttons/links with visible text |
-| **role** | `role=button[name="Submit"]` | Good for ARIA-compliant pages |
-| **name attr** | `input[name="password"]` | Good for form fields |
-| **CSS** | `div.header > nav a:first-child` | Fallback — most fragile |
+| Priority | Format | Example | When to use |
+|----------|--------|---------|-------------|
+| **1** (best) | `[N]` ref ID | `[3]` | From `snapshot` output — always works |
+| **2** | `text="..."` | `text="Sign In"` | Find element by exact text |
+| **3** | `:has-text()` | `button:has-text("Save")` | CSS tag + text match |
+| **4** | `role=` | `role=button[name="Submit"]` | ARIA-compliant pages |
+| **5** | `data-testid` | `[data-testid="login-btn"]` | Stable test attributes |
+| **6** | `name=` | `input[name="email"]` | Form fields |
+| **7** | `aria-label` | `[aria-label="Search"]` | Icon buttons |
+| **8** (fallback) | CSS | `#id`, `.class`, `div > a:first-child` | Last resort — most fragile |
 
 ### Selector Tips
 
-- Always **quote** selectors in the shell to avoid glob expansion
-- Use `pi-browser snapshot` first to understand the page structure
-- Prefer `:has-text()` for clickable elements with visible text
-- For complex pages, combine: `div.modal input[name="email"]`
+- **Always run `snapshot` first** to see what elements are available and their ref IDs
+- **Quote selectors** in the shell to avoid glob expansion
+- Ref IDs (`[N]`) are only valid until the page navigates — after navigation, run `snapshot` again
+- All interaction commands **auto-wait** up to 5 seconds for the element to appear
+- If an element is not found, the error message suggests similar elements
+
+## Snapshot Output Format
+
+```
+--- Interactive Elements ---
+Page: Example Site | H1: Welcome
+[1] link "Home" [href=/]
+[2] link "Products" [href=/products]
+[3] button "Search" [aria-label="Search"]
+[4] textbox "Email" [type=email, placeholder="Enter email", name=email]
+[5] textbox "Password" [type=password, placeholder="Password", name=password]
+[6] button "Sign In"
+[7] checkbox "Remember me" [name=remember]
+[8] link "Forgot password?" [href=/forgot]
+[9] combobox "Country" [name=country]
+```
+
+Each line shows: `[ref]` `role` `"accessible name"` `[attributes]`
 
 ## Workflow Variables
 
@@ -116,11 +184,13 @@ Variables are automatically detected from `{{...}}` patterns in fill values and 
 
 ## Best Practices
 
-1. **Always navigate first** — `pi-browser navigate <url>` before any other command
-2. **Snapshot before acting** — run `pi-browser snapshot` to understand the page, then decide what to click/fill
-3. **Use screenshots for verification** — after important actions, take a screenshot to confirm the result
-4. **Quote all selectors** — shell-special characters in selectors must be quoted
-5. **One action per command** — don't try to chain multiple actions in one CLI call
+1. **Navigate first** — `pi-browser navigate <url>` before any other command
+2. **Snapshot before acting** — run `pi-browser snapshot` to see the page structure and ref IDs
+3. **Use ref IDs** — `click [3]` is more reliable than any CSS selector
+4. **Verify after actions** — after important clicks/fills, run `snapshot` or `screenshot` to confirm
+5. **Quote all selectors** — shell-special characters must be quoted
+6. **One action per command** — don't chain multiple actions in one CLI call
+7. **Re-snapshot after navigation** — ref IDs reset when the page changes
 
 ## Typical Workflow
 
@@ -130,45 +200,30 @@ pi-browser navigate https://example.com/login
 
 # 2. Get the page structure
 pi-browser snapshot
+# Output:
+# --- Interactive Elements ---
+# Page: Login | H1: Sign In
+# [1] textbox "Email" [type=email, name=email]
+# [2] textbox "Password" [type=password, name=password]
+# [3] button "Sign In"
+# [4] link "Forgot password?" [href=/forgot]
 
-# 3. Fill the form based on what you found
-pi-browser fill 'input[name="username"]' 'myuser'
-pi-browser fill 'input[name="password"]' 'mypass'
+# 3. Fill the form using ref IDs
+pi-browser fill [1] 'myuser@example.com'
+pi-browser fill [2] 'mypass123'
 
 # 4. Click the login button
-pi-browser click 'button:has-text("Sign In")'
+pi-browser click [3]
 
 # 5. Verify the result
 pi-browser snapshot
 pi-browser screenshot --output /tmp/after-login.png
 ```
 
-## Recording a Workflow
-
-```bash
-# 1. Tell the user to click "Record" in the browser panel
-# 2. Start recording
-pi-browser record start
-
-# 3. User performs actions in the browser (navigate, click, fill)
-#    The system captures each action with a selector
-
-# 4. Stop recording
-pi-browser record stop > /tmp/steps.json
-
-# 5. Save as a named workflow
-cat /tmp/steps.json | pi-browser save "My Workflow"
-
-# 6. List workflows
-pi-browser workflows
-
-# 7. Replay later with variables
-pi-browser replay "My Workflow" --var key=value
-```
-
 ## Notes
 
 - The browser must be open in the right panel of the desktop app
-- All commands return JSON on stdout (except `snapshot` which returns text)
+- All commands return JSON on stdout (except `snapshot` and `text` which return plain text)
 - Errors are written to stderr with exit code 1
 - The server only listens on `127.0.0.1` — no external access
+- All interaction commands (click, fill, hover, select) auto-wait up to 5s for the element

@@ -88,28 +88,35 @@ async function main() {
     outputText(`pi-browser — Browser automation CLI for Pi Coding Agent
 
 Usage:
-  pi-browser navigate <url>          Navigate to a URL
-  pi-browser snapshot                Get accessibility tree of the page
-  pi-browser click <selector>        Click an element by selector
-  pi-browser fill <selector> <value> Fill an input with a value
+  pi-browser navigate <url>              Navigate to a URL
+  pi-browser snapshot                     Get interactive elements tree with ref IDs
+  pi-browser click <selector>            Click an element (supports [N], :has-text, role=, text=, CSS)
+  pi-browser fill <selector> <value>     Fill an input with a value
+  pi-browser hover <selector>            Hover over an element
+  pi-browser select <selector> <value>   Select an option in a <select> dropdown
+  pi-browser press <key>                 Press a keyboard key (Enter, Tab, Escape, etc.)
+  pi-browser wait <selector> [timeout]   Wait for an element to appear (default 10s)
+  pi-browser text [selector]             Get text content of element or entire page
+  pi-browser attribute <selector> <attr> Get an attribute value of an element
   pi-browser screenshot [--output <path>]  Take a screenshot (base64 or save to file)
-  pi-browser scroll <up|down> [amount]     Scroll the page
-  pi-browser evaluate <expression>   Evaluate JavaScript in the page
-  pi-browser record start            Start recording user interactions
-  pi-browser record stop             Stop recording, return captured steps
+  pi-browser scroll <up|down> [amount]   Scroll the page
+  pi-browser evaluate <expression>       Evaluate JavaScript in the page
+  pi-browser record start                Start recording user interactions
+  pi-browser record stop                 Stop recording, return captured steps
   pi-browser replay <name> [--var key=value]...  Replay a saved workflow
-  pi-browser workflows               List saved workflows
-  pi-browser save <name>             Save recorded steps as a workflow (use --steps for JSON input)
-  pi-browser delete <name>           Delete a saved workflow
-  pi-browser url                     Get current URL and title
-  pi-browser health                  Check server health
+  pi-browser workflows                   List saved workflows
+  pi-browser save <name>                 Save recorded steps as a workflow (use --steps for JSON input)
+  pi-browser delete <name>               Delete a saved workflow
+  pi-browser url                         Get current URL and title
+  pi-browser health                      Check server health
 
-Selectors:
-  CSS:                    button#submit, input[name=email]
-  Has-text:               button:has-text("Login")
-  ARIA role:              role=button[name="Submit"]
-  Aria-label:             [aria-label="Search"]
-  Data-testid:            [data-testid="login-btn"]
+Selectors (in priority order):
+  [N]                     Use ref ID from snapshot (most reliable)
+  text="Sign In"          Find element by text content
+  button:has-text("Save") CSS tag + text match
+  role=button[name="Save"] ARIA role-based
+  [data-testid="x"]       data-testid attribute
+  #id, .class, input[name=email]  Standard CSS
 
 Workflow Variables:
   Use {{variableName}} in recorded fill/navigate values.
@@ -153,10 +160,72 @@ Workflow Variables:
       break;
     }
 
+    case 'hover': {
+      const selector = args[1];
+      if (!selector) { outputText('Usage: pi-browser hover <selector>'); process.exit(1); }
+      const result = await request('POST', '/hover', { selector });
+      outputJSON(result);
+      break;
+    }
+
+    case 'select': {
+      const selector = args[1];
+      const value = args[2];
+      if (!selector || value === undefined) {
+        outputText('Usage: pi-browser select <selector> <value>');
+        process.exit(1);
+      }
+      const result = await request('POST', '/select', { selector, value });
+      outputJSON(result);
+      break;
+    }
+
+    case 'press': {
+      const key = args[1];
+      if (!key) { outputText('Usage: pi-browser press <key>'); process.exit(1); }
+      const result = await request('POST', '/press', { key });
+      outputJSON(result);
+      break;
+    }
+
+    case 'wait': {
+      const selector = args[1];
+      if (!selector) { outputText('Usage: pi-browser wait <selector> [timeout]'); process.exit(1); }
+      const timeout = args[2] ? parseInt(args[2], 10) : 10000;
+      const result = await request('POST', '/wait', { selector, timeout });
+      outputJSON(result);
+      break;
+    }
+
+    case 'text': {
+      const selector = args[1];
+      if (selector) {
+        const result = await request('POST', '/text', { selector });
+        outputText(result.text || '');
+      } else {
+        const result = await request('GET', '/text');
+        outputText(result.text || '');
+      }
+      break;
+    }
+
+    case 'attribute': {
+      const selector = args[1];
+      const attr = args[2];
+      if (!selector || !attr) {
+        outputText('Usage: pi-browser attribute <selector> <attribute>');
+        process.exit(1);
+      }
+      const result = await request('POST', '/attribute', { selector, attribute: attr });
+      outputJSON(result);
+      break;
+    }
+
     case 'screenshot': {
       const outputIdx = args.indexOf('--output');
       const outputPath = outputIdx >= 0 ? args[outputIdx + 1] : null;
-      const result = await request('GET', '/screenshot');
+      const fullPage = args.includes('--fullpage') || args.includes('--full');
+      const result = await request('GET', fullPage ? '/screenshot?fullPage=true' : '/screenshot');
       if (outputPath) {
         const fs = await import('fs');
         fs.writeFileSync(outputPath, Buffer.from(result.base64, 'base64'));

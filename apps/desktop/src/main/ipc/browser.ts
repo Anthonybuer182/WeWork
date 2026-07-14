@@ -100,4 +100,13 @@ export function registerBrowserIpcHandlers(browserManager: BrowserManager): void
       win.webContents.send('pi:browser:replayProgress', { current, total, step });
     });
   });
+
+  // When the BrowserManager needs the Browser tab to be open (e.g. CLI
+  // commands arrive while the user is on the Preview tab), forward the
+  // request to the renderer to switch tabs.
+  browserManager.onSwitchToBrowserTab(() => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('pi:browser:switchToBrowserTab');
+    });
+  });
 }

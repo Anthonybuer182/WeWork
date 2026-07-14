@@ -35,11 +35,11 @@ if (!gotLock) {
   });
 
   /**
-   * On first launch, copy bundled skills from the app's resources into
+   * On launch, sync bundled skills from the app's resources into
    * ~/.pi/agent/skills/ so the pi-coding-agent SDK auto-discovers them.
    *
-   * Each bundled skill directory is only copied if it doesn't already
-   * exist in the target (won't overwrite user-installed skills).
+   * Always overwrites app-provided files (SKILL.md, bin/) to ensure
+   * the latest versions are used. User-created files are preserved.
    */
   function migrateSkills(): void {
     const __filename = fileURLToPath(import.meta.url);
@@ -60,9 +60,25 @@ if (!gotLock) {
       .filter((d) => d.isDirectory());
 
     for (const dir of bundledDirs) {
+      const sourcePath = join(bundledSource, dir.name);
       const target = join(targetDir, dir.name);
       if (!existsSync(target)) {
-        cpSync(join(bundledSource, dir.name), target, { recursive: true });
+        // New skill — copy entirely
+        cpSync(sourcePath, target, { recursive: true });
+      } else {
+        // Existing skill — sync app-provided files (SKILL.md, bin/)
+        const filesToSync = readdirSync(sourcePath, { withFileTypes: true });
+        for (const entry of filesToSync) {
+          const srcFile = join(sourcePath, entry.name);
+          const tgtFile = join(target, entry.name);
+          if (entry.isDirectory()) {
+            // Always overwrite bin/ directory contents
+            cpSync(srcFile, tgtFile, { recursive: true, force: true });
+          } else {
+            // Overwrite top-level files like SKILL.md
+            cpSync(srcFile, tgtFile, { force: true });
+          }
+        }
       }
     }
   }

@@ -14,6 +14,7 @@ interface WebviewElement extends HTMLElement {
 
 interface BrowserQuoteButtonProps {
   webviewRef: React.RefObject<WebviewElement | null>;
+  zoom?: number;
 }
 
 /**
@@ -25,10 +26,12 @@ interface BrowserQuoteButtonProps {
  * selection area. Clicking it adds the selected text as a quote to the
  * composer with the page URL as source.
  */
-export function BrowserQuoteButton({ webviewRef }: BrowserQuoteButtonProps) {
+export function BrowserQuoteButton({ webviewRef, zoom = 1 }: BrowserQuoteButtonProps) {
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
   const addQuote = useComposerStore((s) => s.addQuote);
 
   const checkSelection = useCallback(async () => {
@@ -71,9 +74,11 @@ export function BrowserQuoteButton({ webviewRef }: BrowserQuoteButtonProps) {
       const containerRect = containerEl.getBoundingClientRect();
       const webviewRect = webview.getBoundingClientRect();
 
-      // The webview's internal coordinates need to be offset by the webview's position
-      const top = Math.max(4, (webviewRect.top - containerRect.top) + rect.top - 36);
-      const left = (webviewRect.left - containerRect.left) + rect.left + rect.width / 2;
+      // Apply zoom factor: webview internal CSS coords are in zoomed space.
+      // Multiply by zoom to get actual pixel position on screen.
+      const z = zoomRef.current;
+      const top = Math.max(4, (webviewRect.top - containerRect.top) + rect.top * z - 36);
+      const left = (webviewRect.left - containerRect.left) + (rect.left + rect.width / 2) * z;
 
       setPosition({ top, left });
       setVisible(true);
@@ -161,7 +166,7 @@ export function BrowserQuoteButton({ webviewRef }: BrowserQuoteButtonProps) {
   }, [webviewRef, addQuote]);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 9999 }}>
       {visible && (
         <div
           className="absolute z-50 pointer-events-auto"

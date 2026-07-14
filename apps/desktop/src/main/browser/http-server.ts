@@ -25,7 +25,7 @@ export function startBrowserHttpServer(
     const path = url.pathname;
 
     try {
-      const result = await routeRequest(browserManager, req.method ?? 'GET', path, body);
+      const result = await routeRequest(browserManager, req.method ?? 'GET', path, body, url);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
     } catch (error) {
@@ -69,18 +69,28 @@ async function routeRequest(
   method: string,
   path: string,
   body: Record<string, unknown>,
+  url: URL,
 ): Promise<unknown> {
+  // Commands that need the webview to be connected.
+  // 'health' is exempt so the CLI can check server availability without a webview.
+  const needsConnection = path !== '/health';
+  if (needsConnection) {
+    await browserManager.ensureConnected();
+  }
+
   // GET routes
   if (method === 'GET') {
     switch (path) {
       case '/snapshot':
         return { snapshot: await browserManager.getSnapshot() };
       case '/screenshot':
-        return await browserManager.screenshot();
+        return await browserManager.screenshot(url.searchParams.get('fullPage') === 'true' ? { fullPage: true } : undefined);
       case '/url':
         return await browserManager.getUrl();
       case '/workflows':
         return { workflows: await browserManager.listWorkflows() };
+      case '/text':
+        return await browserManager.getText();
       case '/health':
         return { status: 'ok' };
       default:
@@ -97,6 +107,21 @@ async function routeRequest(
         return await browserManager.click(body.selector as string);
       case '/fill':
         return await browserManager.fill(body.selector as string, body.value as string);
+      case '/hover':
+        return await browserManager.hover(body.selector as string);
+      case '/select':
+        return await browserManager.selectOption(body.selector as string, body.value as string);
+      case '/press':
+        return await browserManager.pressKey(body.key as string);
+      case '/wait':
+        return await browserManager.waitForSelector(
+          body.selector as string,
+          (body.timeout as number) ?? 10000,
+        );
+      case '/text':
+        return await browserManager.getText(body.selector as string | undefined);
+      case '/attribute':
+        return await browserManager.getAttribute(body.selector as string, body.attribute as string);
       case '/scroll':
         return await browserManager.scroll(
           (body.direction as 'up' | 'down') ?? 'down',

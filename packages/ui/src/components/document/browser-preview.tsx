@@ -49,6 +49,7 @@ interface BrowserAPI {
   onUrlChanged: (callback: (url: string) => void) => void;
   onRecordingState: (callback: (recording: boolean) => void) => void;
   onReplayProgress: (callback: (progress: { current: number; total: number }) => void) => void;
+  onSwitchToBrowserTab: (callback: () => void) => void;
 }
 
 function getBrowserAPI(): BrowserAPI | undefined {
@@ -519,7 +520,7 @@ export function BrowserPreview() {
               className="w-full h-full"
               style={{ display: 'inline-flex', width: '100%', height: '100%', position: 'relative', zIndex: 0 }}
             />
-            <BrowserQuoteButton webviewRef={webviewRef} />
+            <BrowserQuoteButton webviewRef={webviewRef} zoom={zoom} />
           </>
         ) : (
           <iframe

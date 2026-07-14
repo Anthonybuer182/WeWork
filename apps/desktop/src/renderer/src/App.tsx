@@ -59,6 +59,22 @@ function AppContent() {
     });
   }, [sdk, setConnectionStatus]);
 
+  // Listen for "switch to Browser tab" signals from the main process.
+  // This fires when the AI agent uses pi-browser CLI while the Browser
+  // tab isn't open — auto-switches so the webview mounts and connects.
+  useEffect(() => {
+    const api = (window as unknown as { electronAPI?: { browser?: { onSwitchToBrowserTab?: (cb: () => void) => void } } }).electronAPI?.browser;
+    if (api?.onSwitchToBrowserTab) {
+      api.onSwitchToBrowserTab(() => {
+        const state = useUIStore.getState();
+        state.setRightPanelTab('browser');
+        if (!state.rightPanelOpen) {
+          state.toggleRightPanel();
+        }
+      });
+    }
+  }, []);
+
   return (
     <TooltipProvider delayDuration={300}>
       <AppShell>

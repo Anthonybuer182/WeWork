@@ -172,6 +172,9 @@ const electronAPI: ElectronAPI = {
     onReplayProgress: (callback) => {
       ipcRenderer.on('pi:browser:replayProgress', (_event, progress) => callback(progress));
     },
+    onSwitchToBrowserTab: (callback) => {
+      ipcRenderer.on('pi:browser:switchToBrowserTab', () => callback());
+    },
   },
 };
 

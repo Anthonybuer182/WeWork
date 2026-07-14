@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync, exists
 import { join } from 'path';
 import { homedir } from 'os';
 import { RECORDING_SCRIPT, RECORDING_MESSAGE_PREFIX } from './recording-script';
+import { BROWSER_HELPERS_JS } from './browser-helpers';
 
 /** A single recorded workflow step. */
 export interface WorkflowStep {
@@ -35,6 +36,7 @@ export interface SnapshotNode {
 type UrlChangedCallback = (url: string) => void;
 type RecordingStateCallback = (recording: boolean) => void;
 type ReplayProgressCallback = (current: number, total: number, step: WorkflowStep) => void;
+type SwitchToBrowserTabCallback = () => void;
 
 /**
  * BrowserManager — manages the Electron webview via the debugger API,
@@ -52,6 +54,7 @@ export class BrowserManager {
   private urlChangedCallbacks: UrlChangedCallback[] = [];
   private recordingStateCallbacks: RecordingStateCallback[] = [];
   private replayProgressCallbacks: ReplayProgressCallback[] = [];
+  private switchToBrowserTabCallbacks: SwitchToBrowserTabCallback[] = [];
   private workflowsDir: string;
   private currentZoom = 1;
 
@@ -77,7 +80,7 @@ export class BrowserManager {
     // instead of popping up a new BrowserWindow. We inject JS that overrides
     // window.open before each page load, since setWindowOpenHandler doesn't
     // work reliably for <webview> tags in Electron 38.
-    this.injectWindowOpenOverride();
+    this.injectHelpers();
 
     // Attach the debugger (Electron's debugger API handles CDP messaging)
     try {
@@ -104,15 +107,15 @@ export class BrowserManager {
         if (url && !url.startsWith('about:')) {
           this.urlChangedCallbacks.forEach((cb) => cb(url));
         }
-        // Re-inject window.open override after each navigation
-        this.injectWindowOpenOverride();
+        // Re-inject helpers after each navigation
+        this.injectHelpers();
         // Also try auto-zoom here as a fallback
         this.computeAutoZoom();
       }
 
       if (method === 'Page.loadEventFired') {
         console.log('[BrowserManager] Page.loadEventFired');
-        this.injectWindowOpenOverride();
+        this.injectHelpers();
         this.computeAutoZoom();
       }
     });
@@ -122,15 +125,65 @@ export class BrowserManager {
     await this.sendCommand('Runtime.enable');
     await this.sendCommand('Accessibility.enable');
 
-    // Inject the window.open override immediately
-    this.injectWindowOpenOverride();
+    // Inject the helpers immediately
+    this.injectHelpers();
 
     console.log('[BrowserManager] Connected to webview via debugger API');
   }
 
-  /** Inject JS to override window.open and rewrite target="_blank" links so they navigate in-place. */
-  private injectWindowOpenOverride(): void {
+  /** Check if the debugger is attached and the webview is alive. */
+  isConnected(): boolean {
+    if (!this.webviewWc || !this.debuggerAttached) return false;
+    try {
+      return !this.webviewWc.isDestroyed();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Ensure the webview is connected before executing a command.
+   * If the webview doesn't exist (Browser tab not open), notify the
+   * renderer to switch to the Browser tab, then retry connecting.
+   */
+  async ensureConnected(timeoutMs = 15000): Promise<void> {
+    // Already connected and alive
+    if (this.isConnected()) return;
+
+    // Reset stale state
+    this.webviewWc = null;
+    this.debuggerAttached = false;
+
+    // Signal the renderer to switch to the Browser tab
+    console.log('[BrowserManager] Webview not found — requesting tab switch');
+    this.switchToBrowserTabCallbacks.forEach((cb) => cb());
+
+    // Poll for the webview to appear and connect
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      await new Promise((r) => setTimeout(r, 500));
+      try {
+        const allWc = webContents.getAllWebContents();
+        const wv = allWc.find((wc) => wc.getType() === 'webview');
+        if (wv && !wv.isDestroyed()) {
+          // Found the webview — connect now
+          await this.connect();
+          if (this.isConnected()) return;
+        }
+      } catch {
+        // Keep retrying
+      }
+    }
+
+    throw new Error('Browser panel is not open. Please open the Browser tab in the right panel and try again.');
+  }
+
+  /** Inject JS helpers (selector resolver, snapshot, window.open override) into the page. */
+  private injectHelpers(): void {
     if (!this.webviewWc) return;
+    // Inject the helpers (idempotent — checks window.__piHelpers)
+    this.webviewWc.executeJavaScript(BROWSER_HELPERS_JS).catch(() => {});
+    // Also inject window.open override
     this.webviewWc.executeJavaScript(`
       if (!window.__pi_open_override) {
         window.__pi_open_override = true;
@@ -275,47 +328,18 @@ export class BrowserManager {
 
   /** ——— Snapshot / accessibility ——— */
 
-  /** Take an accessibility snapshot and format it as a text tree with refs. */
+  /** Take a snapshot of interactive elements with ref IDs for easy targeting. */
   async getSnapshot(): Promise<string> {
     try {
-      // Use DOM-based snapshot (more reliable than AXTree)
-      const result = await this.sendCommand('Runtime.evaluate', {
-        expression: `(function() {
-          function buildNode(el, depth, ref) {
-            var indent = '  '.repeat(depth);
-            var tag = el.tagName ? el.tagName.toLowerCase() : 'unknown';
-            var role = el.getAttribute('role') || '';
-            var ariaLabel = el.getAttribute('aria-label') || '';
-            var text = (el.textContent || '').trim().slice(0, 50);
-            var name = ariaLabel || text;
-
-            var cs = window.getComputedStyle(el);
-            if (cs.display === 'none' || cs.visibility === 'hidden') return '';
-
-            var nodeRef = ref + (depth + 1);
-            var line = indent + '[' + nodeRef + '] ';
-            if (role) line += role;
-            else line += tag;
-            if (name) line += ': "' + name + '"';
-
-            var childLines = [];
-            var children = el.children;
-            for (var i = 0; i < children.length && i < 50; i++) {
-              var childRef = nodeRef + '.' + (i + 1) + '.';
-              var childLine = buildNode(children[i], depth + 1, childRef);
-              if (childLine) childLines.push(childLine);
-            }
-
-            return [line].concat(childLines).join('\\n');
-          }
-
-          var body = document.body;
-          if (!body) return '(empty page)';
-          return buildNode(body, 0, '');
-        })()`,
+      // Ensure helpers are injected
+      await this.sendCommand('Runtime.evaluate', {
+        expression: BROWSER_HELPERS_JS,
         returnByValue: true,
       });
-
+      const result = await this.sendCommand('Runtime.evaluate', {
+        expression: 'window.piSnapshot ? window.piSnapshot() : "(helpers not loaded)"',
+        returnByValue: true,
+      });
       return (result?.result as { value?: string })?.value ?? '(empty page)';
     } catch {
       return '(snapshot unavailable)';
@@ -324,76 +348,297 @@ export class BrowserManager {
 
   /** ——— Interaction ——— */
 
-  /** Click an element by selector. */
-  async click(selector: string): Promise<{ selector: string; clicked: boolean }> {
-    const escapedSelector = selector.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  /** Build an expression that ensures helpers are loaded, then runs the given code. */
+  private buildExpression(code: string): string {
+    return `${BROWSER_HELPERS_JS}\n${code}`;
+  }
+
+  /** Wait for an element to exist and be visible, with timeout. Returns true if found. */
+  async waitForElement(selector: string, timeoutMs = 5000): Promise<boolean> {
+    const expr = this.buildExpression(`(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      return !!el;
+    })()`);
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const result = await this.sendCommand('Runtime.evaluate', {
+          expression: expr,
+          returnByValue: true,
+        });
+        if ((result?.result as { value?: boolean })?.value) return true;
+      } catch {
+        // Ignore transient errors
+      }
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    return false;
+  }
+
+  /** Click an element by selector. Supports CSS, :has-text(), role=, text=, and [N] ref. */
+  async click(selector: string): Promise<{ selector: string; clicked: boolean; error?: string }> {
+    // Auto-wait: poll for element up to 5s
+    const found = await this.waitForElement(selector, 5000);
+    if (!found) {
+      // Get suggestions for similar elements
+      let suggestions = '';
+      try {
+        const sugResult = await this.sendCommand('Runtime.evaluate', {
+          expression: this.buildExpression(`(window.piFindSimilar ? window.piFindSimilar(${JSON.stringify(selector)}, 5) : []).join('\\n')`),
+          returnByValue: true,
+        });
+        suggestions = (sugResult?.result as { value?: string })?.value ?? '';
+      } catch {}
+      const errorMsg = suggestions
+        ? `Element not found: "${selector}". Did you mean one of these?\n${suggestions}`
+        : `Element not found: "${selector}"`;
+      return { selector, clicked: false, error: errorMsg };
+    }
+
+    const expr = this.buildExpression(`(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return false;
+      el.scrollIntoView({block:'center', behavior:'instant'});
+      el.click();
+      return true;
+    })()`);
     const result = await this.sendCommand('Runtime.evaluate', {
-      expression: `(function(){
-        var el = document.querySelector('${escapedSelector}');
-        if (el) { el.scrollIntoView({block:'center'}); el.click(); return true; }
-        return false;
-      })()`,
+      expression: expr,
       returnByValue: true,
     });
     const clicked = (result?.result as { value?: boolean })?.value ?? false;
     return { selector, clicked };
   }
 
-  /** Fill an input by selector. Uses the native value setter to support React/Vue controlled inputs. */
-  async fill(selector: string, value: string): Promise<{ selector: string; value: string }> {
-    const escapedSelector = selector.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    const escapedValue = value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    await this.sendCommand('Runtime.evaluate', {
-      expression: `(function(){
-        var el = document.querySelector('${escapedSelector}');
-        if (!el) return;
-        el.focus();
+  /** Fill an input by selector. Uses native value setter for React/Vue. Supports all selector formats. */
+  async fill(selector: string, value: string): Promise<{ selector: string; value: string; error?: string }> {
+    const found = await this.waitForElement(selector, 5000);
+    if (!found) {
+      return { selector, value, error: `Element not found: "${selector}"` };
+    }
 
-        // Use native value setter for React/Vue controlled inputs
-        var tag = el.tagName && el.tagName.toLowerCase();
-        if (tag === 'input' || tag === 'textarea') {
-          var nativeSetter = Object.getOwnPropertyDescriptor(
-            window.HTMLInputElement.prototype, 'value'
-          );
-          if (nativeSetter && nativeSetter.set) {
-            nativeSetter.set.call(el, '${escapedValue}');
-          } else {
-            el.value = '${escapedValue}';
-          }
-        } else if (el.isContentEditable) {
-          el.textContent = '${escapedValue}';
-        } else {
-          el.value = '${escapedValue}';
-        }
-
-        el.dispatchEvent(new Event('input', {bubbles: true}));
-        el.dispatchEvent(new Event('change', {bubbles: true}));
-      })()`,
+    // Step 1: Get element rect and click to focus (native mouse click triggers React focus handlers)
+    const rectExpr = this.buildExpression(`(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return null;
+      el.scrollIntoView({block:'center', behavior:'instant'});
+      var r = el.getBoundingClientRect();
+      return {x: r.left + r.width/2, y: r.top + r.height/2, width: r.width, height: r.height};
+    })()`);
+    const rectResult = await this.sendCommand('Runtime.evaluate', {
+      expression: rectExpr,
       returnByValue: true,
     });
+    const rect = (rectResult?.result as { value?: { x: number; y: number; width: number; height: number } })?.value;
+    if (!rect) {
+      return { selector, value, error: `Cannot get rect for: "${selector}"` };
+    }
+
+    // Click 3 times to select all text (triple-click)
+    for (let i = 0; i < 3; i++) {
+      await this.sendCommand('Input.dispatchMouseEvent', {
+        type: 'mousePressed',
+        x: rect.x,
+        y: rect.y,
+        button: 'left',
+        clickCount: i + 1,
+      });
+      await this.sendCommand('Input.dispatchMouseEvent', {
+        type: 'mouseReleased',
+        x: rect.x,
+        y: rect.y,
+        button: 'left',
+        clickCount: i + 1,
+      });
+    }
+
+    // Step 2: Type the new value via Input.insertText (triggers React onChange via browser input pipeline)
+    await this.sendCommand('Input.insertText', { text: value });
+
     return { selector, value };
   }
 
-  /** Take a full-page screenshot (captures beyond viewport) and return base64. */
-  async screenshot(): Promise<{ base64: string }> {
-    // Get full page dimensions including scrollable area
-    const metrics = await this.sendCommand('Runtime.evaluate', {
-      expression: `JSON.stringify({
-        width: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
-        height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
-      })`,
+  /** Hover over an element by selector. */
+  async hover(selector: string): Promise<{ selector: string; hovered: boolean; error?: string }> {
+    const found = await this.waitForElement(selector, 5000);
+    if (!found) {
+      return { selector, hovered: false, error: `Element not found: "${selector}"` };
+    }
+
+    const expr = this.buildExpression(`(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return false;
+      el.scrollIntoView({block:'center', behavior:'instant'});
+      var rect = el.getBoundingClientRect();
+      var x = rect.left + rect.width / 2;
+      var y = rect.top + rect.height / 2;
+      ['pointerover','pointerenter','mouseover','mouseenter','pointermove','mousemove','pointerout','pointerleave','mouseout','mouseleave'].forEach(function(evt) {
+        el.dispatchEvent(new MouseEvent(evt, {bubbles: true, cancelable: true, clientX: x, clientY: y}));
+      });
+      return true;
+    })()`);
+    const result = await this.sendCommand('Runtime.evaluate', {
+      expression: expr,
       returnByValue: true,
     });
-    const dims = JSON.parse((metrics?.result as { value?: string })?.value ?? '{"width":800,"height":600}');
-    const width = Math.min(dims.width || 800, 4000);
-    const height = Math.min(dims.height || 600, 8000);
+    return { selector, hovered: (result?.result as { value?: boolean })?.value ?? false };
+  }
 
-    const result = await this.sendCommand('Page.captureScreenshot', {
-      format: 'png',
-      captureBeyondViewport: true,
-      clip: { x: 0, y: 0, width, height, scale: 1 },
+  /** Select an option in a <select> element by value or visible text. */
+  async selectOption(selector: string, value: string): Promise<{ selector: string; value: string; selected: boolean; error?: string }> {
+    const found = await this.waitForElement(selector, 5000);
+    if (!found) {
+      return { selector, value, selected: false, error: `Element not found: "${selector}"` };
+    }
+
+    const expr = this.buildExpression(`(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el || el.tagName.toLowerCase() !== 'select') return false;
+      var opts = Array.from(el.options);
+      // Try exact value match, then text match
+      var target = opts.find(function(o) { return o.value === ${JSON.stringify(value)}; })
+        || opts.find(function(o) { return o.textContent.trim() === ${JSON.stringify(value)}; })
+        || opts.find(function(o) { return o.textContent.trim().includes(${JSON.stringify(value)}); });
+      if (!target) return false;
+      el.value = target.value;
+      el.dispatchEvent(new Event('input', {bubbles: true}));
+      el.dispatchEvent(new Event('change', {bubbles: true}));
+      return true;
+    })()`);
+    const result = await this.sendCommand('Runtime.evaluate', {
+      expression: expr,
+      returnByValue: true,
     });
-    return { base64: (result?.data as string) ?? '' };
+    return { selector, value, selected: (result?.result as { value?: boolean })?.value ?? false };
+  }
+
+  /** Press a keyboard key. Supports key names like 'Enter', 'Tab', 'Escape', 'ArrowDown'. */
+  async pressKey(key: string): Promise<{ key: string; pressed: boolean }> {
+    const expr = this.buildExpression(`(function(){
+      var key = ${JSON.stringify(key)};
+      var target = document.activeElement || document.body;
+      var opts = {bubbles: true, cancelable: true, key: key, code: key};
+      target.dispatchEvent(new KeyboardEvent('keydown', opts));
+      target.dispatchEvent(new KeyboardEvent('keypress', opts));
+      target.dispatchEvent(new KeyboardEvent('keyup', opts));
+      return true;
+    })()`);
+    await this.sendCommand('Runtime.evaluate', {
+      expression: expr,
+      returnByValue: true,
+    });
+    return { key, pressed: true };
+  }
+
+  /** Wait for a selector to appear on the page. */
+  async waitForSelector(selector: string, timeoutMs = 10000): Promise<{ selector: string; found: boolean }> {
+    const found = await this.waitForElement(selector, timeoutMs);
+    return { selector, found };
+  }
+
+  /** Get text content of an element (or entire page if no selector). */
+  async getText(selector?: string): Promise<{ text: string; selector?: string }> {
+    const expr = this.buildExpression(`(function(){
+      ${selector ? `var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return '';
+      return (el.innerText || el.textContent || '').trim();` : `return (document.body.innerText || document.body.textContent || '').trim();`}
+    })()`);
+    const result = await this.sendCommand('Runtime.evaluate', {
+      expression: expr,
+      returnByValue: true,
+    });
+    return { text: (result?.result as { value?: string })?.value ?? '', selector };
+  }
+
+  /** Get the value of an attribute on an element. */
+  async getAttribute(selector: string, attribute: string): Promise<{ selector: string; attribute: string; value: string | null }> {
+    const expr = this.buildExpression(`(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return null;
+      return el.getAttribute(${JSON.stringify(attribute)});
+    })()`);
+    const result = await this.sendCommand('Runtime.evaluate', {
+      expression: expr,
+      returnByValue: true,
+    });
+    return { selector, attribute, value: (result?.result as { value?: string | null })?.value ?? null };
+  }
+
+  /** Take a screenshot. Resets zoom to 1.0 for full resolution, restores after.
+   *  Default: viewport only. Pass fullPage: true for full page (scrolls to trigger lazy load first). */
+  async screenshot(options?: { fullPage?: boolean }): Promise<{ base64: string }> {
+    const savedZoom = this.currentZoom;
+
+    // For full-page: scroll through the page to trigger lazy-loaded content
+    if (options?.fullPage) {
+      await this.triggerLazyLoad();
+      // Scroll back to top before capturing
+      await this.sendCommand('Runtime.evaluate', {
+        expression: 'window.scrollTo(0, 0)',
+        returnByValue: true,
+      });
+    }
+
+    // Reset zoom to 1.0 for full-resolution capture
+    try { this.webviewWc?.setZoomFactor(1); } catch {}
+    await new Promise((r) => setTimeout(r, 200));
+
+    try {
+      if (options?.fullPage) {
+        const metrics = await this.sendCommand('Runtime.evaluate', {
+          expression: `JSON.stringify({
+            width: document.documentElement.clientWidth,
+            height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+          })`,
+          returnByValue: true,
+        });
+        const dims = JSON.parse((metrics?.result as { value?: string })?.value ?? '{"width":800,"height":600}');
+        const width = dims.width || 800;
+        const height = Math.min(dims.height || 600, 8000);
+
+        const result = await this.sendCommand('Page.captureScreenshot', {
+          format: 'png',
+          captureBeyondViewport: true,
+          clip: { x: 0, y: 0, width, height, scale: 1 },
+        });
+        return { base64: (result?.data as string) ?? '' };
+      } else {
+        const result = await this.sendCommand('Page.captureScreenshot', {
+          format: 'png',
+        });
+        return { base64: (result?.data as string) ?? '' };
+      }
+    } finally {
+      // Restore zoom
+      try { this.webviewWc?.setZoomFactor(savedZoom); } catch {}
+    }
+  }
+
+  /** Scroll through the page to trigger lazy-loaded content. */
+  private async triggerLazyLoad(): Promise<void> {
+    try {
+      const stepExpr = `(function(){
+        var step = window.innerHeight * 0.8;
+        var target = window.scrollY + step;
+        var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (target >= maxScroll) { window.scrollTo(0, maxScroll); return false; }
+        window.scrollTo(0, target);
+        return true;
+      })()`;
+      let hasMore = true;
+      let count = 0;
+      while (hasMore && count < 50) {
+        const result = await this.sendCommand('Runtime.evaluate', {
+          expression: stepExpr,
+          returnByValue: true,
+        });
+        hasMore = (result?.result as { value?: boolean })?.value ?? false;
+        count++;
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    } catch (err) {
+      console.warn('[BrowserManager] triggerLazyLoad error:', err);
+    }
   }
 
   /** Scroll the page. */
@@ -634,6 +879,11 @@ export class BrowserManager {
   /** Register a callback for replay progress. */
   onReplayProgress(cb: ReplayProgressCallback): void {
     this.replayProgressCallbacks.push(cb);
+  }
+
+  /** Register a callback for switching to the Browser tab (main → renderer signal). */
+  onSwitchToBrowserTab(cb: SwitchToBrowserTabCallback): void {
+    this.switchToBrowserTabCallbacks.push(cb);
   }
 
   /** ——— Viewport ——— */
