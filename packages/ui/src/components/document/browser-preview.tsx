@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { BrowserQuoteButton } from './browser-quote-button';
 import { WorkflowDialog, type WorkflowStep } from './workflow-dialog';
 import { WorkflowSelector, type Workflow } from './workflow-selector';
-import { useUIStore } from '@/stores/ui-store';
+
 
 /** Minimal webview element interface. */
 interface WebviewElement extends HTMLElement {
@@ -65,10 +65,12 @@ export function BrowserPreview() {
   const [replayProgress, setReplayProgress] = useState<{ current: number; total: number } | null>(null);
   const api = getBrowserAPI();
   const inElectron = isElectron();
-  const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
 
-  // ── Track container height via ResizeObserver ──
-  const [containerHeight, setContainerHeight] = useState(600);
+  // ── Track container size via ResizeObserver ──
+  // We observe the container (not the webview) because the webview element
+  // may not be mounted yet when the observer is set up. The container size
+  // includes the toolbar, so we subtract it for accurate viewport sync.
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const container = document.querySelector('.browser-preview-container');
@@ -76,28 +78,37 @@ export function BrowserPreview() {
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setContainerHeight(entry.contentRect.height);
+        setContainerSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
       }
     });
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
 
-  // ── Sync viewport width/height to the webview ──
+  // ── Sync viewport to the webview's actual rendered size ──
   useEffect(() => {
     if (!api || !inElectron || !connected) return;
 
     const debounceMs = 300;
     const timer = setTimeout(() => {
-      const width = Math.round(rightPanelWidth);
-      const height = Math.round(containerHeight);
-      api.setViewport(width, height).catch((err) => {
-        console.warn('[BrowserPreview] setViewport failed:', err);
-      });
+      // Measure the webview element's actual size for precise viewport sync
+      const webview = webviewRef.current;
+      if (!webview) return;
+      const rect = webview.getBoundingClientRect();
+      const width = Math.round(rect.width);
+      const height = Math.round(rect.height);
+      if (width > 0 && height > 0) {
+        api.setViewport(width, height).catch((err) => {
+          console.warn('[BrowserPreview] setViewport failed:', err);
+        });
+      }
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [api, inElectron, connected, rightPanelWidth, containerHeight]);
+  }, [api, inElectron, connected, containerSize]);
 
   // ── Track connected state in a ref to break callback dependency chain ──
   const connectedRef = useRef(false);
@@ -426,8 +437,7 @@ export function BrowserPreview() {
               ref={setWebviewRef as any}
               src="about:blank"
               className="w-full h-full"
-              style={{ display: 'inline-flex', width: '100%', height: '100%' }}
-              {...({ allowpopups: 'true' } as any)}
+              style={{ display: 'inline-flex', width: '100%', height: '100%', position: 'relative', zIndex: 0 }}
             />
             <BrowserQuoteButton webviewRef={webviewRef} />
           </>

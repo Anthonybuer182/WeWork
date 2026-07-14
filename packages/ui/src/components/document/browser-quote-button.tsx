@@ -8,6 +8,8 @@ import { createQuote } from '@/lib/quote-helpers';
 interface WebviewElement extends HTMLElement {
   executeJavaScript: (code: string) => Promise<unknown>;
   getURL: () => string;
+  addEventListener: (event: string, listener: (e: unknown) => void) => void;
+  removeEventListener: (event: string, listener: (e: unknown) => void) => void;
 }
 
 interface BrowserQuoteButtonProps {
@@ -70,39 +72,71 @@ export function BrowserQuoteButton({ webviewRef }: BrowserQuoteButtonProps) {
       const webviewRect = webview.getBoundingClientRect();
 
       // The webview's internal coordinates need to be offset by the webview's position
-      const top = (webviewRect.top - containerRect.top) + rect.top - 36;
+      const top = Math.max(4, (webviewRect.top - containerRect.top) + rect.top - 36);
       const left = (webviewRect.left - containerRect.left) + rect.left + rect.width / 2;
 
       setPosition({ top, left });
       setVisible(true);
-    } catch {
+    } catch (err) {
+      console.warn('[BrowserQuoteButton] checkSelection error:', err);
       setVisible(false);
     }
   }, [webviewRef]);
 
-  // Poll for selection every 500ms
+  // Poll for selection every 300ms
   useEffect(() => {
-    const interval = setInterval(checkSelection, 500);
+    const interval = setInterval(checkSelection, 300);
     return () => clearInterval(interval);
   }, [checkSelection]);
 
-  // Also check on mouseup events in the container
+  // Inject a mouseup listener into the webview so we get immediate
+  // selection notifications instead of waiting for the next poll.
+  // The injected script does console.log('__pi_sel__') on mouseup,
+  // which we catch via the webview's 'console-message' event.
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const webview = webviewRef.current;
+    if (!webview) return;
 
-    let debounce: ReturnType<typeof setTimeout> | null = null;
-    const handleMouseUp = () => {
-      if (debounce) clearTimeout(debounce);
-      debounce = setTimeout(checkSelection, 200);
+    const MOUSEUP_MARKER = '__pi_sel__';
+
+    const injectListener = () => {
+      try {
+        webview.executeJavaScript(`
+          if (!window.__pi_mouseup_injected) {
+            window.__pi_mouseup_injected = true;
+            document.addEventListener('mouseup', () => {
+              console.log(${JSON.stringify(MOUSEUP_MARKER)});
+            });
+          }
+        `).catch(() => {});
+      } catch {
+        // Webview not ready yet — will retry on did-finish-load
+      }
     };
 
-    container.addEventListener('mouseup', handleMouseUp);
+    const handleConsoleMessage = (e: unknown) => {
+      // Electron's <webview> console-message event puts the message in
+      // event.detail.message (not event.message)
+      const ev = e as { detail?: { message?: string }; message?: string };
+      const msg = ev?.detail?.message ?? ev?.message ?? '';
+      if (msg.includes(MOUSEUP_MARKER)) {
+        setTimeout(checkSelection, 50);
+      }
+    };
+
+    const handleFinishLoad = () => injectListener();
+
+    webview.addEventListener('did-finish-load', handleFinishLoad);
+    webview.addEventListener('console-message', handleConsoleMessage);
+
+    // Try injecting immediately in case the page is already loaded
+    injectListener();
+
     return () => {
-      container.removeEventListener('mouseup', handleMouseUp);
-      if (debounce) clearTimeout(debounce);
+      webview.removeEventListener('did-finish-load', handleFinishLoad);
+      webview.removeEventListener('console-message', handleConsoleMessage);
     };
-  }, [checkSelection]);
+  }, [webviewRef, checkSelection]);
 
   const handleQuote = useCallback(async () => {
     const webview = webviewRef.current;
@@ -126,25 +160,25 @@ export function BrowserQuoteButton({ webviewRef }: BrowserQuoteButtonProps) {
     }
   }, [webviewRef, addQuote]);
 
-  if (!visible) return null;
-
   return (
-    <div ref={containerRef} className="relative h-full w-full pointer-events-none">
-      <div
-        className="absolute z-50 pointer-events-auto"
-        style={{ top: position.top, left: position.left, transform: 'translateX(-50%)' }}
-      >
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleQuote}
-          className="h-7 gap-1.5 shadow-md"
-          title="Quote to chat"
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
+      {visible && (
+        <div
+          className="absolute z-50 pointer-events-auto"
+          style={{ top: position.top, left: position.left, transform: 'translateX(-50%)' }}
         >
-          <QuoteIcon className="h-3 w-3" />
-          Quote
-        </Button>
-      </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleQuote}
+            className="h-7 gap-1.5 shadow-md"
+            title="Quote to chat"
+          >
+            <QuoteIcon className="h-3 w-3" />
+            Quote
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

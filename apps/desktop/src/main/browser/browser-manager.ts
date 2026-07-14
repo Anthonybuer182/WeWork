@@ -72,6 +72,12 @@ export class BrowserManager {
 
     this.webviewWc = wv;
 
+    // Intercept window.open() and target="_blank" links — navigate in-place
+    // instead of popping up a new BrowserWindow. We inject JS that overrides
+    // window.open before each page load, since setWindowOpenHandler doesn't
+    // work reliably for <webview> tags in Electron 38.
+    this.injectWindowOpenOverride();
+
     // Attach the debugger (Electron's debugger API handles CDP messaging)
     try {
       wv.debugger.attach('1.3');
@@ -97,6 +103,8 @@ export class BrowserManager {
         if (url && !url.startsWith('about:')) {
           this.urlChangedCallbacks.forEach((cb) => cb(url));
         }
+        // Re-inject window.open override after each navigation
+        this.injectWindowOpenOverride();
       }
     });
 
@@ -105,7 +113,27 @@ export class BrowserManager {
     await this.sendCommand('Runtime.enable');
     await this.sendCommand('Accessibility.enable');
 
+    // Inject the window.open override immediately
+    this.injectWindowOpenOverride();
+
     console.log('[BrowserManager] Connected to webview via debugger API');
+  }
+
+  /** Inject JS to override window.open and rewrite target="_blank" links so they navigate in-place. */
+  private injectWindowOpenOverride(): void {
+    if (!this.webviewWc) return;
+    this.webviewWc.executeJavaScript(`
+      if (!window.__pi_open_override) {
+        window.__pi_open_override = true;
+        window.open = function(url) {
+          if (url) location.href = url;
+          return null;
+        };
+      }
+      document.querySelectorAll('a[target="_blank"]').forEach(function(a) {
+        a.target = '_self';
+      });
+    `).catch(() => {});
   }
 
   /** ——— CDP communication ——— */
