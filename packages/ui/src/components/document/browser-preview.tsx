@@ -7,6 +7,10 @@ import {
   Circle,
   Square,
   Globe,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +43,9 @@ interface BrowserAPI {
   deleteWorkflow: (name: string) => Promise<{ name: string; deleted: boolean }>;
   replay: (name: string, variables?: Record<string, string>) => Promise<{ name: string; completed: boolean; stepCount: number }>;
   setViewport: (width: number, height: number) => Promise<void>;
+  setZoom: (factor: number) => Promise<{ zoom: number }>;
+  resetZoom: () => Promise<{ zoom: number }>;
+  getZoom: () => Promise<{ zoom: number }>;
   onUrlChanged: (callback: (url: string) => void) => void;
   onRecordingState: (callback: (recording: boolean) => void) => void;
   onReplayProgress: (callback: (progress: { current: number; total: number }) => void) => void;
@@ -63,6 +70,8 @@ export function BrowserPreview() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [recordedSteps, setRecordedSteps] = useState<WorkflowStep[]>([]);
   const [replayProgress, setReplayProgress] = useState<{ current: number; total: number } | null>(null);
+  const [zoom, setZoomState] = useState(1);
+  const [fullscreen, setFullscreen] = useState(false);
   const api = getBrowserAPI();
   const inElectron = isElectron();
 
@@ -282,6 +291,35 @@ export function BrowserPreview() {
     }
   };
 
+  // ── Zoom ──
+  const handleZoomIn = useCallback(async () => {
+    if (!api) return;
+    const result = await api.setZoom(zoom + 0.1);
+    setZoomState(result.zoom);
+  }, [api, zoom]);
+
+  const handleZoomOut = useCallback(async () => {
+    if (!api) return;
+    const result = await api.setZoom(zoom - 0.1);
+    setZoomState(result.zoom);
+  }, [api, zoom]);
+
+  const handleZoomReset = useCallback(async () => {
+    if (!api) return;
+    const result = await api.resetZoom();
+    setZoomState(result.zoom);
+  }, [api]);
+
+  const handleToggleFullscreen = useCallback(() => {
+    setFullscreen((f) => !f);
+  }, []);
+
+  // Sync zoom state when page navigates (auto-zoom changes)
+  useEffect(() => {
+    if (!api || !connected) return;
+    api.getZoom().then((r) => setZoomState(r.zoom)).catch(() => {});
+  }, [api, connected, url]);
+
   // ── Recording ──
   const handleRecordToggle = useCallback(async () => {
     if (!api) return;
@@ -323,7 +361,7 @@ export function BrowserPreview() {
   }, [api]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={fullscreen ? 'fixed inset-0 z-[9999] bg-background flex flex-col' : 'flex flex-col h-full'}>
       {/* ── Toolbar ── */}
       <div className="flex items-center gap-1 border-b px-2 py-1.5">
         {inElectron && (
@@ -373,6 +411,48 @@ export function BrowserPreview() {
           </TooltipTrigger>
           <TooltipContent>Open in browser</TooltipContent>
         </Tooltip>
+
+        {inElectron && (
+          <>
+            <div className="w-px h-5 bg-border mx-0.5" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleZoomOut}>
+                  <ZoomOut className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Zoom out</TooltipContent>
+            </Tooltip>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-1.5 text-xs min-w-[3rem]"
+              onClick={handleZoomReset}
+            >
+              {Math.round(zoom * 100)}%
+            </Button>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleZoomIn}>
+                  <ZoomIn className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Zoom in</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleToggleFullscreen}>
+                  {fullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{fullscreen ? 'Exit fullscreen' : 'Fullscreen'}</TooltipContent>
+            </Tooltip>
+          </>
+        )}
 
         {inElectron && (
           <>

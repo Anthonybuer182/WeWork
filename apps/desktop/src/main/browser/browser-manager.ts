@@ -53,6 +53,7 @@ export class BrowserManager {
   private recordingStateCallbacks: RecordingStateCallback[] = [];
   private replayProgressCallbacks: ReplayProgressCallback[] = [];
   private workflowsDir: string;
+  private currentZoom = 1;
 
   constructor(workflowsDir?: string) {
     this.workflowsDir = workflowsDir ?? join(homedir(), '.pi', 'agent', 'workflows');
@@ -105,6 +106,14 @@ export class BrowserManager {
         }
         // Re-inject window.open override after each navigation
         this.injectWindowOpenOverride();
+        // Also try auto-zoom here as a fallback
+        this.computeAutoZoom();
+      }
+
+      if (method === 'Page.loadEventFired') {
+        console.log('[BrowserManager] Page.loadEventFired');
+        this.injectWindowOpenOverride();
+        this.computeAutoZoom();
       }
     });
 
@@ -134,6 +143,46 @@ export class BrowserManager {
         a.target = '_self';
       });
     `).catch(() => {});
+  }
+
+  /** Measure page content width and compute auto-fit zoom via CDP. */
+  /** Measure page content width vs webview width and auto-fit zoom. */
+  private webviewWidth = 600;
+
+  /** Set the webview's CSS width (called from renderer via IPC). */
+  setWebviewWidth(width: number): void {
+    this.webviewWidth = width;
+  }
+
+  private async computeAutoZoom(): Promise<void> {
+    if (!this.webviewWc) return;
+    try {
+      // Reset zoom to 1.0 first to get natural page dimensions
+      this.webviewWc.setZoomFactor(1);
+      // Wait for layout to settle after zoom reset
+      await new Promise((r) => setTimeout(r, 100));
+
+      const clientW = this.webviewWidth;
+      const result = await this.sendCommand('Runtime.evaluate', {
+        expression: `JSON.stringify({scrollW: document.documentElement.scrollWidth || document.body.scrollWidth})`,
+        returnByValue: true,
+      });
+      const dims = JSON.parse((result?.result as { value?: string })?.value ?? '{"scrollW":0}');
+      console.log('[BrowserManager] computeAutoZoom:', {scrollW: dims.scrollW, clientW});
+      if (dims.scrollW > clientW + 2) {
+        this.currentZoom = Math.max(0.3, clientW / dims.scrollW);
+      } else {
+        this.currentZoom = 1;
+      }
+      await this.applyZoom();
+    } catch (err) {
+      console.warn('[BrowserManager] computeAutoZoom error:', err);
+    }
+  }
+
+  private async applyZoom(): Promise<void> {
+    console.log('[BrowserManager] applyZoom:', this.currentZoom);
+    try { this.webviewWc?.setZoomFactor(this.currentZoom); } catch {}
   }
 
   /** ——— CDP communication ——— */
@@ -325,10 +374,24 @@ export class BrowserManager {
     return { selector, value };
   }
 
-  /** Take a screenshot and return base64. */
+  /** Take a full-page screenshot (captures beyond viewport) and return base64. */
   async screenshot(): Promise<{ base64: string }> {
+    // Get full page dimensions including scrollable area
+    const metrics = await this.sendCommand('Runtime.evaluate', {
+      expression: `JSON.stringify({
+        width: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+        height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+      })`,
+      returnByValue: true,
+    });
+    const dims = JSON.parse((metrics?.result as { value?: string })?.value ?? '{"width":800,"height":600}');
+    const width = Math.min(dims.width || 800, 4000);
+    const height = Math.min(dims.height || 600, 8000);
+
     const result = await this.sendCommand('Page.captureScreenshot', {
       format: 'png',
+      captureBeyondViewport: true,
+      clip: { x: 0, y: 0, width, height, scale: 1 },
     });
     return { base64: (result?.data as string) ?? '' };
   }
@@ -577,12 +640,23 @@ export class BrowserManager {
 
   /** Override the webview's device metrics to match the panel width. */
   async setDeviceMetrics(width: number, height: number): Promise<void> {
-    await this.sendCommand('Emulation.setDeviceMetricsOverride', {
-      width: Math.round(width),
-      height: Math.round(height),
-      deviceScaleFactor: 1,
-      mobile: false,
-    });
+    this.webviewWidth = width;
+    await this.computeAutoZoom();
+  }
+
+  /** Set user zoom (0.3–3.0). Combined with auto-fit zoom. */
+  async setZoom(factor: number): Promise<{ zoom: number }> {
+    this.currentZoom = Math.max(0.3, Math.min(3, factor));
+    await this.applyZoom();
+    return { zoom: this.currentZoom };
+  }
+
+  async resetZoom(): Promise<{ zoom: number }> {
+    return await this.setZoom(1);
+  }
+
+  getZoom(): number {
+    return this.currentZoom;
   }
 
   /** ——— Cleanup ——— */

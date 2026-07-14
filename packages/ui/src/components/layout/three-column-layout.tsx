@@ -71,6 +71,7 @@ export function ThreeColumnLayout({
           Math.min(maxRightWidth, rect.width - x),
         );
         setCurrentRightWidth(newWidth);
+        onRightWidthChangeRef.current?.(newWidth);
       }
     },
     [dragging, minLeftWidth, maxLeftWidth, minRightWidth, maxRightWidth],
@@ -78,7 +79,6 @@ export function ThreeColumnLayout({
 
   const handleMouseUp = useCallback(() => {
     setDragging(null);
-    // Persist the current right width after drag ends
     onRightWidthChangeRef.current?.(rightWidthRef.current);
   }, []);
 
@@ -189,8 +189,14 @@ export function ThreeColumnLayout({
       {/* ============== Right column ============== */}
       {rightPanelOpen && (
         <>
-          <Separator
-            orientation="vertical"
+          <div
+            className="relative flex-shrink-0 cursor-col-resize group"
+            style={{ width: '8px' }}
+            onMouseDown={() => setDragging('right')}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') handleKeyboardResize(-10);
+              if (e.key === 'ArrowRight') handleKeyboardResize(10);
+            }}
             role="separator"
             tabIndex={0}
             aria-label="Resize preview panel"
@@ -198,15 +204,10 @@ export function ThreeColumnLayout({
             aria-valuemin={minRightWidth}
             aria-valuemax={maxRightWidth}
             aria-orientation="vertical"
-            className="w-1 cursor-col-resize hover:bg-primary/50 transition-colors"
-            onMouseDown={() => setDragging('right')}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft')
-                handleKeyboardResize(-10);
-              if (e.key === 'ArrowRight')
-                handleKeyboardResize(10);
-            }}
-          />
+          >
+            <div className="absolute inset-y-0 -left-2 -right-2 z-10" />
+            <div className="h-full w-full bg-border group-hover:bg-primary/50 group-active:bg-primary/30 transition-colors" />
+          </div>
           <div
             style={{ width: currentRightWidth }}
             className="flex-shrink-0 overflow-hidden border-l flex flex-col"

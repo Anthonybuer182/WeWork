@@ -68,6 +68,9 @@ export interface ElectronAPI {
     deleteWorkflow: (name: string) => Promise<{ name: string; deleted: boolean }>;
     replay: (name: string, variables?: Record<string, string>) => Promise<{ name: string; completed: boolean; stepCount: number }>;
     setViewport: (width: number, height: number) => Promise<void>;
+    setZoom: (factor: number) => Promise<{ zoom: number }>;
+    resetZoom: () => Promise<{ zoom: number }>;
+    getZoom: () => Promise<{ zoom: number }>;
     onUrlChanged: (callback: (url: string) => void) => void;
     onRecordingState: (callback: (recording: boolean) => void) => void;
     onReplayProgress: (callback: (progress: { current: number; total: number; step: unknown }) => void) => void;
@@ -157,6 +160,9 @@ const electronAPI: ElectronAPI = {
     deleteWorkflow: (name) => ipcRenderer.invoke('pi:browser:deleteWorkflow', name),
     replay: (name, variables?) => ipcRenderer.invoke('pi:browser:replay', name, variables),
     setViewport: (width, height) => ipcRenderer.invoke('pi:browser:setViewport', width, height),
+    setZoom: (factor) => ipcRenderer.invoke('pi:browser:setZoom', factor),
+    resetZoom: () => ipcRenderer.invoke('pi:browser:resetZoom'),
+    getZoom: () => ipcRenderer.invoke('pi:browser:getZoom'),
     onUrlChanged: (callback) => {
       ipcRenderer.on('pi:browser:urlChanged', (_event, url) => callback(url));
     },

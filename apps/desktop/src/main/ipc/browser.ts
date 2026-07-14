@@ -68,6 +68,19 @@ export function registerBrowserIpcHandlers(browserManager: BrowserManager): void
     await browserManager.setDeviceMetrics(width, height);
   });
 
+  // ── Zoom ──
+  ipcMain.handle('pi:browser:setZoom', async (_event, factor: number) => {
+    return await browserManager.setZoom(factor);
+  });
+
+  ipcMain.handle('pi:browser:resetZoom', async () => {
+    return await browserManager.resetZoom();
+  });
+
+  ipcMain.handle('pi:browser:getZoom', async () => {
+    return { zoom: browserManager.getZoom() };
+  });
+
   // ── Events (main → renderer) ──
   // Register callbacks that forward to all renderer windows
   browserManager.onUrlChanged((url) => {
