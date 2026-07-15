@@ -117,7 +117,7 @@ function AppContent() {
           rightPanel={
             <RightPanel>
               {rightPanelActiveTab === 'preview' && <DocumentPreview />}
-              <div style={rightPanelActiveTab === 'browser' ? { height: '100%' } : { display: 'none' }}>
+              <div style={{ height: '100%', display: rightPanelActiveTab === 'browser' ? undefined : 'none' }}>
                 <BrowserPreview />
               </div>
               {rightPanelActiveTab === 'settings' && <ProviderSettings />}

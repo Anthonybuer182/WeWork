@@ -87,19 +87,86 @@ pi-browser fill '#search-box' 'cats'
 pi-browser hover [3]
 pi-browser hover 'nav a:has-text("Products")'
 
-# Select an option in a dropdown
+# Select an option in a <select> dropdown
 pi-browser select [7] 'United States'
 pi-browser select 'select[name="country"]' 'US'
 
-# Press a keyboard key
+# Type text into an autocomplete/search field, wait for suggestions, then select matching option
+pi-browser type_and_select [5] 'keyword' 'Option Text Match'
+pi-browser type_and_select 'input[name="recipient"]' '张' '张三'
+
+# Press a keyboard key (real CDP keyboard input — works with React/Vue)
 pi-browser press Enter
 pi-browser press Tab
 pi-browser press Escape
 pi-browser press ArrowDown
+pi-browser press ArrowUp
 
 # Wait for an element to appear (default timeout 10s)
 pi-browser wait '[data-testid="results"]'
 pi-browser wait 'div.loading' 5000
+```
+
+### Handling Dynamic Elements: Dropdowns, Autocomplete, Modals
+
+Web pages often show elements dynamically — suggestion dropdowns after typing, modals after clicking, tooltips on hover. These elements appear AFTER the initial snapshot. Use these patterns:
+
+**Pattern 1: `type_and_select` (recommended for autocomplete)**
+
+Single command for the full flow: type → wait for dropdown → click matching option.
+
+```bash
+pi-browser type_and_select [3] 'zhang' '张三'
+# Output: {"selector":"[3]","typed":"zhang","matched":"张三 - zhangsan@qq.com","selected":true}
+```
+
+This internally:
+1. Focuses and clears the input
+2. Types the text character by character (triggers React onChange properly)
+3. Waits for suggestion dropdown to appear
+4. Scans floating layers for matching option text
+5. Clicks the matched option
+
+**Pattern 2: Re-snapshot after typing (manual control)**
+
+After typing in an input field, ALWAYS re-snapshot to capture dynamically appeared dropdown options.
+
+```bash
+pi-browser fill [1] 'zhang'
+pi-browser snapshot           # ← RE-SNAPSHOT after typing!
+# Output will include floating layer section:
+# --- Floating Layer: listbox ("recipient-suggest") ---
+# [12] option "张三 - zhangsan@qq.com"
+# [13] option "张四 - zhangsi@aliyun.com"
+
+pi-browser click [12]          # Click the desired option
+```
+
+**Pattern 3: Keyboard navigation**
+
+For dropdowns that support arrow key navigation:
+
+```bash
+pi-browser fill [1] 'keyword'
+pi-browser press ArrowDown    # Select first suggestion
+pi-browser press ArrowDown    # Move to next
+pi-browser press Enter        # Confirm selection
+```
+
+**Pattern 4: Handling modals/dialogs**
+
+After an action that opens a modal, re-snapshot. Modal elements appear in a separate "Floating Layer" section.
+
+```bash
+pi-browser click [5]           # Click "Add User" button
+pi-browser snapshot            # ← RE-SNAPSHOT to see modal
+# --- Floating Layer: dialog ("user-modal") ---
+# [20] textbox "Name"
+# [21] button "Save"
+# [22] button "Cancel"
+
+pi-browser fill [20] 'John'
+pi-browser click [21]          # Save in modal
 ```
 
 ### Recording & Replaying Workflows
@@ -151,21 +218,23 @@ Multiple selector formats are supported. **Use ref IDs from snapshot whenever po
 
 ## Snapshot Output Format
 
+The snapshot now detects and groups elements by **visual layer**:
+
 ```
---- Interactive Elements ---
+--- Interactive Elements (Main Page) ---
 Page: Example Site | H1: Welcome
 [1] link "Home" [href=/]
 [2] link "Products" [href=/products]
 [3] button "Search" [aria-label="Search"]
-[4] textbox "Email" [type=email, placeholder="Enter email", name=email]
-[5] textbox "Password" [type=password, placeholder="Password", name=password]
-[6] button "Sign In"
-[7] checkbox "Remember me" [name=remember]
-[8] link "Forgot password?" [href=/forgot]
-[9] combobox "Country" [name=country]
+
+--- Floating Layer: listbox ("search-suggestions") ---
+[4] option "Result 1 - Description"
+[5] option "Result 2 - Description"
 ```
 
 Each line shows: `[ref]` `role` `"accessible name"` `[attributes]`
+
+Floating layers (dropdowns, modals, popups) are automatically detected and shown in separate sections. Re-run `snapshot` after interactions that trigger dynamic UI changes to see these layers.
 
 ## Workflow Variables
 
@@ -187,10 +256,11 @@ Variables are automatically detected from `{{...}}` patterns in fill values and 
 1. **Navigate first** — `pi-browser navigate <url>` before any other command
 2. **Snapshot before acting** — run `pi-browser snapshot` to see the page structure and ref IDs
 3. **Use ref IDs** — `click [3]` is more reliable than any CSS selector
-4. **Verify after actions** — after important clicks/fills, run `snapshot` or `screenshot` to confirm
-5. **Quote all selectors** — shell-special characters must be quoted
-6. **One action per command** — don't chain multiple actions in one CLI call
-7. **Re-snapshot after navigation** — ref IDs reset when the page changes
+4. **Re-snapshot after interactions** — after typing in inputs, clicking buttons that trigger UI changes, or opening modals, run `snapshot` again to capture dynamically appeared elements
+5. **Use `type_and_select` for autocomplete** — it handles the full flow in one command
+6. **Quote all selectors** — shell-special characters must be quoted
+7. **One action per command** — don't chain multiple actions in one CLI call
+8. **Check floating layers** — when `snapshot` shows a "Floating Layer" section, those are dynamically appeared dropdowns/modals/popups
 
 ## Typical Workflow
 

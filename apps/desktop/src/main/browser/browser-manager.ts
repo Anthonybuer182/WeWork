@@ -512,21 +512,256 @@ export class BrowserManager {
     return { selector, value, selected: (result?.result as { value?: boolean })?.value ?? false };
   }
 
-  /** Press a keyboard key. Supports key names like 'Enter', 'Tab', 'Escape', 'ArrowDown'. */
-  async pressKey(key: string): Promise<{ key: string; pressed: boolean }> {
-    const expr = this.buildExpression(`(function(){
-      var key = ${JSON.stringify(key)};
-      var target = document.activeElement || document.body;
-      var opts = {bubbles: true, cancelable: true, key: key, code: key};
-      target.dispatchEvent(new KeyboardEvent('keydown', opts));
-      target.dispatchEvent(new KeyboardEvent('keypress', opts));
-      target.dispatchEvent(new KeyboardEvent('keyup', opts));
-      return true;
+  /**
+   * Type text into an input, wait for suggestion dropdown to appear, then select matching option.
+   * Compound operation for autocomplete / typeahead fields.
+   *
+   * @param selector - Selector for the input element
+   * @param text - Text to type into the input
+   * @param optionMatcher - Text to match against suggestion options (case-insensitive substring)
+   * @param waitMs - How long to wait for suggestions to appear (default 1500ms)
+   */
+  async typeAndSelect(
+    selector: string,
+    text: string,
+    optionMatcher: string,
+    waitMs = 1500,
+  ): Promise<{ selector: string; typed: string; matched: string | null; selected: boolean; error?: string }> {
+    // 1. Focus and clear the input
+    const found = await this.waitForElement(selector, 5000);
+    if (!found) {
+      return { selector, typed: text, matched: null, selected: false, error: `Input element not found: "${selector}"` };
+    }
+
+    // Get element rect for CDP mouse events (same approach as fill())
+    const rectExpr = this.buildExpression(`(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return null;
+      el.scrollIntoView({block:'center', behavior:'instant'});
+      var r = el.getBoundingClientRect();
+      return {x: r.left + r.width/2, y: r.top + r.height/2, width: r.width, height: r.height};
     })()`);
+    const rectResult = await this.sendCommand('Runtime.evaluate', {
+      expression: rectExpr,
+      returnByValue: true,
+    });
+    const rect = (rectResult?.result as { value?: { x: number; y: number; width: number; height: number } })?.value;
+    if (!rect) {
+      return { selector, typed: text, matched: null, selected: false, error: `Cannot get rect for: "${selector}"` };
+    }
+
+    // Triple-click to select all existing text (same as fill())
+    for (let i = 0; i < 3; i++) {
+      await this.sendCommand('Input.dispatchMouseEvent', {
+        type: 'mousePressed', x: rect.x, y: rect.y, button: 'left', clickCount: i + 1,
+      });
+      await this.sendCommand('Input.dispatchMouseEvent', {
+        type: 'mouseReleased', x: rect.x, y: rect.y, button: 'left', clickCount: i + 1,
+      });
+    }
+
+    // 2. Type the text using CDP insertText
+    await this.sendCommand('Input.insertText', { text });
+
+    // Dispatch DOM input/change events so React/Vue/vanilla JS listeners fire (e.g., autocomplete dropdowns)
     await this.sendCommand('Runtime.evaluate', {
+      expression: this.buildExpression(`(function(){
+        var el = window.piResolveSelector(${JSON.stringify(selector)});
+        if (el) {
+          el.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+          el.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
+        }
+      })()`),
+    });
+
+    // 3. Wait for suggestion dropdown to appear
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+
+    // 4. Take a fresh snapshot to find the suggestion options
+    await this.sendCommand('Runtime.evaluate', {
+      expression: BROWSER_HELPERS_JS,
+      returnByValue: true,
+    });
+
+    // 5. Try to find and click a matching option
+    const matcherEscaped = JSON.stringify(optionMatcher.toLowerCase());
+    const expr = this.buildExpression(`(function(){
+      // Look for options in dropdown layers
+      var candidates = [];
+
+      // Strategy A: role="option" elements that contain the target text
+      var options = document.querySelectorAll('[role="option"]');
+      for (var o = 0; o < options.length; o++) {
+        if (piIsVisible(options[o]) && (options[o].textContent || '').toLowerCase().includes(${matcherEscaped})) {
+          candidates.push(options[o]);
+        }
+      }
+
+      // Strategy B: <li> elements in floating containers
+      if (candidates.length === 0) {
+        var lis = document.querySelectorAll('li');
+        for (var l = 0; l < lis.length; l++) {
+          if (piIsVisible(lis[l])) {
+            var txt = (lis[l].textContent || '').trim().toLowerCase();
+            if (txt.includes(${matcherEscaped}) && txt.length < 200) {
+              candidates.push(lis[l]);
+            }
+          }
+        }
+      }
+
+      // Strategy C: Any visible element with matching text and onclick/href
+      if (candidates.length === 0) {
+        var all = document.querySelectorAll('div, span, a, button, p');
+        for (var a = 0; a < all.length; a++) {
+          if (piIsVisible(all[a])) {
+            var atxt = (all[a].textContent || '').trim().toLowerCase();
+            if (atxt === ${matcherEscaped}) {
+              candidates.push(all[a]);
+              break;
+            }
+          }
+        }
+        // Fall back to partial match
+        if (candidates.length === 0) {
+          for (var a2 = 0; a2 < all.length; a2++) {
+            if (piIsVisible(all[a2])) {
+              var atxt2 = (all[a2].textContent || '').trim().toLowerCase();
+              if (atxt2.includes(${matcherEscaped}) && atxt2.length < 100) {
+                candidates.push(all[a2]);
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (candidates.length > 0) {
+        // Click the first matching candidate
+        var target = candidates[0];
+        var rect = target.getBoundingClientRect();
+        var x = rect.left + rect.width / 2;
+        var y = rect.top + rect.height / 2;
+        target.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true, clientX:x, clientY:y}));
+        target.dispatchEvent(new MouseEvent('mousedown', {bubbles:true, clientX:x, clientY:y}));
+        target.dispatchEvent(new MouseEvent('mouseup', {bubbles:true, clientX:x, clientY:y}));
+        return (target.textContent || '').trim().slice(0, 100);
+      }
+      return null;
+    })()`);
+
+    const result = await this.sendCommand('Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
+
+    const matched = (result?.result as { value?: string | null })?.value ?? null;
+
+    if (matched) {
+      return { selector, typed: text, matched, selected: true };
+    }
+
+    // If no match found, try keyboard navigation approach
+    // Press ArrowDown to open/select first suggestion, then type more
+    const isSingleChar = text.length === 1;
+    if (!matched && !isSingleChar) {
+      // Could try pressing ArrowDown + Enter as fallback
+      return {
+        selector,
+        typed: text,
+        matched: null,
+        selected: false,
+        error: `No option matching "${optionMatcher}" found in dropdown. Try re-snapshotting to see available options.`,
+      };
+    }
+
+    return { selector, typed: text, matched: null, selected: false, error: `No matching option found for "${optionMatcher}"` };
+  }
+
+  /** CDP key code mappings for common special keys. */
+  private static KEY_MAP: Record<string, { key: string; code: string; windowsVirtualKeyCode: number; nativeVirtualKeyCode: number }> = {
+    'Enter':     { key: 'Enter',     code: 'Enter',     windowsVirtualKeyCode: 13,  nativeVirtualKeyCode: 36 },
+    'Tab':       { key: 'Tab',       code: 'Tab',       windowsVirtualKeyCode: 9,   nativeVirtualKeyCode: 48 },
+    'Escape':    { key: 'Escape',    code: 'Escape',    windowsVirtualKeyCode: 27,  nativeVirtualKeyCode: 53 },
+    'ArrowDown': { key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40,  nativeVirtualKeyCode: 125 },
+    'ArrowUp':   { key: 'ArrowUp',   code: 'ArrowUp',   windowsVirtualKeyCode: 38,  nativeVirtualKeyCode: 126 },
+    'ArrowLeft': { key: 'ArrowLeft', code: 'ArrowLeft', windowsVirtualKeyCode: 37,  nativeVirtualKeyCode: 123 },
+    'ArrowRight':{ key: 'ArrowRight',code: 'ArrowRight',windowsVirtualKeyCode: 39,  nativeVirtualKeyCode: 124 },
+    'Backspace': { key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8,   nativeVirtualKeyCode: 51 },
+    'Delete':    { key: 'Delete',    code: 'Delete',    windowsVirtualKeyCode: 46,  nativeVirtualKeyCode: 117 },
+    'Home':      { key: 'Home',      code: 'Home',      windowsVirtualKeyCode: 36,  nativeVirtualKeyCode: 115 },
+    'End':       { key: 'End',       code: 'End',       windowsVirtualKeyCode: 35,  nativeVirtualKeyCode: 119 },
+    'PageUp':    { key: 'PageUp',    code: 'PageUp',    windowsVirtualKeyCode: 33,  nativeVirtualKeyCode: 116 },
+    'PageDown':  { key: 'PageDown',  code: 'PageDown',  windowsVirtualKeyCode: 34,  nativeVirtualKeyCode: 121 },
+    'Space':     { key: ' ',         code: 'Space',     windowsVirtualKeyCode: 32,  nativeVirtualKeyCode: 49 },
+    'Shift':     { key: 'Shift',     code: 'ShiftLeft', windowsVirtualKeyCode: 16,  nativeVirtualKeyCode: 56 },
+    'Control':   { key: 'Control',   code: 'ControlLeft',windowsVirtualKeyCode: 17,  nativeVirtualKeyCode: 59 },
+    'Alt':       { key: 'Alt',       code: 'AltLeft',   windowsVirtualKeyCode: 18,  nativeVirtualKeyCode: 58 },
+    'Meta':      { key: 'Meta',      code: 'MetaLeft',  windowsVirtualKeyCode: 91,  nativeVirtualKeyCode: 55 },
+    'F5':        { key: 'F5',        code: 'F5',        windowsVirtualKeyCode: 116, nativeVirtualKeyCode: 96 },
+  };
+
+  /**
+   * Press a keyboard key using CDP Input.dispatchKeyEvent — real OS-level keyboard input
+   * that works with React/Vue event systems (unlike JS dispatchEvent).
+   *
+   * Supports special keys (Enter, Tab, ArrowDown, etc.) and regular characters.
+   */
+  async pressKey(key: string): Promise<{ key: string; pressed: boolean }> {
+    const keyDef = BrowserManager.KEY_MAP[key];
+
+    if (keyDef) {
+      // Special key — send keyDown + keyUp via CDP
+      const base: Record<string, unknown> = {
+        type: 'rawKeyDown',
+        key: keyDef.key,
+        code: keyDef.code,
+        windowsVirtualKeyCode: keyDef.windowsVirtualKeyCode,
+        nativeVirtualKeyCode: keyDef.nativeVirtualKeyCode,
+        isSystemKey: false,
+      };
+
+      await this.sendCommand('Input.dispatchKeyEvent', {
+        ...base,
+        type: 'rawKeyDown',
+      });
+
+      // For keys that produce characters (Enter, Space, Tab), also send a char event
+      if (['Enter', 'Tab', 'Space'].includes(key)) {
+        await this.sendCommand('Input.dispatchKeyEvent', {
+          ...base,
+          type: 'char',
+          text: key === 'Enter' ? '\r' : key === 'Tab' ? '\t' : ' ',
+          unmodifiedText: key === 'Enter' ? '\r' : key === 'Tab' ? '\t' : ' ',
+        });
+      }
+
+      await this.sendCommand('Input.dispatchKeyEvent', {
+        ...base,
+        type: 'keyUp',
+      });
+    } else {
+      // Regular character — use char event which triggers React onChange properly
+      await this.sendCommand('Input.dispatchKeyEvent', {
+        type: 'char',
+        key: key,
+        text: key,
+        unmodifiedText: key,
+      });
+
+      // Also send keyDown/keyUp pair for completeness
+      await this.sendCommand('Input.dispatchKeyEvent', {
+        type: 'rawKeyDown',
+        key: key,
+        windowsVirtualKeyCode: key.length === 1 ? key.toUpperCase().charCodeAt(0) : 0,
+      });
+      await this.sendCommand('Input.dispatchKeyEvent', {
+        type: 'keyUp',
+        key: key,
+        windowsVirtualKeyCode: key.length === 1 ? key.toUpperCase().charCodeAt(0) : 0,
+      });
+    }
+
     return { key, pressed: true };
   }
 

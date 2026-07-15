@@ -111,6 +111,13 @@ async function routeRequest(
         return await browserManager.hover(body.selector as string);
       case '/select':
         return await browserManager.selectOption(body.selector as string, body.value as string);
+      case '/type-and-select':
+        return await browserManager.typeAndSelect(
+          body.selector as string,
+          body.text as string,
+          body.option as string,
+          (body.wait as number) ?? 1500,
+        );
       case '/press':
         return await browserManager.pressKey(body.key as string);
       case '/wait':

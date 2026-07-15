@@ -94,7 +94,8 @@ Usage:
   pi-browser fill <selector> <value>     Fill an input with a value
   pi-browser hover <selector>            Hover over an element
   pi-browser select <selector> <value>   Select an option in a <select> dropdown
-  pi-browser press <key>                 Press a keyboard key (Enter, Tab, Escape, etc.)
+  pi-browser type_and_select <selector> <text> <option>  Type text into input, then select matching autocomplete suggestion
+  pi-browser press <key>                 Press a keyboard key (Enter, Tab, Escape, ArrowDown, etc.)
   pi-browser wait <selector> [timeout]   Wait for an element to appear (default 10s)
   pi-browser text [selector]             Get text content of element or entire page
   pi-browser attribute <selector> <attr> Get an attribute value of an element
@@ -176,6 +177,20 @@ Workflow Variables:
         process.exit(1);
       }
       const result = await request('POST', '/select', { selector, value });
+      outputJSON(result);
+      break;
+    }
+
+    case 'type_and_select': {
+      const selector = args[1];
+      const text = args[2];
+      const option = args[3];
+      const wait = args[4] ? parseInt(args[4], 10) : undefined;
+      if (!selector || !text || !option) {
+        outputText('Usage: pi-browser type_and_select <selector> <text> <option> [wait_ms]');
+        process.exit(1);
+      }
+      const result = await request('POST', '/type-and-select', { selector, text, option, wait });
       outputJSON(result);
       break;
     }

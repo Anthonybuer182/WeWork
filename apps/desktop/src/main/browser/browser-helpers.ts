@@ -63,6 +63,7 @@ export const BROWSER_HELPERS_JS = `
     if (rect.width === 0 && rect.height === 0) return false;
     return true;
   }
+  window.piIsVisible = piIsVisible;
 
   // ── Selector resolver ──
   window.piResolveSelector = function(selector) {
@@ -157,6 +158,12 @@ export const BROWSER_HELPERS_JS = `
 
   // ── Snapshot: list interactive elements with refs ──
   window.piSnapshot = function() {
+    // Clear old refs so re-snapshotting after interactions gives fresh ref IDs
+    var oldRefs = document.querySelectorAll('[data-pi-ref]');
+    for (var r = 0; r < oldRefs.length; r++) {
+      oldRefs[r].removeAttribute('data-pi-ref');
+    }
+
     var interactiveSelectors = [
       'a[href]', 'button', 'input:not([type="hidden"])', 'select', 'textarea',
       'label', 'summary',
@@ -171,57 +178,165 @@ export const BROWSER_HELPERS_JS = `
     var lines = [];
     var ref = 0;
 
+    // --- Phase 1: Main page elements ---
+    var mainElements = [];
+    var seenElements = new Set();
+
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       if (!piIsVisible(el)) continue;
-
-      // Skip duplicate refs (element matched by multiple selectors)
-      if (el.hasAttribute('data-pi-ref')) continue;
+      if (seenElements.has(el)) continue;
+      seenElements.add(el);
 
       ref++;
       el.setAttribute('data-pi-ref', String(ref));
-
-      var role = piImplicitRole(el);
-      var name = piAccessibleName(el);
-      var tag = el.tagName.toLowerCase();
-      var type = el.getAttribute('type') || '';
-      var placeholder = el.getAttribute('placeholder') || '';
-      var nameAttr = el.getAttribute('name') || '';
-      var id = el.getAttribute('id') || '';
-      var href = el.getAttribute('href') || '';
-      var value = el.getAttribute('value') || '';
-      var checked = el.checked ? ' [checked]' : '';
-
-      var parts = ['[' + ref + ']', role];
-
-      if (name) {
-        parts.push('"' + name.slice(0, 80) + '"');
-      }
-
-      var attrs = [];
-      if (type && tag === 'input') attrs.push('type=' + type);
-      if (placeholder) attrs.push('placeholder="' + placeholder + '"');
-      if (nameAttr) attrs.push('name=' + nameAttr);
-      if (id && !/^(r\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) attrs.push('#' + id);
-      if (href && href !== '#' && href !== 'javascript:void(0)') attrs.push('href=' + href.slice(0, 60));
-      if (value && tag === 'input' && (type === 'submit' || type === 'button')) attrs.push('value="' + value + '"');
-      if (checked) attrs.push(checked.trim());
-
-      if (attrs.length > 0) parts.push('[' + attrs.join(', ') + ']');
-
-      lines.push(parts.join(' '));
+      mainElements.push(formatElement(ref, el));
     }
 
-    // Also show page heading for context
+    // --- Phase 2: Floating layer detection (dropdowns, modals, tooltips) ---
+    var floatingContainers = findFloatingContainers();
+
+    for (var fc = 0; fc < floatingContainers.length; fc++) {
+      var container = floatingContainers[fc];
+      var floatingEls = container.querySelectorAll(interactiveSelectors);
+      var layerElements = [];
+
+      for (var j = 0; j < floatingEls.length; j++) {
+        var fel = floatingEls[j];
+        if (!piIsVisible(fel)) continue;
+        if (seenElements.has(fel)) continue;
+        seenElements.add(fel);
+
+        ref++;
+        fel.setAttribute('data-pi-ref', String(ref));
+        layerElements.push(formatElement(ref, fel));
+      }
+
+      if (layerElements.length > 0) {
+        // Add section header
+        var layerName = container.className
+          ? container.className.toString().split(' ').slice(0, 2).join(' ')
+          : container.tagName.toLowerCase();
+        if (container.getAttribute('role')) {
+          layerName = container.getAttribute('role') + ' ("' + layerName.slice(0, 30) + '")';
+        }
+        lines.push('');
+        lines.push('--- Floating Layer: ' + layerName + ' ---');
+        for (var k = 0; k < layerElements.length; k++) {
+          lines.push(layerElements[k]);
+        }
+      }
+    }
+
+    // --- Assemble output: main page elements first, then floating layers ---
+    for (var m = 0; m < mainElements.length; m++) {
+      lines.push(mainElements[m]);
+    }
+
     var h1 = document.querySelector('h1');
     var title = document.title || '';
     var header = 'Page: ' + title;
     if (h1 && h1.textContent.trim()) header += ' | H1: ' + h1.textContent.trim().slice(0, 80);
     lines.unshift(header);
-    lines.unshift('--- Interactive Elements ---');
+    lines.unshift('--- Interactive Elements (Main Page) ---');
 
     return lines.join('\\n');
   };
+
+  // ── Format a single element line for snapshot output ──
+  function formatElement(ref, el) {
+    var role = piImplicitRole(el);
+    var name = piAccessibleName(el);
+    var tag = el.tagName.toLowerCase();
+    var type = el.getAttribute('type') || '';
+    var placeholder = el.getAttribute('placeholder') || '';
+    var nameAttr = el.getAttribute('name') || '';
+    var id = el.getAttribute('id') || '';
+    var href = el.getAttribute('href') || '';
+    var value = el.getAttribute('value') || '';
+    var checked = el.checked ? ' [checked]' : '';
+
+    var parts = ['[' + ref + ']', role];
+
+    if (name) {
+      parts.push('"' + name.slice(0, 80) + '"');
+    }
+
+    var attrs = [];
+    if (type && tag === 'input') attrs.push('type=' + type);
+    if (placeholder) attrs.push('placeholder="' + placeholder + '"');
+    if (nameAttr) attrs.push('name=' + nameAttr);
+    if (id && !/^(r\\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) attrs.push('#' + id);
+    if (href && href !== '#' && href !== 'javascript:void(0)') attrs.push('href=' + href.slice(0, 60));
+    if (value && tag === 'input' && (type === 'submit' || type === 'button')) attrs.push('value="' + value + '"');
+    if (checked) attrs.push(checked.trim());
+
+    if (attrs.length > 0) parts.push('[' + attrs.join(', ') + ']');
+
+    return parts.join(' ');
+  }
+
+  // ── Find floating overlay containers (dropdowns, modals, tooltips, popups) ──
+  function findFloatingContainers() {
+    var containers = [];
+    var allDivs = document.querySelectorAll('div, ul, ol, section, aside, [role="listbox"], [role="menu"], [role="dialog"], [role="tooltip"], [role="alertdialog"], [role="presentation"]');
+
+    for (var i = 0; i < allDivs.length; i++) {
+      var el = allDivs[i];
+      if (!el.isConnected) continue;
+      var cs = window.getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+
+      // Detect as floating layer if any of:
+      var isFloating = false;
+
+      // 1. ARIA role that indicates overlay
+      var role = el.getAttribute('role') || '';
+      if (role === 'listbox' || role === 'menu' || role === 'dialog' || role === 'tooltip' || role === 'alertdialog') {
+        isFloating = true;
+      }
+
+      // 2. High z-index position:fixed/absolute container (> 10 means intentional overlay)
+      if (!isFloating && (cs.position === 'fixed' || cs.position === 'absolute')) {
+        var zIndex = parseInt(cs.zIndex, 10);
+        if (zIndex > 10) isFloating = true;
+      }
+
+      // 3. Element has visible children and matches common dropdown/popup patterns
+      if (!isFloating && el.children.length > 0 && el.children.length <= 50) {
+        var cls = (el.className && typeof el.className === 'string') ? el.className.toLowerCase() : '';
+        if (/(dropdown|popup|popover|overlay|menu|suggest|select|autocomplete|tooltip|modal|drawer)/.test(cls)) {
+          var zIdx = parseInt(cs.zIndex, 10);
+          if (zIdx > 0 || cs.position === 'absolute' || cs.position === 'fixed') {
+            isFloating = true;
+          }
+        }
+      }
+
+      if (isFloating) {
+        // Check if it has visible interactive children
+        var interactive = el.querySelector('a[href], button, input, [role="option"], [role="menuitem"], [onclick], li, span');
+        if (interactive && piIsVisible(interactive)) {
+          containers.push(el);
+        }
+      }
+    }
+
+    // Deduplicate: remove containers that are descendants of another floating container
+    var deduped = [];
+    for (var d = 0; d < containers.length; d++) {
+      var isChild = false;
+      for (var p = 0; p < containers.length; p++) {
+        if (d !== p && containers[p].contains(containers[d])) {
+          isChild = true;
+          break;
+        }
+      }
+      if (!isChild) deduped.push(containers[d]);
+    }
+
+    return deduped;
+  }
 
   // ── Find similar elements (for error suggestions) ──
   window.piFindSimilar = function(selector, limit) {
