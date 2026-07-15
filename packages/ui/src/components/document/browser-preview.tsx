@@ -517,6 +517,7 @@ export function BrowserPreview() {
             <webview
               ref={setWebviewRef as any}
               src="about:blank"
+              partition="persist:pi-browser"
               className="w-full h-full"
               style={{ display: 'inline-flex', width: '100%', height: '100%', position: 'relative', zIndex: 0 }}
             />
