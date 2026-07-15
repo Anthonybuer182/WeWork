@@ -3,9 +3,10 @@ import { createMainWindow } from '@main/window-manager';
 import { registerIpcHandlers } from '@main/ipc/index';
 import { registerNativeIpcHandlers } from '@main/ipc/native';
 import { SettingsManager, getAgentDir } from '@earendil-works/pi-coding-agent';
-import { existsSync, mkdirSync, readdirSync, cpSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, cpSync, writeFileSync } from 'fs';
+import { homedir } from 'os';
 import { exec, execSync } from 'child_process';
-import { join, dirname } from 'path';
+import { join, dirname, delimiter } from 'path';
 import { fileURLToPath } from 'url';
 import { BrowserManager, startBrowserHttpServer } from '@main/browser';
 import { registerBrowserIpcHandlers } from '@main/ipc/browser';
@@ -88,10 +89,7 @@ if (!gotLock) {
    * Runs non-blocking: failures are silent (Agent can install on demand).
    */
   function ensureSkillBinaries(): void {
-    // install.sh is bash-based, macOS/Linux only
-    if (process.platform === 'win32') return;
-
-    // Install pi-browser CLI (bundled with the app, just needs a symlink)
+    // Install pi-browser CLI (bundled with the app)
     ensurePiBrowserBinary();
 
     try {
@@ -128,7 +126,15 @@ if (!gotLock) {
       return;
     }
 
-    const installDir = join(process.env.HOME ?? '', '.local', 'bin');
+    if (process.platform === 'win32') {
+      ensurePiBrowserBinaryWindows(binSource);
+    } else {
+      ensurePiBrowserBinaryUnix(binSource);
+    }
+  }
+
+  function ensurePiBrowserBinaryUnix(binSource: string): void {
+    const installDir = join(homedir(), '.local', 'bin');
     const installTarget = join(installDir, 'pi-browser');
 
     // Already installed and pointing to the right place
@@ -150,6 +156,62 @@ if (!gotLock) {
       console.log('[pi-browser] Installed to', installTarget);
     } catch (err) {
       console.error('[pi-browser] Install failed:', err);
+    }
+  }
+
+  function ensurePiBrowserBinaryWindows(binSource: string): void {
+    const installDir = join(homedir(), '.local', 'bin');
+    const installTarget = join(installDir, 'pi-browser.cmd');
+
+    const cmdContent = `@echo off\r\nnode "${binSource}" %*`;
+
+    try {
+      // Check if already installed with correct content
+      if (existsSync(installTarget)) {
+        const existing = execSync(`type "${installTarget}" 2>nul || echo ""`, {
+          encoding: 'utf-8',
+          windowsHide: true,
+        }).trim();
+        if (existing.includes(binSource)) return;
+      }
+    } catch {
+      // proceed with install
+    }
+
+    try {
+      mkdirSync(installDir, { recursive: true });
+      writeFileSync(installTarget, cmdContent, { encoding: 'utf-8' });
+      console.log('[pi-browser] Installed to', installTarget);
+
+      // Best-effort: add install directory to user PATH
+      ensureWindowsPath(installDir);
+    } catch (err) {
+      console.error('[pi-browser] Windows install failed:', err);
+    }
+  }
+
+  function ensureWindowsPath(dir: string): void {
+    // Check if already in current PATH
+    if ((process.env.PATH ?? '').toLowerCase().includes(dir.toLowerCase())) return;
+
+    // Check user PATH from registry
+    try {
+      const regOutput = execSync('reg query "HKCU\\Environment" /v Path 2>nul', {
+        encoding: 'utf-8', windowsHide: true,
+      });
+      if (regOutput.toLowerCase().includes(dir.toLowerCase())) return;
+    } catch {}
+
+    // Use PowerShell .NET API (no 1024-char limit, preserves REG_EXPAND_SZ)
+    try {
+      execSync(
+        `powershell -NoProfile -Command "[Environment]::SetEnvironmentVariable('Path', '${dir};' + [Environment]::GetEnvironmentVariable('Path', 'User'), 'User')"`,
+        { windowsHide: true },
+      );
+      // Also update current process PATH so it takes effect immediately
+      process.env.PATH = dir + delimiter + (process.env.PATH ?? '');
+    } catch {
+      // Best-effort only
     }
   }
 
