@@ -1,11 +1,11 @@
 ---
 name: browser
-description: Browse web pages, read content, fill forms, take screenshots, record and replay browser workflows. Use when the user asks to visit a website, scrape content, automate web interactions, or save repetitive browser tasks as reusable workflows.
+description: Browse web pages, read content, fill forms, and take screenshots. Use when the user asks to visit a website, scrape content, or automate web interactions.
 ---
 
 # pi-browser
 
-Browser automation CLI for the Pi Coding Agent desktop app. Control the built-in browser (visible in the right panel) — navigate, click, fill forms, read content, screenshot, record and replay workflows.
+Browser automation CLI for the Pi Coding Agent desktop app. Control the built-in browser (visible in the right panel) — navigate, click, fill forms, read content, screenshot.
 
 ## How it works
 
@@ -169,30 +169,6 @@ pi-browser fill [20] 'John'
 pi-browser click [21]          # Save in modal
 ```
 
-### Recording & Replaying Workflows
-
-Record a sequence of browser interactions, then replay them later — no LLM needed during replay.
-
-```bash
-# Start recording (user performs actions in the browser panel)
-pi-browser record start
-
-# Stop recording and get captured steps
-pi-browser record stop
-
-# Save recorded steps as a named workflow
-pi-browser record stop | pi-browser save "GitHub Login"
-
-# List saved workflows
-pi-browser workflows
-
-# Replay a workflow with variables
-pi-browser replay "GitHub Login" --var username=myuser --var password=mypass
-
-# Delete a workflow
-pi-browser delete "GitHub Login"
-```
-
 ## Selectors
 
 Multiple selector formats are supported. **Use ref IDs from snapshot whenever possible** — they're the most reliable.
@@ -235,21 +211,6 @@ Page: Example Site | H1: Welcome
 Each line shows: `[ref]` `role` `"accessible name"` `[attributes]`
 
 Floating layers (dropdowns, modals, popups) are automatically detected and shown in separate sections. Re-run `snapshot` after interactions that trigger dynamic UI changes to see these layers.
-
-## Workflow Variables
-
-Recorded workflows can contain `{{variableName}}` placeholders. During replay, pass values with `--var`:
-
-```bash
-# A recorded login workflow might have steps like:
-# fill input[name="user"] {{username}}
-# fill input[name="pass"] {{password}}
-
-# Replay with actual values:
-pi-browser replay "Login" --var username=alice --var password=secret123
-```
-
-Variables are automatically detected from `{{...}}` patterns in fill values and navigate URLs.
 
 ## Best Practices
 

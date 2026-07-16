@@ -4,8 +4,6 @@ import {
   ArrowRight,
   RotateCw,
   ExternalLink,
-  Circle,
-  Square,
   Globe,
   ZoomIn,
   ZoomOut,
@@ -16,8 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { BrowserQuoteButton } from './browser-quote-button';
-import { WorkflowDialog, type WorkflowStep } from './workflow-dialog';
-import { WorkflowSelector, type Workflow } from './workflow-selector';
 
 
 /** Minimal webview element interface. */
@@ -36,19 +32,11 @@ interface BrowserAPI {
   navigate: (url: string) => Promise<{ url: string; title: string }>;
   getUrl: () => Promise<{ url: string; title: string }>;
   screenshot: () => Promise<{ base64: string }>;
-  startRecording: () => Promise<{ started: boolean }>;
-  stopRecording: () => Promise<{ steps: WorkflowStep[] }>;
-  saveWorkflow: (name: string, steps: WorkflowStep[]) => Promise<{ name: string; saved: boolean }>;
-  listWorkflows: () => Promise<Workflow[]>;
-  deleteWorkflow: (name: string) => Promise<{ name: string; deleted: boolean }>;
-  replay: (name: string, variables?: Record<string, string>) => Promise<{ name: string; completed: boolean; stepCount: number }>;
   setViewport: (width: number, height: number) => Promise<void>;
   setZoom: (factor: number) => Promise<{ zoom: number }>;
   resetZoom: () => Promise<{ zoom: number }>;
   getZoom: () => Promise<{ zoom: number }>;
   onUrlChanged: (callback: (url: string) => void) => void;
-  onRecordingState: (callback: (recording: boolean) => void) => void;
-  onReplayProgress: (callback: (progress: { current: number; total: number }) => void) => void;
   onSwitchToBrowserTab: (callback: () => void) => void;
 }
 
@@ -67,10 +55,6 @@ export function BrowserPreview() {
   const [url, setUrl] = useState('about:blank');
   const [urlInput, setUrlInput] = useState('');
   const [connected, setConnected] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [recordedSteps, setRecordedSteps] = useState<WorkflowStep[]>([]);
-  const [replayProgress, setReplayProgress] = useState<{ current: number; total: number } | null>(null);
   const [zoom, setZoomState] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const api = getBrowserAPI();
@@ -178,20 +162,7 @@ export function BrowserPreview() {
       setUrlInput(newUrl);
     };
 
-    const handleRecordingState = (isRecording: boolean) => {
-      setRecording(isRecording);
-    };
-
-    const handleReplayProgress = (progress: { current: number; total: number }) => {
-      setReplayProgress(progress);
-      if (progress.current >= progress.total) {
-        setTimeout(() => setReplayProgress(null), 1000);
-      }
-    };
-
     api.onUrlChanged(handleUrlChanged);
-    api.onRecordingState(handleRecordingState);
-    api.onReplayProgress(handleReplayProgress);
   }, [api]);
 
   // ── Handle webview element when it's mounted (Electron only) ──
@@ -321,46 +292,6 @@ export function BrowserPreview() {
     api.getZoom().then((r) => setZoomState(r.zoom)).catch(() => {});
   }, [api, connected, url]);
 
-  // ── Recording ──
-  const handleRecordToggle = useCallback(async () => {
-    if (!api) return;
-    try {
-      if (recording) {
-        const result = await api.stopRecording();
-        setRecordedSteps(result.steps || []);
-        setDialogOpen(true);
-      } else {
-        await api.startRecording();
-      }
-    } catch (err) {
-      console.error('Recording toggle failed:', err);
-    }
-  }, [api, recording]);
-
-  // ── Save workflow ──
-  const handleSaveWorkflow = useCallback(async (name: string, steps: WorkflowStep[]) => {
-    if (!api) return;
-    await api.saveWorkflow(name, steps);
-  }, [api]);
-
-  // ── Replay workflow ──
-  const handleReplay = useCallback(async (name: string, variables: Record<string, string>) => {
-    if (!api) return;
-    await api.replay(name, variables);
-  }, [api]);
-
-  // ── Delete workflow ──
-  const handleDeleteWorkflow = useCallback(async (name: string) => {
-    if (!api) return;
-    await api.deleteWorkflow(name);
-  }, [api]);
-
-  // ── List workflows ──
-  const handleListWorkflows = useCallback(async (): Promise<Workflow[]> => {
-    if (!api) return [];
-    return await api.listWorkflows();
-  }, [api]);
-
   return (
     <div className={fullscreen ? 'fixed inset-0 z-[9999] bg-background flex flex-col' : 'flex flex-col h-full'}>
       {/* ── Toolbar ── */}
@@ -454,61 +385,7 @@ export function BrowserPreview() {
             </Tooltip>
           </>
         )}
-
-        {inElectron && (
-          <>
-            <div className="w-px h-5 bg-border mx-0.5" />
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={recording ? 'destructive' : 'ghost'}
-                  size="sm"
-                  className="h-7 gap-1.5"
-                  onClick={handleRecordToggle}
-                >
-                  {recording ? (
-                    <>
-                      <Square className="h-3 w-3 fill-current" />
-                      Stop
-                    </>
-                  ) : (
-                    <>
-                      <Circle className="h-3 w-3 fill-current" />
-                      Record
-                    </>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{recording ? 'Stop recording' : 'Start recording'}</TooltipContent>
-            </Tooltip>
-
-            <WorkflowSelector
-              onReplay={handleReplay}
-              onDelete={handleDeleteWorkflow}
-              fetchWorkflows={handleListWorkflows}
-              replayProgress={replayProgress}
-            />
-          </>
-        )}
       </div>
-
-      {/* ── Status bar ── */}
-      {(recording || replayProgress) && (
-        <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 text-xs border-b">
-          {recording && (
-            <span className="flex items-center gap-1.5 text-destructive">
-              <Circle className="h-2 w-2 fill-current animate-pulse" />
-              Recording...
-            </span>
-          )}
-          {replayProgress && (
-            <span className="flex items-center gap-1.5 text-muted-foreground">
-              Replaying step {replayProgress.current}/{replayProgress.total}
-            </span>
-          )}
-        </div>
-      )}
 
       {/* ── Webview (Electron) or Iframe (Web) ── */}
       <div className="browser-preview-container relative flex-1 overflow-hidden">
@@ -542,17 +419,6 @@ export function BrowserPreview() {
           </div>
         )}
       </div>
-
-      {/* ── Workflow save dialog ── */}
-      <WorkflowDialog
-        open={dialogOpen}
-        steps={recordedSteps}
-        onSave={handleSaveWorkflow}
-        onClose={() => {
-          setDialogOpen(false);
-          setRecordedSteps([]);
-        }}
-      />
     </div>
   );
 }

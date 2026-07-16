@@ -1,5 +1,5 @@
 import http from 'http';
-import type { BrowserManager, WorkflowStep } from './browser-manager';
+import type { BrowserManager } from './browser-manager';
 
 /** Local HTTP server that the pi-browser CLI tool calls. */
 export function startBrowserHttpServer(
@@ -9,7 +9,7 @@ export function startBrowserHttpServer(
   const server = http.createServer(async (req, res) => {
     // CORS headers for local development
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -87,8 +87,6 @@ async function routeRequest(
         return await browserManager.screenshot(url.searchParams.get('fullPage') === 'true' ? { fullPage: true } : undefined);
       case '/url':
         return await browserManager.getUrl();
-      case '/workflows':
-        return { workflows: await browserManager.listWorkflows() };
       case '/text':
         return await browserManager.getText();
       case '/health':
@@ -136,34 +134,8 @@ async function routeRequest(
         );
       case '/evaluate':
         return await browserManager.evaluate(body.expression as string);
-      case '/record/start':
-        return await browserManager.startRecording();
-      case '/record/stop':
-        return await browserManager.stopRecording();
-      case '/replay': {
-        const name = body.name as string;
-        const variables = (body.variables as Record<string, string>) ?? {};
-        return await browserManager.replay(name, variables);
-      }
-      case '/workflow/save': {
-        const name = body.name as string;
-        const steps = body.steps as WorkflowStep[];
-        return await browserManager.saveWorkflow(name, steps);
-      }
       default:
         throw new Error(`Unknown POST route: ${path}`);
-    }
-  }
-
-  // DELETE routes
-  if (method === 'DELETE') {
-    switch (path) {
-      case '/workflow': {
-        // Name passed as query param
-        return await browserManager.deleteWorkflow(body.name as string);
-      }
-      default:
-        throw new Error(`Unknown DELETE route: ${path}`);
     }
   }
 

@@ -37,32 +37,6 @@ export function registerBrowserIpcHandlers(browserManager: BrowserManager): void
     return await browserManager.screenshot();
   });
 
-  // ── Recording ──
-  ipcMain.handle('pi:browser:record:start', async () => {
-    return await browserManager.startRecording();
-  });
-
-  ipcMain.handle('pi:browser:record:stop', async () => {
-    return await browserManager.stopRecording();
-  });
-
-  // ── Workflows ──
-  ipcMain.handle('pi:browser:saveWorkflow', async (_event, name: string, steps: unknown) => {
-    return await browserManager.saveWorkflow(name, steps as Parameters<typeof browserManager.saveWorkflow>[1]);
-  });
-
-  ipcMain.handle('pi:browser:listWorkflows', async () => {
-    return await browserManager.listWorkflows();
-  });
-
-  ipcMain.handle('pi:browser:deleteWorkflow', async (_event, name: string) => {
-    return await browserManager.deleteWorkflow(name);
-  });
-
-  ipcMain.handle('pi:browser:replay', async (_event, name: string, variables?: Record<string, string>) => {
-    return await browserManager.replay(name, variables ?? {});
-  });
-
   // ── Viewport ──
   ipcMain.handle('pi:browser:setViewport', async (_event, width: number, height: number) => {
     await browserManager.setDeviceMetrics(width, height);
@@ -86,18 +60,6 @@ export function registerBrowserIpcHandlers(browserManager: BrowserManager): void
   browserManager.onUrlChanged((url) => {
     BrowserWindow.getAllWindows().forEach((win) => {
       win.webContents.send('pi:browser:urlChanged', url);
-    });
-  });
-
-  browserManager.onRecordingState((recording) => {
-    BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('pi:browser:recordingState', recording);
-    });
-  });
-
-  browserManager.onReplayProgress((current, total, step) => {
-    BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('pi:browser:replayProgress', { current, total, step });
     });
   });
 

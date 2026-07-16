@@ -1,29 +1,5 @@
 import { webContents } from 'electron';
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync, existsSync } from 'fs';
-import { join } from 'path';
-import { homedir } from 'os';
-import { RECORDING_SCRIPT, RECORDING_MESSAGE_PREFIX } from './recording-script';
 import { BROWSER_HELPERS_JS } from './browser-helpers';
-
-/** A single recorded workflow step. */
-export interface WorkflowStep {
-  type: 'click' | 'fill' | 'scroll' | 'navigate';
-  selector?: string;
-  value?: string;
-  direction?: 'up' | 'down';
-  amount?: number;
-  url?: string;
-  timestamp: number;
-}
-
-/** A saved workflow definition. */
-export interface Workflow {
-  name: string;
-  steps: WorkflowStep[];
-  variables: string[];
-  createdAt: string;
-  updatedAt: string;
-}
 
 /** Snapshot node — simplified accessibility tree. */
 export interface SnapshotNode {
@@ -34,13 +10,11 @@ export interface SnapshotNode {
 }
 
 type UrlChangedCallback = (url: string) => void;
-type RecordingStateCallback = (recording: boolean) => void;
-type ReplayProgressCallback = (current: number, total: number, step: WorkflowStep) => void;
 type SwitchToBrowserTabCallback = () => void;
 
 /**
- * BrowserManager — manages the Electron webview via the debugger API,
- * browser automation, and recording/replay of workflows.
+ * BrowserManager — manages the Electron webview via the debugger API
+ * and browser automation.
  *
  * Uses Electron's webContents.debugger API instead of Playwright's
  * page enumeration because Playwright's connectOverCDP does not expose
@@ -49,18 +23,11 @@ type SwitchToBrowserTabCallback = () => void;
 export class BrowserManager {
   private webviewWc: Electron.WebContents | null = null;
   private debuggerAttached = false;
-  private recording = false;
-  private recordedSteps: WorkflowStep[] = [];
   private urlChangedCallbacks: UrlChangedCallback[] = [];
-  private recordingStateCallbacks: RecordingStateCallback[] = [];
-  private replayProgressCallbacks: ReplayProgressCallback[] = [];
   private switchToBrowserTabCallbacks: SwitchToBrowserTabCallback[] = [];
-  private workflowsDir: string;
   private currentZoom = 1;
 
-  constructor(workflowsDir?: string) {
-    this.workflowsDir = workflowsDir ?? join(homedir(), '.pi', 'agent', 'workflows');
-  }
+  constructor() {}
 
   /** ——— Connection ——— */
 
@@ -97,10 +64,6 @@ export class BrowserManager {
 
     // Listen for CDP events (not command responses — those use the Promise from sendCommand)
     wv.debugger.on('message', (_event, method: string, params: Record<string, unknown>) => {
-      if (method === 'Runtime.consoleAPICalled') {
-        this.handleConsoleMessage(params);
-      }
-
       if (method === 'Page.frameNavigated' && params?.frame) {
         const frame = params.frame as { url?: string };
         const url = frame.url || '';
@@ -662,7 +625,6 @@ export class BrowserManager {
     }
 
     // If no match found, try keyboard navigation approach
-    // Press ArrowDown to open/select first suggestion, then type more
     const isSingleChar = text.length === 1;
     if (!matched && !isSingleChar) {
       // Could try pressing ArrowDown + Enter as fallback
@@ -895,225 +857,11 @@ export class BrowserManager {
     return { result: (result?.result as { value?: unknown })?.value };
   }
 
-  /** ——— Recording ——— */
-
-  /** Handle console messages from the webview (for recording). */
-  private handleConsoleMessage(params: Record<string, unknown>): void {
-    if (!this.recording) return;
-
-    const args = params?.args as Array<{ type?: string; value?: string }> | undefined;
-    if (!args || args.length === 0) return;
-
-    const text = args.map((a) => a.value ?? '').join(' ');
-    if (text.startsWith(RECORDING_MESSAGE_PREFIX)) {
-      try {
-        const step = JSON.parse(text.slice(RECORDING_MESSAGE_PREFIX.length));
-        this.recordedSteps.push(step);
-      } catch {
-        // Ignore malformed messages
-      }
-    }
-  }
-
-  /** Start recording user interactions. */
-  async startRecording(): Promise<{ started: boolean }> {
-    this.recording = true;
-    this.recordedSteps = [];
-
-    // Enable console and runtime domains
-    await this.sendCommand('Runtime.enable', {});
-
-    // Inject the recording script
-    await this.sendCommand('Runtime.evaluate', {
-      expression: RECORDING_SCRIPT,
-      returnByValue: true,
-    });
-
-    this.recordingStateCallbacks.forEach((cb) => cb(true));
-    console.log('[BrowserManager] Recording started');
-    return { started: true };
-  }
-
-  /** Stop recording and return captured steps. */
-  async stopRecording(): Promise<{ steps: WorkflowStep[] }> {
-    // Set flag to stop recording in the injected script
-    try {
-      await this.sendCommand('Runtime.evaluate', {
-        expression: '(function(){ window.__piBrowserRecording = false; })()',
-        returnByValue: true,
-      });
-    } catch {
-      // Ignore errors if page navigated away
-    }
-
-    this.recording = false;
-    this.recordingStateCallbacks.forEach((cb) => cb(false));
-    console.log(`[BrowserManager] Recording stopped, ${this.recordedSteps.length} steps captured`);
-
-    return { steps: [...this.recordedSteps] };
-  }
-
-  /** Whether recording is active. */
-  isRecording(): boolean {
-    return this.recording;
-  }
-
-  /** ——— Workflow management ——— */
-
-  /** Save a workflow to disk. */
-  async saveWorkflow(name: string, steps: WorkflowStep[]): Promise<{ name: string; saved: boolean }> {
-    if (!existsSync(this.workflowsDir)) {
-      mkdirSync(this.workflowsDir, { recursive: true });
-    }
-
-    const variables = this.extractVariables(steps);
-    const now = new Date().toISOString();
-
-    // Check if updating existing
-    const filepath = join(this.workflowsDir, `${name}.json`);
-    let existing: Workflow | null = null;
-    if (existsSync(filepath)) {
-      try {
-        existing = JSON.parse(readFileSync(filepath, 'utf-8'));
-      } catch {
-        // Ignore parse errors
-      }
-    }
-
-    const workflow: Workflow = {
-      name,
-      steps,
-      variables,
-      createdAt: existing?.createdAt ?? now,
-      updatedAt: now,
-    };
-
-    writeFileSync(filepath, JSON.stringify(workflow, null, 2), 'utf-8');
-    console.log(`[BrowserManager] Workflow "${name}" saved with ${steps.length} steps`);
-    return { name, saved: true };
-  }
-
-  /** List all saved workflows. */
-  async listWorkflows(): Promise<Workflow[]> {
-    if (!existsSync(this.workflowsDir)) return [];
-    const files = readdirSync(this.workflowsDir).filter((f) => f.endsWith('.json'));
-    const workflows: Workflow[] = [];
-    for (const file of files) {
-      try {
-        const content = readFileSync(join(this.workflowsDir, file), 'utf-8');
-        workflows.push(JSON.parse(content));
-      } catch {
-        // Skip invalid files
-      }
-    }
-    return workflows.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  }
-
-  /** Delete a workflow by name. */
-  async deleteWorkflow(name: string): Promise<{ name: string; deleted: boolean }> {
-    const filepath = join(this.workflowsDir, `${name}.json`);
-    if (existsSync(filepath)) {
-      unlinkSync(filepath);
-      return { name, deleted: true };
-    }
-    return { name, deleted: false };
-  }
-
-  /** Extract {{variable}} placeholders from workflow steps. */
-  private extractVariables(steps: WorkflowStep[]): string[] {
-    const variables = new Set<string>();
-    const regex = /\{\{(\w+)\}\}/g;
-    for (const step of steps) {
-      const text = `${step.value ?? ''} ${step.url ?? ''} ${step.selector ?? ''}`;
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        variables.add(match[1]);
-      }
-    }
-    return Array.from(variables);
-  }
-
-  /** Replace {{variable}} placeholders in a string. */
-  private replaceVariables(text: string, variables: Record<string, string>): string {
-    return text.replace(/\{\{(\w+)\}\}/g, (_, key) => variables[key] ?? `{{${key}}}`);
-  }
-
-  /** Replay a saved workflow with optional variable substitutions. */
-  async replay(name: string, variables: Record<string, string> = {}): Promise<{ name: string; completed: boolean; stepCount: number }> {
-    const filepath = join(this.workflowsDir, `${name}.json`);
-    if (!existsSync(filepath)) {
-      throw new Error(`Workflow "${name}" not found`);
-    }
-
-    const workflow: Workflow = JSON.parse(readFileSync(filepath, 'utf-8'));
-    const steps = workflow.steps;
-    const total = steps.length;
-
-    for (let i = 0; i < steps.length; i++) {
-      const step = steps[i];
-
-      // Notify progress
-      this.replayProgressCallbacks.forEach((cb) => cb(i + 1, total, step));
-
-      // Replace variables in step
-      const stepValue = step.value ? this.replaceVariables(step.value, variables) : undefined;
-      const stepUrl = step.url ? this.replaceVariables(step.url, variables) : undefined;
-      const stepSelector = step.selector ? this.replaceVariables(step.selector, variables) : undefined;
-
-      try {
-        switch (step.type) {
-          case 'navigate':
-            if (stepUrl) {
-              await this.sendCommand('Page.navigate', { url: stepUrl });
-              await this.waitForPageLoad();
-            }
-            break;
-          case 'click':
-            if (stepSelector) {
-              await this.click(stepSelector);
-            }
-            break;
-          case 'fill':
-            if (stepSelector && stepValue !== undefined) {
-              await this.fill(stepSelector, stepValue);
-            }
-            break;
-          case 'scroll':
-            if (step.direction && step.amount) {
-              await this.scroll(step.direction, step.amount);
-            }
-            break;
-        }
-        // Small delay between steps for stability
-        await new Promise((r) => setTimeout(r, 300));
-      } catch (err) {
-        console.error(`[BrowserManager] Replay step ${i + 1}/${total} failed:`, err);
-        // Continue with next step rather than aborting entirely
-      }
-    }
-
-    // Final progress notification
-    this.replayProgressCallbacks.forEach((cb) => cb(total, total, steps[total - 1]));
-
-    console.log(`[BrowserManager] Workflow "${name}" replayed (${total} steps)`);
-    return { name, completed: true, stepCount: total };
-  }
-
   /** ——— Events ——— */
 
   /** Register a callback for URL changes. */
   onUrlChanged(cb: UrlChangedCallback): void {
     this.urlChangedCallbacks.push(cb);
-  }
-
-  /** Register a callback for recording state changes. */
-  onRecordingState(cb: RecordingStateCallback): void {
-    this.recordingStateCallbacks.push(cb);
-  }
-
-  /** Register a callback for replay progress. */
-  onReplayProgress(cb: ReplayProgressCallback): void {
-    this.replayProgressCallbacks.push(cb);
   }
 
   /** Register a callback for switching to the Browser tab (main → renderer signal). */

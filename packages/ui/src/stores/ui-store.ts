@@ -23,7 +23,6 @@ interface UIState {
   searchQuery: string;
   memoryPreviews: Record<string, MemoryPreview>;
   browserUrl: string;
-  isRecording: boolean;
 
   setActiveWorkspace: (id: string | null) => void;
   setActiveSession: (id: string | null) => void;
@@ -39,7 +38,6 @@ interface UIState {
   setMemoryPreview: (id: string, info: MemoryPreview) => void;
   clearMemoryPreview: (id: string) => void;
   setBrowserUrl: (url: string) => void;
-  setRecording: (recording: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -58,7 +56,6 @@ export const useUIStore = create<UIState>()(
       searchQuery: '',
       memoryPreviews: {},
       browserUrl: 'about:blank',
-      isRecording: false,
 
       setActiveWorkspace: (id) => set({ activeWorkspaceId: id, activeSessionId: null }),
       setActiveSession: (id) => set({ activeSessionId: id }),
@@ -85,7 +82,6 @@ export const useUIStore = create<UIState>()(
           return { memoryPreviews: next };
         }),
       setBrowserUrl: (url) => set({ browserUrl: url }),
-      setRecording: (recording) => set({ isRecording: recording }),
     }),
     {
       name: 'pi-ui-storage',
