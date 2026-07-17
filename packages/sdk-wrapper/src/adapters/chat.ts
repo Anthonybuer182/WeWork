@@ -5,6 +5,7 @@ import { createAgentSession, SessionManager, ModelRegistry, AuthStorage, Default
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 import { extractThinkContent } from '../utils/think-parser.js';
 import { detectWrittenFiles } from '../utils/file-detection.js';
+import { migrateModelsConfig } from './config.js';
 
 /**
  * Real chat adapter using createAgentSessionFromServices.
@@ -136,6 +137,11 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
       const session = await getOrCreateAgentSession(params.sessionId, params.workspaceCwd, params.skills);
 
       try {
+        // Auto-migrate and always refresh so the in-memory registry
+        // picks up any models.json changes (e.g. manually patched multimodal models).
+        migrateModelsConfig();
+        registry.refresh();
+
         // Switch to the requested model if specified
         if (params.modelId) {
           const model = findModelById(params.modelId);
@@ -530,6 +536,10 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
       }
 
       try {
+        // Auto-migrate and always refresh registry
+        migrateModelsConfig();
+        registry.refresh();
+
         // Switch to the requested model if specified
         if (params.modelId) {
           const model = findModelById(params.modelId);

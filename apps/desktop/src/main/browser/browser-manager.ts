@@ -1256,12 +1256,12 @@ export class BrowserManager {
         expression: 'window.scrollTo(0, 0)',
         returnByValue: true,
       });
-    }
 
-    // Reset zoom to 1.0 for full-resolution capture
-    try { this.webviewWc?.setZoomFactor(1); } catch {}
-    // Wait for the renderer to repaint after zoom change
-    await new Promise((r) => setTimeout(r, 300));
+      // Reset zoom to 1.0 for accurate content dimension measurement
+      try { this.webviewWc?.setZoomFactor(1); } catch {}
+      // Wait for the renderer to repaint after zoom change
+      await new Promise((r) => setTimeout(r, 300));
+    }
 
     try {
       if (options?.fullPage) {
@@ -1294,14 +1294,32 @@ export class BrowserManager {
         });
         return { base64: (result?.data as string) ?? '' };
       } else {
+        // Viewport screenshot: capture at current zoom level.
+        // Do NOT reset zoom — the user wants to see exactly what they're viewing.
+        // Use Page.getLayoutMetrics for accurate viewport dimensions.
+        const layoutMetrics = await this.sendCommand('Page.getLayoutMetrics', {}) as Record<string, unknown>;
+        const cssViewport = layoutMetrics?.cssVisualViewport as Record<string, number> | undefined;
+        const vpWidth = cssViewport?.clientWidth ?? 0;
+        const vpHeight = cssViewport?.clientHeight ?? 0;
+
         const result = await this.sendCommand('Page.captureScreenshot', {
           format: 'png',
+          captureBeyondViewport: true,
+          clip: vpWidth > 0 && vpHeight > 0 ? {
+            x: 0,
+            y: 0,
+            width: Math.floor(vpWidth),
+            height: Math.floor(vpHeight),
+            scale: 1,
+          } : undefined,
         });
         return { base64: (result?.data as string) ?? '' };
       }
     } finally {
-      // Restore zoom
-      try { this.webviewWc?.setZoomFactor(savedZoom); } catch {}
+      // Restore zoom (only if we changed it for full-page)
+      if (options?.fullPage) {
+        try { this.webviewWc?.setZoomFactor(savedZoom); } catch {}
+      }
     }
   }
 

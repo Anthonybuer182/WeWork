@@ -29,8 +29,8 @@ const KNOWN_MULTIMODAL_PATTERNS: RegExp[] = [
   /moondream/i, /paligemma/i, /florence/i, /owlv/i,
   // Qwen VL series
   /qwen-vl/i, /qwen2-vl/i, /qwen2.5-vl/i,
-  // MiniMax multimodal models (M1, M3)
-  /minimax-m/i,
+  // MiniMax multimodal models (M1, M3 support vision; M2.x does NOT)
+  /minimax-m1/i, /minimax-m3/i,
   // DeepSeek models (Janus, VL series are vision-capable)
   /janus/i,
   // Step series (step-1v, step-1o-vision)

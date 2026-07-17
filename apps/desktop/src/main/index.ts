@@ -45,7 +45,7 @@ if (!gotLock) {
     /deepseek-vl/i, /glm-4v/i, /yi-vl/i, /phi-3-v/i,
     /moondream/i, /paligemma/i, /florence/i, /owlv/i,
     /qwen-vl/i, /qwen2-vl/i, /qwen2.5-vl/i,
-    /minimax-m/i, /janus/i, /step.*v/i,
+    /minimax-m1/i, /minimax-m3/i, /janus/i, /step.*v/i,
     /doubao.*vision/i, /doubao.*vl/i,
     /ernie.*vl/i, /ernie-4/i,
     /hunyuan.*vision/i, /hunyuan.*vl/i, /hunyuan-turbos/i,
