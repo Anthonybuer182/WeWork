@@ -47,6 +47,42 @@ Analyze this screenshot:
 
 // ── VlmAnalyzer ──
 
+/**
+ * Known VLM model name patterns for auto-detection.
+ * When a model's `input` field does not explicitly include "image",
+ * these patterns are used to identify likely vision-capable models.
+ */
+const VLM_NAME_PATTERNS: RegExp[] = [
+  // Explicit VL/vision markers
+  /vl/i, /vision/i, /visual/i, /multimodal/i,
+  // OpenAI vision models (gpt-4o, gpt-4-turbo, gpt-4-vision)
+  /gpt-4o/i, /gpt-4-turbo/i, /gpt-4-v/i,
+  // Anthropic Claude 3+ (all support vision)
+  /claude-3/i, /claude-4/i, /claude-sonnet/i, /claude-opus/i,
+  // Google Gemini (all support vision)
+  /gemini/i,
+  // Open-source VL models
+  /pixtral/i, /llava/i, /cogv/i, /internvl/i, /minicpm-v/i,
+  /deepseek-vl/i, /glm-4v/i, /yi-vl/i, /phi-3-v/i,
+  /moondream/i, /paligemma/i, /florence/i, /owlv/i,
+  // Qwen VL series
+  /qwen-vl/i, /qwen2-vl/i, /qwen2.5-vl/i,
+  // MiniMax multimodal models (M1, M3 support vision)
+  /minimax-m/i,
+];
+
+/** Stage 1: model explicitly declares image input support. */
+function isExplicitVlm(m: { input?: unknown; id?: string; name?: string }): boolean {
+  return Array.isArray(m.input) && (m.input as string[]).includes('image');
+}
+
+/** Stage 2: model name matches a known VLM pattern but input field does not declare image. */
+function isHeuristicVlm(m: { input?: unknown; id?: string; name?: string }): boolean {
+  if (isExplicitVlm(m)) return false; // already handled in stage 1
+  const candidateName = ((m.id ?? m.name) ?? '').toLowerCase();
+  return VLM_NAME_PATTERNS.some((pattern) => pattern.test(candidateName));
+}
+
 export class VlmAnalyzer {
   private registry: ModelRegistry;
   private config: VlmAnalyzerConfig;
@@ -90,45 +126,88 @@ export class VlmAnalyzer {
 
   // ── Private: model resolution ──
 
+  /**
+   * Resolve a VLM-capable model with three-stage fallback:
+   *   1. Explicit `input: ["text", "image"]` — fastest, always correct
+   *   2. Name-based heuristic — catches models like qwen-vl whose config
+   *      doesn't declare image support explicitly
+   *   3. Any remaining auth-configured model — last-resort fallback
+   */
   private async resolveModel(): Promise<VlmModelConfig | null> {
     const now = Date.now();
     if (this.cachedModel && (now - this.cacheTimestamp) < this.CACHE_TTL) {
       return this.cachedModel;
     }
 
-    // Find the first available model that supports image input
-    const models = this.registry.getAll();
-    let vlmModel = models.find((m) =>
-      (m.input as string[])?.includes('image') &&
-      this.registry.hasConfiguredAuth(m),
-    );
+    // ── Gather candidates ──
+    // Build an ordered pool: explicit VLM first, then name-heuristic, then any auth model.
+    const allModels = this.registry.getAll();
+    const seen = new Set<string>();
+    const candidates: typeof allModels = [];
 
-    // Fallback: also check getAvailable() which returns auth-checked models
-    if (!vlmModel) {
-      const available = this.registry.getAvailable();
-      vlmModel = available.find((m) =>
-        (m.input as string[])?.includes('image'),
-      );
+    // Stage 1: explicit + auth (highest confidence)
+    for (const m of allModels) {
+      if (seen.has(m.id)) continue;
+      if (this.registry.hasConfiguredAuth(m) && isExplicitVlm(m)) {
+        seen.add(m.id);
+        candidates.push(m);
+        console.log('[VlmAnalyzer] Stage 1 (explicit):', m.id, '| provider:', m.provider);
+      }
+    }
+    // Stage 2: name-heuristic + auth
+    for (const m of allModels) {
+      if (seen.has(m.id)) continue;
+      if (this.registry.hasConfiguredAuth(m) && isHeuristicVlm(m)) {
+        seen.add(m.id);
+        candidates.push(m);
+        console.log('[VlmAnalyzer] Stage 2 (heuristic):', m.id, '| provider:', m.provider);
+      }
+    }
+    // Stage 3: any remaining auth model (last-resort)
+    for (const m of allModels) {
+      if (seen.has(m.id)) continue;
+      if (this.registry.hasConfiguredAuth(m)) {
+        seen.add(m.id);
+        candidates.push(m);
+        console.log('[VlmAnalyzer] Stage 3 (fallback):', m.id, '| provider:', m.provider);
+      }
     }
 
-    if (!vlmModel) return null;
-
-    try {
-      const apiKey = await this.registry.getApiKeyForProvider(vlmModel.provider);
-      if (!apiKey) return null;
-
-      this.cachedModel = {
-        provider: vlmModel.provider,
-        modelId: vlmModel.id,
-        baseUrl: vlmModel.baseUrl || this.getDefaultBaseUrl(vlmModel.provider),
-        apiKey,
-        api: String(vlmModel.api || ''),
-      };
-      this.cacheTimestamp = now;
-      return this.cachedModel;
-    } catch {
+    if (candidates.length === 0) {
+      console.warn('[VlmAnalyzer] No models with configured auth found.');
       return null;
     }
+
+    console.log('[VlmAnalyzer] Candidates:', candidates.map((c) => `${c.id}(${c.provider})`).join(', '));
+
+    // ── Stage 4: try each candidate, cache the first successful one ──
+    for (const vlmModel of candidates) {
+      try {
+        const apiKey = await this.registry.getApiKeyForProvider(vlmModel.provider);
+        if (!apiKey) {
+          console.warn('[VlmAnalyzer] No API key for', vlmModel.id, '— skipping');
+          continue;
+        }
+
+        this.cachedModel = {
+          provider: vlmModel.provider,
+          modelId: vlmModel.id,
+          baseUrl: vlmModel.baseUrl || this.getDefaultBaseUrl(vlmModel.provider),
+          apiKey,
+          api: String(vlmModel.api || ''),
+        };
+        this.cacheTimestamp = now;
+        console.log('[VlmAnalyzer] Selected:', this.cachedModel.modelId,
+          '| api:', this.cachedModel.api,
+          '| baseUrl:', this.cachedModel.baseUrl);
+        return this.cachedModel;
+      } catch (err) {
+        console.warn('[VlmAnalyzer] Failed to resolve', vlmModel.id, '—', err);
+      }
+    }
+
+    console.warn('[VlmAnalyzer] No VLM-capable model could be resolved.');
+    return null;
   }
 
   private getDefaultBaseUrl(provider: string): string {

@@ -3,7 +3,7 @@ import { createMainWindow } from '@main/window-manager';
 import { registerIpcHandlers } from '@main/ipc/index';
 import { registerNativeIpcHandlers } from '@main/ipc/native';
 import { SettingsManager, getAgentDir, ModelRegistry, AuthStorage } from '@earendil-works/pi-coding-agent';
-import { existsSync, mkdirSync, readdirSync, cpSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, cpSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { exec, execSync } from 'child_process';
 import { join, dirname, delimiter } from 'path';
@@ -34,6 +34,59 @@ if (!gotLock) {
       mainWindow.focus();
     }
   });
+
+  // Known multimodal model name patterns for auto-detection.
+  const MULTIMODAL_NAME_PATTERNS: RegExp[] = [
+    /vl/i, /vision/i, /visual/i, /multimodal/i,
+    /gpt-4o/i, /gpt-4-turbo/i,
+    /claude-3/i, /claude-4/i, /claude-sonnet/i, /claude-opus/i,
+    /gemini/i,
+    /pixtral/i, /llava/i, /cogv/i, /internvl/i, /minicpm-v/i,
+    /deepseek-vl/i, /glm-4v/i, /yi-vl/i, /phi-3-v/i,
+    /moondream/i, /paligemma/i, /florence/i, /owlv/i,
+    /qwen-vl/i, /qwen2-vl/i, /qwen2.5-vl/i,
+    /minimax-m/i, /janus/i, /step.*v/i,
+    /doubao.*vision/i, /doubao.*vl/i,
+    /ernie.*vl/i, /ernie-4/i,
+    /hunyuan.*vision/i, /hunyuan.*vl/i, /hunyuan-turbos/i,
+    /spark.*vl/i,
+  ];
+
+  /** One-time migration: auto-patch existing models.json to mark known multimodal models. */
+  function migrateMultimodalModels(): void {
+    const path = join(getAgentDir(), 'models.json');
+    if (!existsSync(path)) return;
+
+    try {
+      const raw = readFileSync(path, 'utf-8');
+      const config = JSON.parse(raw);
+      if (!config?.providers) return;
+
+      let patched = 0;
+      for (const provider of Object.values(config.providers) as any[]) {
+        if (!provider.models) continue;
+        for (const model of provider.models as any[]) {
+          const name = ((model.name || model.id) ?? '').toLowerCase();
+          if (
+            !model.input?.includes('image') &&
+            MULTIMODAL_NAME_PATTERNS.some((p) => p.test(name))
+          ) {
+            model.input = ['text', 'image'];
+            patched++;
+            console.log(`[migrate] Auto-detected multimodal model: ${model.id || model.name}`);
+          }
+        }
+      }
+
+      if (patched > 0) {
+        writeFileSync(path, JSON.stringify(config, null, 2), 'utf-8');
+        console.log(`[migrate] Patched ${patched} model(s) to include image input support.`);
+      }
+    } catch (err) {
+      // models.json unreadable — continue without migration
+      console.warn('[migrate] Could not migrate models.json:', err);
+    }
+  }
 
   /**
    * On launch, sync bundled skills from the app's resources into
@@ -217,6 +270,10 @@ if (!gotLock) {
 
   app.whenReady().then(async () => {
     const settingsManager = SettingsManager.create(app.getPath('home'));
+
+    // Migrate existing models.json: auto-detect multimodal models that
+    // were configured before the auto-detection feature existed (e.g. MiniMax-M3).
+    migrateMultimodalModels();
 
     // Shared ModelRegistry — used by chat service AND VLM analyzer
     const sharedModelRegistry = ModelRegistry.create(AuthStorage.inMemory());

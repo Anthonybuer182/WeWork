@@ -1,5 +1,6 @@
 import { webContents } from 'electron';
 import { BROWSER_HELPERS_JS } from './browser-helpers';
+import type { VlmAnalyzer } from './vlm-analyzer';
 
 /** Snapshot node — simplified accessibility tree. */
 export interface SnapshotNode {
@@ -7,6 +8,48 @@ export interface SnapshotNode {
   name: string;
   ref?: string;
   children?: SnapshotNode[];
+}
+
+/** Page analysis — platform-agnostic page classification after navigation. */
+export interface PageAnalysis {
+  /** 'content' = normal page, 'gate' = few elements (login/auth), 'error' = error page, 'empty' = nothing rendered yet  */
+  pageState: 'content' | 'gate' | 'error' | 'loading' | 'empty';
+  /** Count of visible interactive elements */
+  elementCount: number;
+  /** Action-oriented buttons/links found on the page with risk classification */
+  coreActions: Array<{ text: string; risk: 'low' | 'high' }>;
+  /** Whether the page has text/password/email input fields */
+  hasForm: boolean;
+  /** Human-readable summary of page state, e.g. "Gate page with low-risk action(s): '登录'. Safe to auto-click." */
+  summary: string;
+}
+
+/** Result of a single navigation step in a walk. */
+export interface WalkStep {
+  /** The text label that was searched for */
+  action: string;
+  /** How the element was clicked */
+  selector: string;
+  /** Whether this step succeeded */
+  success: boolean;
+  /** Error message if step failed */
+  error?: string;
+}
+
+/** Result of a goal-oriented navigation via walk(). */
+export interface WalkResult {
+  /** Original goal description */
+  goal: string;
+  /** Destination URL after walk completed */
+  url: string;
+  /** Destination page title */
+  title: string;
+  /** Whether the walk reached a new page (not stuck on the starting page) */
+  reached: boolean;
+  /** Individual steps taken */
+  steps: WalkStep[];
+  /** Final page analysis after walk */
+  page: PageAnalysis;
 }
 
 type UrlChangedCallback = (url: string) => void;
@@ -224,14 +267,63 @@ export class BrowserManager {
 
   /** ——— Core browser operations ——— */
 
-  /** Navigate to a URL. */
-  async navigate(url: string): Promise<{ url: string; title: string }> {
+  /**
+   * Navigate to a URL and analyze the resulting page.
+   *
+   * By default, automatically handles gate pages (login, authorization, etc.)
+   * by clicking low-risk action buttons. Set `autoHandleGate: false` to disable.
+   */
+  async navigate(
+    url: string,
+    options?: { autoHandleGate?: boolean; maxGateRetries?: number },
+  ): Promise<{ url: string; title: string; page: PageAnalysis }> {
+    const autoHandleGate = options?.autoHandleGate !== false;
+    const maxGateRetries = options?.maxGateRetries ?? 2;
+
     await this.sendCommand('Page.navigate', { url });
-    // Wait for page to load (simple delay approach)
+    // Wait for page to load (DOM complete)
     await this.waitForPageLoad();
-    const title = await this.getTitle();
-    const currentUrl = await this.getCurrentUrl();
-    return { url: currentUrl, title };
+    // Extra wait for SPA rendering (JS-heavy pages like WeChat, DingTalk)
+    await this.waitForSpaReady();
+    let title = await this.getTitle();
+    let currentUrl = await this.getCurrentUrl();
+    // Analyze page to help LLM determine next action
+    let page = await this.analyzePage();
+
+    // Auto-handle gate pages: click low-risk actions (login, agree, confirm, etc.)
+    if (autoHandleGate) {
+      let retries = 0;
+      while (page.pageState === 'gate' && retries < maxGateRetries) {
+        const lowRiskAction = page.coreActions.find((a) => a.risk === 'low');
+        if (!lowRiskAction) break;
+
+        console.log('[BrowserManager] Gate page detected, auto-clicking:', lowRiskAction.text);
+        const clickResult = await this.click(`text="${lowRiskAction.text}"`);
+        if (!clickResult.clicked) {
+          console.warn('[BrowserManager] Auto-click failed:', clickResult.error);
+          break;
+        }
+
+        // Wait for page to change after click
+        await this.waitForPageLoad();
+        await this.waitForSpaReady();
+
+        title = await this.getTitle();
+        currentUrl = await this.getCurrentUrl();
+        page = await this.analyzePage();
+        retries++;
+      }
+
+      if (page.pageState === 'gate' && retries >= maxGateRetries) {
+        console.warn(
+          '[BrowserManager] Gate page persists after',
+          maxGateRetries,
+          'retries. May require manual action (e.g., QR code scan).',
+        );
+      }
+    }
+
+    return { url: currentUrl, title, page };
   }
 
   /** Get the current URL. */
@@ -289,6 +381,83 @@ export class BrowserManager {
     throw new Error('Page load timed out');
   }
 
+  /**
+   * Wait for SPA (React/Vue/Angular) pages to finish rendering.
+   *
+   * After `readyState === 'complete'`, JS-heavy pages still need time to
+   * bootstrap the framework and render the actual UI. We wait a minimum
+   * time, then poll for DOM stability (no new children added).
+   */
+  private async waitForSpaReady(timeoutMs = 8000): Promise<void> {
+    const minWaitMs = 1500; // Minimum time for SPA to bootstrap
+    const stabilityPollMs = 500;
+    const stableThreshold = 2; // Consecutive stable polls needed
+
+    const start = Date.now();
+
+    // Minimum wait for SPA to bootstrap
+    const elapsed = Date.now() - start;
+    if (elapsed < minWaitMs) {
+      await new Promise((r) => setTimeout(r, minWaitMs - elapsed));
+    }
+
+    // Poll for DOM stability
+    let stableCount = 0;
+    let lastCount = -1;
+
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const result = await this.sendCommand('Runtime.evaluate', {
+          expression: 'document.body ? document.body.children.length : 0',
+          returnByValue: true,
+        });
+        const count = (result?.result as { value?: number })?.value ?? 0;
+
+        if (count === lastCount) {
+          stableCount++;
+          if (stableCount >= stableThreshold) return; // DOM stable
+        } else {
+          stableCount = 0;
+          lastCount = count;
+        }
+      } catch {
+        // Ignore transient eval errors
+      }
+      await new Promise((r) => setTimeout(r, stabilityPollMs));
+    }
+    // If we time out, proceed anyway — the page is as ready as it'll get
+  }
+
+  /**
+   * Analyze the current page state. Runs `piAnalyzePage()` in the page context
+   * to classify the page type and extract core actions the LLM might want to take.
+   */
+  private async analyzePage(): Promise<PageAnalysis> {
+    try {
+      // Ensure helpers are injected
+      await this.sendCommand('Runtime.evaluate', {
+        expression: BROWSER_HELPERS_JS,
+        returnByValue: true,
+      });
+      const result = await this.sendCommand('Runtime.evaluate', {
+        expression: 'window.piAnalyzePage ? JSON.stringify(window.piAnalyzePage()) : null',
+        returnByValue: true,
+      });
+      const value = (result?.result as { value?: string })?.value;
+      if (value) return JSON.parse(value) as PageAnalysis;
+    } catch {
+      // Page analysis is best-effort
+    }
+
+    return {
+      pageState: 'empty',
+      elementCount: 0,
+      coreActions: [],
+      hasForm: false,
+      summary: 'Page analysis unavailable',
+    };
+  }
+
   /** ——— Snapshot / accessibility ——— */
 
   /** Take a snapshot of interactive elements with ref IDs for easy targeting. */
@@ -307,6 +476,150 @@ export class BrowserManager {
     } catch {
       return '(snapshot unavailable)';
     }
+  }
+
+  /** Search for interactive elements matching a semantic query.
+   *  Returns scored matches with text, role, ref ID, and page section. */
+  async find(query: string): Promise<Array<{ score: number; role: string; text: string; section: string }>> {
+    try {
+      await this.sendCommand('Runtime.evaluate', {
+        expression: BROWSER_HELPERS_JS,
+        returnByValue: true,
+      });
+      const result = await this.sendCommand('Runtime.evaluate', {
+        expression: `window.piFind ? JSON.stringify(window.piFind(${JSON.stringify(query)})) : null`,
+        returnByValue: true,
+      });
+      const value = (result?.result as { value?: string })?.value;
+      if (value) return JSON.parse(value);
+    } catch (err) {
+      console.warn('[BrowserManager] find error:', err);
+    }
+    return [];
+  }
+
+  /** Take a snapshot grouped by page section (sidebar, header, main, footer). */
+  async getStructuredSnapshot(): Promise<string> {
+    try {
+      await this.sendCommand('Runtime.evaluate', {
+        expression: BROWSER_HELPERS_JS,
+        returnByValue: true,
+      });
+      const result = await this.sendCommand('Runtime.evaluate', {
+        expression: 'window.piSnapshotStructured ? window.piSnapshotStructured() : "(structured snapshot unavailable)"',
+        returnByValue: true,
+      });
+      return (result?.result as { value?: string })?.value ?? '(empty page)';
+    } catch {
+      return '(structured snapshot unavailable)';
+    }
+  }
+
+  /**
+   * Goal-oriented navigation: use VLM to plan a navigation path from a screenshot,
+   * then execute it automatically.
+   *
+   * This is the universal, platform-agnostic navigation method. The LLM only
+   * specifies a GOAL (e.g. "article editor"), and the VLM reads the actual UI
+   * text from the screenshot to plan the path. Works on ANY platform.
+   */
+  async walk(
+    goal: string,
+    vlmAnalyzer: VlmAnalyzer,
+    maxSteps = 5,
+  ): Promise<WalkResult> {
+    const startUrl = await this.getCurrentUrl();
+    const startTitle = await this.getTitle();
+    const steps: WalkStep[] = [];
+
+    // Step 1: Plan the path with VLM
+    const screenshot = await this.screenshot();
+    const snapshot = await this.getSnapshot().catch(() => '(unavailable)');
+
+    const pathPlanPrompt =
+      `You are a navigation planner. The user wants to reach: "${goal}".\n\n` +
+      `The current page snapshot shows these interactive elements:\n${snapshot.slice(0, 2500)}\n\n` +
+      `Look at the screenshot and plan a path of clicks to reach the goal. ` +
+      `Return ONLY a JSON array like [{"text":"Label","where":"sidebar"},...] ` +
+      `where "text" is the exact visible text to click and "where" is optional context ` +
+      `(sidebar, header, main, footer). Be concise — plan the shortest path. ` +
+      `If the goal is already reached (page appears to be the destination), return [].`;
+
+    let pathPlan: Array<{ text: string; where?: string }> = [];
+
+    try {
+      const rawPlan = await vlmAnalyzer.analyze(screenshot.base64, pathPlanPrompt);
+      if (rawPlan) {
+        // Try to extract JSON from the response (it may be wrapped in markdown)
+        const jsonMatch = rawPlan.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          pathPlan = JSON.parse(jsonMatch[0]);
+        }
+      }
+    } catch (err) {
+      console.warn('[walk] VLM path planning failed, falling back to heuristic', err);
+    }
+
+    // Heuristic fallback: if VLM returned nothing, split goal into keywords
+    if (pathPlan.length === 0 && goal) {
+      const keywords = goal.split(/[\s,，、]+/).filter(k => k.length > 1);
+      for (const keyword of keywords.slice(0, maxSteps)) {
+        const matches = await this.find(keyword);
+        if (matches.length > 0 && matches[0].score >= 30) {
+          pathPlan.push({ text: matches[0].text, where: matches[0].section });
+        }
+      }
+    }
+
+    // If we still have no path, we can't navigate
+    if (pathPlan.length === 0) {
+      return {
+        goal,
+        url: startUrl,
+        title: startTitle,
+        reached: false,
+        steps: [],
+        page: await this.analyzePage().catch(() => ({ type: 'unknown' } as unknown as PageAnalysis)),
+      };
+    }
+
+    // Step 2: Execute the path
+    for (const plannedStep of pathPlan) {
+      // Try exact text match first
+      let clickResult = await this.click(`text="${plannedStep.text}"`);
+      // On failure, try fuzzy find
+      if (!clickResult.clicked) {
+        const matches = await this.find(plannedStep.text);
+        if (matches.length > 0 && matches[0].score >= 30) {
+          clickResult = await this.click(`text="${matches[0].text}"`);
+        }
+      }
+
+      steps.push({
+        action: `click "${plannedStep.text}"`,
+        selector: `text="${plannedStep.text}"`,
+        success: clickResult.clicked,
+        error: clickResult.clicked ? undefined : clickResult.error || 'Element not found',
+      });
+
+      if (!clickResult.clicked) break; // Stop on first failure
+
+      // Wait for navigation / SPA transition
+      await this.waitForPageLoad().catch(() => {});
+      await this.waitForSpaReady().catch(() => {});
+    }
+
+    const finalUrl = await this.getCurrentUrl().catch(() => startUrl);
+    const finalTitle = await this.getTitle().catch(() => startTitle);
+
+    return {
+      goal,
+      url: finalUrl,
+      title: finalTitle,
+      reached: steps.every(s => s.success),
+      steps,
+      page: await this.analyzePage().catch(() => ({ type: 'unknown' } as unknown as PageAnalysis)),
+    };
   }
 
   /** ——— Interaction ——— */
@@ -638,6 +951,175 @@ export class BrowserManager {
     }
 
     return { selector, typed: text, matched: null, selected: false, error: `No matching option found for "${optionMatcher}"` };
+  }
+
+  /**
+   * Universal popup handler: click a trigger element, wait for a popup/dropdown/modal
+   * to appear, find a matching option by text, and click it.
+   *
+   * Works for any popup type: dropdown menus, context menus, selection panels,
+   * modal dialogs, date pickers, color pickers, etc.
+   *
+   * Platform-agnostic — works on WeChat, DingTalk, Xiaohongshu, and any web app.
+   *
+   * @param triggerSelector - Selector for the element that opens the popup
+   * @param optionText - Text to match in the popup options (case-insensitive substring)
+   * @param waitMs - Time to wait for popup to render (default 2000ms)
+   */
+  async clickAndSelect(
+    triggerSelector: string,
+    optionText: string,
+    waitMs = 2000,
+  ): Promise<{ trigger: string; matched: string | null; selected: boolean; error?: string }> {
+    // 1. Click the trigger element
+    const clickResult = await this.click(triggerSelector);
+    if (!clickResult.clicked) {
+      return { trigger: triggerSelector, matched: null, selected: false, error: clickResult.error ?? 'Click failed' };
+    }
+
+    // 2. Wait for popup to appear (animation + network delay)
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+
+    // 3. Re-inject helpers so piIsVisible etc. work inside the popup
+    await this.sendCommand('Runtime.evaluate', {
+      expression: BROWSER_HELPERS_JS,
+      returnByValue: true,
+    });
+
+    // 4. Multi-strategy search for matching option inside popup containers
+    const matcherEscaped = JSON.stringify(optionText.toLowerCase());
+    const expr = this.buildExpression(`(function(){
+      // Find popup/floating containers (must be visible NOW, after delay)
+      var floatingContainers = [];
+
+      // Strategy for finding containers: high z-index + position fixed/absolute
+      var containers = document.querySelectorAll('div, ul, ol, section, aside, nav, [role="listbox"], [role="menu"], [role="dialog"], [role="tooltip"], [role="alertdialog"], [role="presentation"], [role="tree"]');
+      for (var c = 0; c < containers.length; c++) {
+        var el = containers[c];
+        if (!el.isConnected) continue;
+        var cs = window.getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+
+        var role = el.getAttribute('role') || '';
+        var isFloating = false;
+
+        // ARIA role indicates overlay
+        if (role === 'listbox' || role === 'menu' || role === 'dialog' || role === 'tooltip' || role === 'alertdialog' || role === 'tree') {
+          isFloating = true;
+        }
+
+        // High z-index positioned element
+        if (!isFloating && (cs.position === 'fixed' || cs.position === 'absolute')) {
+          var zIndex = parseInt(cs.zIndex, 10);
+          if (zIndex > 10) isFloating = true;
+        }
+
+        // Class-based popup patterns
+        if (!isFloating && el.children.length > 0 && el.children.length <= 100) {
+          var cls = (el.className && typeof el.className === 'string') ? el.className.toLowerCase() : '';
+          if (/(dropdown|popup|popover|overlay|menu|suggest|select|autocomplete|tooltip|modal|drawer|picker|panel|flyout|pulldown)/.test(cls)) {
+            var zIdx = parseInt(cs.zIndex, 10);
+            if (zIdx > 0 || cs.position === 'absolute' || cs.position === 'fixed') {
+              isFloating = true;
+            }
+          }
+        }
+
+        if (isFloating && piIsVisible(el)) {
+          floatingContainers.push(el);
+        }
+      }
+
+      // Deduplicate: remove parent containers (keep only top-level floating containers)
+      var rootContainers = [];
+      for (var d = 0; d < floatingContainers.length; d++) {
+        var isChild = false;
+        for (var p = 0; p < floatingContainers.length; p++) {
+          if (d !== p && floatingContainers[p].contains(floatingContainers[d])) {
+            isChild = true;
+            break;
+          }
+        }
+        if (!isChild) rootContainers.push(floatingContainers[d]);
+      }
+
+      if (rootContainers.length === 0) return null;
+
+      // Search inside each floating container for matching option
+      var searchSelectors = [
+        '[role="option"]', '[role="menuitem"]', '[role="treeitem"]',
+        'li', 'a', 'button', 'option',
+        'div[onclick]', 'span[onclick]',
+        '.menu-item', '.dropdown-item', '.popup-item',
+        '.select-option', '.picker-option'
+      ].join(', ');
+
+      var matcher = ${matcherEscaped};
+
+      for (var rc = 0; rc < rootContainers.length; rc++) {
+        var container = rootContainers[rc];
+        var items = container.querySelectorAll(searchSelectors);
+
+        for (var i = 0; i < items.length; i++) {
+          if (!piIsVisible(items[i])) continue;
+          var text = (items[i].textContent || '').trim().toLowerCase();
+
+          // Substring match, but exclude very long text (descriptive paragraphs, not menu items)
+          if (text.includes(matcher) && text.length < 200) {
+            // Click it via DOM events
+            items[i].scrollIntoView({block:'center', behavior:'instant'});
+            var rect = items[i].getBoundingClientRect();
+            items[i].dispatchEvent(new MouseEvent('mouseover', {bubbles:true, clientX:rect.left+rect.width/2, clientY:rect.top+rect.height/2}));
+            items[i].dispatchEvent(new MouseEvent('mousedown', {bubbles:true, clientX:rect.left+rect.width/2, clientY:rect.top+rect.height/2}));
+            items[i].dispatchEvent(new MouseEvent('mouseup', {bubbles:true, clientX:rect.left+rect.width/2, clientY:rect.top+rect.height/2}));
+            items[i].dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true, clientX:rect.left+rect.width/2, clientY:rect.top+rect.height/2}));
+            // Also try native click() for good measure
+            try { items[i].click(); } catch(e) {}
+            return items[i].textContent.trim().slice(0, 100);
+          }
+        }
+      }
+
+      // Second pass: search for ANY visible element with matching text inside float containers
+      for (var rc2 = 0; rc2 < rootContainers.length; rc2++) {
+        var container2 = rootContainers[rc2];
+        var allEls = container2.querySelectorAll('*');
+        for (var j = 0; j < allEls.length; j++) {
+          if (!piIsVisible(allEls[j])) continue;
+          var t = (allEls[j].textContent || '').trim().toLowerCase();
+          // Exact match on deeper elements
+          if (t === matcher && t.length < 100 && allEls[j].children.length === 0) {
+            allEls[j].scrollIntoView({block:'center', behavior:'instant'});
+            var r = allEls[j].getBoundingClientRect();
+            allEls[j].dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true, clientX:r.left+r.width/2, clientY:r.top+r.height/2}));
+            try { allEls[j].click(); } catch(e) {}
+            return allEls[j].textContent.trim().slice(0, 100);
+          }
+        }
+      }
+
+      return null;
+    })()`);
+
+    const result = await this.sendCommand('Runtime.evaluate', {
+      expression: expr,
+      returnByValue: true,
+    });
+
+    const matched = (result?.result as { value?: string | null })?.value ?? null;
+
+    if (matched) {
+      // Small delay for the popup to close after selection
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return { trigger: triggerSelector, matched, selected: true };
+    }
+
+    return {
+      trigger: triggerSelector,
+      matched: null,
+      selected: false,
+      error: `No option matching "${optionText}" found in popup triggered by "${triggerSelector}". The popup may have a different structure — try using \`pi-browser snapshot\` to inspect available options.`,
+    };
   }
 
   /** CDP key code mappings for common special keys. */

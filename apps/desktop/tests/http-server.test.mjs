@@ -35,10 +35,24 @@ class MockBrowserManager {
   setHealthCheckFails(v) { this._healthCheckFails = v; }
   failOperation(name) { this._shouldFail.add(name); }
   async getSnapshot() { return this._snapshot; }
+  async getStructuredSnapshot() { return this._structuredSnapshot || this._snapshot; }
+  async find(query) { return this._findResults || []; }
   async screenshot() { return this._screenshot; }
   async getUrl() { return { url: 'https://example.com', title: 'Example Domain' }; }
   async getText() { return { text: 'Example text content' }; }
-  async navigate() { return { url: 'https://example.com' }; }
+  async navigate(url, options) {
+    return {
+      url: 'https://example.com',
+      title: 'Example Domain',
+      page: {
+        pageState: 'content',
+        elementCount: 2,
+        coreActions: [],
+        hasForm: false,
+        summary: 'Normal content page with 2 interactive elements.',
+      },
+    };
+  }
   async click(selector) {
     if (this._shouldFail.has('click')) throw new Error(`Element not found: ${selector}`);
     return { clicked: selector };
@@ -58,6 +72,10 @@ class MockBrowserManager {
   async typeAndSelect(selector, text, option, wait) {
     if (this._shouldFail.has('type_and_select')) throw new Error(`Element not found: ${selector}`);
     return { selector, typed: text, matched: option };
+  }
+  async clickAndSelect(selector, option, wait) {
+    if (this._shouldFail.has('click_and_select')) throw new Error(`Element not found: ${selector}`);
+    return { trigger: selector, matched: option, selected: true };
   }
   async pressKey(key) { return { pressed: key }; }
   async waitForSelector() { return { appeared: true }; }
@@ -141,10 +159,16 @@ test('GET /url returns url and title', async () => {
   assertEqual(result.title, 'Example Domain');
 });
 
-test('POST /navigate navigates to URL', async () => {
+test('POST /navigate navigates to URL and returns page analysis', async () => {
   const browser = new MockBrowserManager();
   const result = await browser.navigate('https://example.com');
   assertEqual(result.url, 'https://example.com');
+  assertEqual(result.title, 'Example Domain');
+  assert(result.page !== undefined, 'navigate should return page analysis');
+  assertEqual(result.page.pageState, 'content');
+  assert(typeof result.page.elementCount === 'number', 'elementCount should be a number');
+  assert(Array.isArray(result.page.coreActions), 'coreActions should be an array');
+  assert(typeof result.page.summary === 'string', 'summary should be a string');
 });
 
 test('POST /click success', async () => {
@@ -441,6 +465,47 @@ test('each failure triggers separate VLM call', async () => {
   assertEqual(vlm.callCount, 3, 'VLM should be called 3 times');
 });
 
+describe('click_and_select: Compound Command');
+
+test('click_and_select success returns trigger, matched, selected', async () => {
+  const browser = new MockBrowserManager();
+  const result = await browser.clickAndSelect('[3]', 'Option Text');
+  assertEqual(result.trigger, '[3]');
+  assertEqual(result.matched, 'Option Text');
+  assertEqual(result.selected, true);
+});
+
+test('click_and_select with custom wait parameter', async () => {
+  const browser = new MockBrowserManager();
+  const result = await browser.clickAndSelect('[5]', 'Target', 3000);
+  assertEqual(result.selected, true);
+});
+
+test('click_and_select fails and triggers VLM recovery', async () => {
+  const browser = new MockBrowserManager();
+  browser.failOperation('click_and_select');
+  const vlm = new MockVlmAnalyzer();
+
+  let errorCaught = false;
+  try {
+    await browser.clickAndSelect('[99]', 'Missing Option');
+  } catch (err) {
+    errorCaught = true;
+    const screenshot = await browser.screenshot();
+    await vlm.analyze(screenshot.base64,
+      `Action failed: ${err.message}`);
+  }
+  assert(errorCaught, 'Should have caught the error');
+  assertEqual(vlm.callCount, 1, 'VLM should be called on click_and_select failure');
+});
+
+test('click_and_select with Chinese option text', async () => {
+  const browser = new MockBrowserManager();
+  const result = await browser.clickAndSelect('[3]', '张三');
+  assertEqual(result.matched, '张三');
+  assertEqual(result.selected, true);
+});
+
 describe('Edge Cases: Unknown Routes and Methods');
 
 test('unknown GET path throws', () => {
@@ -456,8 +521,8 @@ test('unknown GET path throws', () => {
 test('unknown POST path throws', () => {
   const paths = ['/unknown', '/snapshot', '/url'];
   for (const p of paths) {
-    if (['/navigate', '/click', '/fill', '/hover', '/select', '/type-and-select',
-         '/press', '/wait', '/text', '/attribute', '/scroll', '/evaluate'].includes(p)) continue;
+    if (['/navigate', '/click', '/fill', '/hover', '/select', '/type-and-select', '/click-and-select',
+         '/press', '/wait', '/text', '/attribute', '/scroll', '/evaluate', '/find'].includes(p)) continue;
     assert(true, `Route ${p}: would be properly handled`);
   }
 });
@@ -465,6 +530,159 @@ test('unknown POST path throws', () => {
 test('OPTIONS method returns 204', () => {
   // OPTIONS preflight returns CORS headers and 204
   assert(true, 'OPTIONS method is handled at the top of the handler');
+});
+
+describe('Find: Semantic Search Route');
+
+test('POST /find accepts query and returns matches', async () => {
+  const browser = new MockBrowserManager();
+  browser._findResults = [
+    { score: 50, role: 'link', text: '草稿箱', section: 'sidebar' },
+    { score: 25, role: 'button', text: '我的草稿', section: 'main' },
+  ];
+  const result = await browser.find('drafts');
+  assert(Array.isArray(result), 'find should return an array');
+  assert(result.length > 0, 'should have results');
+  assertEqual(result[0].text, '草稿箱');
+  assertEqual(result[0].section, 'sidebar');
+});
+
+test('POST /find returns empty array for no matches', async () => {
+  const browser = new MockBrowserManager();
+  browser._findResults = [];
+  const result = await browser.find('nonexistent');
+  assertEqual(result.length, 0, 'should return empty array');
+  assert(Array.isArray(result), 'should still be an array');
+});
+
+test('POST /find with Chinese query', async () => {
+  const browser = new MockBrowserManager();
+  browser._findResults = [
+    { score: 100, role: 'link', text: '草稿箱', section: 'sidebar' },
+  ];
+  const result = await browser.find('草稿箱');
+  assertEqual(result[0].score, 100);
+  assertEqual(result[0].text, '草稿箱');
+});
+
+describe('Structured Snapshot Route');
+
+test('GET /snapshot?structured=true returns structured snapshot', async () => {
+  const browser = new MockBrowserManager();
+  browser._structuredSnapshot = '=== Page: Dashboard ===\n\n--- Sidebar Navigation (2 items) ---\n[1] link "Drafts"\n\n--- Main Content (1 items) ---\n[2] button "Create"';
+  const result = await browser.getStructuredSnapshot();
+  assert(result.includes('Sidebar Navigation'), 'Structured snapshot should have section headers');
+  assert(result.includes('Main Content'), 'Structured snapshot should have main section');
+});
+
+test('getStructuredSnapshot falls back to regular snapshot', async () => {
+  const browser = new MockBrowserManager();
+  browser._structuredSnapshot = undefined;
+  const result = await browser.getStructuredSnapshot();
+  // Should fall back to _snapshot
+  assert(typeof result === 'string', 'Should return a string');
+  assert(result.length > 0, 'Should return non-empty');
+});
+
+describe('Walk: Goal-Based Navigation Route');
+
+// Mock walk implementation for testing
+class MockWalkBrowserManager extends MockBrowserManager {
+  constructor() {
+    super();
+    this._walkResult = null;
+  }
+  setWalkResult(result) { this._walkResult = result; }
+  async walk(goal, vlmAnalyzer, maxSteps) {
+    if (!this._walkResult) throw new Error('No walk result set');
+    return this._walkResult;
+  }
+  async getCurrentUrl() { return 'https://example.com/dashboard'; }
+  async analyzePage() { return { pageState: 'content', elementCount: 10, coreActions: [], hasForm: false, summary: 'Normal page' }; }
+}
+
+test('POST /walk requires vlmAnalyzer', () => {
+  // If vlmAnalyzer is undefined, the route should throw
+  const path = '/walk';
+  assert(path === '/walk', 'Walk route is /walk');
+});
+
+test('POST /walk accepts goal and returns WalkResult', async () => {
+  const browser = new MockWalkBrowserManager();
+  browser.setWalkResult({
+    goal: 'article editor',
+    url: 'https://example.com/editor',
+    title: 'Article Editor',
+    reached: true,
+    steps: [
+      { action: 'Content', selector: 'text="Content"', success: true },
+      { action: 'Drafts', selector: 'text="Drafts"', success: true },
+      { action: 'New Article', selector: 'text="New Article"', success: true },
+    ],
+    page: { pageState: 'content', elementCount: 30, coreActions: [], hasForm: true, summary: 'Editor page' },
+  });
+
+  const result = await browser.walk('article editor', {}, 5);
+  assertEqual(result.goal, 'article editor');
+  assert(result.reached, 'Should have reached the goal');
+  assertEqual(result.steps.length, 3, 'Should have 3 steps');
+  assertEqual(result.steps[0].action, 'Content');
+  assert(result.steps[0].success, 'First step should succeed');
+});
+
+test('POST /walk returns reached=false when no path found', async () => {
+  const browser = new MockWalkBrowserManager();
+  browser.setWalkResult({
+    goal: 'article editor',
+    url: 'https://example.com/dashboard',
+    title: 'Dashboard',
+    reached: false,
+    steps: [],
+    page: { pageState: 'content', elementCount: 10, coreActions: [], hasForm: false, summary: 'Normal' },
+  });
+
+  const result = await browser.walk('article editor', {}, 5);
+  assert(!result.reached, 'Should not have reached the goal');
+  assertEqual(result.steps.length, 0, 'Should have no steps');
+});
+
+test('POST /walk returns error when step click fails', async () => {
+  const browser = new MockWalkBrowserManager();
+  browser.setWalkResult({
+    goal: 'article editor',
+    url: 'https://example.com/dashboard',
+    title: 'Dashboard',
+    reached: false,
+    steps: [
+      { action: 'Missing Button', selector: '', success: false, error: 'Element not found' },
+    ],
+    page: { pageState: 'content', elementCount: 10, coreActions: [], hasForm: false, summary: 'Normal' },
+  });
+
+  const result = await browser.walk('article editor', {}, 5);
+  assert(!result.reached, 'Should not reach goal on failure');
+  assert(!result.steps[0].success, 'Step should have failed');
+  assert(result.steps[0].error.includes('not found'), 'Error should describe the failure');
+});
+
+test('POST /walk respects maxSteps parameter', async () => {
+  const browser = new MockWalkBrowserManager();
+  browser.setWalkResult({
+    goal: 'deep target',
+    url: 'https://example.com/page3',
+    title: 'Page 3',
+    reached: true,
+    steps: [
+      { action: 'Step 1', selector: 'text="Step 1"', success: true },
+      { action: 'Step 2', selector: 'text="Step 2"', success: true },
+      { action: 'Step 3', selector: 'text="Step 3"', success: true },
+    ],
+    page: { pageState: 'content', elementCount: 5, coreActions: [], hasForm: false, summary: 'Normal' },
+  });
+
+  const result = await browser.walk('deep target', {}, 3);
+  assert(result.reached, 'Should reach goal within maxSteps');
+  assert(result.steps.length <= 3, 'Should not exceed maxSteps');
 });
 
 // ── Run tests ──

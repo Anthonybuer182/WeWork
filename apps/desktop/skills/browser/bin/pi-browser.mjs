@@ -68,11 +68,15 @@ async function main() {
 Usage:
   pi-browser navigate <url>              Navigate to a URL
   pi-browser snapshot                     Get interactive elements tree with ref IDs
+  pi-browser snapshot --structured         Get snapshot grouped by page section (sidebar, header, main, footer)
+  pi-browser find <query>                  Search for elements by semantic description (e.g., "drafts", "new creation")
+  pi-browser walk "<goal>"                  Goal-based navigation: plan path with VLM + execute (e.g., "article editor")
   pi-browser click <selector>            Click an element (supports [N], :has-text, role=, text=, CSS)
   pi-browser fill <selector> <value>     Fill an input with a value
   pi-browser hover <selector>            Hover over an element
   pi-browser select <selector> <value>   Select an option in a <select> dropdown
   pi-browser type_and_select <selector> <text> <option>  Type text into input, then select matching autocomplete suggestion
+  pi-browser click_and_select <selector> <option> [wait]   Click element, wait for popup, then select matching option
   pi-browser press <key>                 Press a keyboard key (Enter, Tab, Escape, ArrowDown, etc.)
   pi-browser wait <selector> [timeout]   Wait for an element to appear (default 10s)
   pi-browser text [selector]             Get text content of element or entire page
@@ -103,9 +107,38 @@ Selectors (in priority order):
     }
 
     case 'snapshot': {
-      const result = await request('GET', '/snapshot');
-      // Output the snapshot text directly (not wrapped in JSON) for readability
+      const structured = args.includes('--structured');
+      const query = structured ? '?structured=true' : '';
+      const result = await request('GET', '/snapshot' + query);
       outputText(result.snapshot || '(empty page)');
+      break;
+    }
+
+    case 'find': {
+      const query = args.slice(1).join(' ');
+      if (!query) { outputText('Usage: pi-browser find <query>'); process.exit(1); }
+      const result = await request('POST', '/find', { query });
+      outputJSON(result);
+      break;
+    }
+
+    case 'walk': {
+      const goal = args.slice(1).join(' ');
+      const maxSteps = 5;
+      if (!goal) {
+        outputText('Usage: pi-browser walk "<goal>"');
+        outputText('Example: pi-browser walk "article editor"');
+        outputText('Example: pi-browser walk "create a new draft"');
+        process.exit(1);
+      }
+      outputText(`Walking to: "${goal}"...`);
+      const result = await request('POST', '/walk', { goal, maxSteps });
+      if (result.reached) {
+        outputText(`Reached: ${result.url} (${result.title})`);
+      } else {
+        outputText(`Not reached. Stuck at: ${result.url}`);
+      }
+      outputJSON(result);
       break;
     }
 
@@ -159,6 +192,19 @@ Selectors (in priority order):
         process.exit(1);
       }
       const result = await request('POST', '/type-and-select', { selector, text, option, wait });
+      outputJSON(result);
+      break;
+    }
+
+    case 'click_and_select': {
+      const selector = args[1];
+      const option = args[2];
+      const wait = args[3] ? parseInt(args[3], 10) : 2000;
+      if (!selector || !option) {
+        outputText('Usage: pi-browser click_and_select <selector> <option> [wait_ms]');
+        process.exit(1);
+      }
+      const result = await request('POST', '/click-and-select', { selector, option, wait });
       outputJSON(result);
       break;
     }

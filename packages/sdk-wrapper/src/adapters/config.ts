@@ -6,6 +6,69 @@ import { SettingsManager, AuthStorage, ModelRegistry, getAgentDir, loadSkills } 
 import type { Skill as SdkSkill } from '@earendil-works/pi-coding-agent';
 import type { Config, ModelInfo, ModelProvider, ModelsConfig, ProviderEntry, ModelEntry, Skill } from '@pi/types';
 
+// ── Multimodal model auto-detection ──
+
+/**
+ * Known multimodal model name patterns.
+ * When a model's "input" field doesn't explicitly include "image",
+ * these patterns are used to auto-detect vision-capable models and
+ * automatically set input: ["text", "image"].
+ */
+const KNOWN_MULTIMODAL_PATTERNS: RegExp[] = [
+  // Explicit VL/vision markers
+  /vl/i, /vision/i, /visual/i, /multimodal/i,
+  // OpenAI vision models
+  /gpt-4o/i, /gpt-4-turbo/i, /gpt-4-v/i,
+  // Anthropic Claude 3+ (all support vision)
+  /claude-3/i, /claude-4/i, /claude-sonnet/i, /claude-opus/i,
+  // Google Gemini (all support vision)
+  /gemini/i,
+  // Open-source VL models
+  /pixtral/i, /llava/i, /cogv/i, /internvl/i, /minicpm-v/i,
+  /deepseek-vl/i, /glm-4v/i, /yi-vl/i, /phi-3-v/i,
+  /moondream/i, /paligemma/i, /florence/i, /owlv/i,
+  // Qwen VL series
+  /qwen-vl/i, /qwen2-vl/i, /qwen2.5-vl/i,
+  // MiniMax multimodal models (M1, M3)
+  /minimax-m/i,
+  // DeepSeek models (Janus, VL series are vision-capable)
+  /janus/i,
+  // Step series (step-1v, step-1o-vision)
+  /step.*v/i,
+  // Doubao vision models
+  /doubao.*vision/i, /doubao.*vl/i,
+  // Ernie VL models
+  /ernie.*vl/i, /ernie-4/i,
+  // Hunyuan vision
+  /hunyuan.*vision/i, /hunyuan.*vl/i, /hunyuan-turbos/i,
+  // Spark / iFlytek VL
+  /spark.*vl/i,
+];
+
+/** Auto-detect and fix the "input" field for known multimodal models. */
+function normalizeModelInput(model: ModelEntry): ModelEntry {
+  // If already explicitly set to include image, don't touch it
+  if (model.input?.includes('image')) return model;
+  // If explicitly set to text-only by user, respect that choice
+  if (model.input !== undefined && model.input.length > 0 && !model.input.includes('image')) {
+    // Only override text-only if name matches a known multimodal pattern
+    const name = ((model.name || model.id) ?? '').toLowerCase();
+    if (KNOWN_MULTIMODAL_PATTERNS.some((p) => p.test(name))) {
+      // Was text-only but name suggests multimodal — user probably forgot to set it.
+      // Override to multimodal so the agent can send images to this model.
+      return { ...model, input: ['text', 'image'] };
+    }
+    // Text-only and no name match — user intended this
+    return model;
+  }
+  // input is undefined — auto-detect from name
+  const name = ((model.name || model.id) ?? '').toLowerCase();
+  if (KNOWN_MULTIMODAL_PATTERNS.some((p) => p.test(name))) {
+    return { ...model, input: ['text', 'image'] };
+  }
+  return model;
+}
+
 // Map real SDK thinking levels to our Config thinking levels
 function toConfigThinkLevel(level?: string): Config['defaultThinkLevel'] {
   switch (level) {
@@ -128,6 +191,36 @@ function writeModelsConfig(config: ModelsConfig): void {
   writeFileSync(path, JSON.stringify(config, null, 2), 'utf-8');
 }
 
+/**
+ * One-time migration to auto-patch existing models whose names match known
+ * multimodal patterns but have input: ["text"]. This ensures models like
+ * MiniMax-M3 are recognized as vision-capable even if they were configured
+ * before the auto-detection feature was added.
+ *
+ * Returns the number of models patched, or 0 if no changes were needed.
+ */
+export function migrateModelsConfig(): number {
+  const config = readModelsConfig();
+  let patched = 0;
+
+  for (const provider of Object.values(config.providers)) {
+    if (!provider.models) continue;
+    for (let i = 0; i < provider.models.length; i++) {
+      const original = provider.models[i];
+      const normalized = normalizeModelInput(original);
+      if (normalized !== original) {
+        provider.models[i] = normalized;
+        patched++;
+      }
+    }
+  }
+
+  if (patched > 0) {
+    writeModelsConfig(config);
+  }
+  return patched;
+}
+
 // Re-read configured providers after models.json changes
 function refreshConfiguredProviders(modelRegistry: ModelRegistry): Set<string> {
   // Re-create registry to pick up changes
@@ -192,6 +285,12 @@ export function createRealConfigService(cwd: string, agentDir?: string, modelReg
     },
 
     async listModels(): Promise<ModelInfo[]> {
+      // Auto-migrate existing models (e.g. MiniMax-M3) to include image support.
+      // This runs on every models listing so users don't need to restart the app.
+      const patched = migrateModelsConfig();
+      if (patched > 0) {
+        console.log(`[config] Auto-migrated ${patched} model(s) to multimodal (image input).`);
+      }
       // Refresh from disk so listModels and getModelsConfig stay in sync
       configuredProviders = refreshConfiguredProviders(registry);
       // Only return models that are explicitly configured in models.json
@@ -259,16 +358,28 @@ export function createRealConfigService(cwd: string, agentDir?: string, modelReg
     // models.json CRUD
 
     async getModelsConfig(): Promise<ModelsConfig> {
+      // Auto-migrate existing models in case they were configured before this feature
+      migrateModelsConfig();
       return readModelsConfig();
     },
 
     async saveModelsConfig(config: ModelsConfig): Promise<void> {
+      // Normalize model inputs for known multimodal models
+      for (const provider of Object.values(config.providers)) {
+        if (provider.models) {
+          provider.models = provider.models.map(normalizeModelInput);
+        }
+      }
       writeModelsConfig(config);
       configuredProviders = refreshConfiguredProviders(registry);
     },
 
     async upsertProvider(name: string, provider: ProviderEntry): Promise<void> {
       const current = readModelsConfig();
+      // Normalize model inputs for known multimodal models
+      if (provider.models) {
+        provider.models = provider.models.map(normalizeModelInput);
+      }
       current.providers[name] = provider;
       writeModelsConfig(current);
       configuredProviders = refreshConfiguredProviders(registry);
@@ -288,7 +399,7 @@ export function createRealConfigService(cwd: string, agentDir?: string, modelReg
       if (provider.models.find((m) => m.id === model.id)) {
         throw new Error(`Model "${model.id}" already exists`);
       }
-      provider.models.push(model);
+      provider.models.push(normalizeModelInput(model));
       writeModelsConfig(current);
       configuredProviders = refreshConfiguredProviders(registry);
     },

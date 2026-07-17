@@ -84,8 +84,13 @@ async function routeRequest(
   // GET routes
   if (method === 'GET') {
     switch (path) {
-      case '/snapshot':
-        return { snapshot: await browserManager.getSnapshot() };
+      case '/snapshot': {
+        const structured = url.searchParams.get('structured') === 'true';
+        const snapshot = structured
+          ? await browserManager.getStructuredSnapshot()
+          : await browserManager.getSnapshot();
+        return { snapshot };
+      }
       case '/screenshot': {
         const fullPage = url.searchParams.get('fullPage') === 'true';
         const screenshot = await browserManager.screenshot(fullPage ? { fullPage: true } : undefined);
@@ -118,7 +123,10 @@ async function routeRequest(
   if (method === 'POST') {
     switch (path) {
       case '/navigate':
-        return await browserManager.navigate(body.url as string);
+        return await browserManager.navigate(body.url as string, {
+          autoHandleGate: body.autoHandleGate as boolean | undefined,
+          maxGateRetries: body.maxGateRetries as number | undefined,
+        });
       case '/click':
         return await withVlmRecovery(
           () => browserManager.click(body.selector as string),
@@ -164,6 +172,18 @@ async function routeRequest(
           browserManager,
           vlmAnalyzer,
         );
+      case '/click-and-select':
+        return await withVlmRecovery(
+          () => browserManager.clickAndSelect(
+            body.selector as string,
+            body.option as string,
+            (body.wait as number) ?? 2000,
+          ),
+          body.selector as string,
+          `click-and-select "${String(body.option).slice(0, 20)}"`,
+          browserManager,
+          vlmAnalyzer,
+        );
       case '/press':
         return await browserManager.pressKey(body.key as string);
       case '/wait':
@@ -182,6 +202,17 @@ async function routeRequest(
         );
       case '/evaluate':
         return await browserManager.evaluate(body.expression as string);
+      case '/find':
+        return { matches: await browserManager.find(body.query as string) };
+      case '/walk':
+        if (!vlmAnalyzer) {
+          throw new Error('VLM analyzer is not configured. Walk requires visual analysis to plan navigation paths.');
+        }
+        return await browserManager.walk(
+          body.goal as string,
+          vlmAnalyzer,
+          (body.maxSteps as number) ?? 5,
+        );
       default:
         throw new Error(`Unknown POST route: ${path}`);
     }

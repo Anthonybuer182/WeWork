@@ -13,22 +13,193 @@ Browser automation CLI for the Pi Coding Agent desktop app. Control the built-in
 - `pi-browser` CLI sends requests to this server
 - The server drives the app's `<webview>` via Chrome DevTools Protocol
 - Both agent and user see the **same browser instance** — all actions are visible in real time
+- After `navigate`, the system automatically analyzes the page to classify its type and surface actionable elements
 
-## Quick Start: The 3-Step Workflow
+## Page Analysis (navigate output)
 
-**Always follow this pattern for browser automation:**
+Every `navigate` command returns a `page` object that classifies the page and identifies actions:
+
+```json
+{
+  "url": "https://open.weixin.qq.com/connect/oauth2/...",
+  "title": "微信登录",
+  "page": {
+    "pageState": "gate",
+    "elementCount": 3,
+    "coreActions": [
+      { "text": "登录", "risk": "low" },
+      { "text": "微信账号登录", "risk": "low" }
+    ],
+    "hasForm": false,
+    "summary": "Gate page with low-risk action(s): \"登录\", \"微信账号登录\". Safe to auto-click."
+  }
+}
+```
+
+### pageState values
+
+| State | Meaning | Implication |
+|-------|---------|-------------|
+| `content` | Normal page with many interactive elements | Run `snapshot` to understand structure before acting |
+| `gate` | Few elements (<=5), likely a login/auth/consent page | **Check `coreActions` for low-risk buttons and auto-click them** |
+| `error` | Page shows error (404, access denied, etc.) | Check the content before proceeding |
+| `empty` | No visible interactive elements | Page may be loading, or is a canvas/image-only page. Wait or use `--analyze` screenshot |
+
+### coreActions and risk
+
+The system extracts action-oriented buttons/links (login, sign in, agree, confirm, submit, etc.) and classifies them:
+
+- **`risk: "low"`** — Safe to click automatically. Includes: login, sign in, register, agree, accept, confirm, submit, authorize, enter, continue, next, start, verify. These are standard gate/authorization actions.
+- **`risk: "high"`** — Requires user confirmation. Includes: delete, remove, pay, purchase, subscribe, unsubscribe.
+
+**CRITICAL: When `pageState` is `"gate"` and `coreActions` contains `risk: "low"` actions, you MUST auto-click them by following this workflow:**
 
 ```bash
-# 1. Navigate to the page
+# 1. Navigate — page analysis tells you what to do
 pi-browser navigate https://example.com
 
-# 2. Get the interactive elements snapshot (shows ref IDs)
+# Output will contain page.pageState: "gate" with coreActions.
+# If summary says "Safe to auto-click", proceed immediately:
+
+# 2. Snapshot to get ref IDs for the action buttons
 pi-browser snapshot
 
-# 3. Use the ref ID to click/fill — most reliable
-pi-browser click [3]
-pi-browser fill [5] 'user@example.com'
+# 3. Click the low-risk action button (use text selector if available, or find the ref ID from snapshot)
+pi-browser click 'text="登录"'
+# Or: pi-browser click [1]  (if [1] is the login button in snapshot)
+
+# 4. After the gate action, navigate may redirect. Re-snapshot to see the new page.
+pi-browser snapshot
 ```
+
+**Why this works for any platform:** The detection is based on page structure (element count, button text patterns), not platform-specific URLs. It works for WeChat, DingTalk, Xiaohongshu, Feishu, or any OAuth/provider login flow.
+
+## Quick Start: Universal Goal-Based Navigation
+
+**The `walk` command is the universal navigation tool.** You specify the GOAL, the system figures out the path — works on ANY platform (WeChat, DingTalk, Feishu, Xiaohongshu, Douyin, etc.).
+
+```bash
+# 1. Navigate to the page (gates auto-handled)
+pi-browser navigate https://platform.com
+
+# 2. Walk to your goal — VLM analyzes screenshot, plans path, executes clicks
+pi-browser walk "article editor"
+# → VLM looks at the page, sees "Content → Drafts → New → Article", clicks each one
+# → Returns: { reached: true, url: ".../editor", steps: [{action:"Content",...}, ...] }
+
+# 3. Now you're on the target page — interact normally
+pi-browser fill 'input[name="title"]' 'My Article'
+```
+
+**Why `walk` is universal:**
+- You say **what** you want ("article editor"), not **how** to get there ("click 内容管理")
+- VLM reads the actual UI text from the screenshot — works in any language
+- No platform-specific code — same command on WeChat, DingTalk, Feishu, any site
+- Fallback: if VLM is unavailable, uses keyword-based `find` search as backup
+
+**When to use each tool:**
+
+| Tool | Use for | Example |
+|------|---------|---------|
+| `walk` | **Goal-based navigation** — "get me to X" | `pi-browser walk "article editor"` |
+| `find` | **Finding specific elements by intent** | `pi-browser find "drafts"` |
+| `snapshot --structured` | Understanding full page layout by section | `pi-browser snapshot --structured` |
+| `snapshot` | Capturing all interactive elements (flat list) | `pi-browser snapshot` |
+| `click 'text="..."'` | Clicking a known element label | `pi-browser click 'text="Save"'` |
+
+## Goal-Based Navigation with `walk`
+
+The `walk` command uses VLM (visual language model) to plan navigation paths from the current page:
+
+```bash
+# Universal: works on any platform, any language
+pi-browser walk "create a new draft article"
+pi-browser walk "user settings page"
+pi-browser walk "order management dashboard"
+```
+
+**How it works internally:**
+1. Takes a screenshot of the current page
+2. Sends screenshot + goal to VLM: "What elements should I click to reach this goal?"
+3. VLM returns a path like `["Content", "Drafts", "New Article"]` (actual UI text from screenshot)
+4. Executes each step: `find` → `click` → wait for page transition
+5. Stops when goal is reached or no more steps
+
+**Fallback: when VLM is unavailable**, `walk` uses keyword-based `find` to search for goal-related elements and clicks the best match. This is less reliable than VLM but still works as a heuristic.
+
+**When `walk` doesn't reach the goal:** it returns `{ reached: false }` with the steps it did take and the current URL. Use `snapshot --structured` to inspect the page and continue manually.
+
+## Semantic Search with `find`
+| `snapshot --structured` | Understanding full page layout by section | `pi-browser snapshot --structured` |
+| `snapshot` | Capturing all interactive elements (flat list) | `pi-browser snapshot` |
+| `screenshot --analyze` | Visual-only pages (canvas, CAPTCHA) | `pi-browser screenshot --analyze` |
+
+## Semantic Search with `find`
+
+Use `find` when you know what kind of element you're looking for but don't know its exact text label. It searches all visible interactive elements and returns scored matches:
+
+```bash
+# Find by intent (NOT platform-specific text)
+pi-browser find "drafts"           # Matches "Drafts", "草稿箱", "Draft List", etc.
+pi-browser find "settings"         # Matches "Settings", "设置", "Einstellungen", etc.
+pi-browser find "create new"       # Matches "New", "Create", "新建", "Create New", etc.
+pi-browser find "search box"       # Matches search inputs by intent
+
+# Use matched text to click
+pi-browser find "drafts"
+# {"matches":[{"score":50,"role":"link","text":"草稿箱","section":"sidebar"}]}
+pi-browser click 'text="草稿箱"'
+```
+
+Results are sorted by match score (higher = better match) and include:
+- `score`: relevance score (0-100+)
+- `role`: element role (link, button, textbox, etc.)
+- `text`: element text content
+- `section`: which page section the element is in (sidebar, header, main, footer)
+
+**Use the matched text to click:**
+```bash
+pi-browser find "草稿箱"
+# Result: {"matches":[{"score":50,"role":"link","text":"草稿箱","section":"sidebar"}]}
+pi-browser click 'text="草稿箱"'
+```
+
+## Structured Snapshots
+
+Use `--structured` to group elements by page section, making it easy to understand page layout at a glance:
+
+```bash
+pi-browser snapshot --structured
+```
+
+Output:
+```
+=== Page: Dashboard | H1: Welcome ===
+
+--- Sidebar Navigation (12 items) ---
+[1] link "首页"
+[2] link "内容管理"
+[3] link "草稿箱"
+[4] link "素材管理"
+...
+
+--- Header (4 items) ---
+[13] link "通知"
+[14] button "账号"
+...
+
+--- Main Content (25 items) ---
+[17] button "新的创作"
+[18] link "Article Title 1"
+[19] link "Article Title 2"
+...
+
+--- Floating Layer: dialog ("create-menu") ---
+[42] option "写新图文"
+[43] option "转载文章"
+```
+
+When the `--structured` flag can't detect sections, it falls back to the standard flat snapshot format. Use `find` as the primary tool and `snapshot --structured` when you need the full layout.
 
 ## Commands
 
@@ -41,8 +212,16 @@ pi-browser navigate https://example.com
 # Get the current URL and page title
 pi-browser url
 
-# Get interactive elements tree with ref IDs (PRIMARY way to understand the page)
+# Search for elements by semantic description (PRIMARY way to find elements)
+pi-browser find "drafts"
+pi-browser find "new article"
+pi-browser find "草稿箱"
+
+# Get interactive elements tree with ref IDs
 pi-browser snapshot
+
+# Get structured snapshot grouped by page section (sidebar, header, main, footer)
+pi-browser snapshot --structured
 
 # Get text content of the entire page
 pi-browser text
@@ -99,6 +278,10 @@ pi-browser select 'select[name="country"]' 'US'
 # Type text into an autocomplete/search field, wait for suggestions, then select matching option
 pi-browser type_and_select [5] 'keyword' 'Option Text Match'
 pi-browser type_and_select 'input[name="recipient"]' '张' '张三'
+
+# Click a button to open a popup, then select an option from the popup (universal popup handler)
+pi-browser click_and_select [3] 'Option Text'
+pi-browser click_and_select 'button:has-text("Select")' 'Target Option' 3000
 
 # Press a keyboard key (real CDP keyboard input — works with React/Vue)
 pi-browser press Enter
@@ -172,6 +355,38 @@ pi-browser snapshot            # ← RE-SNAPSHOT to see modal
 
 pi-browser fill [20] 'John'
 pi-browser click [21]          # Save in modal
+```
+
+**Pattern 5: `click_and_select` for popup selections (recommended for popup menus)**
+
+Single compound command: click trigger → wait for popup → find and click matching option. Works universally across all popup types.
+
+```bash
+pi-browser click_and_select [3] 'Option Text'
+# Output: {"trigger":"[3]","matched":"Option Text","selected":true}
+```
+
+This internally:
+1. Clicks the trigger element (button, dropdown toggle, etc.)
+2. Waits for the popup to appear (default 2s, configurable)
+3. Auto-detects floating containers by z-index, position, ARIA role, and class patterns
+4. Searches within containers for the matching option using text substring match
+5. Dispatches DOM events + native click on the matched element
+
+This works for **any** popup pattern because it auto-detects containers rather than relying on platform-specific selectors:
+- Custom dropdown menus (div-based, not `<select>`)
+- Role-based pickers (date, color, emoji)
+- Modal dialogs with selectable options
+- Ant Design / Element UI / Bootstrap / Tailwind popup menus
+- WeChat / DingTalk / Feishu admin panel popups
+- Any dynamically appearing floating layer
+
+When the popup content is complex or `click_and_select` can't find the option:
+```bash
+pi-browser click [3]           # Click trigger
+pi-browser wait 2000            # Wait for popup
+pi-browser snapshot             # Re-snapshot to see popup elements
+pi-browser click [12]           # Click via ref ID (most reliable)
 ```
 
 ## Selectors
@@ -251,7 +466,7 @@ Use this when:
 
 ## Automatic Visual Analysis on Failures
 
-When an interaction command (click, fill, hover, select, type-and-select) **fails**, the system automatically:
+When an interaction command (click, fill, hover, select, type-and-select, click-and-select) **fails**, the system automatically:
 1. Takes a screenshot of the current page
 2. Runs VLM analysis to understand why the action failed
 3. Appends the visual analysis + current snapshot to the error message
@@ -264,44 +479,98 @@ This means you don't need to explicitly request a screenshot after a failure —
 ## Best Practices
 
 1. **Navigate first** — `pi-browser navigate <url>` before any other command
-2. **Snapshot before acting** — run `pi-browser snapshot` to see the page structure and ref IDs
-3. **Use ref IDs** — `click [3]` is more reliable than any CSS selector
-4. **Re-snapshot after interactions** — after typing in inputs, clicking buttons that trigger UI changes, or opening modals, run `snapshot` again to capture dynamically appeared elements
-5. **Check element state** — the snapshot shows `disabled`, `readonly`, `loading`, `checked`, and `below-fold` flags. Don't try to interact with disabled or readonly elements
-6. **Watch for alerts** — the snapshot includes an "Alerts & Notifications" section for error messages and validation feedback
-7. **Use `type_and_select` for autocomplete** — it handles the full flow in one command
-8. **Quote all selectors** — shell-special characters must be quoted
-9. **One action per command** — don't chain multiple actions in one CLI call
-10. **Check floating layers** — when `snapshot` shows a "Floating Layer" section, those are dynamically appeared dropdowns/modals/popups
-11. **Use `--analyze` for visual-only pages** — `pi-browser screenshot --analyze` returns a text description of CAPTCHAs, canvas apps, and pages where the snapshot is insufficient
-12. **Failed actions include automatic analysis** — when click/fill/hover fail, the error already includes a visual analysis of why; read it before retrying
+2. **Check page analysis** — `navigate` output includes `page.pageState` and `coreActions`. Read the `summary` field.
+3. **Auto-click gate pages** — If `pageState` is `"gate"` with low-risk `coreActions`, the system auto-clicks them in `navigate()`. No manual action needed.
+4. **Use `walk` for goal-based navigation** — `pi-browser walk "article editor"` works on ANY platform. Specify the GOAL, not the path. This is the universal solution.
+5. **Use `find` when you know what kind of element you want** — `pi-browser find "drafts"` searches semantically across all elements. It works cross-language — "drafts" matches "草稿箱".
+6. **Click by text after find** — `pi-browser click 'text="草稿箱"'` is the most reliable click method. Text labels are stable across DOM changes.
+7. **Use `snapshot --structured` for page layout** — groups elements by section (sidebar, header, main, footer).
+8. **Re-snapshot after interactions** — after typing, clicking, or opening modals, run `snapshot` again to capture dynamically appeared elements
+9. **Check element state** — the snapshot shows `disabled`, `readonly`, `loading`, `checked`, and `below-fold` flags. Don't try to interact with disabled or readonly elements
+10. **Watch for alerts** — the snapshot includes an "Alerts & Notifications" section for error messages and validation feedback
+11. **Use `type_and_select` for autocomplete** — it handles the full flow in one command
+12. **Use `click_and_select` for popups** — click trigger, wait for popup, select option in one command
+13. **Quote all selectors** — shell-special characters must be quoted
+14. **One action per command** — don't chain multiple actions in one CLI call
+15. **Failed actions include automatic analysis** — when click/fill/hover fail, the error already includes a visual analysis of why; read it before retrying
+16. **Don't guess URL patterns** — URLs vary between platforms. Use `walk` or `find`+`click` to navigate by page structure, never by constructing URLs.
+
+## Navigation Strategy
+
+**CRITICAL**: Never guess URLs. Use `walk` or `find` + `click` to navigate by page structure.
+
+```
+WRONG:  pi-browser navigate https://platform.com/admin/edit?id=123
+RIGHT:  pi-browser walk "article editor"
+        # OR (if no VLM):
+        pi-browser find "drafts"                    ← semantic search for target
+        pi-browser click 'text="草稿箱"'            ← click by matched text
+```
+
+Why guessing URLs fails:
+- Session tokens are embedded in URLs and change frequently
+- URL structures differ between accounts, languages, versions
+- You end up on wrong pages (login, error, redirect loops)
+
+**The universal navigation workflow:**
+
+1. **Navigate to root** — `pi-browser navigate https://platform.com`
+2. **Walk to the goal** — `pi-browser walk "article editor"` (preferred, universal)
+3. **If walk is unavailable** — use `find` + `click` pairs for each step
+4. **If you get stuck** — `pi-browser snapshot --structured` to see full page layout
+
+**Mental model**: You specify the GOAL, the system finds the path. Don't try to navigate by guessing element names or URL patterns.
+
+## Session Expiry & Login Recovery
+
+When a session expires mid-workflow, `navigate()` detects gate pages (login/auth) and **automatically clicks low-risk action buttons** (login, confirm, agree). This means:
+
+- **If redirected to login**: `navigate()` auto-clicks the login button
+- **If login requires QR code/scanning**: The gate persists after auto-click → take a screenshot with `--analyze` to understand what's needed
+- **If login has a form (username/password)**: Fill credentials manually
+
+However, some gate pages (like WeChat QR code, CAPTCHA) require user action even after auto-click:
+
+```bash
+# After navigate() auto-clicked the login button but gate persists:
+pi-browser screenshot --analyze     # VLM describes the QR code/CAPTCHA
+# → Tell user: "Please scan the QR code to continue. I'll wait."
+pi-browser wait '[data-testid="dashboard"]' 30000  # Wait for login to complete
+pi-browser snapshot                                 # Verify logged in
+```
 
 ## Typical Workflow
 
 ```bash
-# 1. Navigate to the target page
-pi-browser navigate https://example.com/login
+# 1. Navigate — gate pages are auto-handled (login, authorization, etc.)
+pi-browser navigate https://platform.com
+# Output: {"url":"https://platform.com/dashboard","title":"Dashboard","page":{"pageState":"content",...}}
 
-# 2. Get the page structure
-pi-browser snapshot
-# Output:
-# --- Interactive Elements ---
-# Page: Login | H1: Sign In
-# [1] textbox "Email" [type=email, name=email]
-# [2] textbox "Password" [type=password, name=password]
-# [3] button "Sign In"
-# [4] link "Forgot password?" [href=/forgot]
+# 2. Walk to the goal — system plans the path from screenshot, executes it
+pi-browser walk "article editor"
+# VLM sees the UI layout, finds: Sidebar "Content" → "Drafts" → "New Article" button
+# Returns: { reached: true, steps: [{action:"Content",...}, {action:"Drafts",...}, {action:"New Article",...}] }
 
-# 3. Fill the form using ref IDs
-pi-browser fill [1] 'myuser@example.com'
-pi-browser fill [2] 'mypass123'
+# 3. If walk didn't reach the goal (reached: false), inspect and continue manually
+pi-browser snapshot --structured
 
-# 4. Click the login button
-pi-browser click [3]
+# 4. Now on the target page — fill content
+pi-browser fill 'input[name="title"]' 'My Article'
+pi-browser fill 'textarea' 'Article content...'
 
-# 5. Verify the result
-pi-browser snapshot
-pi-browser screenshot --output /tmp/after-login.png
+# 5. Use find for specific actions
+pi-browser find "save"
+pi-browser click 'text="Save draft"'
+```
+
+**Without VLM (fallback workflow):**
+```bash
+pi-browser navigate https://platform.com
+pi-browser find "drafts"                       # Semantic search
+pi-browser click 'text="草稿箱"'               # Click matched text
+pi-browser snapshot                             # See what changed
+pi-browser find "new"                          # Find next action
+pi-browser click 'text="New Article"'
 ```
 
 ## Notes
