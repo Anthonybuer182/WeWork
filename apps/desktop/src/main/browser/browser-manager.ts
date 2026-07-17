@@ -778,20 +778,32 @@ export class BrowserManager {
 
     // Reset zoom to 1.0 for full-resolution capture
     try { this.webviewWc?.setZoomFactor(1); } catch {}
-    await new Promise((r) => setTimeout(r, 200));
+    // Wait for the renderer to repaint after zoom change
+    await new Promise((r) => setTimeout(r, 300));
 
     try {
       if (options?.fullPage) {
+        // Use Math.max to include horizontal overflow (scrollWidth > clientWidth)
+        // and account for body-level dimensions on pages where html is constrained.
         const metrics = await this.sendCommand('Runtime.evaluate', {
           expression: `JSON.stringify({
-            width: document.documentElement.clientWidth,
-            height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+            width: Math.max(
+              document.documentElement.scrollWidth,
+              document.documentElement.clientWidth,
+              document.body ? document.body.scrollWidth : 0,
+              document.body ? document.body.clientWidth : 0
+            ),
+            height: Math.max(
+              document.documentElement.scrollHeight,
+              document.documentElement.clientHeight,
+              document.body ? document.body.scrollHeight : 0
+            )
           })`,
           returnByValue: true,
         });
         const dims = JSON.parse((metrics?.result as { value?: string })?.value ?? '{"width":800,"height":600}');
-        const width = dims.width || 800;
-        const height = Math.min(dims.height || 600, 8000);
+        const width = Math.min(dims.width || 1920, 16384);
+        const height = Math.min(dims.height || 600, 16384);
 
         const result = await this.sendCommand('Page.captureScreenshot', {
           format: 'png',
@@ -811,28 +823,43 @@ export class BrowserManager {
     }
   }
 
-  /** Scroll through the page to trigger lazy-loaded content. */
+  /** Scroll through the page to trigger lazy-loaded content.
+   *  Uses a two-pass approach: first scrolls down in steps, then back up.
+   *  Caps at 40 steps to avoid infinite pages, with 400ms between steps
+   *  to give lazy loaders and image decoders time to complete. */
   private async triggerLazyLoad(): Promise<void> {
     try {
       const stepExpr = `(function(){
-        var step = window.innerHeight * 0.8;
-        var target = window.scrollY + step;
+        var step = window.innerHeight * 0.75;
         var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        if (target >= maxScroll) { window.scrollTo(0, maxScroll); return false; }
-        window.scrollTo(0, target);
+        if (window.scrollY + 5 >= maxScroll) { window.scrollTo(0, maxScroll); return false; }
+        window.scrollBy(0, step);
         return true;
       })()`;
+      // Pass 1: scroll down through the entire page
       let hasMore = true;
       let count = 0;
-      while (hasMore && count < 50) {
+      while (hasMore && count < 40) {
         const result = await this.sendCommand('Runtime.evaluate', {
           expression: stepExpr,
           returnByValue: true,
         });
         hasMore = (result?.result as { value?: boolean })?.value ?? false;
         count++;
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 400));
+        // Also dispatch scroll events to wake IntersectionObserver-based loaders
+        await this.sendCommand('Runtime.evaluate', {
+          expression: 'window.dispatchEvent(new Event("scroll", {bubbles: true}))',
+          returnByValue: true,
+        }).catch(() => {});
       }
+      // Pass 2: scroll back up to trigger any reverse-direction lazy content
+      await this.sendCommand('Runtime.evaluate', {
+        expression: 'window.scrollTo(0, 0)',
+        returnByValue: true,
+      });
+      // Wait for final render to stabilize
+      await new Promise((r) => setTimeout(r, 500));
     } catch (err) {
       console.warn('[BrowserManager] triggerLazyLoad error:', err);
     }

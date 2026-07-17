@@ -77,7 +77,7 @@ Usage:
   pi-browser wait <selector> [timeout]   Wait for an element to appear (default 10s)
   pi-browser text [selector]             Get text content of element or entire page
   pi-browser attribute <selector> <attr> Get an attribute value of an element
-  pi-browser screenshot [--output <path>]  Take a screenshot (base64 or save to file)
+  pi-browser screenshot [--output <path>] [--fullpage] [--analyze]  Take a screenshot (base64 or save to file)
   pi-browser scroll <up|down> [amount]   Scroll the page
   pi-browser evaluate <expression>       Evaluate JavaScript in the page
   pi-browser url                         Get current URL and title
@@ -208,11 +208,22 @@ Selectors (in priority order):
       const outputIdx = args.indexOf('--output');
       const outputPath = outputIdx >= 0 ? args[outputIdx + 1] : null;
       const fullPage = args.includes('--fullpage') || args.includes('--full');
-      const result = await request('GET', fullPage ? '/screenshot?fullPage=true' : '/screenshot');
+      const analyze = args.includes('--analyze') || args.includes('--describe');
+      let queryParams = [];
+      if (fullPage) queryParams.push('fullPage=true');
+      if (analyze) queryParams.push('analyze=true');
+      const query = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
+      const result = await request('GET', '/screenshot' + query);
       if (outputPath) {
         const fs = await import('fs');
-        fs.writeFileSync(outputPath, Buffer.from(result.base64, 'base64'));
+        const base64Data = result.screenshot || result.base64;
+        if (base64Data) {
+          fs.writeFileSync(outputPath, Buffer.from(base64Data, 'base64'));
+        }
         outputText(`Screenshot saved to ${outputPath}`);
+        if (result.description) {
+          outputText('\nDescription: ' + result.description);
+        }
       } else {
         outputJSON(result);
       }

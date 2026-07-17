@@ -58,6 +58,11 @@ pi-browser attribute 'a:has-text("Docs")' href
 # Take a screenshot (returns base64, or save to file)
 pi-browser screenshot
 pi-browser screenshot --output /tmp/page.png
+pi-browser screenshot --fullpage
+
+# Take a screenshot with VLM-powered text description (for CAPTCHA, canvas apps, etc.)
+pi-browser screenshot --analyze
+pi-browser screenshot --fullpage --analyze
 
 # Scroll the page
 pi-browser scroll down 500
@@ -194,23 +199,67 @@ Multiple selector formats are supported. **Use ref IDs from snapshot whenever po
 
 ## Snapshot Output Format
 
-The snapshot now detects and groups elements by **visual layer**:
+The snapshot now detects and groups elements by **visual layer** and **state**:
 
 ```
 --- Interactive Elements (Main Page) ---
 Page: Example Site | H1: Welcome
 [1] link "Home" [href=/]
 [2] link "Products" [href=/products]
-[3] button "Search" [aria-label="Search"]
+[3] button "Search" [disabled, aria-label="Search"]
+[4] button "Submit" [below-fold]
+[5] textbox "Email" [type=email, readonly]
 
 --- Floating Layer: listbox ("search-suggestions") ---
-[4] option "Result 1 - Description"
-[5] option "Result 2 - Description"
+[6] option "Result 1 - Description"
+[7] option "Result 2 - Description"
+
+--- Alerts & Notifications ---
+[alert-alert] "Password must be at least 8 characters"
 ```
 
 Each line shows: `[ref]` `role` `"accessible name"` `[attributes]`
 
+**State flags in the snapshot:**
+- `disabled` — element is not interactable (button greyed out, input locked)
+- `readonly` — input is read-only (can read value but cannot edit)
+- `loading` — element is in a loading/spinning state
+- `checked` — checkbox or radio is selected
+- `below-fold` — element requires scrolling to reach
+- Alerts/notifications appear in their own section, including form validation errors
+
 Floating layers (dropdowns, modals, popups) are automatically detected and shown in separate sections. Re-run `snapshot` after interactions that trigger dynamic UI changes to see these layers.
+
+## Screenshot with Visual Analysis
+
+You can request a VLM-powered text description of the current page alongside the screenshot:
+
+```bash
+pi-browser "GET /screenshot?analyze=true"
+```
+
+This returns:
+- `screenshot`: base64 PNG image
+- `description`: text description of the page layout, key elements, visual state, and any obstructions
+- `snapshot`: current interactive elements tree
+
+Use this when:
+- The snapshot is empty or has very few elements (< 3) suggesting a canvas/SPA app
+- You encounter a CAPTCHA or visual verification challenge
+- You need to understand why elements are positioned strangely (overlapping modals, cookie banners)
+- You've tried an action and it failed — the error response already includes automatic visual analysis
+
+## Automatic Visual Analysis on Failures
+
+When an interaction command (click, fill, hover, select, type-and-select) **fails**, the system automatically:
+1. Takes a screenshot of the current page
+2. Runs VLM analysis to understand why the action failed
+3. Appends the visual analysis + current snapshot to the error message
+
+This means you don't need to explicitly request a screenshot after a failure — the context is already included in the error. The visual analysis describes:
+- What blocked the element (overlays, popups, cookie banners)
+- Whether the page changed (redirected, loaded new content)
+- What you should try instead
 
 ## Best Practices
 
@@ -218,10 +267,14 @@ Floating layers (dropdowns, modals, popups) are automatically detected and shown
 2. **Snapshot before acting** — run `pi-browser snapshot` to see the page structure and ref IDs
 3. **Use ref IDs** — `click [3]` is more reliable than any CSS selector
 4. **Re-snapshot after interactions** — after typing in inputs, clicking buttons that trigger UI changes, or opening modals, run `snapshot` again to capture dynamically appeared elements
-5. **Use `type_and_select` for autocomplete** — it handles the full flow in one command
-6. **Quote all selectors** — shell-special characters must be quoted
-7. **One action per command** — don't chain multiple actions in one CLI call
-8. **Check floating layers** — when `snapshot` shows a "Floating Layer" section, those are dynamically appeared dropdowns/modals/popups
+5. **Check element state** — the snapshot shows `disabled`, `readonly`, `loading`, `checked`, and `below-fold` flags. Don't try to interact with disabled or readonly elements
+6. **Watch for alerts** — the snapshot includes an "Alerts & Notifications" section for error messages and validation feedback
+7. **Use `type_and_select` for autocomplete** — it handles the full flow in one command
+8. **Quote all selectors** — shell-special characters must be quoted
+9. **One action per command** — don't chain multiple actions in one CLI call
+10. **Check floating layers** — when `snapshot` shows a "Floating Layer" section, those are dynamically appeared dropdowns/modals/popups
+11. **Use `--analyze` for visual-only pages** — `pi-browser screenshot --analyze` returns a text description of CAPTCHAs, canvas apps, and pages where the snapshot is insufficient
+12. **Failed actions include automatic analysis** — when click/fill/hover fail, the error already includes a visual analysis of why; read it before retrying
 
 ## Typical Workflow
 

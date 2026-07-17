@@ -233,6 +233,16 @@ export const BROWSER_HELPERS_JS = `
       lines.push(mainElements[m]);
     }
 
+    // --- Add alerts / toasts / notifications that are visible ---
+    var alerts = findAlerts();
+    if (alerts.length > 0) {
+      lines.push('');
+      lines.push('--- Alerts & Notifications ---');
+      for (var a = 0; a < alerts.length; a++) {
+        lines.push(alerts[a]);
+      }
+    }
+
     var h1 = document.querySelector('h1');
     var title = document.title || '';
     var header = 'Page: ' + title;
@@ -242,6 +252,49 @@ export const BROWSER_HELPERS_JS = `
 
     return lines.join('\\n');
   };
+
+  // ── Find visible alerts, toasts, notifications, and validation messages ──
+  function findAlerts() {
+    var results = [];
+    var selectors = [
+      '[role="alert"]', '[role="status"]', '[role="log"]',
+      '.toast', '.notification', '.snackbar', '.alert',
+      '[class*="toast"]', '[class*="notification"]', '[class*="snackbar"]',
+      '[data-toast]', '[data-notification]', '[data-alert]'
+    ];
+    var seen = new Set();
+    for (var s = 0; s < selectors.length; s++) {
+      try {
+        var els = document.querySelectorAll(selectors[s]);
+        for (var i = 0; i < els.length; i++) {
+          var el = els[i];
+          if (!piIsVisible(el)) continue;
+          if (seen.has(el)) continue;
+          seen.add(el);
+          var text = (el.textContent || '').trim().slice(0, 200);
+          if (text.length > 0) {
+            var role = el.getAttribute('role') || 'notification';
+            results.push('[alert-' + role + '] "' + text + '"');
+          }
+        }
+      } catch(e) {}
+    }
+    // Also detect inline form validation errors
+    try {
+      var validationErrors = document.querySelectorAll('[aria-invalid="true"], .error, .field-error, .form-error, [class*="has-error"] .error-text, [class*="is-invalid"] ~ * [class*="invalid"]');
+      for (var v = 0; v < validationErrors.length; v++) {
+        var eel = validationErrors[v];
+        if (!piIsVisible(eel)) continue;
+        if (seen.has(eel)) continue;
+        seen.add(eel);
+        var vtext = (eel.textContent || '').trim().slice(0, 200);
+        if (vtext.length > 0) {
+          results.push('[alert-validation] "' + vtext + '"');
+        }
+      }
+    } catch(e) {}
+    return results;
+  }
 
   // ── Format a single element line for snapshot output ──
   function formatElement(ref, el) {
@@ -254,7 +307,6 @@ export const BROWSER_HELPERS_JS = `
     var id = el.getAttribute('id') || '';
     var href = el.getAttribute('href') || '';
     var value = el.getAttribute('value') || '';
-    var checked = el.checked ? ' [checked]' : '';
 
     var parts = ['[' + ref + ']', role];
 
@@ -269,7 +321,37 @@ export const BROWSER_HELPERS_JS = `
     if (id && !/^(r\\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) attrs.push('#' + id);
     if (href && href !== '#' && href !== 'javascript:void(0)') attrs.push('href=' + href.slice(0, 60));
     if (value && tag === 'input' && (type === 'submit' || type === 'button')) attrs.push('value="' + value + '"');
-    if (checked) attrs.push(checked.trim());
+
+    // State flags
+    if (el.disabled || el.getAttribute('aria-disabled') === 'true') {
+      attrs.push('disabled');
+    }
+    if (el.readOnly || el.getAttribute('aria-readonly') === 'true') {
+      attrs.push('readonly');
+    }
+    if (el.checked) {
+      attrs.push('checked');
+    }
+    if (el.getAttribute('aria-checked') === 'true') {
+      attrs.push('checked');
+    }
+    if (el.getAttribute('aria-busy') === 'true') {
+      attrs.push('loading');
+    }
+    // Detect loading spinners via common class names
+    if (!el.disabled) {
+      var cls = (el.className && typeof el.className === 'string') ? el.className : '';
+      if (/(?:spinner|spinning|loader|loading|progress)/i.test(cls)) {
+        attrs.push('loading');
+      }
+    }
+
+    // Position hint: above or below fold
+    var rect = el.getBoundingClientRect();
+    var foldY = window.innerHeight * 0.9;
+    if (rect.top > foldY) {
+      attrs.push('below-fold');
+    }
 
     if (attrs.length > 0) parts.push('[' + attrs.join(', ') + ']');
 

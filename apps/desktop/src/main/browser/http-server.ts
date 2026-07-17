@@ -1,10 +1,12 @@
 import http from 'http';
 import type { BrowserManager } from './browser-manager';
+import type { VlmAnalyzer } from './vlm-analyzer';
 
 /** Local HTTP server that the pi-browser CLI tool calls. */
 export function startBrowserHttpServer(
   browserManager: BrowserManager,
   port = 19223,
+  vlmAnalyzer?: VlmAnalyzer,
 ): http.Server {
   const server = http.createServer(async (req, res) => {
     // CORS headers for local development
@@ -25,7 +27,7 @@ export function startBrowserHttpServer(
     const path = url.pathname;
 
     try {
-      const result = await routeRequest(browserManager, req.method ?? 'GET', path, body, url);
+      const result = await routeRequest(browserManager, req.method ?? 'GET', path, body, url, vlmAnalyzer);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
     } catch (error) {
@@ -70,6 +72,7 @@ async function routeRequest(
   path: string,
   body: Record<string, unknown>,
   url: URL,
+  vlmAnalyzer?: VlmAnalyzer,
 ): Promise<unknown> {
   // Commands that need the webview to be connected.
   // 'health' is exempt so the CLI can check server availability without a webview.
@@ -83,8 +86,23 @@ async function routeRequest(
     switch (path) {
       case '/snapshot':
         return { snapshot: await browserManager.getSnapshot() };
-      case '/screenshot':
-        return await browserManager.screenshot(url.searchParams.get('fullPage') === 'true' ? { fullPage: true } : undefined);
+      case '/screenshot': {
+        const fullPage = url.searchParams.get('fullPage') === 'true';
+        const screenshot = await browserManager.screenshot(fullPage ? { fullPage: true } : undefined);
+        // If analyze=true is passed, run VLM analysis alongside the screenshot
+        if (url.searchParams.get('analyze') === 'true' && vlmAnalyzer) {
+          const snapshot = await browserManager.getSnapshot().catch(() => '(snapshot unavailable)');
+          const analysis = await vlmAnalyzer.analyze(screenshot.base64,
+            `The agent is viewing this page. Snapshot: ${snapshot.slice(0, 3000)}`
+          );
+          return {
+            screenshot: screenshot.base64,
+            description: analysis ?? '(VLM analysis unavailable)',
+            snapshot,
+          };
+        }
+        return { screenshot: screenshot.base64 };
+      }
       case '/url':
         return await browserManager.getUrl();
       case '/text':
@@ -102,19 +120,49 @@ async function routeRequest(
       case '/navigate':
         return await browserManager.navigate(body.url as string);
       case '/click':
-        return await browserManager.click(body.selector as string);
-      case '/fill':
-        return await browserManager.fill(body.selector as string, body.value as string);
-      case '/hover':
-        return await browserManager.hover(body.selector as string);
-      case '/select':
-        return await browserManager.selectOption(body.selector as string, body.value as string);
-      case '/type-and-select':
-        return await browserManager.typeAndSelect(
+        return await withVlmRecovery(
+          () => browserManager.click(body.selector as string),
           body.selector as string,
-          body.text as string,
-          body.option as string,
-          (body.wait as number) ?? 1500,
+          'click',
+          browserManager,
+          vlmAnalyzer,
+        );
+      case '/fill':
+        return await withVlmRecovery(
+          () => browserManager.fill(body.selector as string, body.value as string),
+          body.selector as string,
+          `fill "${String(body.value).slice(0, 20)}"`,
+          browserManager,
+          vlmAnalyzer,
+        );
+      case '/hover':
+        return await withVlmRecovery(
+          () => browserManager.hover(body.selector as string),
+          body.selector as string,
+          'hover',
+          browserManager,
+          vlmAnalyzer,
+        );
+      case '/select':
+        return await withVlmRecovery(
+          () => browserManager.selectOption(body.selector as string, body.value as string),
+          body.selector as string,
+          `select "${String(body.value).slice(0, 20)}"`,
+          browserManager,
+          vlmAnalyzer,
+        );
+      case '/type-and-select':
+        return await withVlmRecovery(
+          () => browserManager.typeAndSelect(
+            body.selector as string,
+            body.text as string,
+            body.option as string,
+            (body.wait as number) ?? 1500,
+          ),
+          body.selector as string,
+          `type-and-select "${String(body.text).slice(0, 20)}"`,
+          browserManager,
+          vlmAnalyzer,
         );
       case '/press':
         return await browserManager.pressKey(body.key as string);
@@ -140,4 +188,61 @@ async function routeRequest(
   }
 
   throw new Error(`Method ${method} not supported`);
+}
+
+/**
+ * Wraps an interactive operation with VLM-powered error recovery.
+ *
+ * On success: returns the result as-is (zero VLM overhead).
+ * On failure: takes a screenshot, runs VLM analysis, and appends the
+ * visual description + current snapshot to the error so the text-only
+ * agent can understand WHY the operation failed.
+ */
+async function withVlmRecovery<T>(
+  operation: () => Promise<T>,
+  selector: string,
+  actionLabel: string,
+  browserManager: BrowserManager,
+  vlmAnalyzer?: VlmAnalyzer,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+
+    // If no VLM, just rethrow the original error
+    if (!vlmAnalyzer) throw err;
+
+    try {
+      // Capture current page state
+      const [screenshot, snapshot] = await Promise.all([
+        browserManager.screenshot().catch(() => null),
+        browserManager.getSnapshot().catch(() => '(snapshot unavailable)'),
+      ]);
+
+      let visualContext = '';
+      if (screenshot?.base64) {
+        const analysis = await vlmAnalyzer.analyze(
+          screenshot.base64,
+          `The agent tried to ${actionLabel} on selector "${selector}" but it failed with: ${errorMsg}. ` +
+          `Current page snapshot: ${snapshot?.slice(0, 2000) ?? '(unavailable)'}. ` +
+          `Explain why this action might have failed and what the agent should try instead.`,
+        );
+        if (analysis) {
+          visualContext = `\n\n[Visual Analysis] ${analysis}`;
+        }
+      }
+
+      if (snapshot && !snapshot.startsWith('(snapshot')) {
+        visualContext += `\n\n[Current Snapshot]\n${snapshot.slice(0, 4000)}`;
+      }
+
+      // Augment the error with VLM context
+      const augmentedError = new Error(`${errorMsg}${visualContext}`);
+      throw augmentedError;
+    } catch (vlmErr) {
+      // VLM analysis itself failed — just rethrow original error
+      throw err;
+    }
+  }
 }

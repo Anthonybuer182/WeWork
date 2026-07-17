@@ -23,9 +23,10 @@ interface SdkRequest {
   params: unknown;
 }
 
-export function registerIpcHandlers(settingsManager: SettingsManager): void {
-  // Shared ModelRegistry so config writes refresh chat's visible model list
-  const sharedModelRegistry = ModelRegistry.create(AuthStorage.inMemory());
+export function registerIpcHandlers(settingsManager: SettingsManager, modelRegistry?: ModelRegistry): void {
+  // Shared ModelRegistry so config writes refresh chat's visible model list.
+  // If an external registry is provided, use it (allows sharing with VLM analyzer).
+  const sharedModelRegistry = modelRegistry ?? ModelRegistry.create(AuthStorage.inMemory());
 
   // app.getPath('home') is stable across platforms and never points inside
   // the app bundle (unlike process.cwd() in packaged builds).

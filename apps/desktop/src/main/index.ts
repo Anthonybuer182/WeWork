@@ -2,13 +2,13 @@ import { app, BrowserWindow } from 'electron';
 import { createMainWindow } from '@main/window-manager';
 import { registerIpcHandlers } from '@main/ipc/index';
 import { registerNativeIpcHandlers } from '@main/ipc/native';
-import { SettingsManager, getAgentDir } from '@earendil-works/pi-coding-agent';
+import { SettingsManager, getAgentDir, ModelRegistry, AuthStorage } from '@earendil-works/pi-coding-agent';
 import { existsSync, mkdirSync, readdirSync, cpSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { exec, execSync } from 'child_process';
 import { join, dirname, delimiter } from 'path';
 import { fileURLToPath } from 'url';
-import { BrowserManager, startBrowserHttpServer } from '@main/browser';
+import { BrowserManager, startBrowserHttpServer, VlmAnalyzer } from '@main/browser';
 import { registerBrowserIpcHandlers } from '@main/ipc/browser';
 
 let mainWindow: BrowserWindow | null = null;
@@ -218,18 +218,23 @@ if (!gotLock) {
   app.whenReady().then(async () => {
     const settingsManager = SettingsManager.create(app.getPath('home'));
 
+    // Shared ModelRegistry — used by chat service AND VLM analyzer
+    const sharedModelRegistry = ModelRegistry.create(AuthStorage.inMemory());
+    // VLM analyzer for error recovery (gracefully handles missing VLM config)
+    const vlmAnalyzer = new VlmAnalyzer(sharedModelRegistry, { timeoutMs: 15000 });
+
     migrateSkills();
     ensureSkillBinaries();
     injectBundledShell(settingsManager);
 
     mainWindow = createMainWindow();
-    registerIpcHandlers(settingsManager);
+    registerIpcHandlers(settingsManager, sharedModelRegistry);
     registerNativeIpcHandlers();
     registerBrowserIpcHandlers(browserManager);
 
     // Start the browser automation HTTP server (for pi-browser CLI).
     // The BrowserManager connects to CDP lazily when the webview is ready.
-    startBrowserHttpServer(browserManager, 19223);
+    startBrowserHttpServer(browserManager, 19223, vlmAnalyzer);
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
