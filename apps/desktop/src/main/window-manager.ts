@@ -20,7 +20,6 @@ export function createMainWindow(): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      webviewTag: true,
     },
   });
 

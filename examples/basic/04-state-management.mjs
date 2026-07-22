@@ -6,7 +6,7 @@
  *   2. 多轮对话 — Agent 自动维护对话历史
  *   3. 动态修改状态 — 运行中切换模型、系统提示词、思考等级
  *   4. reset() — 重置 Agent 状态
- *   5. 图片输入 — prompt() 传入图片
+ *   5. 切换模型 & 图片输入 — 切换到视觉模型并传入图片
  *
  * AgentState 包含：
  *   systemPrompt  — 系统提示词
@@ -73,8 +73,7 @@ async function main() {
   console.log("\n=== 修改状态后继续对话 ===\n");
 
   // 切换系统提示词
-  agent.state.systemPrompt = "你是一个幽默的助手，回答时加入表情符号。";
-
+  agent.state.systemPrompt = "你是一个助手，每次回答前加上领导称呼我，例如：领导：回复答案";
   // 切换思考等级（需要模型支持 reasoning）
   agent.state.thinkingLevel = "medium";
 
@@ -82,62 +81,45 @@ async function main() {
   await agent.prompt("用一句话介绍 Rust。");
   console.log("\n");
 
-  // ─── 5. 切换模型 ──────────────────────────────────────────────
-  // 可以在对话中途切换模型，Agent 会保留对话历史
-  console.log("=== 切换模型 ===\n");
-  try {
-    const { model: newModel, apiKey: newApiKey } = await loadModelFromConfig("deepseek", "deepseek-chat");
-    agent.state.model = newModel;
-    // 切换 provider 后需更新 getApiKey（通过重新创建 Agent 或使用闭包变量）
-    // 这里为演示简洁，直接用 continue 前手动注入
-    console.log(`已切换到: ${newModel.provider}/${newModel.id}`);
-
-    console.log("用户: 你是什么模型？");
-    // 注意：切换 provider 后 apiKey 也变了，需要用新的 apiKey
-    // 这里用一个临时 Agent 演示，实际项目应统一管理 apiKey
-    const tempAgent = new Agent({
-      initialState: {
-        systemPrompt: agent.state.systemPrompt,
-        model: newModel,
-        messages: agent.state.messages,
-      },
-      getApiKey: async () => newApiKey,
-    });
-    tempAgent.subscribe((event) => {
-      if (event.type === "message_update" && event.assistantMessageEvent.type === "text_delta") {
-        process.stdout.write(event.assistantMessageEvent.delta);
-      }
-    });
-    await tempAgent.prompt("你是什么模型？");
-    console.log("\n");
-  } catch (err) {
-    console.log(`（跳过模型切换演示：${err.message}）\n`);
-  }
-
-  // ─── 6. 图片输入 ──────────────────────────────────────────────
-  console.log("=== 图片输入 ===\n");
-  // prompt() 的第二个参数是图片数组
-  // 支持视觉模型（Claude 3.5 Sonnet, GPT-4o, Gemini 等）
+  // ─── 5. 切换模型 & 图片输入 ─────────────────────────────────────
+  // 同 provider 下可直接 agent.state.model 切换模型，对话历史自动保留
+  // （跨 provider 切换时 apiKey 不同，需用闭包变量管理或重建 Agent）
+  // 切换到视觉模型后，还可以用 prompt() 的第二个参数传入图片
+  // 支持视觉的模型: MiniMax-M3, Claude 3.5 Sonnet, GPT-4o, Gemini, Qwen-VL 等
+  console.log("=== 切换模型 & 图片输入 ===\n");
   const redPixelBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
-  console.log("用户: [发送了一张图片] 这张图片是什么颜色的？");
-  await agent.prompt("这张图片是什么颜色的？", [
-    {
-      type: "image",
-      data: redPixelBase64,
-      mimeType: "image/png",
-    },
-  ]);
-  console.log("\n");
+  try {
+    const { model: vlmModel } = await loadModelFromConfig("minimax", "MiniMax-M3");
+    agent.state.model = vlmModel;
+    console.log(`已切换到: ${vlmModel.provider}/${vlmModel.id}`);
 
-  // ─── 7. reset() 重置 ──────────────────────────────────────────
+    console.log("用户: 你是什么模型？");
+    await agent.prompt("你是什么模型？");
+    console.log("\n");
+
+    // prompt() 的第二个参数是图片数组，支持 base64 图片输入
+    console.log("用户: [发送了一张图片] 这张图片是什么颜色的？");
+    await agent.prompt("这张图片是什么颜色的？", [
+      {
+        type: "image",
+        data: redPixelBase64,
+        mimeType: "image/png",
+      },
+    ]);
+    console.log("\n");
+  } catch (err) {
+    console.log(`（跳过模型切换 & 图片输入演示：${err.message}）\n`);
+  }
+
+  // ─── 6. reset() 重置 ──────────────────────────────────────────
   console.log("=== reset() 重置 Agent ===\n");
   console.log(`重置前消息数: ${agent.state.messages.length}`);
   agent.reset();
   console.log(`重置后消息数: ${agent.state.messages.length}`);
   console.log("（系统提示词和模型保留，消息历史清空）");
 
-  // ─── 8. 消息历史结构 ──────────────────────────────────────────
+  // ─── 7. 消息历史结构 ──────────────────────────────────────────
   console.log("\n--- 消息历史结构说明 ---");
   console.log("agent.state.messages 是 AgentMessage[] 数组");
   console.log("每条消息的 role 可能是: user | assistant | toolResult");

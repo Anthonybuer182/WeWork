@@ -7,6 +7,8 @@ import {
   useTheme,
   useUIStore,
   TooltipProvider,
+  useComposerStore,
+  createQuote,
 } from '@pi/ui';
 import { AppShell } from '@pi/ui';
 import { ThreeColumnLayout } from '@pi/ui';
@@ -71,6 +73,20 @@ function AppContent() {
         if (!state.rightPanelOpen) {
           state.toggleRightPanel();
         }
+      });
+    }
+  }, []);
+
+  // Listen for quote events from the injected page script.
+  // The injected quote button in the BrowserView page sends {text, url, title}
+  // via fetch to http://127.0.0.1:19223/quote, which forwards to the renderer.
+  useEffect(() => {
+    const api = (window as unknown as { electronAPI?: { browser?: { onQuote?: (cb: (data: { text: string; url: string; title: string }) => void) => void } } }).electronAPI?.browser;
+    if (api?.onQuote) {
+      api.onQuote((data) => {
+        const url = data.url || '';
+        const source = url || 'browser';
+        useComposerStore.getState().addQuote(createQuote(data.text, source, 'browser'));
       });
     }
   }, []);

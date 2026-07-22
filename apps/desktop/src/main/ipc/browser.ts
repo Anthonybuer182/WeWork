@@ -9,8 +9,8 @@ import type { BrowserManager } from '@main/browser';
  * instead, but both ultimately call the same BrowserManager.
  */
 export function registerBrowserIpcHandlers(browserManager: BrowserManager): void {
-  // ── Connect to webview via CDP ──
-  // Called by the renderer when the <webview> is ready.
+  // ── Connect to BrowserView via CDP ──
+  // Called by the renderer when the Browser tab is opened.
   ipcMain.handle('pi:browser:connect', async () => {
     try {
       await browserManager.connect();
@@ -23,6 +23,24 @@ export function registerBrowserIpcHandlers(browserManager: BrowserManager): void
     }
   });
 
+  // ── Bounds (renderer reports placeholder div position) ──
+  ipcMain.handle('pi:browser:setBounds', async (_event, x: number, y: number, width: number, height: number) => {
+    browserManager.setBounds(x, y, width, height);
+  });
+
+  ipcMain.handle('pi:browser:getBounds', async () => {
+    return browserManager.getBounds();
+  });
+
+  ipcMain.handle('pi:browser:hide', async () => {
+    browserManager.hide();
+  });
+
+  // ── Execute JavaScript in page ──
+  ipcMain.handle('pi:browser:executeJavaScript', async (_event, code: string) => {
+    return await browserManager.evaluate(code);
+  });
+
   // ── Navigation ──
   ipcMain.handle('pi:browser:navigate', async (_event, url: string) => {
     return await browserManager.navigate(url);
@@ -30,6 +48,23 @@ export function registerBrowserIpcHandlers(browserManager: BrowserManager): void
 
   ipcMain.handle('pi:browser:getUrl', async () => {
     return await browserManager.getUrl();
+  });
+
+  // ── Toolbar navigation (back/forward/reload) ──
+  ipcMain.handle('pi:browser:goBack', async () => {
+    browserManager.navigateBack();
+  });
+
+  ipcMain.handle('pi:browser:goForward', async () => {
+    browserManager.navigateForward();
+  });
+
+  ipcMain.handle('pi:browser:reload', async () => {
+    browserManager.reload();
+  });
+
+  ipcMain.handle('pi:browser:loadURL', async (_event, url: string) => {
+    browserManager.loadURL(url);
   });
 
   // ── Screenshot ──

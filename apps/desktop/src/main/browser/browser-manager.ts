@@ -1,4 +1,4 @@
-import { webContents } from 'electron';
+import { BrowserView, BrowserWindow, session } from 'electron';
 import { BROWSER_HELPERS_JS } from './browser-helpers';
 import type { VlmAnalyzer } from './vlm-analyzer';
 
@@ -64,40 +64,183 @@ type SwitchToBrowserTabCallback = () => void;
  * `type: "webview"` CDP targets (Electron 38).
  */
 export class BrowserManager {
-  private webviewWc: Electron.WebContents | null = null;
+  private browserView: BrowserView | null = null;
+  private mainWindow: BrowserWindow | null = null;
   private debuggerAttached = false;
   private urlChangedCallbacks: UrlChangedCallback[] = [];
   private switchToBrowserTabCallbacks: SwitchToBrowserTabCallback[] = [];
   private currentZoom = 1;
+  private isNavigating = false;
+  private zoomComputing = false;
+  private lastBounds: { x: number; y: number; width: number; height: number } | null = null;
+  private zoomDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {}
 
-  /** ——— Connection ——— */
+  /** ——— BrowserView lifecycle ——— */
 
-  /** Connect to the Electron webview via the debugger API. */
+  /** Set the BrowserView and wire navigation events. Call once at startup. */
+  setBrowserView(bv: BrowserView, mainWindow: BrowserWindow): void {
+    this.browserView = bv;
+    this.mainWindow = mainWindow;
+    const wc = bv.webContents;
+
+    // Spoof a standard Chrome User-Agent — zhipin.com and similar CDNs
+    // drop TLS connections from Electron's default UA string.
+    wc.setUserAgent(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ' +
+      'AppleWebKit/537.36 (KHTML, like Gecko) ' +
+      'Chrome/130.0.0.0 Safari/537.36',
+    );
+
+    // Ignore certificate errors for user-browsed content (equivalent to
+    // clicking "Proceed anyway" in a regular browser). The BrowserView
+    // loads arbitrary user-chosen URLs, so strict cert rejection is
+    // counterproductive.
+    wc.on('certificate-error', (event, _url, _error, _certificate, callback) => {
+      event.preventDefault();
+      callback(true); // proceed
+    });
+
+    // Configure the session: allow permissions for user-browsed content,
+    // and allow running insecure content (HTTP subresources on HTTPS pages)
+    // which is common on Chinese sites like zhipin.com.
+    const ses = session.fromPartition('persist:pi-browser');
+    ses.setPermissionRequestHandler((_wc, _permission, callback) => {
+      callback(true);
+    });
+
+    wc.on('did-navigate', (_event, url) => {
+      if (url && !url.startsWith('about:')) {
+        this.urlChangedCallbacks.forEach((cb) => cb(url));
+      }
+    });
+    wc.on('did-navigate-in-page', (_event, url) => {
+      if (url) {
+        this.urlChangedCallbacks.forEach((cb) => cb(url));
+      }
+    });
+    wc.on('did-finish-load', () => {
+      if (!this.isNavigating) {
+        this.injectHelpers();
+        this.injectQuoteButton();
+        this.scheduleAutoZoom();
+      }
+      // BrowserView compositing workaround: after a page load (especially
+      // SPA navigations like zhipin.com's anti-bot triggered ones), the
+      // native composited surface can go blank while the webContents still
+      // has rendered content. Re-applying the bounds nudges the compositor
+      // to redraw the surface.
+      this.refreshCompositor();
+    });
+
+    // Log renderer crashes for diagnosis (GPU/renderer process death causes
+    // the BrowserView surface to go permanently white).
+    wc.on('render-process-gone', (_event, details) => {
+      console.error('[BrowserManager] render-process-gone:', details.reason, details);
+    });
+    wc.on('unresponsive', () => {
+      console.warn('[BrowserManager] webContents became unresponsive');
+    });
+    wc.on('responsive', () => {
+      console.log('[BrowserManager] webContents became responsive again');
+    });
+  }
+
+  private refreshCompositorTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Force the BrowserView's compositor to redraw by re-applying the
+   * current bounds. This fixes the "page loads then goes white" issue
+   * caused by Chromium's compositor culling the BrowserView surface
+   * after certain navigations. Debounced to avoid hammering during
+   * rapid SPA route changes (zhipin.com triggers many of these).
+   */
+  private refreshCompositor(): void {
+    if (!this.browserView || !this.lastBounds) return;
+    const { x, y, width, height } = this.lastBounds;
+    if (width <= 0 || height <= 0) return;
+    if (this.refreshCompositorTimer) clearTimeout(this.refreshCompositorTimer);
+    this.refreshCompositorTimer = setTimeout(() => {
+      this.refreshCompositorTimer = null;
+      try {
+        // Nudge bounds by 1px then restore — forces the compositor to
+        // re-evaluate and redraw the BrowserView surface.
+        this.browserView!.setBounds({ x, y, width: width + 1, height });
+        this.browserView!.setBounds({ x, y, width, height });
+      } catch {
+        // ignore
+      }
+    }, 50);
+  }
+
+  /** Get the BrowserView's webContents. */
+  private get wc(): Electron.WebContents | null {
+    if (!this.browserView) return null;
+    try {
+      if (this.browserView.webContents.isDestroyed()) return null;
+    } catch {
+      return null;
+    }
+    return this.browserView.webContents;
+  }
+
+  /**
+   * Set BrowserView bounds (viewport-relative position and size).
+   * Call from renderer via IPC to position the native overlay over the placeholder div.
+   */
+  setBounds(x: number, y: number, width: number, height: number): void {
+    if (!this.browserView) {
+      console.warn('[BrowserManager] setBounds called but browserView is null');
+      return;
+    }
+    console.log('[BrowserManager] setBounds:', { x, y, width, height });
+    this.browserView.setBounds({ x, y, width, height });
+    this.lastBounds = { x, y, width, height };
+    const viewWidth = width;
+    if (viewWidth > 0 && this.webviewWidth !== viewWidth) {
+      this.webviewWidth = viewWidth;
+    }
+  }
+
+  /** Hide the BrowserView (set zero-size bounds). */
+  hide(): void {
+    if (!this.browserView) return;
+    this.browserView.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+    this.lastBounds = null;
+  }
+
+  /** Get current BrowserView bounds. */
+  getBounds(): { x: number; y: number; width: number; height: number } {
+    if (!this.browserView) return { x: 0, y: 0, width: 0, height: 0 };
+    return this.browserView.getBounds();
+  }
+
+  /** ─── Connection ─── */
+
+  /** Connect to the BrowserView's webContents via the debugger API. */
   async connect(): Promise<void> {
-    // Find the webview webContents in all Electron views
-    const allWc = webContents.getAllWebContents();
-    const wv = allWc.find((wc) => wc.getType() === 'webview');
-
-    if (!wv) {
-      throw new Error('No webview page found. Ensure the Browser tab is open.');
+    const wc = this.wc;
+    if (!wc) {
+      throw new Error('BrowserView not initialized. Call setBrowserView() first.');
     }
 
-    this.webviewWc = wv;
+    // Increase max listeners
+    wc.setMaxListeners(50);
 
-    // Intercept window.open() and target="_blank" links — navigate in-place
-    // instead of popping up a new BrowserWindow. We inject JS that overrides
-    // window.open before each page load, since setWindowOpenHandler doesn't
-    // work reliably for <webview> tags in Electron 38.
+    // Inject helpers (window.open override)
     this.injectHelpers();
 
-    // Attach the debugger (Electron's debugger API handles CDP messaging)
+    // Detach any existing debugger session before attaching (handles
+    // dangling sessions left after CDP errors like "target navigated").
+    try { wc.debugger.detach(); } catch {}
+    this.debuggerAttached = false;
+
+    // Attach the debugger
     try {
-      wv.debugger.attach('1.3');
+      wc.debugger.attach('1.3');
       this.debuggerAttached = true;
     } catch (err) {
-      // If already attached by something else, try continuing
       if (err instanceof Error && err.message.includes('already attached')) {
         this.debuggerAttached = true;
       } else {
@@ -105,24 +248,32 @@ export class BrowserManager {
       }
     }
 
-    // Listen for CDP events (not command responses — those use the Promise from sendCommand)
-    wv.debugger.on('message', (_event, method: string, params: Record<string, unknown>) => {
+    // Listen for CDP events
+    wc.debugger.on('message', (_event, method: string, params: Record<string, unknown>) => {
       if (method === 'Page.frameNavigated' && params?.frame) {
         const frame = params.frame as { url?: string };
         const url = frame.url || '';
         if (url && !url.startsWith('about:')) {
           this.urlChangedCallbacks.forEach((cb) => cb(url));
         }
-        // Re-inject helpers after each navigation
-        this.injectHelpers();
-        // Also try auto-zoom here as a fallback
-        this.computeAutoZoom();
+        if (!this.isNavigating) {
+          this.injectHelpers();
+          this.injectQuoteButton();
+          this.scheduleAutoZoom();
+        }
       }
 
       if (method === 'Page.loadEventFired') {
         console.log('[BrowserManager] Page.loadEventFired');
-        this.injectHelpers();
-        this.computeAutoZoom();
+        if (!this.isNavigating) {
+          this.injectHelpers();
+          this.injectQuoteButton();
+          this.scheduleAutoZoom();
+        }
+        // Refresh compositor surface after every load event (fixes the
+        // "page loads then goes white" compositing bug on sites like
+        // zhipin.com that trigger multiple sub-frame loads).
+        this.refreshCompositor();
       }
     });
 
@@ -133,49 +284,41 @@ export class BrowserManager {
 
     // Inject the helpers immediately
     this.injectHelpers();
+    this.injectQuoteButton();
 
-    console.log('[BrowserManager] Connected to webview via debugger API');
+    console.log('[BrowserManager] Connected to BrowserView via debugger API');
   }
 
-  /** Check if the debugger is attached and the webview is alive. */
+  /** Check if the debugger is attached and the BrowserView is alive. */
   isConnected(): boolean {
-    if (!this.webviewWc || !this.debuggerAttached) return false;
+    if (!this.browserView || !this.debuggerAttached) return false;
     try {
-      return !this.webviewWc.isDestroyed();
+      return !this.browserView.webContents.isDestroyed();
     } catch {
       return false;
     }
   }
 
   /**
-   * Ensure the webview is connected before executing a command.
-   * If the webview doesn't exist (Browser tab not open), notify the
-   * renderer to switch to the Browser tab, then retry connecting.
+   * Ensure the browser is connected before executing a command.
+   * If the BrowserView doesn't exist (Browser tab not open), notify the
+   * renderer to switch to the Browser tab.
    */
   async ensureConnected(timeoutMs = 15000): Promise<void> {
-    // Already connected and alive
     if (this.isConnected()) return;
 
-    // Reset stale state
-    this.webviewWc = null;
-    this.debuggerAttached = false;
-
     // Signal the renderer to switch to the Browser tab
-    console.log('[BrowserManager] Webview not found — requesting tab switch');
+    console.log('[BrowserManager] Not connected — requesting tab switch');
     this.switchToBrowserTabCallbacks.forEach((cb) => cb());
 
-    // Poll for the webview to appear and connect
+    // Wait for connection by polling connect() which handles the full
+    // debugger lifecycle (attach, enable domains, inject helpers).
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       await new Promise((r) => setTimeout(r, 500));
       try {
-        const allWc = webContents.getAllWebContents();
-        const wv = allWc.find((wc) => wc.getType() === 'webview');
-        if (wv && !wv.isDestroyed()) {
-          // Found the webview — connect now
-          await this.connect();
-          if (this.isConnected()) return;
-        }
+        await this.connect();
+        if (this.isConnected()) return;
       } catch {
         // Keep retrying
       }
@@ -184,24 +327,78 @@ export class BrowserManager {
     throw new Error('Browser panel is not open. Please open the Browser tab in the right panel and try again.');
   }
 
+  /** ─── Toolbar navigation ─── */
+
+  /** Navigate back in browsing history. */
+  navigateBack(): void {
+    if (this.wc && this.wc.canGoBack()) {
+      this.wc.goBack();
+    }
+  }
+
+  /** Navigate forward in browsing history. */
+  navigateForward(): void {
+    if (this.wc && this.wc.canGoForward()) {
+      this.wc.goForward();
+    }
+  }
+
+  /** Reload the current page. */
+  reload(): void {
+    this.wc?.reload();
+  }
+
+  /** Load a URL directly via webContents (handles redirects natively). */
+  loadURL(url: string): void {
+    this.wc?.loadURL(url);
+  }
+
   /** Inject JS helpers (selector resolver, snapshot, window.open override) into the page. */
   private injectHelpers(): void {
-    if (!this.webviewWc) return;
-    // Inject the helpers (idempotent — checks window.__piHelpers)
-    this.webviewWc.executeJavaScript(BROWSER_HELPERS_JS).catch(() => {});
-    // Also inject window.open override
-    this.webviewWc.executeJavaScript(`
-      if (!window.__pi_open_override) {
-        window.__pi_open_override = true;
-        window.open = function(url) {
-          if (url) location.href = url;
-          return null;
-        };
-      }
-      document.querySelectorAll('a[target="_blank"]').forEach(function(a) {
-        a.target = '_self';
-      });
-    `).catch(() => {});
+    const wc = this.wc;
+    if (!wc) return;
+    try {
+      if (wc.isDestroyed()) return;
+    } catch {
+      return;
+    }
+    try {
+      // Inject the helpers (idempotent — checks window.__piHelpers)
+      wc.executeJavaScript(BROWSER_HELPERS_JS).catch(() => {});
+      // Also inject window.open override
+      wc.executeJavaScript(`
+        if (!window.__pi_open_override) {
+          window.__pi_open_override = true;
+          window.open = function(url) {
+            if (url) location.href = url;
+            return null;
+          };
+        }
+        document.querySelectorAll('a[target="_blank"]').forEach(function(a) {
+          a.target = '_self';
+        });
+      `).catch(() => {});
+    } catch {
+      // Silently ignore — helpers are best-effort
+    }
+  }
+
+  /** Schedule a debounced auto-zoom computation. Used by the CDP event handler
+   *  to avoid rapid consecutive calls during resource loads on heavy pages. */
+  private scheduleAutoZoom(): void {
+    if (this.zoomDebounceTimer) clearTimeout(this.zoomDebounceTimer);
+    this.zoomDebounceTimer = setTimeout(() => {
+      this.zoomDebounceTimer = null;
+      this.computeAutoZoom();
+    }, 800);
+  }
+
+  /** Cancel any pending scheduled zoom (e.g., when navigate starts). */
+  private cancelScheduledZoom(): void {
+    if (this.zoomDebounceTimer) {
+      clearTimeout(this.zoomDebounceTimer);
+      this.zoomDebounceTimer = null;
+    }
   }
 
   /** Measure page content width and compute auto-fit zoom via CDP. */
@@ -214,10 +411,20 @@ export class BrowserManager {
   }
 
   private async computeAutoZoom(): Promise<void> {
-    if (!this.webviewWc) return;
+    // Re-entrant guard — prevent concurrent zoom computations
+    if (this.zoomComputing) return;
+    const wc = this.wc;
+    if (!wc) return;
+    // Guard against destroyed webContents
+    try {
+      if (wc.isDestroyed()) return;
+    } catch {
+      return;
+    }
+    this.zoomComputing = true;
     try {
       // Reset zoom to 1.0 first to get natural page dimensions
-      this.webviewWc.setZoomFactor(1);
+      try { wc.setZoomFactor(1); } catch {}
       // Wait for layout to settle after zoom reset
       await new Promise((r) => setTimeout(r, 100));
 
@@ -236,12 +443,14 @@ export class BrowserManager {
       await this.applyZoom();
     } catch (err) {
       console.warn('[BrowserManager] computeAutoZoom error:', err);
+    } finally {
+      this.zoomComputing = false;
     }
   }
 
   private async applyZoom(): Promise<void> {
     console.log('[BrowserManager] applyZoom:', this.currentZoom);
-    try { this.webviewWc?.setZoomFactor(this.currentZoom); } catch {}
+    try { this.wc?.setZoomFactor(this.currentZoom); } catch {}
   }
 
   /** ——— CDP communication ——— */
@@ -251,14 +460,15 @@ export class BrowserManager {
    * Electron automatically manages CDP message IDs and routes responses.
    */
   private sendCommand(method: string, params: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
-    if (!this.webviewWc || !this.debuggerAttached) {
+    const wc = this.wc;
+    if (!wc || !this.debuggerAttached) {
       return Promise.reject(new Error('Debugger not attached'));
     }
 
     // Wrap with timeout
     const timeoutMs = 30000;
     return Promise.race([
-      this.webviewWc.debugger.sendCommand(method, params),
+      wc.debugger.sendCommand(method, params),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`CDP command "${method}" timed out`)), timeoutMs)
       ),
@@ -280,50 +490,65 @@ export class BrowserManager {
     const autoHandleGate = options?.autoHandleGate !== false;
     const maxGateRetries = options?.maxGateRetries ?? 2;
 
-    await this.sendCommand('Page.navigate', { url });
-    // Wait for page to load (DOM complete)
-    await this.waitForPageLoad();
-    // Extra wait for SPA rendering (JS-heavy pages like WeChat, DingTalk)
-    await this.waitForSpaReady();
-    let title = await this.getTitle();
-    let currentUrl = await this.getCurrentUrl();
-    // Analyze page to help LLM determine next action
-    let page = await this.analyzePage();
+    this.isNavigating = true;
+    this.cancelScheduledZoom();
+    try {
+      // Use webContents.loadURL() for navigation — handles redirects natively
+      const wc = this.wc;
+      if (!wc) throw new Error('BrowserView not available');
+      wc.loadURL(url);
+      // Wait for page to load (DOM complete)
+      await this.waitForPageLoad();
+      // Extra wait for SPA rendering (JS-heavy pages like WeChat, DingTalk)
+      await this.waitForSpaReady();
+      let title = await this.getTitle();
+      let currentUrl = await this.getCurrentUrl();
+      // Analyze page to help LLM determine next action
+      let page = await this.analyzePage();
 
-    // Auto-handle gate pages: click low-risk actions (login, agree, confirm, etc.)
-    if (autoHandleGate) {
-      let retries = 0;
-      while (page.pageState === 'gate' && retries < maxGateRetries) {
-        const lowRiskAction = page.coreActions.find((a) => a.risk === 'low');
-        if (!lowRiskAction) break;
+      // Auto-handle gate pages: click low-risk actions (login, agree, confirm, etc.)
+      if (autoHandleGate) {
+        let retries = 0;
+        while (page.pageState === 'gate' && retries < maxGateRetries) {
+          const lowRiskAction = page.coreActions.find((a) => a.risk === 'low');
+          if (!lowRiskAction) break;
 
-        console.log('[BrowserManager] Gate page detected, auto-clicking:', lowRiskAction.text);
-        const clickResult = await this.click(`text="${lowRiskAction.text}"`);
-        if (!clickResult.clicked) {
-          console.warn('[BrowserManager] Auto-click failed:', clickResult.error);
-          break;
+          console.log('[BrowserManager] Gate page detected, auto-clicking:', lowRiskAction.text);
+          const clickResult = await this.click(`text="${lowRiskAction.text}"`);
+          if (!clickResult.clicked) {
+            console.warn('[BrowserManager] Auto-click failed:', clickResult.error);
+            break;
+          }
+
+          // Wait for page to change after click
+          await this.waitForPageLoad();
+          await this.waitForSpaReady();
+
+          title = await this.getTitle();
+          currentUrl = await this.getCurrentUrl();
+          page = await this.analyzePage();
+          retries++;
         }
 
-        // Wait for page to change after click
-        await this.waitForPageLoad();
-        await this.waitForSpaReady();
-
-        title = await this.getTitle();
-        currentUrl = await this.getCurrentUrl();
-        page = await this.analyzePage();
-        retries++;
+        if (page.pageState === 'gate' && retries >= maxGateRetries) {
+          console.warn(
+            '[BrowserManager] Gate page persists after',
+            maxGateRetries,
+            'retries. May require manual action (e.g., QR code scan).',
+          );
+        }
       }
 
-      if (page.pageState === 'gate' && retries >= maxGateRetries) {
-        console.warn(
-          '[BrowserManager] Gate page persists after',
-          maxGateRetries,
-          'retries. May require manual action (e.g., QR code scan).',
-        );
-      }
+      // Re-inject helpers and compute auto-zoom now that navigation is complete.
+      // This compensates for skipped calls in the CDP event handler during navigation.
+      this.injectHelpers();
+      this.injectQuoteButton();
+      await this.computeAutoZoom();
+
+      return { url: currentUrl, title, page };
+    } finally {
+      this.isNavigating = false;
     }
-
-    return { url: currentUrl, title, page };
   }
 
   /** Get the current URL. */
@@ -359,7 +584,7 @@ export class BrowserManager {
   }
 
   /** Wait for the page to finish loading (domcontentloaded). */
-  private async waitForPageLoad(timeoutMs = 15000): Promise<void> {
+  private async waitForPageLoad(timeoutMs = 30000): Promise<void> {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       try {
@@ -1258,7 +1483,7 @@ export class BrowserManager {
       });
 
       // Reset zoom to 1.0 for accurate content dimension measurement
-      try { this.webviewWc?.setZoomFactor(1); } catch {}
+      try { this.wc?.setZoomFactor(1); } catch {}
       // Wait for the renderer to repaint after zoom change
       await new Promise((r) => setTimeout(r, 300));
     }
@@ -1318,7 +1543,7 @@ export class BrowserManager {
     } finally {
       // Restore zoom (only if we changed it for full-page)
       if (options?.fullPage) {
-        try { this.webviewWc?.setZoomFactor(savedZoom); } catch {}
+        try { this.wc?.setZoomFactor(savedZoom); } catch {}
       }
     }
   }
@@ -1419,18 +1644,107 @@ export class BrowserManager {
     return this.currentZoom;
   }
 
+  /** ——— Quote button ——— */
+
+  /**
+   * Inject a self-contained quote button script into the page.
+   * Renders an HTML button when text is selected, sends selected text + URL
+   * to the main process via fetch to the /quote HTTP endpoint.
+   */
+  injectQuoteButton(): void {
+    const wc = this.wc;
+    if (!wc) return;
+    try {
+      if (wc.isDestroyed()) return;
+    } catch {
+      return;
+    }
+
+    wc.executeJavaScript(`
+      (function() {
+        if (window.__piQuoteInjected) return;
+        window.__piQuoteInjected = true;
+
+        var btn = document.createElement('div');
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>Quote';
+        btn.style.cssText = 'position:fixed;z-index:2147483647;display:none;align-items:center;padding:6px 12px;background:#fff;border:1px solid #d4d4d8;border-radius:8px;font-size:12px;color:#18181b;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;user-select:none;transition:opacity 0.15s';
+        document.body.appendChild(btn);
+
+        var timeout = null;
+        var hidden = true;
+
+        function hideButton() {
+          if (!hidden) {
+            btn.style.display = 'none';
+            hidden = true;
+          }
+        }
+
+        function showButton(x, y) {
+          btn.style.left = x + 'px';
+          btn.style.top = y + 'px';
+          btn.style.display = 'flex';
+          hidden = false;
+        }
+
+        document.addEventListener('mouseup', function(e) {
+          clearTimeout(timeout);
+          timeout = setTimeout(function() {
+            var sel = window.getSelection();
+            var text = sel ? sel.toString().trim() : '';
+            if (!text || text.length < 2) {
+              hideButton();
+              return;
+            }
+            var range = sel.getRangeAt(0);
+            var rect = range.getBoundingClientRect();
+            var x = rect.left + rect.width / 2 - 40;
+            var y = rect.top + window.scrollY - 36;
+            if (y < window.scrollY + 4) y = window.scrollY + 4;
+            showButton(x, y);
+          }, 200);
+        });
+
+        document.addEventListener('mousedown', function(e) {
+          if (e.target === btn || btn.contains(e.target)) return;
+          hideButton();
+        });
+
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var sel = window.getSelection();
+          var text = sel ? sel.toString().trim() : '';
+          if (!text) return;
+          fetch('http://127.0.0.1:19223/quote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: text,
+              url: window.location.href,
+              title: document.title
+            })
+          }).then(function() {
+            sel.removeAllRanges();
+            hideButton();
+          }).catch(function() {});
+        });
+      })();
+    `).catch(() => {});
+  }
+
   /** ——— Cleanup ——— */
 
   /** Disconnect the debugger. */
   async disconnect(): Promise<void> {
-    if (this.webviewWc && this.debuggerAttached) {
+    const wc = this.wc;
+    if (wc && this.debuggerAttached) {
       try {
-        this.webviewWc.debugger.detach();
+        wc.debugger.detach();
       } catch {
         // Ignore detach errors
       }
       this.debuggerAttached = false;
     }
-    this.webviewWc = null;
   }
 }

@@ -65,8 +65,17 @@ export interface ElectronAPI {
     setZoom: (factor: number) => Promise<{ zoom: number }>;
     resetZoom: () => Promise<{ zoom: number }>;
     getZoom: () => Promise<{ zoom: number }>;
+    setBounds: (x: number, y: number, width: number, height: number) => Promise<void>;
+    getBounds: () => Promise<{ x: number; y: number; width: number; height: number }>;
+    executeJavaScript: (code: string) => Promise<{ result: unknown }>;
+    goBack: () => Promise<void>;
+    goForward: () => Promise<void>;
+    reload: () => Promise<void>;
+    loadURL: (url: string) => Promise<void>;
+    hide: () => Promise<void>;
     onUrlChanged: (callback: (url: string) => void) => void;
     onSwitchToBrowserTab: (callback: () => void) => void;
+    onQuote: (callback: (data: { text: string; url: string; title: string }) => void) => void;
   };
 }
 
@@ -150,11 +159,22 @@ const electronAPI: ElectronAPI = {
     setZoom: (factor) => ipcRenderer.invoke('pi:browser:setZoom', factor),
     resetZoom: () => ipcRenderer.invoke('pi:browser:resetZoom'),
     getZoom: () => ipcRenderer.invoke('pi:browser:getZoom'),
+    setBounds: (x, y, width, height) => ipcRenderer.invoke('pi:browser:setBounds', x, y, width, height),
+    getBounds: () => ipcRenderer.invoke('pi:browser:getBounds'),
+    executeJavaScript: (code) => ipcRenderer.invoke('pi:browser:executeJavaScript', code),
+    goBack: () => ipcRenderer.invoke('pi:browser:goBack'),
+    goForward: () => ipcRenderer.invoke('pi:browser:goForward'),
+    reload: () => ipcRenderer.invoke('pi:browser:reload'),
+    loadURL: (url) => ipcRenderer.invoke('pi:browser:loadURL', url),
+    hide: () => ipcRenderer.invoke('pi:browser:hide'),
     onUrlChanged: (callback) => {
       ipcRenderer.on('pi:browser:urlChanged', (_event, url) => callback(url));
     },
     onSwitchToBrowserTab: (callback) => {
       ipcRenderer.on('pi:browser:switchToBrowserTab', () => callback());
+    },
+    onQuote: (callback) => {
+      ipcRenderer.on('pi:browser:quote', (_event, data) => callback(data));
     },
   },
 };

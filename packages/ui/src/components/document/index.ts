@@ -10,4 +10,3 @@ export { ImagePreview } from './image-preview';
 export { VideoPreview } from './video-preview';
 export { EmptyPreview } from './empty-preview';
 export { BrowserPreview } from './browser-preview';
-export { BrowserQuoteButton } from './browser-quote-button';

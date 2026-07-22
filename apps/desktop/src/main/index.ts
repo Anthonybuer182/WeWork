@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, BrowserView } from 'electron';
 import { createMainWindow } from '@main/window-manager';
 import { registerIpcHandlers } from '@main/ipc/index';
 import { registerNativeIpcHandlers } from '@main/ipc/native';
@@ -18,10 +18,24 @@ let mainWindow: BrowserWindow | null = null;
 export const browserManager = new BrowserManager();
 
 // Enable Chrome DevTools Protocol so Playwright can connect to the
-// Electron app's own webContents (including <webview> tags) via CDP.
+// Electron app's own webContents (including BrowserView) via CDP.
 // The CLI tool (pi-browser) talks to a local HTTP server which drives
 // Playwright — both agent and user see the same browser instance.
 app.commandLine.appendSwitch('remote-debugging-port', '19222');
+
+// Prevent Chromium from culling the BrowserView's compositor surface.
+// Without these switches, Chromium's window-occlusion detector and
+// background-throttler incorrectly mark the BrowserView as occluded
+// after certain page navigations (notably zhipin.com's anti-bot
+// triggered sub-frame loads). The GPU process then fails to produce
+// compositor overlays ("Invalid mailbox" / "non-existent mailbox"
+// errors in skia_output_device_buffer_queue.cc and
+// shared_image_manager.cc), leaving the BrowserView permanently white
+// while the underlying webContents still renders correctly.
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion,IntensiveWakeUpThrottling');
 
 const gotLock = app.requestSingleInstanceLock();
 
@@ -285,6 +299,29 @@ if (!gotLock) {
     injectBundledShell(settingsManager);
 
     mainWindow = createMainWindow();
+
+    // Create BrowserView (replaces <webview> to avoid guest-instance crashes on redirects).
+    // BrowserView uses a persistent webContents — no guest recreation, no use-after-free.
+    const browserView = new BrowserView({
+      webPreferences: {
+        partition: 'persist:pi-browser',
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+        // Prevent Chromium from throttling/hiding the BrowserView's compositor
+        // surface when the window is occluded or backgrounded — without this,
+        // the BrowserView can go permanently white while the webContents still
+        // has rendered content (this is what caused the zhipin.com blanking bug).
+        backgroundThrottling: false,
+        paintWhenInitiallyHidden: true,
+      },
+    });
+    // Hide initially — bounds are set by the renderer when the Browser tab opens.
+    browserView.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+    browserView.setAutoResize({ width: false, height: false });
+    mainWindow.setBrowserView(browserView);
+    browserManager.setBrowserView(browserView, mainWindow);
+
     registerIpcHandlers(settingsManager, sharedModelRegistry);
     registerNativeIpcHandlers();
     registerBrowserIpcHandlers(browserManager);
