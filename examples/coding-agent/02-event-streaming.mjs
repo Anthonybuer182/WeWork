@@ -14,15 +14,12 @@
 
 import {
   createAgentSession,
-  ModelRuntime,
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
 
 async function main() {
-  const modelRuntime = await ModelRuntime.create();
   const { session } = await createAgentSession({
     sessionManager: SessionManager.inMemory(),
-    modelRuntime,
   });
 
   // ─── 订阅全部感兴趣的事件 ───────────────────────────────────

@@ -12,17 +12,13 @@
 
 import {
   createAgentSession,
-  ModelRuntime,
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
 
 async function main() {
-  const modelRuntime = await ModelRuntime.create();
-
   // ─── 只读模式：仅启用 read/grep/find/ls，禁止任何写操作 ───
   const { session } = await createAgentSession({
     sessionManager: SessionManager.inMemory(),
-    modelRuntime,
     tools: ["read", "grep", "find", "ls"],
     // 等价写法：不给 tools，改用 excludeTools: ["bash", "edit", "write"]
   });
@@ -31,7 +27,9 @@ async function main() {
   session.subscribe((event) => {
     if (event.type === "tool_execution_start") {
       toolCalled = true;
-      console.log(`🔧 使用工具: ${event.toolName}`);
+      const a = event.args ?? {};
+      const target = a.path ?? a.pattern ?? a.command ?? a.cwd ?? "";
+      console.log(`🔧 使用工具: ${event.toolName}${target ? ` → ${target}` : ""}`);
     }
     if (
       event.type === "message_update" &&
@@ -48,9 +46,13 @@ async function main() {
   console.log(`\n\n是否调用了工具: ${toolCalled}`);
 
   // ─── 查看 Agent 当前可用工具列表 ───────────────────────────
-  // session.agent.state.tools 来自 pi-agent-core 的 Agent
-  const tools = session.agent.state.tools;
-  console.log(`已启用工具: ${tools.map((t) => t.name).join(", ")}`);
+  // session.getAllTools() 返回所有已注册工具
+  // session.state.tools 返回当前启用的工具（来自 pi-agent-core Agent state）
+  const allTools = session.getAllTools();
+  console.log(`所有已注册工具: ${allTools.map((t) => t.name).join(", ")}`);
+
+  const activeTools = session.state.tools;
+  console.log(`当前启用工具: ${activeTools.map((t) => t.name).join(", ")}`);
 
   session.dispose();
 }

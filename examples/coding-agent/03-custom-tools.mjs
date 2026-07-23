@@ -12,7 +12,6 @@ import { Type } from "@earendil-works/pi-ai";
 import {
   createAgentSession,
   defineTool,
-  ModelRuntime,
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
 
@@ -45,13 +44,10 @@ async function main() {
     }),
   });
 
-  const modelRuntime = await ModelRuntime.create();
-
   // ─── 2. 注入自定义工具 ─────────────────────────────────────
   // customTools 与内置工具合并；如需限制可用工具，用 tools 白名单
   const { session } = await createAgentSession({
     sessionManager: SessionManager.inMemory(),
-    modelRuntime,
     customTools: [uptimeTool, echoTool],
     // tools: ["read", "bash", "get_uptime"],  // 白名单（含自定义工具名）
   });
