@@ -151,50 +151,20 @@ async function main() {
   console.log("║  04 — Loop Engineering: Agent 的元模式                  ║");
   console.log("╚══════════════════════════════════════════════════════════╝\n");
 
-  console.log("循环模式:");
-  console.log("  while (i < maxIterations) {");
-  console.log("    reply = LLM(messages)         // 调用 LLM");
-  console.log("    messages.push(reply)          // 积累状态");
-  console.log("    if (shouldStop(reply)) break   // 检查停止");
-  console.log("  }");
-  console.log("\n  所有 Agent 都是基于 Loop 的变体:");
-  console.log("    ReAct = Loop + Tool Calling     (05-react.mjs)");
-  console.log("    Plan  = Loop over Steps         (06-plan.mjs)");
-  console.log("    Graph = Loop over Nodes        (07-graph.mjs)\n");
+  console.log("Loop = 把 LLM 放在 while 循环里");
+  console.log("  ReAct = Loop + Tool Calling  (05)");
+  console.log("  Plan  = Loop over Steps     (06)");
+  console.log("  Graph = Loop over Nodes     (07)\n");
 
-  // 1. 自省循环演示
-  console.log("═══ 1. 自省循环 ═══\n");
+  // 一个案例：自省循环 — LLM 自我评估，满意才停
   const agent = createLoopAgent({ config, maxIterations: 5, onToken: (t) => process.stdout.write(t) });
-
   const input = "解释什么是闭包，给出代码示例。";
   console.log(`用户: ${input}\n`);
 
   const trace = await agent.run(input);
 
-  console.log(`  循环次数: ${trace.iterations}`);
-  console.log(`  tokens: ${trace.tokens.input + trace.tokens.output}, 耗时: ${trace.durationMs}ms`);
-  console.log(`  最终回答: ${trace.finalReply?.replace("[DONE]", "").slice(0, 100)}...\n`);
-
-  // 2. 单轮循环（一次就停）
-  console.log("═══ 2. 单轮循环 ═══\n");
-  const trace2 = await agent.run("你好");
-  console.log(`  循环次数: ${trace2.iterations}（一次就标记 [DONE]）`);
-  console.log(`  回答: ${trace2.finalReply?.replace("[DONE]", "").slice(0, 60)}...\n`);
-
-  // 3. 通用循环引擎
-  console.log("═══ 3. 通用循环引擎 createLoop() ═══\n");
-  console.log("  createLoop 是 05-react.mjs 的基础:");
-  console.log("  ReAct 的循环 = createLoop({");
-  console.log("    step: 调 LLM + 执行工具,");
-  console.log("    shouldStop: 无 tool_calls 时停止");
-  console.log("  })\n");
-
-  console.log("═══ Loop 的变体 ═══\n");
-  console.log("  Loop + 工具调用  = ReAct (05-react.mjs)");
-  console.log("  Loop over Steps  = Plan  (06-plan.mjs)");
-  console.log("  Loop over Nodes  = Graph (07-graph.mjs)");
-
-  console.log("\n速查: createLoop({ maxIterations, step, shouldStop }).run(messages, config)");
+  console.log(`\n  循环 ${trace.iterations} 次, ${trace.durationMs}ms`);
+  console.log("\n速查: createLoop({ maxIterations, step, shouldStop })");
   console.log("\n✅ 完成 — 下一步: 05-react.mjs");
 }
 

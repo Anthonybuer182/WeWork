@@ -168,47 +168,20 @@ async function main() {
   console.log("║  05 — ReAct: Reason + Act（基于 Loop）                 ║");
   console.log("╚══════════════════════════════════════════════════════════╝\n");
 
-  console.log("ReAct = Loop + Tool Calling");
-  console.log("  循环引擎: createLoop() (04-loop.mjs)");
-  console.log("  step 函数: 调 LLM + 执行工具");
-  console.log("  shouldStop: 无 tool_calls 时停止\n");
+  console.log("ReAct = Loop + Tool Calling\n");
 
-  console.log("ReAct 循环结构:");
-  console.log("  createLoop({");
-  console.log("    step: async (messages, cfg, trace) => {");
-  console.log("      reply = LLM(messages, tools)    // Thought + Action");
-  console.log("      if (reply.tool_calls) {         // 有 Action？");
-  console.log("        results = execute(tools)      // Observation");
-  console.log("        messages.push(results)        // 加入历史");
-  console.log("        return { done: false }         // 继续 Thought");
-  console.log("      }");
-  console.log("      return { done: true }           // 最终答案");
-  console.log("    },");
-  console.log("    shouldStop: (r) => r.done");
-  console.log("  })\n");
-
+  // 一个案例：多轮 ReAct — 算数 + 查天气
   const agent = createReActAgent({ config, tools: allTools, maxIterations: 10, onToken: (t) => process.stdout.write(t) });
+  const input = "帮我算 25 * 4 + 10，查北京天气，然后总结。";
+  console.log(`用户: ${input}\n`);
 
-  // 演示 1: 多轮 ReAct
-  console.log("═══ 1. 多轮 ReAct ═══\n");
-  const input1 = "帮我算 25 * 4 + 10，查北京天气，然后总结。";
-  console.log(`用户: ${input1}\n`);
+  const trace = await agent.run(input);
 
-  const trace1 = await agent.run(input1);
+  console.log(`\n  轮次: ${trace.iterations}, 工具: ${trace.toolCalls.length}次`);
+  trace.toolCalls.forEach((tc) => console.log(`    - ${tc.name}(${JSON.stringify(tc.args)}) -> ${tc.result}`));
+  console.log(`  回复: ${trace.finalReply?.slice(0, 80)}...\n`);
 
-  console.log(`\n  轮次: ${trace1.iterations}, 工具: ${trace1.toolCalls.length}次, ${trace1.durationMs}ms`);
-  trace1.toolCalls.forEach((tc) => {
-    console.log(`    - ${tc.name}(${JSON.stringify(tc.args)}) -> ${tc.result}`);
-  });
-  console.log(`  回复: ${trace1.finalReply?.slice(0, 80)}...\n`);
-
-  // 演示 2: 单轮 ReAct
-  console.log("═══ 2. 单轮 ReAct（无工具调用）═══\n");
-  const trace2 = await agent.run("你好，用一句话介绍自己。");
-  console.log(`  轮次: ${trace2.iterations}（一次结束）`);
-  console.log(`  回复: ${trace2.finalReply?.slice(0, 80)}...\n`);
-
-  console.log("速查: createReActAgent({ config, tools, maxIterations }).run(input) -> trace");
+  console.log("速查: createReActAgent({ config, tools, maxIterations }).run(input)");
   console.log("\n✅ 完成 — 下一步: 06-plan.mjs");
 }
 

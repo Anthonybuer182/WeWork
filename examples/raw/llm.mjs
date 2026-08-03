@@ -56,6 +56,9 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
     body.stream = true;
     body.stream_options = { include_usage: true };
 
+    console.log("\n━━━ Request ━━━━━━━━━━━━━━━━");
+    console.log(JSON.stringify(body, null, 2));
+
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -79,6 +82,7 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
     let finishReason = null;
     let usage = null;
 
+    console.log("\n━━━ Response (streaming) ━━━━━━━━━");
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -126,7 +130,7 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
       }
     }
 
-    return {
+    const result = {
       message: {
         role: "assistant",
         content,
@@ -135,9 +139,16 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
       finishReason: finishReason || "stop",
       usage,
     };
+    // 流式模式下 content 已由 onToken 实时输出，这里只记录响应元数据
+    console.log("\n━━━ Response metadata ━━━━━━━━━━━━");
+    console.log(JSON.stringify({ finishReason: result.finishReason, usage: result.usage, ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}) }, null, 2));
+    return result;
   }
 
   // ── 非流式模式（原逻辑）──
+  console.log("\n━━━ Request ━━━━━━━━━━━━━━━━");
+  console.log(JSON.stringify(body, null, 2));
+
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -155,9 +166,12 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
   const data = await res.json();
   const choice = data.choices[0];
 
-  return {
+  const result = {
     message: choice.message,    // {role: "assistant", content, tool_calls?}
     finishReason: choice.finish_reason, // "stop" | "tool_calls"
     usage: data.usage,          // {prompt_tokens, completion_tokens, total_tokens}
   };
+  console.log("\n━━━ Response ━━━━━━━━━━━━━━━");
+  console.log(JSON.stringify(result, null, 2));
+  return result;
 }

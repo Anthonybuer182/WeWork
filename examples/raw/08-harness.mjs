@@ -189,32 +189,16 @@ async function main() {
   console.log("║  08 — Harness: 测试和评估 Agent                          ║");
   console.log("╚══════════════════════════════════════════════════════════╝\n");
 
-  console.log("架构（模块依赖链）:");
-  console.log("  08-harness.mjs  (顶层消费者)");
-  console.log("    <- 05-react.mjs      -> 被测 Agent (ReAct)");
-  console.log("         <- 04-loop.mjs    -> createLoop 循环引擎");
-  console.log("         <- 01-prompt.mjs  -> ReAct system prompt");
-  console.log("         <- 02-context.mjs -> 截断管理");
-  console.log("    <- llm.mjs          -> LLM 裁判评估器\n");
+  console.log("Harness = TestCase + Runner + Evaluator + Report\n");
 
-  // 创建被测 Agent（用 05-react.mjs）
   const agent = createReActAgent({ config, tools: allTools, maxIterations: 5 });
   const agentUnderTest = (input) => agent.run(input);
 
-  // 定义测试用例
   const cases = [
-    testCase("简单加法", "计算 3 + 5", [
-      { name: "调用了 calculator", check: (t, e) => e.toolUsed(t, "calculator") },
-      { name: "结果包含 8", check: (t, e) => e.toolResultContains(t, "calculator", "= 8") },
-      { name: "回复包含 8", check: (t, e) => e.contains(t, ["8"]) },
-    ]),
-    testCase("复杂表达式", "计算 25 * 4 + 10", [
+    testCase("计算器测试", "计算 25 * 4 + 10", [
       { name: "调用了 calculator", check: (t, e) => e.toolUsed(t, "calculator") },
       { name: "结果包含 110", check: (t, e) => e.toolResultContains(t, "calculator", "= 110") },
-    ]),
-    testCase("闲聊不调工具", "你好，用一句话介绍自己", [
-      { name: "没有调用工具", check: (t, e) => e.noToolUsed(t) },
-      { name: "LLM 裁判评分", check: (t, e, c) => e.llmJudge(t, "回答是否简洁合理", c) },
+      { name: "回复包含 110", check: (t, e) => e.contains(t, ["110"]) },
     ]),
   ];
 
@@ -223,36 +207,7 @@ async function main() {
   const results = await runHarness(config, cases, agentUnderTest);
   report(results);
 
-  // 总结
-  console.log("\n════════════════════════════════════════════════════════════");
-  console.log("  八大 Engineering 完整回顾:");
-  console.log("  ┌────────┬──────────────────────┬────────────────────────┐");
-  console.log("  │ 编号   │ 主题                 │ 文件                   │");
-  console.log("  ├────────┼──────────────────────┼────────────────────────┤");
-  console.log("  │ 01     │ Prompt Engineering   │ 01-prompt.mjs          │");
-  console.log("  │ 02     │ Context Engineering  │ 02-context.mjs         │");
-  console.log("  │ 03     │ Memory Engineering   │ 03-memory.mjs          │");
-  console.log("  │ 04     │ Loop Engineering     │ 04-loop.mjs             │");
-  console.log("  │ 05     │ ReAct (Loop+Tools)  │ 05-react.mjs           │");
-  console.log("  │ 06     │ Plan & Execute      │ 06-plan.mjs             │");
-  console.log("  │ 07     │ Graph Engineering    │ 07-graph.mjs            │");
-  console.log("  │ 08     │ Harness Engineering │ 08-harness.mjs (顶层)   │");
-  console.log("  └────────┴──────────────────────┴────────────────────────┘");
-  console.log("\n  依赖链:");
-  console.log("    llm.mjs (base)");
-  console.log("    -> 01-prompt.mjs + 02-context.mjs (layer 1)");
-  console.log("    -> 03-memory.mjs (layer 2, import 02)");
-  console.log("    -> 04-loop.mjs (layer 2, import 01+02)");
-  console.log("    -> 05-react.mjs (layer 3, import 04-loop+01+02)");
-  console.log("    -> 06-plan.mjs (layer 4, import 05)");
-  console.log("    -> 07-graph.mjs (layer 2, import 01)");
-  console.log("    -> 08-harness.mjs (顶层, import 05)");
-  console.log("\n  每个文件既是案例（可运行讲解），又是模块（可被 import）。");
-  console.log("  从'说'(Prompt) 到'看'(Context) 到'记'(Memory)");
-  console.log("  到'转'(Loop) 到'做'(ReAct) 到'规划'(Plan)");
-  console.log("  到'控'(Graph) 到'测'(Harness)");
-  console.log("════════════════════════════════════════════════════════════");
-
+  console.log("\n速查: testCase(name, input, expectations) + runHarness(config, cases, agentFn)");
   console.log("\n✅ 全部示例完成！");
 }
 

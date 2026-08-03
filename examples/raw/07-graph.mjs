@@ -101,15 +101,11 @@ async function main() {
   console.log("║  07 — Graph Engineering: 用图定义执行流程                ║");
   console.log("╚══════════════════════════════════════════════════════════╝\n");
 
-  console.log("图结构:");
-  console.log("  research -> draft -> review");
-  console.log("                        |- PASS -> END");
-  console.log("                        |- FAIL -> revise -> review\n");
+  console.log("图: research → draft → review →(PASS)→ END / (FAIL)→ revise → review\n");
 
   const MAX_REVISE = 2;
   const graph = createGraph("research");
 
-  // 节点 1: research
   graph.addNode("research", async (state, cfg) => {
     console.log(`  [research] 调研: ${state.topic}`);
     process.stdout.write("    ");
@@ -125,9 +121,8 @@ async function main() {
     return { ...state, research: message.content, reviseCount: 0 };
   });
 
-  // 节点 2: draft
   graph.addNode("draft", async (state, cfg) => {
-    console.log("  [draft] 起草草稿");
+    console.log("  [draft] 起草");
     process.stdout.write("    ");
     const { message } = await chat({
       ...cfg,
@@ -141,7 +136,6 @@ async function main() {
     return { ...state, draft: message.content };
   });
 
-  // 节点 3: review
   graph.addNode("review", async (state, cfg) => {
     console.log(`  [review] 审查（第 ${state.reviseCount + 1} 次）`);
     const { message } = await chat({
@@ -156,7 +150,6 @@ async function main() {
     return { ...state, reviewPassed: passed, reviewComment: message.content };
   });
 
-  // 节点 4: revise
   graph.addNode("revise", async (state, cfg) => {
     console.log(`  [revise] 修改（第 ${state.reviseCount + 1} 次）`);
     process.stdout.write("    ");
@@ -172,7 +165,6 @@ async function main() {
     return { ...state, draft: message.content, reviseCount: state.reviseCount + 1 };
   });
 
-  // 边: 流程定义（含条件路由）
   graph.addEdge("research", "draft");
   graph.addEdge("draft", "review");
   graph.addEdge("review", "END", (s) => s.reviewPassed);
@@ -180,25 +172,11 @@ async function main() {
   graph.addEdge("review", "END", (s) => !s.reviewPassed && s.reviseCount >= MAX_REVISE);
   graph.addEdge("revise", "review");
 
-  // 运行
-  console.log("\n开始执行图...\n");
-  const { state, trace, steps } = await graph.run(
-    { topic: "人工智能对教育的影响" },
-    config
-  );
+  console.log("开始执行图...\n");
+  const { state, steps } = await graph.run({ topic: "人工智能对教育的影响" }, config);
 
-  console.log("\n═══ 执行结果 ═══");
-  console.log("  轨迹:");
-  trace.forEach((t, i) => console.log(`    ${i + 1}. ${t.node}`));
-  console.log(`  总步数: ${steps}, 修改次数: ${state.reviseCount}`);
-  console.log(`  最终草稿: ${state.draft?.slice(0, 100)}...\n`);
-
-  console.log("═══ Loop vs Graph ═══\n");
-  console.log("  ReAct/Plan: LLM 隐式控制流程，灵活但不可预测");
-  console.log("  Graph:     开发者显式定义流程，可控可审计");
-  console.log("  Graph 的每个节点内部可以是一个 ReAct loop。\n");
-
-  console.log("速查: createGraph(start).addNode().addEdge().run(initialState, config)");
+  console.log(`\n  总步数: ${steps}, 修改次数: ${state.reviseCount}`);
+  console.log("\n速查: createGraph(start).addNode().addEdge().run(initialState, config)");
   console.log("\n✅ 完成 — 下一步: 08-harness.mjs");
 }
 

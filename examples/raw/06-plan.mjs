@@ -178,10 +178,7 @@ async function main() {
   console.log("║  06 — Plan & Execute: 先规划再执行                       ║");
   console.log("╚══════════════════════════════════════════════════════════╝\n");
 
-  console.log("流程:");
-  console.log("  1. Plan    — LLM 拆任务 -> ['步骤1', '步骤2', ...]");
-  console.log("  2. Execute — 每步用 ReAct agent 执行");
-  console.log("  3. Join    — 汇总所有步骤结果 -> 最终回答\n");
+  console.log("流程: Plan(拆步骤) → Execute(每步用ReAct) → Join(汇总)\n");
 
   const agent = createPlanExecuteAgent({
     config,
@@ -196,33 +193,18 @@ async function main() {
 
   const trace = await agent.run(input);
 
-  // 输出计划
-  console.log("═══ 1. Plan ═══\n");
+  console.log("\n═══ Plan ═══");
   trace.plan.forEach((step, i) => console.log(`  ${i + 1}. ${step}`));
 
-  // 输出每步结果
-  console.log("\n═══ 2. Execute ═══\n");
+  console.log("\n═══ Execute ═══");
   trace.stepResults.forEach((sr, i) => {
-    console.log(`  步骤 ${i + 1}: ${sr.step}`);
-    console.log(`    轮次: ${sr.iterations}, 工具: ${sr.toolCalls.length}`);
-    sr.toolCalls.forEach((tc) => console.log(`      - ${tc.name}(${JSON.stringify(tc.args)}) -> ${tc.result}`));
-    console.log(`    结果: ${sr.reply?.slice(0, 80)}...\n`);
+    console.log(`  步骤 ${i + 1}: ${sr.step} (轮次:${sr.iterations}, 工具:${sr.toolCalls.length})`);
   });
 
-  // 输出汇总
-  console.log("═══ 3. Join ═══\n");
-  console.log(`  最终回复: ${trace.finalReply?.slice(0, 120)}...\n`);
+  console.log(`\n═══ Join ═══\n  ${trace.finalReply?.slice(0, 120)}...\n`);
 
-  console.log("═══ 统计 ═══");
-  console.log(`  计划步骤: ${trace.plan.length}, 总轮次: ${trace.totalIterations}, 工具: ${trace.totalToolCalls}`);
-  console.log(`  tokens: ${trace.tokens.input + trace.tokens.output}, 耗时: ${trace.durationMs}ms\n`);
-
-  console.log("═══ Plan vs ReAct ═══\n");
-  console.log("  ReAct: 走一步看一步（reactive），简单任务");
-  console.log("  Plan:  先全局规划（proactive），复杂多步任务");
-  console.log("  Plan 的每步执行用 ReAct，这就是模块的组合。\n");
-
-  console.log("速查: createPlanExecuteAgent({ config, tools, maxSteps }).run(input) -> trace");
+  console.log(`统计: ${trace.plan.length}步, ${trace.totalIterations}轮, ${trace.totalToolCalls}工具, ${trace.durationMs}ms`);
+  console.log("\n速查: createPlanExecuteAgent({ config, tools, maxSteps }).run(input)");
   console.log("\n✅ 完成 — 下一步: 07-graph.mjs");
 }
 
