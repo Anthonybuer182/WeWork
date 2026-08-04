@@ -5,14 +5,17 @@
  *
  * Plan & Execute = 先规划，再执行
  *   1. Plan    — LLM 把任务拆成步骤列表
- *   2. Execute — 每步用 ReAct agent 执行
+ *   2. Execute — 逐个执行步骤（执行器可插拔：可用 ReAct，也可用普通 LLM 调用）
  *   3. Join    — 汇总所有步骤的结果
  *
- * Plan vs ReAct:
- *   ReAct: 走一步看一步（reactive）
- *   Plan:  先全局规划再执行（proactive）
+ * Plan & Execute 与 ReAct 的关系:
+ *   两者是并列的 agent 模式，不是依赖关系：
+ *   - ReAct: 走一步看一步（reactive），适合步骤不可预知的任务
+ *   - Plan:  先全局规划再执行（proactive），适合能先拆解的多步任务
+ *   本文件选择用 ReAct 作为 Execute 阶段的执行器，是一种常见组合，但不是必须的。
+ *   Execute 阶段是可插拔的——这是 Plan & Execute 最重要的设计思想。
  *
- * 依赖: llm.mjs, 01-prompt.mjs, 05-react.mjs
+ * 依赖: llm.mjs, 01-prompt.mjs, 05-react.mjs（本文件用其作为执行器）
  * 被依赖: (可被 08-harness.mjs import)
  *
  * 导出: createPlanExecuteAgent
@@ -189,7 +192,6 @@ async function main() {
   });
 
   const input = "帮我查北京天气，根据天气推荐穿搭，再算 200 元外套打 8 折多少钱。";
-  console.log(`用户: ${input}\n\n运行中...\n`);
 
   const trace = await agent.run(input);
 
@@ -204,8 +206,9 @@ async function main() {
   console.log(`\n═══ Join ═══\n  ${trace.finalReply?.slice(0, 120)}...\n`);
 
   console.log(`统计: ${trace.plan.length}步, ${trace.totalIterations}轮, ${trace.totalToolCalls}工具, ${trace.durationMs}ms`);
-  console.log("\n速查: createPlanExecuteAgent({ config, tools, maxSteps }).run(input)");
-  console.log("\n✅ 完成 — 下一步: 07-graph.mjs");
 }
 
-main().catch(console.error);
+// 直接运行时才执行（被 import 时不运行）
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}

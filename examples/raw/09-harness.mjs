@@ -211,4 +211,7 @@ async function main() {
   console.log("\n✅ 全部示例完成！");
 }
 
-main().catch(console.error);
+// 直接运行时才执行（被 import 时不运行）
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}

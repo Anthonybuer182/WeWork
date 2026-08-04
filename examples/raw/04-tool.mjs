@@ -59,4 +59,7 @@ async function main() {
 
 }
 
-main().catch(console.error);
+// 直接运行时才执行（被 import 时不运行）
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}

@@ -180,4 +180,7 @@ async function main() {
   console.log("\n✅ 完成 — 下一步: 08-harness.mjs");
 }
 
-main().catch(console.error);
+// 直接运行时才执行（被 import 时不运行）
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}

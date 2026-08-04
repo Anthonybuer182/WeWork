@@ -10,6 +10,7 @@
  *   - 返回 assistant 消息（可能包含 tool_calls）
  *
  * 支持流式输出：传入 onToken 回调即可逐 token 接收文本。
+ * 支持静默：传入 silent: true 可关闭请求/响应日志（用于演示场景）。
  *
  * 没有魔法，就是 HTTP 请求。
  */
@@ -30,14 +31,19 @@ export const config = {
 // 流式:   chat({ ..., onToken: (text) => void })
 //   -> 同样的返回值，但 onToken 会逐块回调文本
 //
+// 静默:   chat({ ..., silent: true })
+//   -> 关闭请求/响应日志，适合演示时保持输出整洁
+//
 // 流式原理: 请求体加 stream: true，响应变成 SSE 格式
 //   data: {"choices":[{"delta":{"content":"你"}}]}
 //   data: {"choices":[{"delta":{"content":"好"}}]}
 //   data: [DONE]
 //   每个 chunk 的 delta.content 是一小段文本，拼接起来就是完整回复
 
-export async function chat({ baseUrl, apiKey, model, messages, tools, onToken }) {
+export async function chat({ baseUrl, apiKey, model, messages, tools, onToken, silent = false }) {
   const url = `${baseUrl}/chat/completions`;
+  // silent 时关闭日志，保持调用方输出整洁
+  const log = silent ? () => {} : (...a) => console.log(...a);
 
   const body = { model, messages };
   if (tools && tools.length > 0) {
@@ -56,8 +62,8 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
     body.stream = true;
     body.stream_options = { include_usage: true };
 
-    console.log("\n━━━ Request ━━━━━━━━━━━━━━━━");
-    console.log(JSON.stringify(body, null, 2));
+    log("\n━━━ Request ━━━━━━━━━━━════");
+    log(JSON.stringify(body, null, 2));
 
     const res = await fetch(url, {
       method: "POST",
@@ -82,7 +88,7 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
     let finishReason = null;
     let usage = null;
 
-    console.log("\n━━━ Response (streaming) ━━━━━━━━━");
+    log("\n━━━ Response (streaming) ━━━━━━━━━");
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -140,14 +146,14 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
       usage,
     };
     // 流式模式下 content 已由 onToken 实时输出，这里只记录响应元数据
-    console.log("\n━━━ Response metadata ━━━━━━━━━━━━");
-    console.log(JSON.stringify({ finishReason: result.finishReason, usage: result.usage, ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}) }, null, 2));
+    log("\n━━━ Response metadata ━━━━━━━━━═══");
+    log(JSON.stringify({ finishReason: result.finishReason, usage: result.usage, ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}) }, null, 2));
     return result;
   }
 
   // ── 非流式模式（原逻辑）──
-  console.log("\n━━━ Request ━━━━━━━━━━━━━━━━");
-  console.log(JSON.stringify(body, null, 2));
+  log("\n━━━ Request ━━━━━━━════════");
+  log(JSON.stringify(body, null, 2));
 
   const res = await fetch(url, {
     method: "POST",
@@ -171,7 +177,7 @@ export async function chat({ baseUrl, apiKey, model, messages, tools, onToken })
     finishReason: choice.finish_reason, // "stop" | "tool_calls"
     usage: data.usage,          // {prompt_tokens, completion_tokens, total_tokens}
   };
-  console.log("\n━━━ Response ━━━━━━━━━━━━━━━");
-  console.log(JSON.stringify(result, null, 2));
+  log("\n━━━ Response ━━━━━━━━━══════");
+  log(JSON.stringify(result, null, 2));
   return result;
 }

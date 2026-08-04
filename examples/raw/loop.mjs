@@ -53,7 +53,8 @@ export function createLoop({
       tokens: { input: 0, output: 0 },
       durationMs: 0,
       messages: [...messages],
-      ...initialTrace,
+      // 深拷贝 initialTrace，避免数组/对象字段在多次 run 间共享累积
+      ...structuredClone(initialTrace),
     };
 
     const start = Date.now();
@@ -168,4 +169,7 @@ async function main() {
   console.log("\n✅ 完成 — 下一步: 05-react.mjs");
 }
 
-main().catch(console.error);
+// 直接运行时才执行（被 import 时不运行）
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}
