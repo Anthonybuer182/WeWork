@@ -19,7 +19,7 @@
 
 export const config = {
   baseUrl: "https://api.minimaxi.com/v1",
-  apiKey: "",
+  apiKey: "sk-api-QOJLagiHYO3jkui5b94xUQL-TUsZimKLzaWmg_0hlH_ltakI6OoFWvolOoH8V6qGn0KPjm7QcgTGs3wGFJ-AdEcYhmJ43pirg3-MXrI2KdlZ8bOwNdCSpHA",
   model: "MiniMax-M2.7",
 };
 

@@ -15,7 +15,7 @@
  *        → turn_end → turn_start(下一轮) → ... → agent_end
  *
  * 运行方式：
- *   node examples/basic/02-event-streaming.mjs
+ *   node examples/agent-core/02-event-streaming.mjs
  */
 
 import { Agent } from "@earendil-works/pi-agent-core";

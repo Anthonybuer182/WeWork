@@ -18,7 +18,7 @@
  *   streamingMessage — 当前流式消息（只读）
  *
  * 运行方式：
- *   node examples/basic/04-state-management.mjs
+ *   node examples/agent-core/04-state-management.mjs
  */
 
 import { Agent } from "@earendil-works/pi-agent-core";

@@ -13,7 +13,7 @@
  *   followUp — 在 Agent 完全结束后注入，触发新一轮处理
  *
  * 运行方式：
- *   node examples/advanced/05-steering-followup.mjs
+ *   node examples/agent-core/05-steering-followup.mjs
  */
 
 import { Agent } from "@earendil-works/pi-agent-core";

@@ -14,7 +14,7 @@
  *   sequential — 逐个执行
  *
  * 运行方式：
- *   node examples/basic/03-custom-tools.mjs
+ *   node examples/agent-core/03-custom-tools.mjs
  */
 
 import { Agent } from "@earendil-works/pi-agent-core";

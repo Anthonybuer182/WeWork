@@ -10,7 +10,7 @@
  * 运行前请先在 ~/.pi/agent/models.json 中配置 provider 和 apiKey。
  *
  * 运行方式：
- *   node examples/basic/01-basic-agent.mjs
+ *   node examples/agent-core/01-basic-agent.mjs
  */
 
 import { Agent } from "@earendil-works/pi-agent-core";

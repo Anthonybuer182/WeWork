@@ -11,10 +11,17 @@
 - **文档预览** — 支持代码高亮、Markdown、PDF、Office 文档（.docx/.xlsx/.pptx）等格式预览
 - **模型配置** — 支持多种 AI 提供商和模型选择，可自定义思考等级
 - **斜杠命令** — 支持 `/help`、`/clear`、`/compact`、`/model`、`/config` 等命令
+- **浏览器自动化** — 支持通过 AI 驱动浏览器进行网页操作，实现自动化浏览与交互
 
 ## 功能演示
 
+### AI 编程助手
+
 ![Demo](./assets/demo.gif)
+
+### 浏览器自动化
+
+![Browser Automation](./assets/chrome.gif)
 
 ## 技术栈
 
