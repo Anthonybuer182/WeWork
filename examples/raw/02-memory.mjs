@@ -1,7 +1,7 @@
 /**
- * 03-memory.mjs — Memory Engineering（记忆工程）
+ * 02-memory.mjs — Memory Engineering（记忆工程）
  *
- * 既是案例（node 03-memory.mjs 可运行讲解），又是模块（可被其他 agent import）。
+ * 既是案例（node 02-memory.mjs 可运行讲解），又是模块（可被其他 agent import）。
  *
  * Memory = 把对话存下来，下次会话还能拿出来
  *   短期记忆 = 当前对话的 messages（Context Engineering 管理，进程结束即消失）

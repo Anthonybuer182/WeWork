@@ -76,10 +76,9 @@ export function createReActAgent({
   const loop = createLoop({
     maxIterations,
     agentType: "ReAct",
-    initialTrace: { toolCalls: [] },
 
     async step(messages, cfg, trace) {
-      // 1. Thought + Action: 调用 LLM（非流式，输出干净）
+      // 1. 调用 LLM → 同一次响应里返回 Thought(content) + Action 意图(tool_calls)
       const { message: reply, usage } = await chat({ ...cfg, messages, tools, silent });
       messages.push(reply);
 
@@ -91,20 +90,24 @@ export function createReActAgent({
         return { reply, usage, done: true };
       }
 
-      // 3. 有 Action → 记录 Thought + Action
-      if (onStep) onStep({ phase: "act", iteration: trace.iterations, thought: reply.content, toolCalls });
+      // 3. Thought: LLM 的推理过程
+      if (onStep) onStep({ phase: "thought", iteration: trace.iterations, thought: reply.content });
 
-      // 4. Observation: 执行工具，结果加入历史
+      // 4. Action: LLM 决定调用工具（tool_calls 即调用意图）
+      if (onStep) onStep({ phase: "act", iteration: trace.iterations, toolCalls });
+
+      // 5. Observation: 执行工具，结果加入历史
       for (const tc of toolCalls) {
         const { name, arguments: argsStr } = tc.function;
         const args = JSON.parse(argsStr);
         const result = toolMap[name] ? toolMap[name].execute(args) : `工具 ${name} 不存在`;
+        trace.toolCalls ??= [];
         trace.toolCalls.push({ name, args, result });
         messages.push({ role: "tool", tool_call_id: tc.id, content: result });
         if (onStep) onStep({ phase: "observe", iteration: trace.iterations, name, args, result });
       }
 
-      // 5. 回到循环顶部 → LLM 看到 Observation 后继续 Thought
+      // 6. 回到循环顶部 → LLM 看到 Observation 后继续 Thought
       return { reply, usage, done: false };
     },
 
@@ -134,13 +137,14 @@ const cleanThought = (s) => (s || "").replace(/<think>[\s\S]*?<\/think>/g, "").t
 
 // 把 ReAct 每一步打印成可读流程
 function prettyStep({ phase, iteration, thought, toolCalls, name, args, result }) {
-  if (phase === "act") {
+  if (phase === "thought") {
     console.log(`\n[轮 ${iteration}]`);
     console.log(`  Thought     | ${cleanThought(thought).slice(0, 80)}`);
+  } else if (phase === "act") {
     const actions = toolCalls.map((tc) => `${tc.function.name}(${tc.function.arguments})`).join(" + ");
     console.log(`  Action      | ${actions}`);
   } else if (phase === "observe") {
-    console.log(`  Observation | ${name}() => ${result}`);
+    console.log(`  Observation | ${name}(${JSON.stringify(args)}) => ${result}`);
   } else if (phase === "answer") {
     console.log(`\n[轮 ${iteration}] (无需工具，直接回复)`);
     console.log(`  Answer      | ${cleanThought(thought).slice(0, 120)}`);

@@ -35,7 +35,6 @@ import { buildSystemPrompt } from "./01-prompt.mjs";
  * @param {function} options.step - 步骤函数 (messages, config, trace) -> { reply, usage, ... }
  * @param {function} options.shouldStop - 停止判断 (result, trace) -> boolean
  * @param {string} options.agentType - trace.agentType 标识
- * @param {object} options.initialTrace - 额外 trace 字段
  * @returns {function} run(messages, config) -> trace
  */
 export function createLoop({
@@ -43,7 +42,6 @@ export function createLoop({
   step,
   shouldStop,
   agentType = "Loop",
-  initialTrace = {},
 }) {
   return async function run(messages, config) {
     const trace = {
@@ -53,8 +51,6 @@ export function createLoop({
       tokens: { input: 0, output: 0 },
       durationMs: 0,
       messages: [...messages],
-      // 深拷贝 initialTrace，避免数组/对象字段在多次 run 间共享累积
-      ...structuredClone(initialTrace),
     };
 
     const start = Date.now();

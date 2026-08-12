@@ -6,7 +6,6 @@
  * Prompt = 角色 + 规则 + 格式 + 示例 + 推理引导
  *
  * 依赖: llm.mjs
- * 被依赖: 04-loop.mjs, 05-react.mjs, 06-plan.mjs, 07-graph.mjs
  *
  * 导出: buildSystemPrompt, structuredPrompt, cotPrompt
  */
