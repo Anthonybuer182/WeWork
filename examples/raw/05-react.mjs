@@ -96,7 +96,8 @@ export function createReActAgent({
       // 4. Action: LLM 决定调用工具（tool_calls 即调用意图）
       if (onStep) onStep({ phase: "act", iteration: trace.iterations, toolCalls });
 
-      // 5. Observation: 执行工具，结果加入历史
+      // 5. Observation: 执行工具，结果加入历史（等所有工具执行完，统一触发一次观察）
+      const observations = [];
       for (const tc of toolCalls) {
         const { name, arguments: argsStr } = tc.function;
         const args = JSON.parse(argsStr);
@@ -104,8 +105,9 @@ export function createReActAgent({
         trace.toolCalls ??= [];
         trace.toolCalls.push({ name, args, result });
         messages.push({ role: "tool", tool_call_id: tc.id, content: result });
-        if (onStep) onStep({ phase: "observe", iteration: trace.iterations, name, args, result });
+        observations.push({ name, args, result });
       }
+      if (onStep) onStep({ phase: "observe", iteration: trace.iterations, observations });
 
       // 6. 回到循环顶部 → LLM 看到 Observation 后继续 Thought
       return { reply, usage, done: false };
@@ -136,7 +138,7 @@ export function createReActAgent({
 const cleanThought = (s) => (s || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim() || "(推理中)";
 
 // 把 ReAct 每一步打印成可读流程
-function prettyStep({ phase, iteration, thought, toolCalls, name, args, result }) {
+function prettyStep({ phase, iteration, thought, toolCalls, observations }) {
   if (phase === "thought") {
     console.log(`\n[轮 ${iteration}]`);
     console.log(`  Thought     | ${cleanThought(thought).slice(0, 80)}`);
@@ -144,7 +146,9 @@ function prettyStep({ phase, iteration, thought, toolCalls, name, args, result }
     const actions = toolCalls.map((tc) => `${tc.function.name}(${tc.function.arguments})`).join(" + ");
     console.log(`  Action      | ${actions}`);
   } else if (phase === "observe") {
-    console.log(`  Observation | ${name}(${JSON.stringify(args)}) => ${result}`);
+    for (const obs of observations) {
+      console.log(`  Observation | ${obs.name}(${JSON.stringify(obs.args)}) => ${obs.result}`);
+    }
   } else if (phase === "answer") {
     console.log(`\n[轮 ${iteration}] (无需工具，直接回复)`);
     console.log(`  Answer      | ${cleanThought(thought).slice(0, 120)}`);
