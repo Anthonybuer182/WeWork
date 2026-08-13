@@ -13,10 +13,11 @@
  * Loop 是所有 Agent 的元模式:
  *   ReAct = Loop + Tool Calling     (05-react.mjs)
  *   Plan  = Loop over Steps         (06-plan.mjs)
- *   Graph = Loop over Nodes         (07-graph.mjs)
+ *   Ralph = Loop over Contexts      (07-ralph.mjs)
+ *   Graph = Loop over Nodes         (08-graph.mjs)
  *
  * 依赖: llm.mjs, 01-prompt.mjs
- * 被依赖: 05-react.mjs（ReAct 用 createLoop 实现循环）
+ * 被依赖: 05-react.mjs, 06-plan.mjs, 07-ralph.mjs — 均用 createLoop 实现循环
  *
  * 导出: createLoop, createLoopAgent
  */
@@ -30,12 +31,24 @@ import { buildSystemPrompt } from "./01-prompt.mjs";
 
 /**
  * 创建通用循环引擎
+ *
+ * state 是通用状态容器——ReAct 用 messages 数组，Plan & Execute 用步骤对象。
+ * 各 Agent 在 step 函数中自行读写 state，createLoop 只管循环和统计。
+ *
+ * 为什么 step 和 shouldStop 要分离？
+ *   - step 负责"做一轮"：调用 LLM、执行工具、更新 state，产出结果 + 元信息（如 done 标志）
+ *   - shouldStop 负责"判断停不停"：只看 step 返回的元信息，不修改任何状态
+ *   - 职责分离使得循环逻辑与业务逻辑解耦：
+ *     ReAct 的 shouldStop 看 result.done（无 tool_calls 即停）
+ *     Plan 的 shouldStop 也看 result.done（步骤执行完即停）
+ *     两者复用同一个循环引擎，只是 done 的判定逻辑不同
+ *
  * @param {object} options
  * @param {number} options.maxIterations - 最大循环次数
- * @param {function} options.step - 步骤函数 (messages, config, trace) -> { reply, usage, ... }
+ * @param {function} options.step - 步骤函数 (state, config, trace) -> { reply, usage, ... }
  * @param {function} options.shouldStop - 停止判断 (result, trace) -> boolean
  * @param {string} options.agentType - trace.agentType 标识
- * @returns {function} run(messages, config) -> trace
+ * @returns {function} run(initialState, config) -> trace
  */
 export function createLoop({
   maxIterations = 10,
@@ -43,14 +56,14 @@ export function createLoop({
   shouldStop,
   agentType = "Loop",
 }) {
-  return async function run(messages, config) {
+  return async function run(initialState, config) {
     const trace = {
       agentType,
       iterations: 0,
       finalReply: "",
       tokens: { input: 0, output: 0 },
       durationMs: 0,
-      messages: [...messages],
+      state: initialState,
     };
 
     const start = Date.now();
@@ -59,8 +72,8 @@ export function createLoop({
     while (trace.iterations < maxIterations) {
       trace.iterations++;
 
-      // step 函数：调用 LLM，处理结果
-      const result = await step(trace.messages, config, trace);
+      // step 函数：处理一轮迭代，state 由各 Agent 自行管理
+      const result = await step(trace.state, config, trace);
 
       if (result.usage) {
         trace.tokens.input += result.usage.prompt_tokens || 0;
@@ -69,10 +82,7 @@ export function createLoop({
 
       // shouldStop：判断是否结束循环
       if (shouldStop(result, trace)) {
-        trace.finalReply =
-          result.reply?.content ||
-          trace.messages[trace.messages.length - 1]?.content ||
-          "";
+        trace.finalReply = result.reply?.content || "";
         break;
       }
     }

@@ -78,7 +78,10 @@ export function createReActAgent({
     agentType: "ReAct",
 
     async step(messages, cfg, trace) {
+      trace.toolCalls ??= []; // 确保始终是数组（即使本轮不调用工具）
       // 1. 调用 LLM → 同一次响应里返回 Thought(content) + Action 意图(tool_calls)
+      // 流式模式下，llm.mjs 会按 SSE chunk 的 index 逐片拼接 tool_calls，
+      // 这里拿到的 reply.tool_calls 已经是完整的工具调用数组，无需关心流式拼接细节
       const { message: reply, usage } = await chat({ ...cfg, messages, tools, silent });
       messages.push(reply);
 

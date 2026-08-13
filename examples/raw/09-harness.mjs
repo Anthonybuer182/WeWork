@@ -1,7 +1,7 @@
 /**
- * 08-harness.mjs — Harness Engineering（测试框架）
+ * 09-harness.mjs — Harness Engineering（测试框架）
  *
- * 既是案例（node 08-harness.mjs 可运行讲解），又是模块（顶层消费者，汇聚全部模块）。
+ * 既是案例（node 09-harness.mjs 可运行讲解），又是模块（顶层消费者，汇聚全部模块）。
  *
  * Harness = 测试 Agent 行为质量的框架
  *   TestCase  — 输入 + 预期行为
@@ -11,16 +11,17 @@
  *
  * ★ 这是整个模块化架构的顶层消费者 ★
  * 被测 Agent = ReAct agent (05-react.mjs)
- *   <- 04-loop.mjs (createLoop) + 01-prompt.mjs + 02-context.mjs + tools
+ *   <- loop.mjs (createLoop) + 01-prompt.mjs + 03-context.mjs + tools
  * 评估器 LLM 裁判 = llm.mjs
  *
- * 依赖: llm.mjs, 05-react.mjs
+ * 依赖: llm.mjs, 05-react.mjs, 04-tool.mjs
  *
  * 导出: evaluators, testCase, runHarness, report
  */
 
 import { config, chat } from "./llm.mjs";
 import { createReActAgent, allTools } from "./05-react.mjs";
+import { calculator } from "./04-tool.mjs";
 
 // ═══════════════════════════════════════════════════════════════
 // 模块 API — Evaluator 评估策略集合
@@ -186,12 +187,13 @@ export function report(results) {
 
 async function main() {
   console.log("╔══════════════════════════════════════════════════════════╗");
-  console.log("║  08 — Harness: 测试和评估 Agent                          ║");
+  console.log("║  09 — Harness: 测试和评估 Agent                          ║");
   console.log("╚══════════════════════════════════════════════════════════╝\n");
 
   console.log("Harness = TestCase + Runner + Evaluator + Report\n");
 
-  const agent = createReActAgent({ config, tools: allTools, maxIterations: 5 });
+  // allTools 只有 get_weather，加上 calculator 才能测试计算功能
+  const agent = createReActAgent({ config, tools: [...allTools, calculator], maxIterations: 5 });
   const agentUnderTest = (input) => agent.run(input);
 
   const cases = [

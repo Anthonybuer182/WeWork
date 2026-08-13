@@ -1,19 +1,19 @@
 /**
- * 07-graph.mjs — Graph Engineering（图引擎）
+ * 08-graph.mjs — Graph Engineering（图引擎）
  *
- * 既是案例（node 07-graph.mjs 可运行讲解），又是模块（可被 08 import）。
+ * 既是案例（node 08-graph.mjs 可运行讲解），又是模块（可被 09 import）。
  *
  * Graph = 节点 (Node) + 边 (Edge) + 状态 (State)
  *   节点: 处理函数 (state, config) -> newState
  *   边:   节点间转移，可带条件 condition(state) -> bool
  *   状态: 在节点间流转的数据
  *
- * 与 ReAct/Plan 的区别:
- *   ReAct/Plan: LLM 隐式控制流程
- *   Graph:     开发者显式定义流程，更可控、可审计
+ * 与 ReAct/Plan/Ralph 的区别:
+ *   ReAct/Plan/Ralph: LLM 隐式控制流程
+ *   Graph:            开发者显式定义流程，更可控、可审计
  *
  * 依赖: llm.mjs, 01-prompt.mjs
- * 被依赖: (可被 08-harness.mjs import)
+ * 被依赖: (可被 09-harness.mjs import)
  *
  * 导出: createGraph
  */
@@ -98,7 +98,7 @@ export function createGraph(startNode) {
 
 async function main() {
   console.log("╔══════════════════════════════════════════════════════════╗");
-  console.log("║  07 — Graph Engineering: 用图定义执行流程                ║");
+  console.log("║  08 — Graph Engineering: 用图定义执行流程                ║");
   console.log("╚══════════════════════════════════════════════════════════╝\n");
 
   console.log("图: research → draft → review →(PASS)→ END / (FAIL)→ revise → review\n");
@@ -118,7 +118,9 @@ async function main() {
       onToken: (t) => process.stdout.write(t),
     });
     console.log();
-    return { ...state, research: message.content, reviseCount: 0 };
+    // 过滤 think 标签，避免污染下游节点
+    const research = message.content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+    return { ...state, research, reviseCount: 0 };
   });
 
   graph.addNode("draft", async (state, cfg) => {
@@ -133,7 +135,9 @@ async function main() {
       onToken: (t) => process.stdout.write(t),
     });
     console.log();
-    return { ...state, draft: message.content };
+    // 过滤 think 标签，避免污染 review 节点
+    const draft = message.content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+    return { ...state, draft };
   });
 
   graph.addNode("review", async (state, cfg) => {
@@ -141,11 +145,13 @@ async function main() {
     const { message } = await chat({
       ...cfg,
       messages: [
-        { role: "system", content: "你是审查员。只回答 'PASS' 或 'FAIL'，后接理由。" },
+        { role: "system", content: "你是审查员。只回答 'PASS' 或 'FAIL'，后接理由。不要输出思考过程，不要使用 <think> 标签。" },
         { role: "user", content: `审查:\n${state.draft}` },
       ],
     });
-    const passed = message.content.toUpperCase().startsWith("PASS");
+    // 过滤 think 标签后判断 PASS/FAIL
+    const cleanContent = message.content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+    const passed = cleanContent.toUpperCase().startsWith("PASS");
     console.log(`  [review] ${passed ? "PASS" : "FAIL"}`);
     return { ...state, reviewPassed: passed, reviewComment: message.content };
   });
@@ -162,7 +168,9 @@ async function main() {
       onToken: (t) => process.stdout.write(t),
     });
     console.log();
-    return { ...state, draft: message.content, reviseCount: state.reviseCount + 1 };
+    // 过滤 think 标签，避免污染 review 节点
+    const draft = message.content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+    return { ...state, draft, reviseCount: state.reviseCount + 1 };
   });
 
   graph.addEdge("research", "draft");
@@ -177,7 +185,7 @@ async function main() {
 
   console.log(`\n  总步数: ${steps}, 修改次数: ${state.reviseCount}`);
   console.log("\n速查: createGraph(start).addNode().addEdge().run(initialState, config)");
-  console.log("\n✅ 完成 — 下一步: 08-harness.mjs");
+  console.log("\n✅ 完成 — 下一步: 09-harness.mjs");
 }
 
 // 直接运行时才执行（被 import 时不运行）
