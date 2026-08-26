@@ -66,11 +66,13 @@ export function createRalphAgent({
   onToken = null,
 }) {
   const sysPrompt = systemPrompt || buildSystemPrompt({
-    role: "自主任务执行代理",
+    role: "自主任务执行代理（Ralph 模式：每次迭代只做一个子任务）",
     rules: [
-      "每次只执行一个子任务，不要贪多",
-      "执行完后把结果追加到进度记录中",
-      "当所有子任务都完成时，在回复末尾输出 " + COMPLETE_SIGNAL,
+      "【最高优先级】每次迭代严格只执行一个子任务",
+      "绝对不要在一次回复中完成多个子任务，即使你知道答案",
+      "未完成的子任务留给后续迭代，这是 Ralph 模式的核心",
+      "执行完当前子任务后，简要记录结果即可",
+      "当且仅当所有子任务都完成后，在回复末尾输出 " + COMPLETE_SIGNAL,
       "不要输出思考过程，不要使用 <think> 标签",
       "用中文回答",
     ],
@@ -102,9 +104,18 @@ export function createRalphAgent({
       // 1. Read: 构建"全新"输入（不携带历史 messages，只携带 progress 摘要）
       //    这就是 Ralph 的核心：每次迭代 LLM 看到的上下文都是干净的
       //    — system + task + progress，而不是几十轮对话历史
+      //
+      //    ★ 显式指定子任务编号：防止 LLM 一次做完所有子任务 ★
+      //    通过 progress 中的 [迭代 N] 标记判断已完成几个子任务，
+      //    据此显式指定"本次做第 N 个子任务"，从外部强制单任务执行
+      const completedCount = progress
+        ? (progress.match(/\[迭代 \d+\]/g) || []).length
+        : 0;
+      const nextTaskNum = completedCount + 1;
+
       const stepInput = progress
-        ? `任务规格:\n${taskSpec}\n\n已有进度:\n${progress}\n\n请继续执行下一个未完成的子任务。如果全部完成，输出 ${COMPLETE_SIGNAL}`
-        : `任务规格:\n${taskSpec}\n\n请开始执行第一个子任务。`;
+        ? `任务规格:\n${taskSpec}\n\n已有进度:\n${progress}\n\n当前应执行第 ${nextTaskNum} 个子任务。\n⚠️ 严格只执行这一个子任务，不要做其他子任务。\n完成本子任务后简要记录结果即可。\n只有在任务规格中所有子任务都已在进度记录中完成时，才输出 ${COMPLETE_SIGNAL}。`
+        : `任务规格:\n${taskSpec}\n\n当前应执行第 1 个子任务。\n⚠️ 严格只执行第 1 个子任务，不要做其他子任务。\n完成本子任务后简要记录结果即可，不要输出 ${COMPLETE_SIGNAL}。`;
 
       // 2. Act: 用 ReAct agent 执行（内部有自己的 messages，用完即弃）
       const stepTrace = await executor.run(stepInput);
@@ -126,6 +137,7 @@ export function createRalphAgent({
         reply: cleanReply,
         toolCalls: stepTrace.toolCalls || [],
         reactIterations: stepTrace.iterations,
+        progressBefore: progress, // 展示本次迭代前的 progress（证明每次是全新上下文）
       });
 
       // 5. 返回结果，shouldStop 根据 done 判断
@@ -230,6 +242,14 @@ async function main() {
       });
     }
     console.log(`  结果: ${sr.reply.slice(0, 100)}${sr.reply.length > 100 ? "..." : ""}`);
+  });
+
+  // 展示 Ralph 的核心特性：每次迭代都是全新上下文
+  console.log("\n═══ 全新上下文验证（Ralph vs ReAct 的根本区别）═══");
+  console.log("每次迭代的 messages = system + task + progress（不累积历史对话）\n");
+  trace.stepResults.forEach((sr) => {
+    const progLen = sr.progressBefore ? sr.progressBefore.length : 0;
+    console.log(`  迭代 ${sr.iteration}: progress ${progLen} 字符 → 全新 messages（无历史 tool/observation）`);
   });
 
   // 展示最终进度（文件系统记忆的模拟）
