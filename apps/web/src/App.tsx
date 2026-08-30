@@ -7,26 +7,22 @@ import {
   useTheme,
   useUIStore,
   TooltipProvider,
+  usePanelStore,
 } from '@pi/ui';
 import { AppShell } from '@pi/ui';
 import { ThreeColumnLayout } from '@pi/ui';
 import { LeftSidebar } from '@pi/ui';
 import { CenterPanel } from '@pi/ui';
-import { RightPanel } from '@pi/ui';
-import { RightPanelTabs } from '@pi/ui';
+import { PanelHost, PanelRail } from '@pi/ui';
 import { WorkspaceDropdown } from '@pi/ui';
 import { WorkspaceCreateButton } from '@pi/ui';
 import { SessionList } from '@pi/ui';
 import { ChatTimeline } from '@pi/ui';
 import { Composer } from '@pi/ui';
 import { UsageBar } from '@pi/ui';
-import { DocumentPreview } from '@pi/ui';
-import { BrowserPreview } from '@pi/ui';
 import { ErrorBoundary } from '@pi/ui';
 import { FileTree } from '@pi/ui';
 import { Separator } from '@pi/ui';
-import { Button } from '@pi/ui';
-import { ProviderSettings } from '@pi/ui';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +33,16 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * The web build registers the same host panels as desktop. There is no
+ * plugin bridge here, so plugin panels simply never appear — the panel
+ * system degrades gracefully. (The browser preview is Electron-only.)
+ */
+const HOST_PANELS = [
+  { id: 'host:preview', title: '预览', icon: 'preview', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
+  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
+];
+
 function AppContent() {
   useTheme();
   const sdk = useSDK();
@@ -45,11 +51,13 @@ function AppContent() {
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth);
-  const rightPanelActiveTab = useUIStore((s) => s.rightPanelActiveTab);
-  const setRightPanelTab = useUIStore((s) => s.setRightPanelTab);
   const toggleRightPanel = useUIStore((s) => s.toggleRightPanel);
-  const connectionStatus = useUIStore((s) => s.connectionStatus);
   const setConnectionStatus = useUIStore((s) => s.setConnectionStatus);
+
+  const setHostPanels = usePanelStore((s) => s.setHostPanels);
+  useEffect(() => {
+    setHostPanels(HOST_PANELS);
+  }, [setHostPanels]);
 
   // Try to connect on mount
   useEffect(() => {
@@ -75,12 +83,8 @@ function AppContent() {
               <WorkspaceCreateButton />
             </>
           }
-          rightPanelHeader={
-            <RightPanelTabs
-              activeTab={rightPanelActiveTab}
-              onTabChange={setRightPanelTab}
-            />
-          }
+          rightPanel={<PanelHost />}
+          rightCollapsedContent={<PanelRail />}
           leftSidebar={
             <LeftSidebar>
               <div className="flex flex-col min-h-0 flex-1 p-2 gap-0">
@@ -98,13 +102,6 @@ function AppContent() {
               <UsageBar />
               <Composer />
             </CenterPanel>
-          }
-          rightPanel={
-            <RightPanel>
-              {rightPanelActiveTab === 'preview' && <DocumentPreview />}
-              {rightPanelActiveTab === 'browser' && <BrowserPreview />}
-              {rightPanelActiveTab === 'settings' && <ProviderSettings />}
-            </RightPanel>
           }
         />
       </AppShell>

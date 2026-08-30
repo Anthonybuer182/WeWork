@@ -14,6 +14,8 @@ interface ThreeColumnLayoutProps {
   topLeftContent?: ReactNode;
   /** Header content for the right panel (tabs). Only rendered when rightPanelOpen. */
   rightPanelHeader?: ReactNode;
+  /** Shown in place of the collapsed right panel (e.g. the panel rail), so badges stay visible. */
+  rightCollapsedContent?: ReactNode;
   /** Callback when the right panel toggle button is clicked. */
   onToggleRightPanel?: () => void;
   /** Callback when right panel width changes (after drag/arrow-key resize finishes). */
@@ -34,6 +36,7 @@ export function ThreeColumnLayout({
   rightPanel,
   topLeftContent,
   rightPanelHeader,
+  rightCollapsedContent,
   onToggleRightPanel,
   onRightWidthChange,
   leftWidth = 260,
@@ -187,7 +190,7 @@ export function ThreeColumnLayout({
       </div>
 
       {/* ============== Right column ============== */}
-      {rightPanelOpen && (
+      {rightPanelOpen ? (
         <>
           <div
             className="relative flex-shrink-0 cursor-col-resize group"
@@ -218,6 +221,10 @@ export function ThreeColumnLayout({
             <div className="flex-1 overflow-hidden">{rightPanel}</div>
           </div>
         </>
+      ) : (
+        rightCollapsedContent && (
+          <div className="flex-shrink-0 border-l">{rightCollapsedContent}</div>
+        )
       )}
     </div>
   );

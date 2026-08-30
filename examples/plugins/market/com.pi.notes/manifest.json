@@ -1,0 +1,19 @@
+{
+  "id": "com.pi.notes",
+  "name": "便签",
+  "description": "市场安装验收插件:声明式面板 + storage 能力持久化",
+  "version": "0.1.0",
+  "engines": { "pi-desktop": ">=0.1.0" },
+  "backend": "./dist/main.mjs",
+  "permissions": ["storage"],
+  "contributes": {
+    "panels": [
+      {
+        "id": "notes",
+        "kind": "declarative",
+        "title": "便签",
+        "icon": "knowledge"
+      }
+    ]
+  }
+}

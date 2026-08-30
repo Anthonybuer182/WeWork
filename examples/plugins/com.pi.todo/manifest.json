@@ -1,0 +1,79 @@
+{
+  "id": "com.pi.todo",
+  "name": "待办",
+  "description": "官方插件:任务管理面板 + agent 工具(todo_add / todo_list / todo_done)",
+  "version": "0.1.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
+  "backend": "./dist/main.mjs",
+  "permissions": [
+    "storage",
+    "notify"
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "tasks",
+        "kind": "declarative",
+        "title": "待办",
+        "icon": "todo"
+      }
+    ],
+    "tools": [
+      {
+        "name": "todo_add",
+        "description": "Add a todo task. Use it when the user asks to remember/plan something, or when a task list helps track multi-step work.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Short task title"
+            },
+            "note": {
+              "type": "string",
+              "description": "Optional details"
+            }
+          },
+          "required": [
+            "title"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "todo_list",
+        "description": "List all todo tasks with their open/done status.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "todo_done",
+        "description": "Mark a todo task as done by its title (exact or prefix match).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Task title to complete"
+            }
+          },
+          "required": [
+            "title"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ],
+    "messageRenderers": [
+      {
+        "type": "todo_add",
+        "kind": "declarative"
+      }
+    ]
+  }
+}

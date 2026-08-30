@@ -14,6 +14,9 @@ importers:
       '@earendil-works/pi-ai':
         specifier: ^0.78.1
         version: 0.78.1(ws@8.21.0)(zod@3.25.76)
+      '@earendil-works/pi-coding-agent':
+        specifier: ^0.78.1
+        version: 0.78.1(ws@8.21.0)(zod@3.25.76)
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.61.1
@@ -44,6 +47,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.62.8
         version: 5.101.0(react@19.2.7)
+      adm-zip:
+        specifier: 0.5.17
+        version: 0.5.17
       playwright-core:
         specifier: ^1.61.1
         version: 1.61.1
@@ -54,6 +60,9 @@ importers:
         specifier: ^19.0.0
         version: 19.2.7(react@19.2.7)
     devDependencies:
+      '@types/adm-zip':
+        specifier: 0.5.8
+        version: 0.5.8
       '@types/react':
         specifier: ^19.0.1
         version: 19.2.16

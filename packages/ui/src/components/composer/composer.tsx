@@ -22,7 +22,8 @@ import { ModelSelector } from '../model/model-selector';
 import { ThinkLevelSelector } from '../model/think-level-selector';
 import { SkillSelector } from '../model/skill-selector';
 import { CompactToggle } from '../model/compact-toggle';
-import { DEFAULT_SLASH_COMMANDS } from '@pi/sdk-wrapper';
+import { useCommandStore, type RegisteredCommand } from '@/stores/command-store';
+import { usePluginStore } from '@/stores/plugin-store';
 import { formatQuotesForPrompt, createQuote, extractMetaFromSelection } from '@/lib/quote-helpers';
 import type { ContentBlock, Config, Skill } from '@pi/types';
 import type { Attachment } from '@pi/types';
@@ -31,6 +32,9 @@ import type { Quote, QuoteSource } from '@pi/types';
 export function Composer() {
   const sdk = useSDK();
   const queryClient = useQueryClient();
+  // Command registry: host commands + plugin-contributed commands.
+  const registeredCommands = useCommandStore((s) => s.commands);
+  const executePluginCommand = usePluginStore((s) => s.executePluginCommand);
   const activeSessionId = useUIStore((s) => s.activeSessionId);
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const compactMode = useUIStore((s) => s.compactMode);
@@ -546,6 +550,15 @@ export function Composer() {
         promptContent = `${promptContent}${formatQuotesForPrompt(currentQuotes)}`;
       }
 
+      // Plugin auto context (contextProviders contribution): collect
+      // relevant context from plugins right before sending.
+      try {
+        const contextSections = await usePluginStore.getState().collectPluginContext(promptContent);
+        if (contextSections.length > 0) {
+          promptContent = `${promptContent}\n\n---\n[相关上下文]\n${contextSections.join('\n\n')}\n---`;
+        }
+      } catch { /* context collection never blocks the send */ }
+
       // Note: the @ prefix on file mentions (e.g. @filename.pptx) is intentionally
       // preserved so that the persisted content keeps the @ and the mention badge
       // renders identically on reload. Workspace/session @mentions already keep @;
@@ -755,15 +768,23 @@ export function Composer() {
     },
   });
 
-  /** Handle built-in slash commands locally without sending to LLM */
+  /** Handle registry slash commands locally without sending to LLM */
   const handleSlashCommand = useCallback(
     (text: string): boolean => {
       const trimmed = text.trim();
-      const knownCommands = new Set(DEFAULT_SLASH_COMMANDS.map((c) => c.name));
-
       // Strip arguments: /bash ls -la → /bash
       const cmdName = trimmed.split(/\s+/)[0];
-      if (!knownCommands.has(cmdName)) return false;
+      const command = registeredCommands.find((c) => c.name === cmdName);
+      if (!command) return false;
+
+      // Plugin commands dispatch to their backend via the control plane.
+      if (command.source !== 'host') {
+        const args = trimmed.slice(cmdName.length).trim();
+        executePluginCommand(command.source, command.name, args).then((res) => {
+          if (!res.ok) console.error('[composer] plugin command failed:', res.error);
+        });
+        return true;
+      }
 
       const now = new Date().toISOString();
 
@@ -771,7 +792,7 @@ export function Composer() {
         const helpSections: Array<{ title: string; items: Array<{ name: string; desc: string }> }> = [
           {
             title: 'Available Commands',
-            items: DEFAULT_SLASH_COMMANDS.map((c) => ({ name: c.name, desc: c.description })),
+            items: registeredCommands.map((c: RegisteredCommand) => ({ name: c.name, desc: c.description })),
           },
           {
             title: 'Skills',
@@ -892,6 +913,8 @@ export function Composer() {
     },
     [
       sdk,
+      registeredCommands,
+      executePluginCommand,
       activeSessionId,
       activeWorkspaceId,
       config,
@@ -1038,7 +1061,7 @@ export function Composer() {
     (query: string) => {
       // Only show menu when there are actual matches; otherwise Enter key
       // gets intercepted for empty-menu selection and the message won't send.
-      const hasMatch = DEFAULT_SLASH_COMMANDS.some(
+      const hasMatch = registeredCommands.some(
         (c) => !query || c.name.toLowerCase().includes(query.toLowerCase()),
       );
       if (!hasMatch) {
@@ -1048,7 +1071,7 @@ export function Composer() {
       setHighlightedSlashIndex(0);
       setShowSlashMenu(true, query);
     },
-    [setShowSlashMenu],
+    [setShowSlashMenu, registeredCommands],
   );
 
   const handleMentionDetect = useCallback(
@@ -1081,10 +1104,10 @@ export function Composer() {
   // Compute total filtered items for both menus (for index clamping)
   const totalSlashItems = useMemo(() => {
     if (!showSlashMenu) return 0;
-    return DEFAULT_SLASH_COMMANDS.filter(
+    return registeredCommands.filter(
       (c) => !slashQuery || c.name.toLowerCase().includes(slashQuery.toLowerCase()),
     ).length;
-  }, [showSlashMenu, slashQuery]);
+  }, [showSlashMenu, slashQuery, registeredCommands]);
 
   const totalMentionItems = useMemo(() => {
     if (!showMentionMenu) return 0;
@@ -1109,7 +1132,7 @@ export function Composer() {
     (cmd?: import('@pi/types').SlashCommand) => {
       // If called without args (Enter key), select highlighted item
       if (!cmd) {
-        const filtered = DEFAULT_SLASH_COMMANDS.filter(
+        const filtered = registeredCommands.filter(
           (c) => !slashQuery || c.name.toLowerCase().includes(slashQuery.toLowerCase()),
         );
         cmd = filtered[highlightedSlashIndex];
@@ -1124,7 +1147,7 @@ export function Composer() {
       setHighlightedSlashIndex(0);
       setTokenInsertVersion((v) => v + 1);
     },
-    [value, setValue, setShowSlashMenu, slashQuery, highlightedSlashIndex],
+    [value, setValue, setShowSlashMenu, slashQuery, highlightedSlashIndex, registeredCommands],
   );
 
   const handleMentionNavigate = useCallback(
@@ -1206,7 +1229,7 @@ export function Composer() {
         {/* Slash Command / Mention Menus */}
         {showSlashMenu && (
           <SlashCommandMenu
-            commands={DEFAULT_SLASH_COMMANDS}
+            commands={registeredCommands}
             query={slashQuery}
             highlightedIndex={highlightedSlashIndex}
             onSelect={handleSlashSelect}

@@ -27,6 +27,11 @@ export { cn, isTextEditableFile, isPreviewableInRightPanel, openWithSystemApp } 
 export { useUIStore } from './stores/ui-store';
 export { useThemeStore } from './stores/theme-store';
 export { useComposerStore } from './stores/composer-store';
+export { usePluginStore, getPluginBridge } from './stores/plugin-store';
+export { usePanelStore, pluginPanelId } from './stores/panel-store';
+export type { PanelEntry, PanelKind, PanelKeepAlive, PanelRuntimeState } from './stores/panel-store';
+export { useCommandStore, HOST_COMMANDS } from './stores/command-store';
+export type { RegisteredCommand } from './stores/command-store';
 
 export { useSDK, SDKProvider } from './hooks/use-sdk';
 export { useTheme } from './hooks/use-theme';
@@ -34,7 +39,7 @@ export { useMediaQuery } from './hooks/use-media-query';
 export { useKeyboardShortcut } from './hooks/use-keyboard-shortcut';
 export { useResizeObserver } from './hooks/use-resize-observer';
 
-export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel, RightPanel, RightPanelTabs } from './components/layout';
+export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel, RightPanel } from './components/layout';
 export { WorkspaceDropdown, WorkspaceCreateButton } from './components/workspace';
 export { SessionList, SessionItem, SessionCreateButton, SessionGroupHeader } from './components/session';
 export { ChatTimeline, MessageBubble, ThinkingBlock, ToolCallDisplay, EmptyChat, StreamingIndicator, QuoteBlockDisplay } from './components/chat';
@@ -49,3 +54,16 @@ export { FileTree, FileTreeNode } from './components/file';
 export { QuotePreviewBar } from './components/composer/quote-preview-bar';
 export { QuoteToChatWrapper } from './components/document/quote-to-chat-wrapper';
 export { createQuote, formatQuotesForPrompt } from './lib/quote-helpers';
+
+export { PluginPanelHost } from './components/plugins/plugin-panel';
+export { PluginCenter } from './components/plugins/plugin-center';
+export { SelectionService } from './components/plugins/selection-service';
+export { DeclarativePanelHost } from './components/plugins/declarative/declarative-panel';
+export { DeclarativeRenderer } from './components/plugins/declarative/declarative-renderer';
+export type { UiEventContext } from './components/plugins/declarative/declarative-renderer';
+export { PanelHost, PanelRail } from './components/panels/panel-host';
+export { PanelRail as PanelRailSwitcher } from './components/panels/panel-rail';
+export { PanelChrome } from './components/panels/panel-chrome';
+export { PanelSlot } from './components/panels/panel-slot';
+export { panelIcon } from './components/panels/panel-icons';
+export { Puzzle as PuzzleIcon } from 'lucide-react';

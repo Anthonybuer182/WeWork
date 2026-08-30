@@ -55,6 +55,10 @@ export interface ToolResultBlock extends ContentBlock {
   toolCallId: string;
   result: string;
   isError?: boolean;
+  /** Tool name (for plugin message-renderer dispatch). */
+  toolName?: string;
+  /** Plugin declarative card tree (messageRenderer contribution). */
+  card?: import('./plugin/ui-tree.js').UiNode;
 }
 
 export interface ImageBlock {

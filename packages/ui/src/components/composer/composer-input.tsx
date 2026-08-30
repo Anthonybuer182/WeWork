@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useLayoutEffect, useEffect, KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
-import { DEFAULT_SLASH_COMMANDS } from '@pi/sdk-wrapper';
+import { useCommandStore } from '@/stores/command-store';
 
 interface PendingTokenInsert {
   text: string;
@@ -44,17 +44,20 @@ interface ComposerInputProps {
 const TOKEN_PATTERN = /((?:^|\s)(?:\/[^\s]+|@[^\s]+))/g;
 
 /** Known slash command names — only these render as command chips. */
-const SLASH_COMMAND_NAMES = new Set(DEFAULT_SLASH_COMMANDS.map((c) => c.name));
+function useSlashCommandNames(): Set<string> {
+  const commands = useCommandStore((s) => s.commands);
+  return new Set(commands.map((c) => c.name));
+}
 
 /** Convert plain text to HTML with styled token spans */
-function renderPlainTextToHTML(text: string): string {
+function renderPlainTextToHTML(text: string, slashCommandNames: Set<string>): string {
   const parts = text.split(TOKEN_PATTERN);
   return parts
     .map((part) => {
       const trimmed = part.trimStart();
       if (trimmed.startsWith('/') || trimmed.startsWith('@')) {
         // Only render known slash commands as chips; unknown /words stay plain
-        if (trimmed.startsWith('/') && !SLASH_COMMAND_NAMES.has(trimmed)) return part;
+        if (trimmed.startsWith('/') && !slashCommandNames.has(trimmed)) return part;
         const isSlash = trimmed.startsWith('/');
         const cls = isSlash ? 'token-slash' : 'token-mention';
         const leadingSpace = part.slice(0, part.length - trimmed.length);
@@ -131,6 +134,8 @@ export function ComposerInput({
   const isComposing = useRef(false);
   // Prevent innerHTML override in useEffect when the value change was triggered by our own onChange.
   const justSynced = useRef(false);
+  // Registry-driven command chips (host + plugin commands).
+  const slashCommandNames = useSlashCommandNames();
 
   const [localValue, setLocalValue] = useState(value);
 
@@ -155,7 +160,7 @@ export function ComposerInput({
     // Re-render HTML when value changes OR when a token was selected from menu
     // (even if text matches, we need to show the styled span)
     if (currentText !== value || pendingTokenInsert?.current) {
-      editorRef.current.innerHTML = renderPlainTextToHTML(value);
+      editorRef.current.innerHTML = renderPlainTextToHTML(value, slashCommandNames);
       setLocalValue(value);
       // Place cursor at end after external value change (e.g., menu selection)
       placeCaretAtEnd(editorRef.current);
@@ -165,7 +170,7 @@ export function ComposerInput({
     if (pendingTokenInsert?.current) {
       pendingTokenInsert.current = null;
     }
-  }, [value, pendingTokenInsert, tokenInsertVersion]);
+  }, [value, pendingTokenInsert, tokenInsertVersion, slashCommandNames]);
 
   // Refocus the input when parent signals (e.g. after file picker closes)
   useEffect(() => {

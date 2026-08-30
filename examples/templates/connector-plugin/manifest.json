@@ -1,0 +1,27 @@
+{
+  "id": "com.yourco.connector-NAME",
+  "name": "NAME 连接器",
+  "description": "连接 <系统名> 的业务数据:面板 + agent 查询工具",
+  "version": "0.1.0",
+  "engines": { "pi-desktop": ">=0.1.0" },
+  "backend": "./dist/main.mjs",
+  "permissions": ["storage", "network:api.your-system.example", "secrets:NAME"],
+  "contributes": {
+    "panels": [
+      { "id": "records", "kind": "declarative", "title": "NAME", "icon": "erp" }
+    ],
+    "tools": [
+      {
+        "name": "NAME_query",
+        "description": "Query records from <系统名>. Describe fields and filters for the agent.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "keyword": { "type": "string", "description": "Filter keyword" }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  }
+}

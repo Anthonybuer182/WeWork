@@ -52,6 +52,9 @@ export interface CompactResult {
 }
 
 export interface ChatService {
+  /** Optional: tear down cached sessions so the next prompt rebuilds them
+   *  (plugin tool/skill sets changing at runtime). */
+  invalidateSessions?(): void;
   sendMessage(params: SendMessageParams): Promise<Message>;
   sendMessageStream(
     params: SendMessageParams,

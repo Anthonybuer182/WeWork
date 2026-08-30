@@ -1,6 +1,6 @@
 import * as path from 'path';
 import type { ChatService, SendMessageParams, StreamChunk } from '../services/chat.js';
-import type { Message, AssistantMessage, ContentBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming } from '@pi/types';
+import type { Message, AssistantMessage, ContentBlock, ToolResultBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming } from '@pi/types';
 import { createAgentSession, SessionManager, ModelRegistry, AuthStorage, DefaultResourceLoader, getAgentDir, SettingsManager } from '@earendil-works/pi-coding-agent';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 import { extractThinkContent } from '../utils/think-parser.js';
@@ -13,8 +13,21 @@ import { migrateModelsConfig } from './config.js';
  * Creates interactive AgentSession instances backed by the real SDK.
  * For existing sessions, opens via SessionManager and attaches to AgentSession.
  * For new sessions, creates via SessionManager.create().
+ *
+ * `options.customToolsProvider` supplies plugin-contributed agent tools;
+ * they are snapshotted at session creation — call `invalidateSessions()`
+ * (wired to the plugin system's extensions-changed hook) to rebuild.
  */
-export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry, settingsManager?: SettingsManager): ChatService {
+export interface RealChatServiceOptions {
+  customToolsProvider?: () => unknown[];
+}
+
+export function createRealChatService(
+  cwd: string,
+  modelRegistry?: ModelRegistry,
+  settingsManager?: SettingsManager,
+  options?: RealChatServiceOptions,
+): ChatService {
   const activeSessions = new Map<string, { session: AgentSession; unsubscribe: () => void; cwd: string; skills?: string[] }>();
   // Track last message end time per session for thinking time calculation
   const sessionTimings = new Map<string, number>();
@@ -122,6 +135,7 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
       modelRegistry: registry, // share registry so custom models are visible
       resourceLoader: await createResourceLoader(workCwd, skills),
       settingsManager,         // share settings so shell path is respected
+      customTools: (options?.customToolsProvider?.() ?? []) as never,
     });
 
     const unsubscribe = session.subscribe((_event) => {
@@ -133,6 +147,15 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
   }
 
   return {
+    /** Tear down all cached sessions so the next prompt rebuilds them
+     *  (used when the plugin tool/skill set changes at runtime). */
+    invalidateSessions(): void {
+      for (const cached of activeSessions.values()) {
+        try { cached.unsubscribe(); } catch { /* best-effort */ }
+      }
+      activeSessions.clear();
+    },
+
     async sendMessage(params: SendMessageParams): Promise<Message> {
       const session = await getOrCreateAgentSession(params.sessionId, params.workspaceCwd, params.skills);
 
@@ -219,7 +242,8 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
       let thinkingBlockId: string | null = null; // stable ID per message turn
       let textBlockId: string | null = null; // stable ID per message turn
       const toolStartTimes = new Map<string, number>();
-      const toolArgs = new Map<string, Record<string, unknown>>();
+      const toolNames = new Map<string, string>();
+  const toolArgs = new Map<string, Record<string, unknown>>();
 
       const unsubscribe = session.subscribe((event: any) => {
         // Skip sending chunks if stream is already closed
@@ -313,6 +337,9 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
                     if (block.toolCallId && args) {
                       toolArgs.set(block.toolCallId, typeof args === 'object' ? args : undefined);
                     }
+                    if (block.toolCallId && block.toolName) {
+                      toolNames.set(block.toolCallId, block.toolName);
+                    }
                     safeChunk({
                       type: 'block',
                       block: {
@@ -336,6 +363,7 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
           case 'tool_execution_start': {
             toolStartTimes.set(event.toolCallId, Date.now());
             toolArgs.set(event.toolCallId, (event as any).args);
+            toolNames.set(event.toolCallId, event.toolName);
             safeChunk({
               type: 'block',
               block: {
@@ -355,10 +383,14 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
             const storedArgs = toolArgs.get(event.toolCallId);
             toolStartTimes.delete(event.toolCallId);
             toolArgs.delete(event.toolCallId);
+            const toolName = toolNames.get(event.toolCallId) ?? undefined;
+            toolNames.delete(event.toolCallId);
 
             // event.result is { content: Array<{type, text}>, isError: boolean }
             // Extract text from content blocks for display
             const rawResult = (event as any).result;
+            // Plugin message-renderer card tree (declarative chat cards).
+            const cardTree = rawResult?.details?.card ?? undefined;
             let resultText: string;
             if (rawResult && typeof rawResult === 'object' && Array.isArray(rawResult.content)) {
               resultText = rawResult.content
@@ -378,9 +410,11 @@ export function createRealChatService(cwd: string, modelRegistry?: ModelRegistry
                 type: 'tool_result',
                 content: event.isError ? `Error: ${resultText}` : resultText || 'Done',
                 toolCallId: event.toolCallId,
+                toolName,
                 result: resultText,
+                card: cardTree,
                 isError: (event as any).isError || rawResult?.isError || false,
-              },
+              } as ToolResultBlock,
             });
 
             // Emit image blocks from tool result content

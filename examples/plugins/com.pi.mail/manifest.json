@@ -1,0 +1,100 @@
+{
+  "id": "com.pi.mail",
+  "name": "邮件草稿",
+  "description": "官方插件:邮件草稿管理面板 + agent 工具(mail_create_draft / mail_list_drafts),Tier 0 起步(发送通道后续接入)",
+  "version": "0.1.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
+  "backend": "./dist/main.mjs",
+  "permissions": [
+    "storage",
+    "notify",
+    "network:localhost"
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "drafts",
+        "kind": "declarative",
+        "title": "邮件",
+        "icon": "mail"
+      }
+    ],
+    "tools": [
+      {
+        "name": "mail_create_draft",
+        "description": "Create an email draft (to / subject / body). The draft appears in the mail panel for the user to review and send. Use whenever the user asks to write or reply to an email.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "string",
+              "description": "Recipient email address"
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject"
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text"
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "mail_list_drafts",
+        "description": "List all email drafts with their status.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "mail_send_draft",
+        "description": "Send an email draft through the configured delivery API. Only drafts created earlier can be sent.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "subject": {
+              "type": "string",
+              "description": "Subject of the draft to send (exact or prefix match)"
+            }
+          },
+          "required": [
+            "subject"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ],
+    "commands": [
+      {
+        "name": "/mail",
+        "title": "写邮件",
+        "description": "打开邮件草稿面板"
+      }
+    ],
+    "messageRenderers": [
+      {
+        "type": "mail_create_draft",
+        "kind": "declarative",
+        "streaming": true
+      }
+    ],
+    "selectionActions": [
+      {
+        "id": "mail.quote-draft",
+        "title": "引用为邮件草稿"
+      }
+    ]
+  }
+}

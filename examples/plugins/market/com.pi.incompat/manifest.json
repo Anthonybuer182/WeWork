@@ -1,0 +1,8 @@
+{
+  "id": "com.pi.incompat",
+  "name": "不兼容示例插件",
+  "description": "engines 版本协商验收样例:要求宿主 >=99.0.0,安装应被拒绝",
+  "version": "0.1.0",
+  "engines": { "pi-desktop": ">=99.0.0" },
+  "permissions": []
+}

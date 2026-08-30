@@ -1,0 +1,95 @@
+{
+  "id": "com.pi.knowledge",
+  "name": "知识库",
+  "description": "官方插件:本地知识条目 + agent 检索工具(kb_save / kb_search / kb_list)",
+  "version": "0.1.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
+  "backend": "./dist/main.mjs",
+  "permissions": [
+    "storage"
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "kb",
+        "kind": "declarative",
+        "title": "知识库",
+        "icon": "knowledge"
+      }
+    ],
+    "tools": [
+      {
+        "name": "kb_save",
+        "description": "Save a knowledge entry for later retrieval. Use for durable facts the user wants remembered (preferences, project context, decisions).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Entry title"
+            },
+            "content": {
+              "type": "string",
+              "description": "Entry content"
+            }
+          },
+          "required": [
+            "title",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "kb_search",
+        "description": "Search the knowledge base by keyword. Returns matching entries with their content. Consult it when the user references earlier decisions or stored context.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search keyword"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "kb_list",
+        "description": "List all knowledge base entries.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    ],
+    "selectionActions": [
+      {
+        "id": "kb.save-selection",
+        "title": "存入知识库"
+      }
+    ],
+    "contextProviders": [
+      {
+        "id": "kb.auto",
+        "auto": true,
+        "description": "发送前自动检索知识库,注入相关条目"
+      }
+    ],
+    "settings": [
+      {
+        "key": "autoContext",
+        "type": "boolean",
+        "label": "自动注入上下文",
+        "description": "发送消息前自动检索知识库并注入相关条目",
+        "default": true
+      }
+    ]
+  }
+}

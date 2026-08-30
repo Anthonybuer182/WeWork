@@ -1,0 +1,145 @@
+import { ipcMain, BrowserWindow } from 'electron';
+import type { InstallPhase } from '@pi/types';
+import type { PluginSystem } from '@main/plugins';
+
+/**
+ * IPC surface for the renderer (see preload `pluginBridge`):
+ *
+ *   pi:plugin:list            → PluginInfo[] (enabled plugins)
+ *   pi:plugin:list-all        → PluginInfo[] (incl. disabled/incompatible)
+ *   pi:plugin:ensure-port     → { ok } + 'pi:plugin:port' port transfer
+ *   pi:plugin:execute-command → { ok, result? }
+ *   pi:plugin:market:catalog  → MarketEntry[] | { error }
+ *   pi:plugin:market:install  → InstallResult (phases pushed as events)
+ *   pi:plugin:uninstall       → InstallResult
+ *   pi:plugin:set-enabled     → InstallResult
+ *   pi:plugin:event           ← push channel (status/state/plugins-changed/install-phase)
+ */
+export function registerPluginIpcHandlers(system: PluginSystem): void {
+  ipcMain.handle('pi:plugin:list', () => system.listInfos());
+
+  ipcMain.handle('pi:plugin:list-all', () => system.listAllInfos());
+
+  ipcMain.handle('pi:plugin:ensure-port', (event, payload: { pluginId?: string }) => {
+    const pluginId = payload?.pluginId;
+    if (!pluginId) return { ok: false, error: 'missing pluginId' };
+    return system.ensureUiPort(pluginId, event.sender);
+  });
+
+  ipcMain.handle('pi:plugin:execute-command', async (_event, payload: { pluginId?: string; name?: string; args?: string }) => {
+    const { pluginId, name, args } = payload ?? {};
+    if (!pluginId || !name) return { ok: false, error: 'missing pluginId or name' };
+    try {
+      const result = await system.executeCommand(pluginId, name, args);
+      return { ok: true, result };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  // ── Marketplace ──
+  ipcMain.handle('pi:plugin:market:catalog', async (_event, payload?: { force?: boolean }) => {
+    try {
+      const plugins = await system.catalog(payload?.force === true);
+      return { ok: true, plugins, registryUrl: system.marketplace.registryUrl };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err), plugins: [] };
+    }
+  });
+
+  ipcMain.handle('pi:plugin:market:install', async (event, payload: { pluginId?: string }) => {
+    const pluginId = payload?.pluginId;
+    if (!pluginId) return { ok: false, error: 'missing pluginId' };
+    const pushPhase = (phase: InstallPhase) => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        if (!win.isDestroyed()) {
+          win.webContents.send('pi:plugin:event', { type: 'install-phase', pluginId, phase });
+        }
+      }
+    };
+    return system.installFromMarket(pluginId, pushPhase);
+  });
+
+  ipcMain.handle('pi:plugin:uninstall', async (_event, payload: { pluginId?: string; keepData?: boolean }) => {
+    const pluginId = payload?.pluginId;
+    if (!pluginId) return { ok: false, error: 'missing pluginId' };
+    return system.uninstall(pluginId, { keepData: payload.keepData !== false });
+  });
+
+  ipcMain.handle('pi:plugin:selection-action', async (_event, payload: {
+    pluginId?: string;
+    actionId?: string;
+    text?: string;
+    source?: { kind: string; pluginId?: string; label?: string };
+  }) => {
+    const { pluginId, actionId, text, source } = payload ?? {};
+    if (!pluginId || !actionId || typeof text !== 'string') {
+      return { ok: false, error: 'missing pluginId, actionId or text' };
+    }
+    try {
+      const result = await system.executeSelectionAction(pluginId, actionId, text, source ?? { kind: 'unknown' });
+      return { ok: true, result };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcMain.handle('pi:plugin:set-enabled', async (_event, payload: { pluginId?: string; enabled?: boolean }) => {
+    const pluginId = payload?.pluginId;
+    if (!pluginId || typeof payload.enabled !== 'boolean') {
+      return { ok: false, error: 'missing pluginId or enabled' };
+    }
+    return system.setEnabled(pluginId, payload.enabled);
+  });
+
+  // ── Extensions (tools / preview routing) ──
+  // ── Context providers (pre-send hook) ──
+  ipcMain.handle('pi:plugin:collect-context', async (_event, payload: { message?: string }) => {
+    const message = String(payload?.message ?? '');
+    const providers = system.listAutoContextProviders();
+    const sections: string[] = [];
+    await Promise.all(
+      providers.map(async ({ pluginId, providerId }) => {
+        try {
+          const text = await system.executeContextProvider(pluginId, providerId, message);
+          if (text && text.trim()) sections.push(`【${pluginId}】${text.trim()}`);
+        } catch { /* provider failure never blocks the send */ }
+      }),
+    );
+    return { ok: true, sections: sections.filter(Boolean) };
+  });
+
+  // ── Plugin settings ──
+  ipcMain.handle('pi:plugin:get-settings', (_event, payload: { pluginId?: string }) => {
+    const pluginId = payload?.pluginId;
+    if (!pluginId) return { ok: false, error: 'missing pluginId' };
+    return { ok: true, settings: system.getPluginSettings(pluginId) };
+  });
+
+  ipcMain.handle('pi:plugin:set-setting', (_event, payload: { pluginId?: string; key?: string; value?: unknown }) => {
+    const { pluginId, key, value } = payload ?? {};
+    if (!pluginId || !key) return { ok: false, error: 'missing pluginId or key' };
+    return system.setPluginSetting(pluginId, key, value);
+  });
+
+  ipcMain.handle('pi:plugin:find-preview', (_event, payload: { path?: string }) => {
+    const path = payload?.path;
+    if (!path) return { panelId: null };
+    return { panelId: system.findPreviewHandler(path) };
+  });
+
+  ipcMain.handle('pi:plugin:list-tools', () => {
+    return system.aggregateTools().map((t) => ({ name: t.name, description: t.description, parameters: t.parameters }));
+  });
+
+  ipcMain.handle('pi:plugin:execute-tool', async (_event, payload: { pluginId?: string; name?: string; params?: Record<string, unknown> }) => {
+    const { pluginId, name, params } = payload ?? {};
+    if (!pluginId || !name) return { ok: false, error: 'missing pluginId or name' };
+    try {
+      const result = await system.executeTool(pluginId, name, params ?? {});
+      return { ok: true, content: result.content ?? [], details: result.details ?? null, card: result.card ?? null };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+}

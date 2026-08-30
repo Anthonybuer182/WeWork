@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hello 插件</title>
+  <!-- pi-plugin:// SDK injected by the host at serve time (before </head>) -->
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1115;
+      --card: #171a21;
+      --border: #2a2f3a;
+      --fg: #e6e9ef;
+      --muted: #8b93a3;
+      --accent: #4f8cff;
+      --ok: #3ecf8e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font: 13px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      padding: 16px;
+    }
+    h1 { font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    h1 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+    .sub { color: var(--muted); font-size: 12px; margin-bottom: 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .card h2 { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 8px; letter-spacing: 0.4px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      font: inherit;
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    button.secondary { background: #2a2f3a; }
+    button:active { transform: translateY(1px); }
+    input {
+      font: inherit;
+      background: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      flex: 1;
+      min-width: 120px;
+    }
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 20px;
+      color: #b6c2d9;
+    }
+    .tag { display: inline-block; font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 99px; padding: 1px 8px; margin-right: 6px; }
+    .ok { color: var(--ok); }
+  </style>
+</head>
+<body>
+  <h1><span class="dot" id="dot"></span>Hello 插件</h1>
+  <div class="sub" id="status">SDK 加载中…</div>
+
+  <div class="card">
+    <h2>1 · UI ↔ BACKEND 数据面(MessagePort 点对点)</h2>
+    <div class="row">
+      <button id="ping">ping backend</button>
+    </div>
+    <pre id="pingOut">尚未调用</pre>
+  </div>
+
+  <div class="card">
+    <h2>2 · 宿主能力(控制面,经 main 权限校验)</h2>
+    <div class="row" style="margin-bottom: 8px">
+      <input id="noteInput" placeholder="写点什么,存入插件私有存储…" />
+      <button id="save">记住</button>
+      <button id="recall" class="secondary">取回</button>
+    </div>
+    <div class="row">
+      <button id="notify" class="secondary">发桌面通知(权限: notify)</button>
+    </div>
+    <pre id="capOut">尚未调用</pre>
+  </div>
+
+  <div class="sub" style="margin-top: 8px">
+    <span class="tag" id="tagSdk">piSDK</span>
+    <span class="tag" id="tagOrigin">origin</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

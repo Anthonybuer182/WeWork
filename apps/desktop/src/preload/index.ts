@@ -77,6 +77,9 @@ export interface ElectronAPI {
     onSwitchToBrowserTab: (callback: () => void) => void;
     onQuote: (callback: (data: { text: string; url: string; title: string }) => void) => void;
   };
+
+  // ── Plugin System ──
+  // (exposed as a separate `window.pluginBridge` global — see bottom of file)
 }
 
 export interface FileStat {
@@ -105,7 +108,6 @@ const electronAPI: ElectronAPI = {
   removeListener: (channel: string, callback: (...args: unknown[]) => void): void => {
     ipcRenderer.removeListener(channel, callback);
   },
-
   window: {
     minimize: () => ipcRenderer.invoke('pi:window:minimize'),
     maximize: () => ipcRenderer.invoke('pi:window:maximize'),
@@ -177,6 +179,107 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.on('pi:browser:quote', (_event, data) => callback(data));
     },
   },
+
 };
 
+// ── Plugin System bridge ──────────────────────────────────────────────
+// Exposed as its own `window.pluginBridge` global. UI data-plane
+// MessagePorts live in this (isolated) world — the main world only sees
+// plain-JSON relays through contextBridge.
+interface PortLike {
+  on(event: 'message', listener: (ev: { data: unknown }) => void): unknown;
+  start(): void;
+  postMessage(message: unknown): void;
+  close(): void;
+}
+
+const pluginBridge = (() => {
+  const pluginPorts = new Map<string, PortLike>();
+  // Messages sent before a port arrives are buffered and flushed on arrival.
+  const outbox = new Map<string, unknown[]>();
+  let messageCallback: ((pluginId: string, payload: unknown) => void) | null = null;
+  let eventCallback: ((event: unknown) => void) | null = null;
+
+  ipcRenderer.on('pi:plugin:port', (event, meta: { pluginId: string }) => {
+    const port = (event.ports as unknown as PortLike[] | undefined)?.[0];
+    if (!port) return;
+    // Replace any previous port for this plugin (fresh pair per ensurePort).
+    const old = pluginPorts.get(meta.pluginId);
+    if (old) old.close();
+
+    const onPortMessage = (ev: { data: unknown }) => {
+      messageCallback?.(meta.pluginId, ev.data);
+    };
+    if (typeof port.on === 'function') {
+      // Electron (EventEmitter-style) MessagePort
+      port.on('message', onPortMessage);
+      port.start();
+    } else {
+      // DOM-style MessagePort (isolated world): onmessage auto-starts
+      (port as unknown as { onmessage: typeof onPortMessage }).onmessage = onPortMessage;
+    }
+    pluginPorts.set(meta.pluginId, port);
+
+    // Flush messages queued while the port was in flight (e.g. a panel's
+    // initial "mounted" event sent right after ensurePort).
+    const queued = outbox.get(meta.pluginId);
+    outbox.delete(meta.pluginId);
+    for (const payload of queued ?? []) {
+      try { port.postMessage(payload); } catch { /* dropped */ }
+    }
+  });
+
+  ipcRenderer.on('pi:plugin:event', (_event, evt) => eventCallback?.(evt));
+
+  return {
+    list: (): Promise<unknown[]> => ipcRenderer.invoke('pi:plugin:list'),
+    listAll: (): Promise<unknown[]> => ipcRenderer.invoke('pi:plugin:list-all'),
+    ensurePort: (pluginId: string): Promise<{ ok: boolean; error?: string }> =>
+      ipcRenderer.invoke('pi:plugin:ensure-port', { pluginId }),
+    executeCommand: (pluginId: string, name: string, args?: string): Promise<{ ok: boolean; result?: unknown; error?: string }> =>
+      ipcRenderer.invoke('pi:plugin:execute-command', { pluginId, name, args }),
+    market: {
+      catalog: (force?: boolean): Promise<{ ok: boolean; plugins: unknown[]; error?: string; registryUrl?: string }> =>
+        ipcRenderer.invoke('pi:plugin:market:catalog', { force }),
+      install: (pluginId: string): Promise<{ ok: boolean; error?: string }> =>
+        ipcRenderer.invoke('pi:plugin:market:install', { pluginId }),
+      uninstall: (pluginId: string, keepData?: boolean): Promise<{ ok: boolean; error?: string }> =>
+        ipcRenderer.invoke('pi:plugin:uninstall', { pluginId, keepData }),
+      setEnabled: (pluginId: string, enabled: boolean): Promise<{ ok: boolean; error?: string }> =>
+        ipcRenderer.invoke('pi:plugin:set-enabled', { pluginId, enabled }),
+    },
+    findPreview: (path: string): Promise<{ panelId: string | null }> =>
+      ipcRenderer.invoke('pi:plugin:find-preview', { path }),
+    collectContext: (message: string): Promise<{ ok: boolean; sections: string[] }> =>
+      ipcRenderer.invoke('pi:plugin:collect-context', { message }),
+    getSettings: (pluginId: string): Promise<{ ok: boolean; settings?: Record<string, unknown>; error?: string }> =>
+      ipcRenderer.invoke('pi:plugin:get-settings', { pluginId }),
+    setSetting: (pluginId: string, key: string, value: unknown): Promise<{ ok: boolean; error?: string }> =>
+      ipcRenderer.invoke('pi:plugin:set-setting', { pluginId, key, value }),
+    listTools: (): Promise<unknown[]> => ipcRenderer.invoke('pi:plugin:list-tools'),
+    executeTool: (pluginId: string, name: string, params?: Record<string, unknown>): Promise<{ ok: boolean; content?: unknown[]; details?: unknown; error?: string }> =>
+      ipcRenderer.invoke('pi:plugin:execute-tool', { pluginId, name, params }),
+    executeSelectionAction: (pluginId: string, actionId: string, text: string, source?: { kind: string; pluginId?: string; label?: string }): Promise<{ ok: boolean; result?: unknown; error?: string }> =>
+      ipcRenderer.invoke('pi:plugin:selection-action', { pluginId, actionId, text, source }),
+    send: (pluginId: string, payload: unknown): void => {
+      const port = pluginPorts.get(pluginId);
+      if (port) {
+        port.postMessage(payload);
+      } else {
+        // No port yet (ensurePort in flight) — buffer until it arrives.
+        const queue = outbox.get(pluginId) ?? [];
+        queue.push(payload);
+        outbox.set(pluginId, queue);
+      }
+    },
+    onMessage: (callback: (pluginId: string, payload: unknown) => void): void => {
+      messageCallback = callback;
+    },
+    onEvent: (callback: (event: unknown) => void): void => {
+      eventCallback = callback;
+    },
+  };
+})();
+
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+contextBridge.exposeInMainWorld('pluginBridge', pluginBridge);

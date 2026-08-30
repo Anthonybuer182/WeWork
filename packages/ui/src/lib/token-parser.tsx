@@ -1,5 +1,5 @@
 import React from 'react';
-import { DEFAULT_SLASH_COMMANDS } from '@pi/sdk-wrapper';
+import { useCommandStore } from '@/stores/command-store';
 
 /**
  * Regex to match /command and @mention tokens.
@@ -8,8 +8,10 @@ import { DEFAULT_SLASH_COMMANDS } from '@pi/sdk-wrapper';
  */
 const TOKEN_PATTERN = /((?:^|\s)(?:\/[^\s]+|@[^\s]+))/g;
 
-/** Known slash command names — only these render as command chips. */
-const SLASH_COMMAND_NAMES = new Set(DEFAULT_SLASH_COMMANDS.map((c) => c.name));
+/** Known slash command names (registry: host + plugin commands) — read at call time. */
+function getSlashCommandNames(): Set<string> {
+  return new Set(useCommandStore.getState().commands.map((c) => c.name));
+}
 
 /**
  * Check whether a string segment looks like a token
@@ -19,7 +21,7 @@ const SLASH_COMMAND_NAMES = new Set(DEFAULT_SLASH_COMMANDS.map((c) => c.name));
 function isToken(text: string): boolean {
   if (!/^(?:\s*)(?:\/[^\s]+|@[^\s]+)$/.test(text)) return false;
   const trimmed = text.trimStart();
-  if (trimmed.startsWith('/') && !SLASH_COMMAND_NAMES.has(trimmed)) return false;
+  if (trimmed.startsWith('/') && !getSlashCommandNames().has(trimmed)) return false;
   return true;
 }
 

@@ -1,4 +1,4 @@
-export type SlashCommandCategory = 'chat' | 'workspace' | 'file' | 'config' | 'skill' | 'tool' | 'other';
+export type SlashCommandCategory = 'chat' | 'workspace' | 'file' | 'config' | 'skill' | 'tool' | 'plugin' | 'other';
 
 export interface SlashCommand {
   id: string;

@@ -10,6 +10,9 @@ import { join, dirname, delimiter } from 'path';
 import { fileURLToPath } from 'url';
 import { BrowserManager, startBrowserHttpServer, VlmAnalyzer } from '@main/browser';
 import { registerBrowserIpcHandlers } from '@main/ipc/browser';
+import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
+import { registerPluginIpcHandlers } from '@main/ipc/plugins';
+import { registerLiveViewIpcHandlers } from '@main/plugins/liveview';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -38,6 +41,11 @@ app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion,IntensiveWakeUpThrottling');
 
 const gotLock = app.requestSingleInstanceLock();
+
+// Register the plugin scheme BEFORE app ready — every plugin panel is served
+// from a unique `pi-plugin://<pluginId>/` origin (process isolation via site
+// isolation; see src/main/plugins/protocol.ts).
+registerPluginSchemePrivileges();
 
 if (!gotLock) {
   app.quit();
@@ -322,9 +330,35 @@ if (!gotLock) {
     mainWindow.setBrowserView(browserView);
     browserManager.setBrowserView(browserView, mainWindow);
 
-    registerIpcHandlers(settingsManager, sharedModelRegistry);
+    // Warm up the CDP connection at boot. The legacy preview panel used to do
+    // this on mount; with the browser now plugin-owned, pre-connect here so
+    // the first browser.* capability call doesn't pay the attach latency.
+    browserManager.connect().catch(() => {});
+
     registerNativeIpcHandlers();
     registerBrowserIpcHandlers(browserManager);
+
+    // Plugin kernel: scan ~/.pi/agent/plugins (plus dev/builtin roots),
+    // spawn backend UtilityProcesses, serve pi-plugin:// and expose IPC.
+    // Created BEFORE the SDK IPC handlers so plugin tools can be injected
+    // into the agent session (customTools).
+    const pluginSystem = new PluginSystem({ browserManager });
+    await pluginSystem.init();
+    registerPluginIpcHandlers(pluginSystem);
+    registerLiveViewIpcHandlers(browserManager);
+
+    const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {
+      customToolsProvider: () => pluginSystem.aggregateTools(),
+    });
+    // Plugin tool/skill set changed at runtime → rebuild agent sessions.
+    pluginSystem.onExtensionsChanged = () => chatService.invalidateSessions?.();
+
+    // Push browser URL changes to plugin backends holding "browser" permission.
+    browserManager.onUrlChanged((url) => {
+      pluginSystem.pushHostEvent('browser.urlChanged', 'browser', { url });
+    });
+
+    app.on('will-quit', () => pluginSystem.dispose());
 
     // Start the browser automation HTTP server (for pi-browser CLI).
     // The BrowserManager connects to CDP lazily when the webview is ready.

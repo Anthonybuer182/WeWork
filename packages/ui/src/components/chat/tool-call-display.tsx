@@ -1,7 +1,9 @@
-import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { Loader2, Sparkles } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { ToolCallBlock, ToolResultBlock } from '@pi/types';
+import { DeclarativeRenderer } from '@/components/plugins/declarative/declarative-renderer';
+import { usePluginStore } from '@/stores/plugin-store';
 import './chat-animations.css';
 
 interface ToolCallDisplayProps {
@@ -57,6 +59,27 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
   };
 
   const preview = getToolPreview(block);
+
+  // Plugin message-renderer: the tool's plugin contributed a declarative
+  // card tree alongside its result — render it instead of the raw output.
+  // (Select a stable store slice; derive with useMemo to avoid re-render loops.)
+  const plugins = usePluginStore((s) => s.plugins);
+  const messageRenderers = useMemo(
+    () => plugins.flatMap((p) => p.messageRenderers.map((m) => ({ type: m.type, streaming: m.streaming !== false }))),
+    [plugins],
+  );
+  const rendererByType = useMemo(() => new Map(messageRenderers.map((m) => [m.type, m])), [messageRenderers]);
+  const hasPluginCard =
+    !!result?.card && !!result.toolName && rendererByType.has(result.toolName);
+  // Streaming args card: while the tool runs, render its args live
+  // (e.g. the mail draft forms as the agent types it).
+  const renderer = block.toolName ? rendererByType.get(block.toolName) : undefined;
+  const argsEntries = useMemo(
+    () => Object.entries(block.args ?? {}).filter(([, v]) => v != null && typeof v !== 'object'),
+    [block.args],
+  );
+  const hasStreamingCard =
+    isRunning && !!renderer?.streaming && argsEntries.length > 0;
 
   const statusColor = hasError
     ? 'border-red-200/50 dark:border-red-800/30 bg-red-50/20 dark:bg-red-950/5'
@@ -126,6 +149,41 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
           <polyline points="2 3.5 5 6.5 8 3.5" />
         </svg>
       </button>
+
+      {/* ── Streaming args card (tool running, args arriving live) ── */}
+      {hasStreamingCard && (
+        <div
+          data-plugin-card-streaming={block.toolName}
+          className="border-t border-border/40 bg-background/60 px-3 py-2"
+        >
+          <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            {block.toolName} · 生成中
+          </div>
+          <div className="flex flex-col gap-1">
+            {argsEntries.map(([key, value]) => (
+              <div key={key} className="flex items-start gap-2 text-sm">
+                <span className="w-20 shrink-0 text-muted-foreground">{key}</span>
+                <span className="min-w-0 flex-1 break-words">{String(value).slice(0, 300)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Plugin message-renderer card (Tier 0 in the chat timeline) ── */}
+      {hasPluginCard && result?.card && (
+        <div
+          data-plugin-card={result.toolName}
+          className="border-t border-border/40 bg-background/60 px-3 py-2"
+        >
+          <div className="mb-1.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+            <Sparkles className="h-3 w-3" />
+            {result.toolName}
+          </div>
+          <DeclarativeRenderer tree={result.card} onEvent={() => undefined} />
+        </div>
+      )}
 
       {/* ── Expanded: args + result ── */}
       {expanded && (

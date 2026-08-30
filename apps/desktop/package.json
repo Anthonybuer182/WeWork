@@ -21,11 +21,13 @@
     "@pi/types": "workspace:*",
     "@pi/ui": "workspace:*",
     "@tanstack/react-query": "^5.62.8",
+    "adm-zip": "0.5.17",
     "playwright-core": "^1.61.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "0.5.8",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
     "@vitejs/plugin-react": "^4.3.4",

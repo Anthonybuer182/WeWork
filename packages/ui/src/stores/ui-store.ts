@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { usePanelStore } from './panel-store';
 
 type ConnectionStatus = 'connected' | 'disconnected' | 'connecting';
 
@@ -16,7 +17,6 @@ interface UIState {
   sidebarOpen: boolean;
   rightPanelOpen: boolean;
   rightPanelWidth: number;
-  rightPanelActiveTab: 'preview' | 'settings' | 'browser';
   compactMode: boolean;
   selectedSkills: string[];
   connectionStatus: ConnectionStatus;
@@ -30,7 +30,6 @@ interface UIState {
   toggleSidebar: () => void;
   toggleRightPanel: () => void;
   setRightPanelWidth: (width: number) => void;
-  setRightPanelTab: (tab: string) => void;
   setCompactMode: (compact: boolean) => void;
   toggleSkill: (skillId: string) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
@@ -49,7 +48,6 @@ export const useUIStore = create<UIState>()(
       sidebarOpen: true,
       rightPanelOpen: true,
       rightPanelWidth: 600,
-      rightPanelActiveTab: 'preview',
       compactMode: false,
       selectedSkills: [],
       connectionStatus: 'connecting',
@@ -59,11 +57,35 @@ export const useUIStore = create<UIState>()(
 
       setActiveWorkspace: (id) => set({ activeWorkspaceId: id, activeSessionId: null }),
       setActiveSession: (id) => set({ activeSessionId: id }),
-      setActivePreviewFile: (path) => set({ activePreviewFilePath: path, rightPanelActiveTab: 'preview', rightPanelOpen: true }),
+      // File selection routes through the filePreview contribution chain:
+      // a plugin panel claims the extension, otherwise the host preview.
+      setActivePreviewFile: (path) => {
+        set({ activePreviewFilePath: path, rightPanelOpen: true });
+        if (!path) return;
+        const api = (window as unknown as {
+          electronAPI?: { invoke?: (channel: string, ...args: unknown[]) => Promise<unknown> };
+        }).electronAPI;
+        const openFallback = () =>
+          usePanelStore.getState().openPanel('host:preview', { focus: true, params: { file: path } });
+        if (!api?.invoke) {
+          openFallback();
+          return;
+        }
+        api
+          .invoke('pi:plugin:find-preview', { path })
+          .then((res) => {
+            const panelId = (res as { panelId?: string | null } | undefined)?.panelId;
+            if (panelId) {
+              usePanelStore.getState().openPanel(panelId, { focus: true, params: { file: path } });
+            } else {
+              openFallback();
+            }
+          })
+          .catch(() => openFallback());
+      },
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
-      setRightPanelTab: (tab) => set({ rightPanelActiveTab: tab === 'settings' ? 'settings' : tab === 'browser' ? 'browser' : 'preview' }),
       setCompactMode: (compact) => set({ compactMode: compact }),
       toggleSkill: (skillId) =>
         set((s) => ({
@@ -91,7 +113,6 @@ export const useUIStore = create<UIState>()(
         sidebarOpen: state.sidebarOpen,
         rightPanelOpen: state.rightPanelOpen,
         rightPanelWidth: state.rightPanelWidth,
-        rightPanelActiveTab: state.rightPanelActiveTab,
         compactMode: state.compactMode,
         selectedSkills: state.selectedSkills,
       }),
