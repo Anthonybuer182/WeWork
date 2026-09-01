@@ -3,23 +3,27 @@
   "name": "浏览器自动化",
   "description": "P4 标杆插件:agent 工具 + Tier 0 控制面板 + liveview 实时预览 + skill 贡献",
   "version": "0.1.0",
-  "engines": { "pi-desktop": ">=0.1.0" },
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
   "backend": "./dist/main.mjs",
-  "permissions": ["browser"],
+  "permissions": [
+    "browser"
+  ],
   "contributes": {
     "panels": [
       {
         "id": "preview",
         "kind": "liveview",
         "title": "浏览器",
-        "icon": "browser",
         "keepAlive": "always"
       },
       {
         "id": "control",
         "kind": "declarative",
         "title": "浏览器控制",
-        "icon": "browser"
+        "icon": "sliders",
+        "companionOf": "preview"
       }
     ],
     "tools": [
@@ -29,9 +33,14 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "url": { "type": "string", "description": "The URL to open, e.g. https://example.com" }
+            "url": {
+              "type": "string",
+              "description": "The URL to open, e.g. https://example.com"
+            }
           },
-          "required": ["url"],
+          "required": [
+            "url"
+          ],
           "additionalProperties": false
         }
       },
@@ -50,14 +59,15 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "fullPage": { "type": "boolean", "description": "Capture the full scrollable page instead of the viewport" }
+            "fullPage": {
+              "type": "boolean",
+              "description": "Capture the full scrollable page instead of the viewport"
+            }
           },
           "additionalProperties": false
         }
       }
-    ],
-    "skills": [
-      { "path": "./skills/browser-native" }
     ]
-  }
+  },
+  "icon": "./assets/icon.svg"
 }

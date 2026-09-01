@@ -18,13 +18,34 @@ export type PanelKeepAlive = 'always' | 'lru' | 'never';
 export interface PanelContribution {
   id: string;
   title?: string;
+  /** Icon name from the host's built-in vocabulary (fallback: Puzzle). */
   icon?: string;
+  /**
+   * Plugin-provided icon file, path relative to the plugin root (e.g.
+   * './ui/assets/panel.svg'). Served from the plugin's own pi-plugin://
+   * origin; takes precedence over the vocabulary `icon`. SVGs render via
+   * <img> so they can never execute scripts in the host.
+   */
+  iconPath?: string;
+  /**
+   * Omit the panel from the rail — it stays openable via panel.open
+   * (events/tools). Use for auxiliary panels that belong to a primary one.
+   */
+  hidden?: boolean;
+  /**
+   * Render this declarative panel as a companion card attached above a
+   * liveview panel of the same plugin (e.g. a control bar over the live
+   * view). The companion is not listed on the rail itself.
+   */
+  companionOf?: string;
   kind: PanelKind;
   /** Path relative to the plugin root (required for `iframe` panels). */
   entry?: string;
   keepAlive?: PanelKeepAlive;
   /** Default panel width in px when opened in the right sidebar. */
   width?: number;
+  /** Let the host size the iframe to its content height (SDK reports it). */
+  autoHeight?: boolean;
 }
 
 /**
@@ -125,6 +146,11 @@ export interface PluginManifest {
   backend?: string;
   /** UI assets root relative to the plugin root. Omit for headless plugins. */
   ui?: string;
+  /**
+   * Plugin icon file, path relative to the plugin root — the plugin's brand
+   * mark, shown in the plugin center's installed list (and marketplace).
+   */
+  icon?: string;
   permissions?: PluginPermission[];
   contributes?: PluginContributions;
 }

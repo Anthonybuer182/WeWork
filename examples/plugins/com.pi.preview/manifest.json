@@ -16,7 +16,7 @@
         "id": "preview",
         "kind": "declarative",
         "title": "文件预览",
-        "icon": "preview"
+        "icon": "eye"
       }
     ],
     "filePreview": [
@@ -32,5 +32,6 @@
         ]
       }
     ]
-  }
+  },
+  "icon": "./assets/icon.svg"
 }

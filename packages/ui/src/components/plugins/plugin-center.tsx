@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown } from 'lucide-react';
+import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown, Puzzle } from 'lucide-react';
 import type { MarketEntry, PluginInfo, PluginSettingInfo } from '@pi/types';
 import { describePermission } from '@pi/types';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -94,6 +94,41 @@ function PluginSettingsSection({ pluginId, settings }: { pluginId: string; setti
   );
 }
 
+/** ── Plugin brand icon (plugin-provided stencil, Puzzle fallback) ── */
+function PluginBrandIcon({ iconUrl, name }: { iconUrl?: string; name: string }) {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => {
+    setBroken(false);
+    if (!iconUrl) return;
+    const probe = new Image();
+    probe.onerror = () => setBroken(true);
+    probe.src = iconUrl;
+    return () => { probe.onerror = null; };
+  }, [iconUrl]);
+  if (iconUrl && !broken) {
+    return (
+      <span
+        role="img"
+        aria-label={name}
+        className="mt-0.5 shrink-0 bg-current text-muted-foreground"
+        style={{
+          width: 32,
+          height: 32,
+          WebkitMaskImage: `url(${iconUrl})`,
+          maskImage: `url(${iconUrl})`,
+          WebkitMaskSize: 'contain',
+          maskSize: 'contain',
+          WebkitMaskRepeat: 'no-repeat',
+          maskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
+          maskPosition: 'center',
+        }}
+      />
+    );
+  }
+  return <Puzzle className="mt-0.5 h-8 w-8 shrink-0 text-muted-foreground/50" />;
+}
+
 /** ── Installed plugin row ── */
 function InstalledItem({ plugin }: { plugin: PluginInfo }) {
   const setPluginEnabled = usePluginStore((s) => s.setPluginEnabled);
@@ -113,6 +148,7 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
 
   return (
     <div data-installed-plugin={plugin.id} className="flex items-start gap-3 rounded-lg border p-3">
+      <PluginBrandIcon iconUrl={plugin.iconUrl} name={plugin.name} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">{plugin.name}</span>

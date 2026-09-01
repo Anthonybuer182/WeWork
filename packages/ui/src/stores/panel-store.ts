@@ -12,13 +12,21 @@ export interface PanelEntry {
   title: string;
   /** Icon key resolved by the rail (see panel-icons.tsx). */
   icon: string;
+  /** Plugin-provided icon (pi-plugin:// URL) — takes precedence over `icon`. */
+  iconUrl?: string;
   kind: PanelKind;
   source: 'host' | string; // 'host' or pluginId
   pluginId?: string;
   panelId?: string;
   /** iframe panels: entry path relative to the plugin root. */
   entry?: string;
+  /** Not shown on the rail; still openable via panel.open / events. */
+  hidden?: boolean;
+  /** Attached above this panel (same plugin) as a companion card. */
+  companionOf?: string;
   keepAlive: PanelKeepAlive;
+  /** iframe panels: host sizes the frame to the reported content height. */
+  autoHeight?: boolean;
 }
 
 export interface PanelRuntimeState {
@@ -112,12 +120,16 @@ export const usePanelStore = create<PanelStoreState>()(
                 id: pluginPanelId(plugin.id, panel.id),
                 title: panel.title,
                 icon: panel.icon ?? 'puzzle',
+                iconUrl: panel.iconUrl,
                 kind: panel.kind,
                 source: plugin.id,
                 pluginId: plugin.id,
                 panelId: panel.id,
                 entry: panel.entry,
+                hidden: panel.hidden === true,
+                companionOf: panel.companionOf,
                 keepAlive: keepAliveFor(panel.kind, panel.keepAlive),
+                autoHeight: panel.autoHeight === true,
               })),
           );
           const hostPanels = s.panels.filter((p) => p.source === 'host');

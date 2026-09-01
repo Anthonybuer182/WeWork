@@ -16,8 +16,7 @@
       {
         "id": "orders",
         "kind": "declarative",
-        "title": "ERP 订单",
-        "icon": "erp"
+        "title": "ERP 订单"
       }
     ],
     "tools": [
@@ -54,5 +53,6 @@
         }
       }
     ]
-  }
+  },
+  "icon": "./assets/icon.svg"
 }

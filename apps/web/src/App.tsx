@@ -39,8 +39,8 @@ const queryClient = new QueryClient({
  * system degrades gracefully. (The browser preview is Electron-only.)
  */
 const HOST_PANELS = [
-  { id: 'host:preview', title: '预览', icon: 'preview', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
   { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
+  { id: 'host:preview', title: '预览', icon: 'preview', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
 ];
 
 function AppContent() {

@@ -6,6 +6,7 @@ import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { useComposerStore } from '@/stores/composer-store';
 import { Button } from '@/components/ui/button';
+import { stripAppendedContext } from '@/lib/quote-helpers';
 import { MessageBubble } from './message-bubble';
 import { EmptyChat } from './empty-chat';
 import { StreamingIndicator } from './streaming-indicator';
@@ -231,7 +232,7 @@ export function ChatTimeline() {
   // Edit: enter inline editing mode for a user message
   const handleEditMessage = useCallback((message: Message) => {
     if (message.role === 'user' && message.entryId) {
-      setEditingMessage(message.entryId, message.id, message.content);
+      setEditingMessage(message.entryId, message.id, stripAppendedContext(message.content));
     }
   }, [setEditingMessage]);
 

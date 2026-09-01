@@ -20,6 +20,7 @@ interface PluginBridge {
   getSettings: (pluginId: string) => Promise<Record<string, unknown>>;
   setSetting: (pluginId: string, key: string, value: unknown) => Promise<{ ok: boolean; error?: string }>;
   send: (pluginId: string, payload: unknown) => void;
+  showContextMenu: (pos: { x: number; y: number }) => Promise<{ ok: boolean }>;
   onMessage: (callback: (pluginId: string, payload: unknown) => void) => void;
   onEvent: (callback: (event: PluginEvent) => void) => void;
 }
@@ -88,13 +89,19 @@ export const usePluginStore = create<PluginStoreState>()((set, get) => ({
       set({ loaded: true });
       return;
     }
-    try {
-      const plugins = await bridge.list();
-      set({ plugins: plugins ?? [], loaded: true });
-    } catch (err) {
-      console.error('[plugin-store] list failed:', err);
-      set({ loaded: true });
+    // The file:// renderer can boot faster than the main-process plugin
+    // kernel registers its IPC handlers — retry briefly instead of caching
+    // a failure (which would leave the panel rail without plugin panels).
+    let plugins: PluginInfo[] | null = null;
+    for (let attempt = 0; attempt < 5 && plugins === null; attempt++) {
+      try {
+        plugins = await bridge.list();
+      } catch (err) {
+        if (attempt === 4) console.error('[plugin-store] list failed:', err);
+        else await new Promise((r) => setTimeout(r, 400));
+      }
     }
+    set({ plugins: plugins ?? [], loaded: true });
     await refreshInstalled(set);
   },
 

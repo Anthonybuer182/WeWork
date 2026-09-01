@@ -89,6 +89,51 @@ const PLUGIN_SDK_SOURCE = String.raw`
     }
   };
 
+  // Content-height reporting — autoHeight panels: the host sizes the
+  // iframe to the reported height.
+  (function () {
+    var lastHeight = -1;
+    var report = function () {
+      // Viewport-independent measurement: the root element's scrollHeight is
+      // pinned to the iframe viewport, so a grown panel could never shrink
+      // back. Measure the root's layout box instead, plus body metrics.
+      var rootBox = document.documentElement.getBoundingClientRect().height || 0;
+      var h = Math.ceil(Math.max(
+        document.body.scrollHeight,
+        document.body.offsetHeight || 0,
+        rootBox
+      ));
+      if (h > 0 && Math.abs(h - lastHeight) >= 2) {
+        lastHeight = h;
+        window.parent.postMessage({
+          __piPlugin: true,
+          pluginId: PLUGIN_ID,
+          direction: 'resize',
+          payload: { height: h }
+        }, '*');
+      }
+    };
+    if (typeof ResizeObserver !== 'undefined') {
+      var ro = new ResizeObserver(function () { setTimeout(report, 30); });
+      ro.observe(document.documentElement);
+      ro.observe(document.body);
+    }
+    window.addEventListener('load', function () { setTimeout(report, 100); });
+    setTimeout(report, 300);
+  })();
+
+  // Context menu bridge — the host pops its native edit menu.
+  document.addEventListener('contextmenu', function (event) {
+    try {
+      window.parent.postMessage({
+        __piPlugin: true,
+        pluginId: PLUGIN_ID,
+        direction: 'contextmenu',
+        payload: { x: event.clientX, y: event.clientY }
+      }, '*');
+    } catch (e) { /* best-effort */ }
+  });
+
   // Selection reporting (滑词) — the host shows its selection menu with
   // the plugin's contributed actions.
   document.addEventListener('mouseup', function (event) {

@@ -44,9 +44,9 @@ const queryClient = new QueryClient({
  * (The browser preview is contributed by the com.pi.browser plugin.)
  */
 const HOST_PANELS = [
-  { id: 'host:preview', title: '预览', icon: 'preview', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
-  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
   { id: 'host:plugins', title: '插件中心', icon: 'puzzle', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
+  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
+  { id: 'host:preview', title: '预览', icon: 'preview', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
 ];
 
 function AppContent() {

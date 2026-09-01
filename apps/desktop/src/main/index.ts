@@ -330,6 +330,15 @@ if (!gotLock) {
     mainWindow.setBrowserView(browserView);
     browserManager.setBrowserView(browserView, mainWindow);
 
+    // A renderer reload never runs React cleanup, so the liveview detach is
+    // lost — the BrowserView would keep stale bounds and invisibly occlude
+    // the UI (eating real mouse clicks). Reset it on any renderer
+    // navigation; the slot re-reports its bounds after remounting.
+    mainWindow.webContents.on('did-start-navigation', () => {
+      console.log('[liveview] renderer navigation — resetting BrowserView bounds (stale-overlay guard)');
+      browserManager.hide();
+    });
+
     // Warm up the CDP connection at boot. The legacy preview panel used to do
     // this on mount; with the browser now plugin-owned, pre-connect here so
     // the first browser.* capability call doesn't pay the attach latency.
@@ -343,8 +352,11 @@ if (!gotLock) {
     // Created BEFORE the SDK IPC handlers so plugin tools can be injected
     // into the agent session (customTools).
     const pluginSystem = new PluginSystem({ browserManager });
-    await pluginSystem.init();
+    // Register IPC handlers BEFORE init completes — the file:// renderer loads
+    // in milliseconds in packaged builds, and its first `pi:plugin:list` must
+    // queue behind kernel boot (whenReady) instead of rejecting outright.
     registerPluginIpcHandlers(pluginSystem);
+    await pluginSystem.init();
     registerLiveViewIpcHandlers(browserManager);
 
     const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {

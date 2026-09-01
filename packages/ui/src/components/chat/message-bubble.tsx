@@ -9,6 +9,7 @@ import { renderTokenizedText } from '@/lib/token-parser';
 import { ImageBlockDisplay } from './image-block-display';
 import { FileBlockDisplay } from './file-block-display';
 import { QuoteBlockDisplay } from './quote-block-display';
+import { extractAppendedQuotes } from '@/lib/quote-helpers';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -185,9 +186,29 @@ export function MessageBubble({
     : [];
   const hasUserMedia = userMediaBlocks.length > 0;
 
+  // User bubbles show what the user typed — context the composer appends for
+  // the model (quoted text, plugin context) renders as cards instead. The
+  // session record persists only text (no quote blocks), so quotes are
+  // re-synthesized from the appended section — exactly one card in both the
+  // live and reloaded views.
+  const { display: displayContent, quotes: extractedQuotes } = isUser
+    ? extractAppendedQuotes(message.content)
+    : { display: message.content, quotes: [] };
+  const hasPersistedQuoteBlocks = userMediaBlocks.some((b) => b.type === 'quote');
+  const synthesizedQuoteBlocks = !hasPersistedQuoteBlocks && extractedQuotes.length > 0
+    ? extractedQuotes.map((q, i) => ({
+        id: `quote-synth-${message.id}-${i}`,
+        type: 'quote' as const,
+        content: q.text,
+        fileName: q.fileName,
+        filePath: q.filePath,
+        source: q.source,
+      }))
+    : [];
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message.content);
+      await navigator.clipboard.writeText(displayContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* clipboard may not be available */ }
@@ -267,12 +288,19 @@ export function MessageBubble({
                 'rounded-lg px-4 py-2 text-sm',
                 isUser ? 'bg-primary text-primary-foreground' : 'bg-muted',
               )}>
-                <p className="whitespace-pre-wrap">{renderTokenizedText(message.content)}</p>
+                <p className="whitespace-pre-wrap">{renderTokenizedText(displayContent)}</p>
               </div>
             )}
             {hasUserMedia && (
               <div className="flex flex-col gap-1 mt-1 max-w-full">
                 {renderBlocks(userMediaBlocks, !!isStreaming, toolTimings)}
+              </div>
+            )}
+            {synthesizedQuoteBlocks.length > 0 && (
+              <div className="flex flex-col gap-1 mt-1 max-w-full">
+                {synthesizedQuoteBlocks.map((block) => (
+                  <QuoteBlockDisplay key={block.id} block={block} />
+                ))}
               </div>
             )}
           </div>

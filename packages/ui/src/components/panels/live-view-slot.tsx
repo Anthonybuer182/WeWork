@@ -32,9 +32,11 @@ export function LiveViewSlot({ pluginId, panelId }: { pluginId: string; panelId:
       const key = `${bounds.x},${bounds.y},${bounds.width},${bounds.height}`;
       if (key === lastBounds) return;
       lastBounds = key;
-      if (bounds.width > 0 && bounds.height > 0) {
-        api.invoke('pi:liveview:set-bounds', bounds).catch(() => {});
-      }
+      // Report every transition — including 0×0 (panel switched away under
+      // keepAlive renders this slot display:none). Main hides the view for
+      // non-positive dims; skipping the report here would leave the view at
+      // stale bounds, an invisible overlay eating real mouse clicks.
+      api.invoke('pi:liveview:set-bounds', bounds).catch(() => {});
     };
 
     api.invoke('pi:liveview:attach', { slotId }).then(() => {

@@ -132,7 +132,15 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
     set((s) => ({ uploadProgress: { ...s.uploadProgress, [id]: progress } })),
   clearUploadProgress: () => set({ uploadProgress: {} }),
   clearAttachments: () => set({ pendingAttachments: [], uploadProgress: {} }),
-  addQuote: (quote) => set((s) => ({ pendingQuotes: [...s.pendingQuotes, quote] })),
+  addQuote: (quote) =>
+    set((s) => {
+      // Dedup: quoting the same text twice (e.g. a double-click on the menu
+      // or re-selecting the same range) adds one entry, not two.
+      if (s.pendingQuotes.some((q) => q.content === quote.content && q.filePath === quote.filePath)) {
+        return s;
+      }
+      return { pendingQuotes: [...s.pendingQuotes, quote] };
+    }),
   removeQuote: (id) => set((s) => ({ pendingQuotes: s.pendingQuotes.filter((q) => q.id !== id) })),
   clearQuotes: () => set({ pendingQuotes: [] }),
   addStreamingBlock: (block) =>

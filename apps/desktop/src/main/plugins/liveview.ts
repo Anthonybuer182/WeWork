@@ -30,6 +30,7 @@ export function registerLiveViewIpcHandlers(browserManager: BrowserManager): voi
     if (payload?.slotId !== BROWSER_LIVEVIEW_SLOT) return { ok: false };
     const { x = 0, y = 0, width = 0, height = 0 } = payload;
     if (width <= 0 || height <= 0) {
+      console.log('[liveview] slot reported 0×0 — hiding BrowserView');
       browserManager.hide();
       return { ok: true };
     }

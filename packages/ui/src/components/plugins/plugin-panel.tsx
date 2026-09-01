@@ -4,7 +4,7 @@ import { getPluginBridge } from '@/stores/plugin-store';
 interface WireFrame {
   __piPlugin: true;
   pluginId: string;
-  direction: 'ui' | 'backend' | 'selection';
+  direction: 'ui' | 'backend' | 'selection' | 'resize' | 'contextmenu';
   payload: unknown;
 }
 
@@ -19,7 +19,7 @@ interface WireFrame {
  * panelId) go to the plugin's iframe panel (they answer iframe SDK requests).
  */
 type PanelTarget =
-  | { kind: 'iframe'; pluginId: string; panelId?: string; win: () => Window | null }
+  | { kind: 'iframe'; pluginId: string; panelId?: string; win: () => Window | null; el?: () => HTMLIFrameElement | null }
   | { kind: 'declarative'; pluginId: string; panelId: string; handler: (payload: unknown) => void };
 
 const panelTargets = new Map<string, PanelTarget>(); // key: `${pluginId}:${panelId ?? '*'}`
@@ -90,6 +90,25 @@ function pushThemeToFrames(reason: string): void {
   }
 }
 
+/** Apply a reported content height to an autoHeight iframe panel. */
+function applyAutoHeight(pluginId: string, height?: number): void {
+  if (typeof height !== 'number' || height <= 0 || height > 20000) return;
+  const target = [...panelTargets.values()].find(
+    (t) => t.pluginId === pluginId && t.kind === 'iframe',
+  ) as Extract<PanelTarget, { kind: 'iframe' }> | undefined;
+  const el = target?.el?.();
+  if (el?.dataset.autoHeight === 'true') {
+    el.style.height = `${Math.round(height)}px`;
+  }
+}
+
+/** Ask main to pop the native context menu (edit roles target the focused webContents). */
+function showPluginContextMenu(pluginId: string, payload?: { x?: number; y?: number }): void {
+  const bridge = getPluginBridge();
+  if (!bridge?.showContextMenu) return;
+  bridge.showContextMenu({ x: payload?.x ?? 0, y: payload?.y ?? 0 }).catch(() => {});
+}
+
 function ensureRelayInstalled(): void {
   if (relayInstalled) return;
   relayInstalled = true;
@@ -113,6 +132,12 @@ function ensureRelayInstalled(): void {
     } else if (data.direction === 'selection') {
       // Selection made inside a plugin iframe — surface to the selection service.
       window.dispatchEvent(new CustomEvent('pi-plugin-selection', { detail: data.payload }));
+    } else if (data.direction === 'resize') {
+      // autoHeight panels: size the iframe to its reported content height.
+      applyAutoHeight(data.pluginId, (data.payload as { height?: number } | undefined)?.height);
+    } else if (data.direction === 'contextmenu') {
+      // Native context menu for sandboxed plugin iframes (main-process Menu).
+      showPluginContextMenu(data.pluginId, data.payload as { x?: number; y?: number } | undefined);
     }
   });
 }
@@ -134,13 +159,15 @@ export interface PluginPanelHostProps {
   pluginId: string;
   panelId: string;
   entry: string;
+  /** Host sizes the iframe to the SDK-reported content height. */
+  autoHeight?: boolean;
 }
 
 /**
  * Renders one iframe plugin panel served from `pi-plugin://<pluginId>/<entry>`
  * — a unique origin per plugin (process isolation via site isolation).
  */
-export function PluginPanelHost({ pluginId, panelId, entry }: PluginPanelHostProps) {
+export function PluginPanelHost({ pluginId, panelId, entry, autoHeight }: PluginPanelHostProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -153,6 +180,7 @@ export function PluginPanelHost({ pluginId, panelId, entry }: PluginPanelHostPro
       pluginId,
       panelId,
       win: () => iframeRef.current?.contentWindow ?? null,
+      el: () => iframeRef.current ?? null,
     });
     // Theme tokens for the freshly mounted panel.
     setTimeout(() => pushThemeToFrames('panel-mount'), 200);
@@ -167,12 +195,14 @@ export function PluginPanelHost({ pluginId, panelId, entry }: PluginPanelHostPro
   const src = `pi-plugin://${pluginId}/${entry.replace(/^\/+/, '')}`;
 
   return (
-    <div className="h-full w-full overflow-hidden bg-background">
+    <div className="h-full w-full overflow-auto bg-background" data-auto-height={autoHeight ? 'true' : undefined}>
       <iframe
         ref={iframeRef}
         src={src}
         title={`${pluginId}:${panelId}`}
-        className="h-full w-full border-0"
+        className={autoHeight ? 'w-full border-0' : 'h-full w-full border-0'}
+        style={autoHeight ? { minHeight: '80px', height: '400px' } : undefined}
+        data-auto-height={autoHeight ? 'true' : undefined}
         data-panel-kind="iframe"
         // allow-same-origin keeps the plugin's own pi-plugin:// origin (needed
         // for fetch/storage within the panel); the origin is unique per plugin

@@ -2,11 +2,16 @@
   "id": "com.pi.hello",
   "name": "Hello 插件",
   "description": "P1/P2 内核验收插件:iframe 面板 + 声明式面板(Tier 0)+ 命令贡献",
-  "version": "0.2.0",
-  "engines": { "pi-desktop": ">=0.1.0" },
+  "version": "0.4.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
   "backend": "./dist/main.mjs",
   "ui": "./ui/",
-  "permissions": ["storage", "notify"],
+  "permissions": [
+    "storage",
+    "notify"
+  ],
   "contributes": {
     "panels": [
       {
@@ -14,13 +19,15 @@
         "kind": "iframe",
         "title": "Hello",
         "entry": "ui/index.html",
-        "keepAlive": "always"
+        "keepAlive": "always",
+        "autoHeight": true,
+        "iconPath": "./assets/icon.svg"
       },
       {
         "id": "demo",
         "kind": "declarative",
         "title": "Demo",
-        "icon": "todo"
+        "icon": "layout"
       }
     ],
     "commands": [
@@ -30,5 +37,6 @@
         "description": "通过插件命令打开 Hello 插件的面板"
       }
     ]
-  }
+  },
+  "icon": "./assets/icon.svg"
 }

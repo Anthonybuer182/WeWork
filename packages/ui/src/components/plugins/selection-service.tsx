@@ -95,11 +95,35 @@ export function SelectionService() {
     };
     window.addEventListener('pi-plugin-selection', onPluginSelection);
 
+    // Selections from the browser liveview: a separate webContents with no
+    // plugin SDK — the main process forwards them from the native
+    // context-menu (right-click on selected text), already offset by the
+    // BrowserView bounds into host-window coordinates.
+    const api = (window as unknown as {
+      electronAPI?: { on: (channel: string, cb: (...args: unknown[]) => void) => void; removeListener: (channel: string, cb: (...args: unknown[]) => void) => void };
+    }).electronAPI;
+    const onBrowserSelection = (data: unknown) => {
+      const detail = data as { text?: string; x?: number; y?: number; url?: string } | undefined;
+      if (!detail?.text?.trim()) return;
+      // data: URLs are unreadable as a label — fall back to the page origin
+      // or a plain label; createQuote derives hostname for real URLs.
+      const url = detail.url ?? '';
+      const label = url.startsWith('data:')
+        ? '浏览器页面'
+        : url || 'browser';
+      show(detail.x ?? 200, detail.y ?? 200, detail.text, {
+        kind: 'browser',
+        label,
+      });
+    };
+    api?.on('pi:browser-selection', onBrowserSelection);
+
     return () => {
       document.removeEventListener('mouseup', onMouseUp);
       document.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('pi-plugin-selection', onPluginSelection);
+      api?.removeListener('pi:browser-selection', onBrowserSelection);
     };
   }, [hide, show]);
 

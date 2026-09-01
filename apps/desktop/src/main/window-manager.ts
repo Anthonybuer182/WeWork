@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from 'electron';
+import { BrowserWindow, screen, Menu } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,6 +21,23 @@ export function createMainWindow(): BrowserWindow {
       nodeIntegration: false,
       sandbox: false,
     },
+  });
+
+  // Native context menu for host-rendered DOM (chat, panels, composer).
+  mainWindow.webContents.on('context-menu', (_event, params) => {
+    const template: Electron.MenuItemConstructorOptions[] = [];
+    if (params.isEditable) {
+      template.push({ label: '剪切', role: 'cut', enabled: params.editFlags.canCut });
+      template.push({ label: '复制', role: 'copy', enabled: params.editFlags.canCopy });
+      template.push({ label: '粘贴', role: 'paste', enabled: params.editFlags.canPaste });
+      template.push({ type: 'separator' });
+      template.push({ label: '全选', role: 'selectAll', enabled: params.editFlags.canSelectAll });
+    } else if (params.selectionText) {
+      template.push({ label: '复制', role: 'copy' });
+    } else {
+      template.push({ label: '重新加载', click: () => mainWindow.webContents.reload() });
+    }
+    Menu.buildFromTemplate(template).popup({ window: mainWindow, x: params.x, y: params.y });
   });
 
   // In development, load from vite dev server

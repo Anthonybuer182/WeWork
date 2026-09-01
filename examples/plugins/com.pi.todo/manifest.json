@@ -16,8 +16,7 @@
       {
         "id": "tasks",
         "kind": "declarative",
-        "title": "待办",
-        "icon": "todo"
+        "title": "待办"
       }
     ],
     "tools": [
@@ -75,5 +74,6 @@
         "kind": "declarative"
       }
     ]
-  }
+  },
+  "icon": "./assets/icon.svg"
 }

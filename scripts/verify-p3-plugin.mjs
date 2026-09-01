@@ -96,7 +96,7 @@ await evaluate(
 await sleep(400);
 
 // ── 1 · Rail "+" opens the plugin center ──
-await evaluate(page, `document.querySelector('[data-rail-plugin-center]')?.click(); true`);
+await evaluate(page, `document.querySelector('[data-panel-id="host:plugins"]')?.click(); true`);
 const centerOpen = await waitFor(
   page,
   `document.querySelector('[data-testid="panel-chrome"]')?.getAttribute('data-panel-title') === '插件中心'`,
@@ -172,7 +172,7 @@ const noteAdded = await waitFor(
 noteAdded ? ok('declarative event loopback: note added and persisted via storage capability') : fail('note added', 'note text not found');
 
 // ── 6 · Disable / re-enable ──
-await evaluate(page, `document.querySelector('[data-rail-plugin-center]')?.click(); true`);
+await evaluate(page, `document.querySelector('[data-panel-id="host:plugins"]')?.click(); true`);
 await sleep(300);
 await evaluate(
   page,

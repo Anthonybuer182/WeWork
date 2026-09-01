@@ -12,7 +12,7 @@
  *  6. Theme bridge: host tokens applied inside a plugin iframe
  */
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -107,7 +107,7 @@ const runTool = (pluginId, name, params) =>
   evaluate(page, `window.pluginBridge.executeTool(${JSON.stringify(pluginId)}, ${JSON.stringify(name)}, ${JSON.stringify(params)})`);
 
 // ── 1 · Settings contribution: auto form in plugin center ──
-await evaluate(page, `document.querySelector('[data-rail-plugin-center]')?.click(); true`);
+await evaluate(page, `document.querySelector('[data-panel-id="host:plugins"]')?.click(); true`);
 await sleep(500);
 const settingsSection = await waitFor(
   page,
@@ -152,11 +152,19 @@ await evaluate(
 );
 await sleep(1000);
 
-const SESSION_FILE = join(
-  homedir(),
-  '.pi/agent/sessions/--Users-simba-Desktop-Test--/2026-07-22T02-03-28-432Z_019f8790-4b30-70fb-b661-66ae74354c85.jsonl',
-);
-const linesBefore = readFileSync(SESSION_FILE, 'utf-8').split('\n').length;
+// Poll ALL session files — the app may have switched sessions since launch
+// (a hardcoded path goes stale as soon as a new session exists).
+const SESSIONS_DIR = join(homedir(), '.pi/agent/sessions/--Users-simba-Desktop-Test--');
+const snapshotCounts = () => {
+  const counts = new Map();
+  try {
+    for (const f of readdirSync(SESSIONS_DIR).filter((f) => f.endsWith('.jsonl'))) {
+      try { counts.set(f, readFileSync(join(SESSIONS_DIR, f), 'utf-8').split('\n').filter(Boolean).length); } catch { /* race */ }
+    }
+  } catch { /* dir missing */ }
+  return counts;
+};
+const beforeCounts = snapshotCounts();
 
 const typeAndSend = async (text) => {
   await evaluate(
@@ -188,18 +196,22 @@ let contextInjected = false;
 for (let i = 0; i < 40; i++) {
   await sleep(3000);
   try {
-    const lines = readFileSync(SESSION_FILE, 'utf-8').split('\n').filter(Boolean);
-    const lastUser = [...lines].reverse().find((l) => l.includes('"user"') && l.includes('P7 上下文注入验收'));
-    if (i < 3 || lastUser) {
-      console.log(`  [ctx-poll ${i}] lines=${lines.length} before=${linesBefore} lastUser=${lastUser ? 'found' : 'none'} hasCtx=${lastUser ? lastUser.includes('[相关上下文]') : '-'} hasMarker=${lastUser ? lastUser.includes(MARKER) : '-'}`);
+    const counts = snapshotCounts();
+    for (const [f, count] of counts) {
+      const before = beforeCounts.get(f) ?? 0;
+      if (count <= before) continue;
+      let content = '';
+      try { content = readFileSync(join(SESSIONS_DIR, f), 'utf-8'); } catch { continue; }
+      const lastUser = [...content.split('\n')].reverse().find((l) => l.includes('"user"') && l.includes('P7 上下文注入验收'));
+      if (i < 3 || lastUser) {
+        console.log(`  [ctx-poll ${i}] ${f.slice(0, 24)}… grew ${before}→${count} lastUser=${lastUser ? 'found' : 'none'} hasCtx=${lastUser ? lastUser.includes('[相关上下文]') : '-'}`);
+      }
+      if (lastUser && lastUser.includes('[相关上下文]') && lastUser.includes(MARKER)) {
+        contextInjected = true;
+        break;
+      }
     }
-    if (lines.length > linesBefore && lastUser && lastUser.includes('[相关上下文]') && lastUser.includes(MARKER)) {
-      contextInjected = true;
-      break;
-    }
-    // assistant already responded without context → stop early
-    const hasAssistant = lines.slice(Math.max(0, linesBefore - 1)).some((l) => l.includes('"assistant"'));
-    if (hasAssistant && lastUser && i > 5) break;
+    if (contextInjected) break;
   } catch (err) { console.log('  [ctx-poll] read error:', String(err).slice(0, 80)); }
 }
 contextInjected

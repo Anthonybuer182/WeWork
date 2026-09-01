@@ -85,6 +85,26 @@ export class BrowserManager {
     this.mainWindow = mainWindow;
     const wc = bv.webContents;
 
+    // Selection quoting from the browser page: the liveview is a separate
+    // webContents with no plugin SDK, so selections only reach the shell via
+    // the native context-menu event (right-click on selected text). Offset
+    // the in-view coordinates by the view's bounds so the floating menu
+    // lands at the right spot in the host window.
+    wc.on('context-menu', (_event, params) => {
+      const text = (params.selectionText ?? '').trim();
+      if (!text || !this.mainWindow) return;
+      const b = this.lastBounds ?? { x: 0, y: 0, width: 0, height: 0 };
+      const send = (url: string) => {
+        this.mainWindow?.webContents.send('pi:browser-selection', {
+          text: text.slice(0, 2000),
+          x: b.x + params.x,
+          y: b.y + params.y,
+          url,
+        });
+      };
+      this.getCurrentUrl().then(send).catch(() => send(''));
+    });
+
     // Spoof a standard Chrome User-Agent — zhipin.com and similar CDNs
     // drop TLS connections from Electron's default UA string.
     wc.setUserAgent(

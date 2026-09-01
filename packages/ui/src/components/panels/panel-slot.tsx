@@ -18,17 +18,35 @@ const HOST_COMPONENTS: Record<string, ComponentType> = {
 };
 
 function PanelBody({ panel }: { panel: PanelEntry }) {
+  const allPanels = usePanelStore((s) => s.panels);
   if (panel.kind === 'host') {
     const Host = HOST_COMPONENTS[panel.id];
     return Host ? <Host /> : null;
   }
   if (panel.kind === 'iframe' && panel.pluginId && panel.panelId && panel.entry) {
-    return <PluginPanelHost pluginId={panel.pluginId} panelId={panel.panelId} entry={panel.entry} />;
+    return <PluginPanelHost pluginId={panel.pluginId} panelId={panel.panelId} entry={panel.entry} autoHeight={panel.autoHeight} />;
   }
   if (panel.kind === 'declarative' && panel.pluginId && panel.panelId) {
     return <DeclarativePanelHost pluginId={panel.pluginId} panelId={panel.panelId} />;
   }
   if (panel.kind === 'liveview' && panel.pluginId && panel.panelId) {
+    // Companion card (e.g. a control bar) renders above the live view —
+    // one rail button, controls and live feed on the same screen.
+    const companion = allPanels.find(
+      (p) => p.companionOf === panel.panelId && p.source === panel.source,
+    );
+    if (companion) {
+      return (
+        <div className="flex h-full w-full flex-col">
+          <div className="shrink-0 border-b bg-background">
+            <DeclarativePanelHost pluginId={companion.pluginId!} panelId={companion.panelId!} />
+          </div>
+          <div className="min-h-0 flex-1">
+            <LiveViewSlot pluginId={panel.pluginId} panelId={panel.panelId} />
+          </div>
+        </div>
+      );
+    }
     return <LiveViewSlot pluginId={panel.pluginId} panelId={panel.panelId} />;
   }
   return null;

@@ -17,8 +17,7 @@
       {
         "id": "drafts",
         "kind": "declarative",
-        "title": "邮件",
-        "icon": "mail"
+        "title": "邮件"
       }
     ],
     "tools": [
@@ -96,5 +95,6 @@
         "title": "引用为邮件草稿"
       }
     ]
-  }
+  },
+  "icon": "./assets/icon.svg"
 }

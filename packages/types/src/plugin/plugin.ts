@@ -20,7 +20,14 @@ export interface PluginPanelInfo {
   kind: 'iframe' | 'declarative' | 'liveview';
   entry?: string;
   icon?: string;
+  /** Plugin-provided icon, absolute pi-plugin:// URL (vocabulary fallback). */
+  iconUrl?: string;
+  /** Not shown on the rail; still openable via panel.open. */
+  hidden?: boolean;
+  /** Attached above this liveview panel (same plugin) as a companion card. */
+  companionOf?: string;
   keepAlive?: 'always' | 'lru' | 'never';
+  autoHeight?: boolean;
 }
 
 export interface PluginCommandInfo {
@@ -77,6 +84,8 @@ export interface PluginInfo {
   source: PluginSource;
   state: PluginRuntimeState;
   permissions: string[];
+  /** Plugin brand icon, absolute pi-plugin:// URL (optional). */
+  iconUrl?: string;
   panels: PluginPanelInfo[];
   commands: PluginCommandInfo[];
   tools: PluginToolInfo[];

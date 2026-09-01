@@ -259,6 +259,11 @@ export class PluginRegistry {
   }
 
   toInfo(plugin: ResolvedPlugin): PluginInfo {
+    // Plugin-provided icon files are served from the plugin's own
+    // pi-plugin:// origin (unique per plugin, cross-origin with the host).
+    const pluginIconUrl = plugin.manifest.icon
+      ? `pi-plugin://${plugin.manifest.id}/${plugin.manifest.icon.replace(/^\.?\//, '')}`
+      : undefined;
     return {
       id: plugin.manifest.id,
       name: plugin.manifest.name,
@@ -267,13 +272,24 @@ export class PluginRegistry {
       source: plugin.source,
       state: plugin.state,
       permissions: plugin.manifest.permissions ?? [],
+      iconUrl: pluginIconUrl,
       panels: (plugin.manifest.contributes?.panels ?? []).map((p) => ({
         id: p.id,
         title: p.title ?? p.id,
         kind: p.kind,
         entry: p.entry,
         icon: p.icon,
+        // Explicit declarations win over the plugin brand: panel iconPath >
+        // panel vocabulary name > inherited plugin icon > Puzzle.
+        iconUrl: p.iconPath
+          ? `pi-plugin://${plugin.manifest.id}/${p.iconPath.replace(/^\.?\//, '')}`
+          : p.icon
+            ? undefined
+            : pluginIconUrl,
+        hidden: p.hidden === true,
+        companionOf: p.companionOf,
         keepAlive: p.keepAlive,
+        autoHeight: p.autoHeight,
       })),
       commands: (plugin.manifest.contributes?.commands ?? []).map((c) => ({
         name: c.name,

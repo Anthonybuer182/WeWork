@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { ipcMain, BrowserWindow, Menu, app } from 'electron';
 import type { InstallPhase } from '@pi/types';
 import type { PluginSystem } from '@main/plugins';
 
@@ -16,13 +16,23 @@ import type { PluginSystem } from '@main/plugins';
  *   pi:plugin:event           ← push channel (status/state/plugins-changed/install-phase)
  */
 export function registerPluginIpcHandlers(system: PluginSystem): void {
-  ipcMain.handle('pi:plugin:list', () => system.listInfos());
+  // `list`/`list-all`/`ensure-port` gate on kernel boot — in packaged builds the
+  // file:// renderer fires its first plugin IPC within milliseconds, possibly
+  // before `PluginSystem.init()` (spawn backends, protocol) has finished.
+  ipcMain.handle('pi:plugin:list', async () => {
+    await system.whenReady();
+    return system.listInfos();
+  });
 
-  ipcMain.handle('pi:plugin:list-all', () => system.listAllInfos());
+  ipcMain.handle('pi:plugin:list-all', async () => {
+    await system.whenReady();
+    return system.listAllInfos();
+  });
 
-  ipcMain.handle('pi:plugin:ensure-port', (event, payload: { pluginId?: string }) => {
+  ipcMain.handle('pi:plugin:ensure-port', async (event, payload: { pluginId?: string }) => {
     const pluginId = payload?.pluginId;
     if (!pluginId) return { ok: false, error: 'missing pluginId' };
+    await system.whenReady();
     return system.ensureUiPort(pluginId, event.sender);
   });
 
@@ -92,6 +102,12 @@ export function registerPluginIpcHandlers(system: PluginSystem): void {
     return system.setEnabled(pluginId, payload.enabled);
   });
 
+  // ── Native context menu (plugin iframe bridge) ──
+  ipcMain.handle('pi:plugin:context-menu', (_event, payload: { x?: number; y?: number }) => {
+    popupEditMenu(payload?.x ?? 0, payload?.y ?? 0);
+    return { ok: true };
+  });
+
   // ── Extensions (tools / preview routing) ──
   // ── Context providers (pre-send hook) ──
   ipcMain.handle('pi:plugin:collect-context', async (_event, payload: { message?: string }) => {
@@ -142,4 +158,19 @@ export function registerPluginIpcHandlers(system: PluginSystem): void {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
   });
+}
+
+
+/** Edit-roles context menu: roles act on the currently focused webContents
+ *  (the plugin OOPIF when invoked from a plugin panel, the shell otherwise). */
+export function popupEditMenu(x: number, y: number): void {
+  const win = BrowserWindow.getFocusedWindow();
+  if (!win) return;
+  Menu.buildFromTemplate([
+    { label: '剪切', role: 'cut' },
+    { label: '复制', role: 'copy' },
+    { label: '粘贴', role: 'paste' },
+    { type: 'separator' },
+    { label: '全选', role: 'selectAll' },
+  ]).popup({ window: win, x: Math.round(x), y: Math.round(y) });
 }

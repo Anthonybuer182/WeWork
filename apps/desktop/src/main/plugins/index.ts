@@ -46,6 +46,8 @@ export class PluginSystem {
   private processes = new Map<string, PluginProcess>();
   /** Notified whenever the aggregate tool/skill set changes. */
   onExtensionsChanged: (() => void) | null = null;
+  /** Resolves when init() has finished — IPC handlers gate reads on this. */
+  private initPromise: Promise<void> | null = null;
 
   constructor(opts?: { agentDir?: string; browserManager?: BrowserManager }) {
     this.registry = new PluginRegistry({ ...opts, appVersion: app.getVersion() });
@@ -58,7 +60,21 @@ export class PluginSystem {
   }
 
   /** Scan roots, activate enabled plugins (spawn backends), serve the protocol. */
-  async init(): Promise<void> {
+  init(): Promise<void> {
+    this.initPromise ??= this.doInit();
+    return this.initPromise;
+  }
+
+  /**
+   * Await kernel boot. The file:// renderer loads in milliseconds in packaged
+   * builds and its first `pi:plugin:list` may race `init()` — handlers
+   * registered before boot queue on this instead of seeing an empty registry.
+   */
+  async whenReady(): Promise<void> {
+    if (this.initPromise) await this.initPromise;
+  }
+
+  private async doInit(): Promise<void> {
     this.registry.scan();
     registerPluginProtocolHandler(this.registry);
 

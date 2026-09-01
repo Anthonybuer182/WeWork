@@ -168,28 +168,34 @@ browserTarget
   ? ok('BrowserView target alive and serving the navigated data: URL (hosted by the liveview slot)')
   : fail('BrowserView target', 'no data: URL target found');
 
-// ── 5 · Tier 0 control panel reflects live state ──
-const controlRail = `[data-panel-id="plugin:com.pi.browser:control"]`;
-await evaluate(page, `document.querySelector('${controlRail}')?.click(); true`);
+// ── 5 · Companion toolbar reflects live state (control merged into the
+//      liveview panel: one plugin, one rail button) ──
 const controlReady = await waitFor(
   page,
   `(() => {
-    const el = document.querySelector('[data-panel-kind="declarative"]');
-    return el && el.textContent.includes('data:text/html') ? true : false;
+    const slot = document.querySelector('[data-testid="panel-slot"]');
+    const input = slot?.querySelector('input');
+    return input && (input.placeholder || '').includes('data:text/html') ? true : false;
   })()`,
 );
-controlReady
-  ? ok('control panel (Tier 0) shows the live browser state — host-event + capability chain')
-  : fail('control panel state', 'current URL not shown');
+const railCount = await evaluate(
+  page,
+  `[...document.querySelectorAll('[data-panel-id]')].filter(b => b.dataset.panelId.includes('com.pi.browser')).length`,
+);
+controlReady && railCount === 1
+  ? ok('companion 工具栏随 liveview 同屏渲染,显示实时 URL(host-event 链)+ 浏览器插件仅占 1 个 rail 按钮')
+  : fail('companion toolbar', `controlReady=${controlReady} railButtons=${railCount}`);
 
-// ── 6 · Skill contribution synced ──
+// ── 6 · Skills: browser plugin contributes tools only (no skill needed —
+//      the three tools are self-descriptive). Guard against stale syncs:
+//      contributing no skills must leave nothing behind in the agent skills dir.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-const skillPath = join(homedir(), '.pi/agent/skills/com.pi.browser/browser-native/SKILL.md');
-existsSync(skillPath)
-  ? ok('skill contribution synced to ~/.pi/agent/skills/com.pi.browser/')
-  : fail('skill sync', skillPath + ' missing');
+const pluginSkillDir = join(homedir(), '.pi/agent/skills/com.pi.browser');
+!existsSync(pluginSkillDir)
+  ? ok('插件不声明 skills 时,agent skills 目录保持干净(无残留同步)')
+  : fail('skill sync residue', pluginSkillDir + ' still exists');
 
 // ── 7 · filePreview routing ──
 const mdRoute = await evaluate(page, `window.pluginBridge.findPreview('/tmp/p4-test.md')`);
