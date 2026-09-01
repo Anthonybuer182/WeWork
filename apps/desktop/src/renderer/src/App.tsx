@@ -57,7 +57,6 @@ function AppContent() {
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth);
-  const toggleRightPanel = useUIStore((s) => s.toggleRightPanel);
   const setConnectionStatus = useUIStore((s) => s.setConnectionStatus);
 
   // ── Panel registry: host panels + plugin panels ──
@@ -70,6 +69,20 @@ function AppContent() {
   useEffect(() => {
     setHostPanels(HOST_PANELS);
   }, [setHostPanels]);
+
+  // The right side defaults to the icon rail only. When it becomes visible
+  // with no active panel (e.g. toggled open), restore the last-used panel —
+  // or the plugin center — instead of an empty placeholder.
+  useEffect(() => {
+    if (!rightPanelOpen) return;
+    const panelState = usePanelStore.getState();
+    if (panelState.activePanelId) return;
+    const fallback =
+      panelState.recency.find((id) => panelState.panels.some((p) => p.id === id)) ??
+      panelState.panels.find((p) => p.id === 'host:plugins')?.id ??
+      panelState.panels[0]?.id;
+    if (fallback) panelState.openPanel(fallback, { focus: true });
+  }, [rightPanelOpen]);
 
   // ── Plugin system: discovery + events + command contributions ──
   const loadPlugins = usePluginStore((s) => s.loadPlugins);
@@ -98,7 +111,13 @@ function AppContent() {
           ? `plugin:${event.pluginId}:${event.panelId}`
           : undefined;
         const target = panelId ?? usePanelStore.getState().panels.find((p) => p.source === event.pluginId)?.id;
-        if (target) openPanel(target, { focus: event.focus });
+        if (target) {
+          openPanel(target, { focus: event.focus });
+          if (event.focus !== false) {
+            // Event-triggered open — surface the panel side too.
+            useUIStore.getState().setRightPanelOpen(true);
+          }
+        }
       } else if (event.type === 'plugins-changed') {
         // Install/uninstall/enable/disable — refresh discovery + panels.
         usePluginStore.getState().loadPlugins();
@@ -124,9 +143,7 @@ function AppContent() {
     if (api?.onSwitchToBrowserTab) {
       api.onSwitchToBrowserTab(() => {
         openPanel('plugin:com.pi.browser:preview', { focus: true });
-        if (!useUIStore.getState().rightPanelOpen) {
-          useUIStore.getState().toggleRightPanel();
-        }
+        useUIStore.getState().setRightPanelOpen(true);
       });
     }
   }, [openPanel]);
@@ -152,7 +169,6 @@ function AppContent() {
         <ThreeColumnLayout
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
-          onToggleRightPanel={toggleRightPanel}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
           topLeftContent={

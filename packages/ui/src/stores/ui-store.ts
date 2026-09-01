@@ -29,6 +29,7 @@ interface UIState {
   setActivePreviewFile: (path: string | null) => void;
   toggleSidebar: () => void;
   toggleRightPanel: () => void;
+  setRightPanelOpen: (open: boolean) => void;
   setRightPanelWidth: (width: number) => void;
   setCompactMode: (compact: boolean) => void;
   toggleSkill: (skillId: string) => void;
@@ -46,7 +47,7 @@ export const useUIStore = create<UIState>()(
       activeSessionId: null,
       activePreviewFilePath: null,
       sidebarOpen: true,
-      rightPanelOpen: true,
+      rightPanelOpen: false,
       rightPanelWidth: 600,
       compactMode: false,
       selectedSkills: [],
@@ -85,6 +86,7 @@ export const useUIStore = create<UIState>()(
       },
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
+      setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
       setCompactMode: (compact) => set({ compactMode: compact }),
       toggleSkill: (skillId) =>
@@ -111,7 +113,9 @@ export const useUIStore = create<UIState>()(
         activeWorkspaceId: state.activeWorkspaceId,
         activeSessionId: state.activeSessionId,
         sidebarOpen: state.sidebarOpen,
-        rightPanelOpen: state.rightPanelOpen,
+        // rightPanelOpen is intentionally NOT persisted: the right side
+        // defaults to the icon rail only — panels open on explicit action
+        // (rail click) or agent event, never restored open across restarts.
         rightPanelWidth: state.rightPanelWidth,
         compactMode: state.compactMode,
         selectedSkills: state.selectedSkills,

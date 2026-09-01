@@ -88,7 +88,8 @@ await evaluate(
   page,
   `(() => {
     if (!document.querySelector('[data-testid="panel-slot"]')) {
-      document.querySelector('button[title="Expand right panel"]')?.click();
+      // 右栏默认收起 — 点插件中心图标展开(人为打开语义)
+      document.querySelector('[data-panel-id="host:plugins"]')?.click();
     }
     return true;
   })()`,

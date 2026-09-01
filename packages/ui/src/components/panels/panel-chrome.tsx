@@ -1,5 +1,6 @@
 import { X, Loader2, CircleAlert } from 'lucide-react';
 import { usePanelStore } from '@/stores/panel-store';
+import { useUIStore } from '@/stores/ui-store';
 import { panelIcon } from './panel-icons';
 
 /**
@@ -11,6 +12,12 @@ export function PanelChrome() {
   const panels = usePanelStore((s) => s.panels);
   const runtime = usePanelStore((s) => (activePanelId ? s.runtime[activePanelId] : undefined));
   const closePanel = usePanelStore((s) => s.closePanel);
+  const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
+  const handleClose = () => {
+    closePanel();
+    // X collapses the whole right side — only the plugin icon rail remains.
+    setRightPanelOpen(false);
+  };
 
   const panel = panels.find((p) => p.id === activePanelId);
   if (!panel) {
@@ -38,7 +45,7 @@ export function PanelChrome() {
       <button
         type="button"
         aria-label="关闭面板"
-        onClick={closePanel}
+        onClick={handleClose}
         className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
       >
         <X className="h-3.5 w-3.5" />

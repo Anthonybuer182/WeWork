@@ -296,7 +296,7 @@ await evaluate(page, `location.reload(); true`);
 await sleep(5000);
 await evaluate(page, `(() => {
   if (!document.querySelector('[data-testid="panel-slot"]')) {
-    document.querySelector('button[title="Expand right panel"]')?.click();
+    document.querySelector('[data-panel-id="host:plugins"]')?.click();
   }
   return true;
 })()`);
@@ -341,13 +341,21 @@ e2eOk
   : fail('agent e2e', '未观察到 browser_navigate 调用 + 标题回复(检查模型可用性)');
 
 // ── 8 · 对话触发自动打开:navigate 后浏览器面板自动激活(无需人工点击)──
-const activePanel = await evaluate(page, `(() => {
-  const slot = document.querySelector('[data-testid="panel-slot"]');
-  return JSON.stringify({
-    active: slot?.querySelector('[data-panel-container]')?.dataset.panelContainer ?? null,
-    liveview: !!slot?.querySelector('[data-liveview-slot]'),
-  });
-})()`);
+// The panel-open event can trail the assistant's final answer slightly —
+// poll briefly instead of sampling once.
+let activePanel = null;
+for (let i = 0; i < 15; i++) {
+  activePanel = await evaluate(page, `(() => {
+    const slot = document.querySelector('[data-testid="panel-slot"]');
+    return JSON.stringify({
+      active: slot?.querySelector('[data-panel-container]')?.dataset.panelContainer ?? null,
+      liveview: !!slot?.querySelector('[data-liveview-slot]'),
+    });
+  })()`);
+  const ap0 = JSON.parse(activePanel ?? '{}');
+  if (ap0.active === 'plugin:com.pi.browser:preview' && ap0.liveview) break;
+  await sleep(2000);
+}
 const ap = JSON.parse(activePanel ?? '{}');
 ap.active === 'plugin:com.pi.browser:preview' && ap.liveview
   ? ok('对话触发自动打开: browser_navigate 执行后右侧预览自动激活("打开XX"类请求无需手动点 rail)')

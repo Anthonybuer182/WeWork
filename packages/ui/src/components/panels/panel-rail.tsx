@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { usePanelStore, type PanelEntry } from '@/stores/panel-store';
+import { useUIStore } from '@/stores/ui-store';
 import { panelIcon } from './panel-icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -53,6 +54,7 @@ function RailIcon({ panel }: { panel: PanelEntry }) {
 function RailButton({ panel }: { panel: PanelEntry }) {
   const activePanelId = usePanelStore((s) => s.activePanelId);
   const openPanel = usePanelStore((s) => s.openPanel);
+  const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const runtime = usePanelStore((s) => s.runtime[panel.id]);
 
   const active = activePanelId === panel.id;
@@ -69,7 +71,11 @@ function RailButton({ panel }: { panel: PanelEntry }) {
           data-panel-id={panel.id}
           data-state={active ? 'active' : 'inactive'}
           data-pending={pending ? 'true' : undefined}
-          onClick={() => openPanel(panel.id, { focus: true })}
+          onClick={() => {
+            openPanel(panel.id, { focus: true });
+            // A rail click is an explicit open — surface the panel side.
+            setRightPanelOpen(true);
+          }}
           className={cn(
             'relative flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition-colors',
             'hover:bg-accent hover:text-accent-foreground',

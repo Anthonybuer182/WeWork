@@ -51,7 +51,6 @@ function AppContent() {
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth);
-  const toggleRightPanel = useUIStore((s) => s.toggleRightPanel);
   const setConnectionStatus = useUIStore((s) => s.setConnectionStatus);
 
   const setHostPanels = usePanelStore((s) => s.setHostPanels);
@@ -74,7 +73,6 @@ function AppContent() {
         <ThreeColumnLayout
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
-          onToggleRightPanel={toggleRightPanel}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
           topLeftContent={

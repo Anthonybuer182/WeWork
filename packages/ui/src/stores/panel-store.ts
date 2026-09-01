@@ -135,10 +135,13 @@ export const usePanelStore = create<PanelStoreState>()(
           const hostPanels = s.panels.filter((p) => p.source === 'host');
           const panels = [...hostPanels, ...pluginPanels];
           const recency = s.recency.filter((id) => panels.some((p) => p.id === id));
+          // Resolve the active panel: keep a still-valid one; otherwise fall
+          // back to the most recent survivor, then the plugin center — the
+          // rail never lands on an empty panel body after startup.
           const activePanelId =
             s.activePanelId && panels.some((p) => p.id === s.activePanelId)
               ? s.activePanelId
-              : s.activePanelId; // keep even if plugin disappeared; PanelSlot renders empty
+              : (recency.find((id) => panels.some((p) => p.id === id)) ?? 'host:plugins');
           return {
             panels,
             recency,
@@ -167,6 +170,8 @@ export const usePanelStore = create<PanelStoreState>()(
           };
         }),
 
+      // The X means "close the panel": clear the active panel — the caller
+      // (panel chrome) also collapses the right side, leaving only the rail.
       closePanel: () => set({ activePanelId: null, mountedIds: computeMounted(get().panels, null, get().recency) }),
 
       setPanelStatus: (status) =>
