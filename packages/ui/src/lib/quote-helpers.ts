@@ -126,3 +126,21 @@ export function extractAppendedQuotes(content: string): { display: string; quote
     .replace(/\s+$/, '');
   return { display, quotes };
 }
+
+/**
+ * Clipboard write that works without document focus (background windows,
+ * automation) — prefers the main-process clipboard and falls back to the
+ * async navigator API.
+ */
+export async function copyText(text: string): Promise<void> {
+  const api = (window as unknown as {
+    electronAPI?: { invoke: (channel: string, ...args: unknown[]) => Promise<unknown> };
+  }).electronAPI;
+  if (api) {
+    try {
+      await api.invoke('pi:clipboard:write', text);
+      return;
+    } catch { /* fall through to navigator */ }
+  }
+  await navigator.clipboard.writeText(text);
+}

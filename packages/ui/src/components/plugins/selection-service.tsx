@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createQuote } from '@/lib/quote-helpers';
+import { copyText, createQuote } from '@/lib/quote-helpers';
 import { useComposerStore } from '@/stores/composer-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import type { QuoteSource } from '@pi/types';
@@ -45,6 +45,8 @@ function isEditableTarget(target: EventTarget | null): boolean {
  */
 export function SelectionService() {
   const [state, setState] = useState<SelectionState | null>(null);
+  const stateRef = useRef<SelectionState | null>(null);
+  stateRef.current = state;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const plugins = usePluginStore((s) => s.plugins);
   const executeSelectionAction = usePluginStore((s) => s.executeSelectionAction);
@@ -79,7 +81,23 @@ export function SelectionService() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') hide();
     };
-    const onScroll = () => hide();
+    // Scroll: re-anchor the menu to the selection's current viewport
+    // position instead of hiding it — scrolling a long chat must not kill
+    // the quote/copy flow. (Host-window selections only; plugin-sourced
+    // selections have no host selection to track, so those still hide.)
+    const onScroll = () => {
+      if (!stateRef.current) return;
+      if (stateRef.current.source.kind !== 'chat') { hide(); return; }
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || !selection.rangeCount) { hide(); return; }
+      const rect = selection.getRangeAt(0).getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) { hide(); return; }
+      setState((s) => (s ? {
+        ...s,
+        x: Math.min(rect.left + rect.width / 2 - 80, window.innerWidth - 200),
+        y: Math.max(8, Math.min(rect.top - 44, window.innerHeight - 120)),
+      } : s));
+    };
 
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('keydown', onKeyDown);
@@ -153,6 +171,17 @@ export function SelectionService() {
         className="rounded-md px-2.5 py-1 text-xs font-medium hover:bg-accent"
       >
         引用到对话
+      </button>
+      <button
+        type="button"
+        data-selection-action="copy"
+        onClick={() => {
+          copyText(state.text).catch(() => {});
+          hide();
+        }}
+        className="rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+      >
+        复制
       </button>
       {pluginActions.map(({ pluginId, action }) => (
         <button

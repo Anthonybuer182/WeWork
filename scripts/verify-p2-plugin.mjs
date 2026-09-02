@@ -91,16 +91,17 @@ const expanded = await evaluate(
   page,
   `(() => {
     if (document.querySelector('[data-testid="panel-slot"]')) return true;
-    const btn = document.querySelector('button[title="Expand right panel"]');
+    // 右栏默认收起(rail-only)— 点插件中心图标展开(人为打开语义)
+    const btn = document.querySelector('[data-panel-id="host:plugins"]');
     if (btn) { btn.click(); return 'clicked'; }
     return false;
   })()`,
 );
 if (!expanded) {
-  fail('right panel expandable', 'no panel-slot and no expand button');
+  fail('right panel expandable', 'no panel-slot and no rail plugins button');
   process.exit(1);
 }
-if (expanded === 'clicked') await sleep(500);
+if (expanded === 'clicked') await sleep(800);
 
 // ── 1 · Rail: unified registry ──
 const railPanels = await waitFor(
