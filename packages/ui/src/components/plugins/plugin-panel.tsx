@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { getPluginBridge } from '@/stores/plugin-store';
+import { usePanelStore } from '@/stores/panel-store';
 
 interface WireFrame {
   __piPlugin: true;
@@ -39,18 +40,24 @@ function unregisterTarget(pluginId: string, panelId?: string): void {
 let relayInstalled = false;
 
 function dispatchBackendMessage(pluginId: string, payload: unknown): void {
-  const msg = payload as { kind?: string; panelId?: string } | null;
+  const msg = payload as { kind?: string; panelId?: string; event?: string } | null;
   if (!msg) return;
 
-  // Exact panel target first (declarative renders carry panelId)
-  if (msg.panelId) {
-    const exact = panelTargets.get(targetKey(pluginId, msg.panelId));
-    if (exact && exact.kind === 'declarative') {
-      exact.handler(payload);
-      return;
-    }
+  // Exact panel target first (declarative renders carry panelId; iframe
+  // panels register their own target so multi-panel plugins route precisely)
+  const exact = msg.panelId ? panelTargets.get(targetKey(pluginId, msg.panelId)) : undefined;
+  if (exact && exact.kind === 'iframe') {
+    exact.win()?.postMessage(
+      { __piPlugin: true, pluginId, direction: 'backend', payload } satisfies WireFrame,
+      '*',
+    );
+    return;
   }
-  // Responses & panel-less messages → the plugin's iframe target
+  if (exact && exact.kind === 'declarative') {
+    exact.handler(payload);
+    return;
+  }
+  // No panelId (tool responses etc.) → the plugin's first iframe target
   const iframe = [...panelTargets.values()].find(
     (t) => t.pluginId === pluginId && t.kind === 'iframe',
   ) as Extract<PanelTarget, { kind: 'iframe' }> | undefined;
@@ -169,6 +176,11 @@ export interface PluginPanelHostProps {
  */
 export function PluginPanelHost({ pluginId, panelId, entry, autoHeight }: PluginPanelHostProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const paramsRef = useRef<Record<string, unknown> | undefined>(undefined);
+  // Open params (e.g. { file } for viewer panels) — re-sent on mount AND on
+  // same-panel re-open with new params, mirroring DeclarativePanelHost.
+  const panelKey = `plugin:${pluginId}:${panelId}`;
+  const params = usePanelStore((s) => s.params[panelKey]);
 
   useEffect(() => {
     const bridge = getPluginBridge();
@@ -192,6 +204,28 @@ export function PluginPanelHost({ pluginId, panelId, entry, autoHeight }: Plugin
     };
   }, [pluginId, panelId]);
 
+  // Tell the backend the panel mounted (with open params). Sent when the
+  // iframe FINISHES LOADING — a sync-rendering backend (e.g. a static list)
+  // would otherwise reply before the iframe attached its message listener,
+  // and the first ui.render would be dropped (races badly under
+  // site-per-process cold process starts). onLoad also re-fires after
+  // iframe reloads, so the backend gets a fresh render then too.
+  const notifyMounted = () => {
+    sendPluginEvent(pluginId, 'panel.mounted', { panelId, params: paramsRef.current }, panelId);
+  };
+
+  // Params change on an already-loaded panel → re-notify (file switch).
+  useEffect(() => {
+    paramsRef.current = params;
+    if (params === undefined) return;
+    const el = iframeRef.current;
+    // Only skip the direct send when the iframe is still on its initial
+    // load — onLoad will deliver the initial params for it.
+    if (el && el.dataset.loaded === 'true') {
+      sendPluginEvent(pluginId, 'panel.mounted', { panelId, params }, panelId);
+    }
+  }, [pluginId, panelId, params]);
+
   const src = `pi-plugin://${pluginId}/${entry.replace(/^\/+/, '')}`;
 
   return (
@@ -200,6 +234,10 @@ export function PluginPanelHost({ pluginId, panelId, entry, autoHeight }: Plugin
         ref={iframeRef}
         src={src}
         title={`${pluginId}:${panelId}`}
+        onLoad={(e) => {
+          (e.currentTarget as HTMLIFrameElement).dataset.loaded = 'true';
+          notifyMounted();
+        }}
         className={autoHeight ? 'w-full border-0' : 'h-full w-full border-0'}
         style={autoHeight ? { minHeight: '80px', height: '400px' } : undefined}
         data-auto-height={autoHeight ? 'true' : undefined}

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>邮件</title>
+<style>
+  :root {
+    --background: #0f1115; --foreground: #e6e9ef;
+    --card: #171a21; --card-foreground: #e6e9ef;
+    --border: #2a2f3a; --muted-foreground: #8b93a3;
+    --primary: #4f8cff; --primary-foreground: #ffffff;
+    --radius: 8px; --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 13px/1.6 var(--font-sans); background: var(--background); color: var(--foreground); padding: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
+  .card h2 { font-size: 12px; font-weight: 600; letter-spacing: .3px; color: var(--muted-foreground); margin-bottom: 9px; }
+  input { width: 100%; font: inherit; color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; outline: none; margin-bottom: 7px; }
+  input:focus { border-color: var(--primary); }
+  button { font: inherit; background: var(--primary); color: var(--primary-foreground); border: 0; border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+  button:active { transform: translateY(1px); }
+  ul { list-style: none; }
+  li { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 6px; cursor: pointer; }
+  li:hover { background: rgba(127,127,127,.08); }
+  li .subj { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  li .to { color: var(--muted-foreground); font-size: 12px; }
+  .badge { font-size: 10.5px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted-foreground); flex-shrink: 0; }
+  .badge.ok { color: var(--primary); border-color: var(--primary); }
+  .empty { color: var(--muted-foreground); text-align: center; padding: 16px 0; font-size: 12.5px; }
+  .hint { color: var(--muted-foreground); font-size: 11.5px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>写邮件</h2>
+    <input id="to" placeholder="收件人…" />
+    <input id="subject" placeholder="主题…" />
+    <input id="body" placeholder="正文…" />
+    <button id="save">保存草稿</button>
+  </div>
+  <div class="card">
+    <h2 id="hd">草稿箱</h2>
+    <ul id="list"></ul>
+    <div class="empty" id="empty" style="display:none">暂无草稿<br>agent 可用 mail_create_draft 工具撰写</div>
+  </div>
+  <div class="hint">点击草稿通过发送接口投递(HTTP API 模式)</div>
+
+  <script>
+    const PLUGIN_ID = 'com.pi.mail';
+    const PANEL_ID = 'drafts';
+
+    function send(eventId, data) {
+      window.parent.postMessage({
+        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
+        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
+      }, '*');
+    }
+
+    function render(s) {
+      const c = s.composing ?? {};
+      const drafts = s.drafts ?? [];
+      document.getElementById('hd').textContent = `草稿箱(${drafts.length})`;
+      // Only sync input values the user isn't editing (backend owns state).
+      const sync = (id, v) => {
+        const el = document.getElementById(id);
+        if (document.activeElement !== el && el.value !== v) el.value = v ?? '';
+      };
+      sync('to', c.to); sync('subject', c.subject); sync('body', c.body);
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      for (const d of drafts) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="subj"></span><span class="to"></span>` +
+          `<span class="badge${d.sent ? ' ok' : ''}">${d.sent ? '已发送' : '草稿'}</span>`;
+        li.querySelector('.subj').textContent = d.subject;
+        li.querySelector('.to').textContent = `→ ${d.to}`;
+        li.addEventListener('click', () => send('draft-send', { key: String(d.id) }));
+        list.appendChild(li);
+      }
+      document.getElementById('empty').style.display = drafts.length ? 'none' : 'block';
+    }
+
+    const wire = (id, eventId) => {
+      document.getElementById(id).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') send(eventId, e.target.value);
+      });
+    };
+    wire('to', 'draft-to'); wire('subject', 'draft-subject'); wire('body', 'draft-body');
+    document.getElementById('save').addEventListener('click', () => send('draft-save'));
+
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
+      const p = d.payload;
+      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    });
+  </script>
+</body>
+</html>

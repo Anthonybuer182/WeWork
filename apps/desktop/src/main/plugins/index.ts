@@ -18,7 +18,7 @@ import { registerPluginProtocolHandler } from './protocol';
 import { PluginMarketplace } from './marketplace';
 import type { BrowserManager } from '@main/browser/browser-manager';
 
-export { registerPluginSchemePrivileges, PI_PLUGIN_SCHEME } from './protocol';
+export { registerPluginSchemePrivileges, PI_PLUGIN_SCHEME, registerMemoryFile, clearMemoryFile } from './protocol';
 export { PluginRegistry } from './registry';
 export { PluginMarketplace, DEFAULT_REGISTRY_URL } from './marketplace';
 
@@ -44,6 +44,8 @@ export class PluginSystem {
   readonly capabilityHub: CapabilityHub;
   readonly marketplace: PluginMarketplace;
   private processes = new Map<string, PluginProcess>();
+  /** Active UI port pairs: `${pluginId}:${webContentsId}` — ensureUiPort is idempotent on these. */
+  private uiPortKeys = new Map<string, boolean>();
   /** Notified whenever the aggregate tool/skill set changes. */
   onExtensionsChanged: (() => void) | null = null;
   /** Resolves when init() has finished — IPC handlers gate reads on this. */
@@ -120,11 +122,19 @@ export class PluginSystem {
     }
   }
 
+  /** Drop the UI port registration for a plugin (backend stopped/crashed). */
+  private clearUiPorts(pluginId: string): void {
+    for (const key of [...this.uiPortKeys.keys()]) {
+      if (key.startsWith(`${pluginId}:`)) this.uiPortKeys.delete(key);
+    }
+  }
+
   /** Kill a running backend (if any) and drop it from the process map. */
   private stopPlugin(pluginId: string): void {
     const proc = this.processes.get(pluginId);
     if (proc) {
       proc.kill();
+      this.clearUiPorts(pluginId);
       this.processes.delete(pluginId);
     }
   }
@@ -423,7 +433,13 @@ export class PluginSystem {
   findPreviewHandler(filePath: string): string | null {
     const ext = filePath.toLowerCase().split('.').pop()?.split('?')[0] ?? '';
     if (!ext) return null;
-    for (const plugin of this.registry.all()) {
+    // Source priority: dev (under development) > user (market-installed) >
+    // builtin — a user-installed viewer overrides the bundled one for the
+    // extensions it claims.
+    const ranked = [...this.registry.all()].sort(
+      (a, b) => sourcePriority(b.source) - sourcePriority(a.source),
+    );
+    for (const plugin of ranked) {
       if (!plugin.enabled || plugin.state === 'incompatible' || plugin.state === 'error') continue;
       const previews = plugin.manifest.contributes?.filePreview ?? [];
       if (!previews.some((p) => (p.match ?? []).includes(ext))) continue;
@@ -448,11 +464,20 @@ export class PluginSystem {
    * backend process, the other is transferred to the requesting renderer.
    * A fresh pair per call makes renderer reloads (dev HMR) self-healing.
    */
-  ensureUiPort(pluginId: string, sender: Electron.WebContents): { ok: boolean; error?: string } {
+  ensureUiPort(pluginId: string, sender: Electron.WebContents): { ok: boolean; error?: string; reused?: boolean } {
     const proc = this.processes.get(pluginId);
     if (!proc) {
       return { ok: false, error: `plugin "${pluginId}" has no backend` };
     }
+    // Idempotent per (plugin, renderer): each new port pair replaces the
+    // backend's state.uiPort, so a second ensurePort while the renderer's
+    // FIRST port is still queued would leave the renderer's outbox messages
+    // stranded on a port pair the backend no longer listens to.
+    const portKey = `${pluginId}:${sender.id}`;
+    if (this.uiPortKeys.get(portKey)) {
+      return { ok: true, reused: true };
+    }
+    this.uiPortKeys.set(portKey, true);
     const { port1, port2 } = new MessageChannelMain();
     try {
       proc.sendUiPort(port1);
@@ -496,4 +521,8 @@ export class PluginSystem {
     }
     this.processes.clear();
   }
+}
+
+function sourcePriority(source: 'dev' | 'user' | 'builtin'): number {
+  return source === 'dev' ? 3 : source === 'user' ? 2 : 1;
 }

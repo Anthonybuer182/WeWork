@@ -147,45 +147,43 @@ pluginTarget
   ? ok('pi-plugin iframe target mounted (unique origin)')
   : fail('pi-plugin iframe target mounted', 'target not found');
 
-// ── 3 · Tier 0 declarative panel ──
+// ── 3 · HTML 面板(hello demo;P10 迁移:声明式 → iframe,状态经 CDP 断言)──
 await railActivate(DEMO_ID);
-const demoMounted = await waitFor(
-  page,
-  `(() => (document.querySelector('[data-panel-kind="declarative"]')?.textContent.match(/当前计数:(\\d+)/) ?? [])[1] ?? null)()`,
-);
-if (!demoMounted) {
-  fail('Tier 0 declarative panel renders', '当前计数 not found');
-} else {
-  ok(`Tier 0 declarative panel renders backend-owned tree (计数=${demoMounted}, backend state survives panel remounts)`);
-
-  // ── 4 · Event loopback (stateless: expect current+1) ──
-  await evaluate(
-    page,
-    `(() => {
-      const btns = [...document.querySelectorAll('[data-panel-kind="declarative"] button')];
-      btns.find(b => b.textContent.trim() === '+1')?.click();
-      return true;
-    })()`,
-  );
-  const expected = String(Number(demoMounted) + 1);
-  const countUpdated = await waitFor(
-    page,
-    `(() => (document.querySelector('[data-panel-kind="declarative"]')?.textContent.match(/当前计数:(\\d+)/) ?? [])[1] === '${expected}')()`,
-  );
-  countUpdated
-    ? ok(`event loopback: +1 click → backend state update → re-render (计数=${expected})`)
-    : fail('event loopback', `计数 did not update to ${expected}`);
+let demoTarget = null;
+for (let i = 0; i < 15 && !demoTarget; i++) {
+  demoTarget = (await listTargets()).find((t) => t.url.startsWith('pi-plugin://com.pi.hello') && t.url.includes('demo'));
+  if (!demoTarget) await sleep(700); // site-per-process 冷进程启动慢于 target 出现
 }
+if (!demoTarget) {
+  fail('HTML 面板(demo)iframe target', 'not found');
+} else {
+  const demo = await connect(demoTarget.webSocketDebuggerUrl);
+  await demo.send('Runtime.enable', {});
+  const demoMounted = await waitFor(
+    demo,
+    `(() => { const c = document.getElementById('count'); return c && Number.isFinite(Number(c.textContent)) ? c.textContent : null; })()`,
+  );
+  if (!demoMounted) {
+    fail('HTML 面板(demo)渲染', '计数 not found');
+  } else {
+    ok(`HTML 面板渲染: backend 状态投影(计数=${demoMounted},重开面板不丢)`);
 
-// ── 5 · No-focus-steal ──
-await evaluate(
-  page,
-  `(() => {
-    const btns = [...document.querySelectorAll('[data-panel-kind="declarative"] button')];
-    btns.find(b => b.textContent.includes('静默打开'))?.click();
-    return true;
-  })()`,
-);
+    // ── 4 · Event loopback (stateless: expect current+1) ──
+    await evaluate(demo, `document.getElementById('inc')?.click(); true`);
+    const expected = String(Number(demoMounted) + 1);
+    const countUpdated = await waitFor(
+      demo,
+      `document.getElementById('count')?.textContent === '${expected}'`,
+    );
+    countUpdated
+      ? ok(`event loopback: +1 click → backend state update → re-render (计数=${expected})`)
+      : fail('event loopback', `计数 did not update to ${expected}`);
+  }
+
+  // ── 5 · No-focus-steal ──
+  await evaluate(demo, `document.getElementById('quiet')?.click(); true`);
+  demo.close();
+}
 await sleep(800);
 const afterQuiet = await evaluate(
   page,

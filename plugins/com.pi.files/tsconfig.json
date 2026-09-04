@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": false,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@genoffice/docx-engine": [
+        "./vendor/docx-engine/src/index.ts"
+      ],
+      "@genoffice/docx-engine/*": [
+        "./vendor/docx-engine/src/*.ts"
+      ],
+      "@genoffice/pptx-engine": [
+        "./vendor/pptx-engine/src/index.ts"
+      ],
+      "@genoffice/pptx-engine/*": [
+        "./vendor/pptx-engine/src/*.ts"
+      ],
+      "@genoffice/pptx-render": [
+        "./vendor/pptx-render/src/index.ts"
+      ],
+      "@genoffice/pptx-render/*": [
+        "./vendor/pptx-render/src/*.ts"
+      ]
+    },
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ]
+}

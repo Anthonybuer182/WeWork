@@ -23,11 +23,8 @@ export interface ResolvedPlugin {
   error?: string;
 }
 
-/** Shape of ~/.pi/agent/plugins.json */
+/** Shape of ~/.pi/agent/plugins/_state.json */
 export interface PluginsStateFile {
-  devPaths?: string[];
-  /** Marketplace index URL/path override (http(s):// or absolute file path). */
-  registry?: string;
   plugins?: Record<string, { enabled?: boolean }>;
 }
 
@@ -37,7 +34,7 @@ const SOURCE_PRIORITY: Record<PluginSource, number> = { dev: 3, user: 2, builtin
  * Multi-root plugin discovery with priority resolution.
  *
  * Roots, highest priority first:
- *   1. dev   — paths registered in plugins.json#devPaths or the PI_DEV_PLUGINS env var
+ *   1. dev   — paths from the PI_DEV_PLUGINS env var (colon-separated)
  *   2. user  — ~/.pi/agent/plugins/  (installed plugins)
  *   3. builtin — <resources>/plugins (ships empty in the zero-builtin strategy)
  */
@@ -58,9 +55,9 @@ export class PluginRegistry {
     return this.appVersionValue;
   }
 
-  /** Marketplace index override from plugins.json (undefined → default). */
+  /** Marketplace index override (environment variable for dev; undefined → default). */
   get registryUrl(): string | undefined {
-    return this.stateFile.registry;
+    return process.env.PI_PLUGIN_REGISTRY;
   }
 
   get pluginsRoot(): string {
@@ -68,7 +65,7 @@ export class PluginRegistry {
   }
 
   get pluginsDataRoot(): string {
-    return join(this.agentDir, 'plugins-data');
+    return join(this.agentDir, 'plugins', '_data');
   }
 
   getDataDir(pluginId: string): string {
@@ -76,7 +73,7 @@ export class PluginRegistry {
   }
 
   private get stateFilePath(): string {
-    return join(this.agentDir, 'plugins.json');
+    return join(this.agentDir, 'plugins', '_state.json');
   }
 
   private getBuiltinRoot(): string {
@@ -89,12 +86,8 @@ export class PluginRegistry {
   }
 
   private getDevPaths(): string[] {
-    const paths = new Set<string>(this.stateFile.devPaths ?? []);
     const env = process.env.PI_DEV_PLUGINS;
-    if (env) {
-      for (const p of env.split(':').filter(Boolean)) paths.add(p);
-    }
-    return [...paths];
+    return env ? env.split(':').filter(Boolean) : [];
   }
 
   // ── State file ──
@@ -105,7 +98,7 @@ export class PluginRegistry {
         this.stateFile = JSON.parse(readFileSync(this.stateFilePath, 'utf-8'));
       }
     } catch (err) {
-      console.warn('[plugins] Failed to read plugins.json:', err);
+      console.warn('[plugins] Failed to read _state.json:', err);
       this.stateFile = {};
     }
   }
@@ -115,7 +108,7 @@ export class PluginRegistry {
       mkdirSync(this.agentDir, { recursive: true });
       writeFileSync(this.stateFilePath, JSON.stringify(this.stateFile, null, 2), 'utf-8');
     } catch (err) {
-      console.warn('[plugins] Failed to write plugins.json:', err);
+      console.warn('[plugins] Failed to write _state.json:', err);
     }
   }
 
@@ -148,6 +141,7 @@ export class PluginRegistry {
       }
       for (const entry of stat) {
         if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+        if (entry.name === '_data') continue;  // plugin data, not a plugin
         this.addCandidate(candidates, join(rootPath, entry.name), source);
       }
     };

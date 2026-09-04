@@ -1,10 +1,35 @@
 import { protocol } from 'electron';
-import { existsSync, readFileSync, statSync } from 'fs';
+import { existsSync, readFileSync, statSync, openSync, readSync, closeSync } from 'fs';
 import { extname, join, resolve, sep } from 'path';
 import type { PluginRegistry } from './registry';
 import { PI_SDK_FILENAME, buildPluginSdkJs } from './plugin-sdk-js';
 
 export const PI_PLUGIN_SCHEME = 'pi-plugin';
+
+/** Reserved first path segments (host-provided, not plugin files). */
+const WS_FILE_ENDPOINT = '/ws-file';
+const MEMORY_ENDPOINT = '/memory-file';
+
+/** In-memory store for user-uploaded files (chat attachments) served to
+ *  plugins over `pi-plugin://<id>/memory-file?name=…`. LRU-bounded. */
+interface MemoryEntry {
+  fileName: string;
+  mimeType: string;
+  data: Buffer;
+}
+const memoryFiles = new Map<string, MemoryEntry>();
+const MEMORY_LRU_LIMIT = 32;
+
+export function registerMemoryFile(name: string, fileName: string, mimeType: string, base64: string): void {
+  memoryFiles.set(name, { fileName, mimeType, data: Buffer.from(base64, 'base64') });
+  while (memoryFiles.size > MEMORY_LRU_LIMIT) {
+    memoryFiles.delete(memoryFiles.keys().next().value as string);
+  }
+}
+
+export function clearMemoryFile(name: string): void {
+  memoryFiles.delete(name);
+}
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -56,7 +81,7 @@ export function registerPluginSchemePrivileges(): void {
 export function registerPluginProtocolHandler(registry: PluginRegistry): void {
   protocol.handle(PI_PLUGIN_SCHEME, async (request) => {
     try {
-      return await handleRequest(registry, request.url);
+      return await handleRequest(registry, request);
     } catch (err) {
       console.error('[pi-plugin] handler error:', err);
       return new Response('Internal error', { status: 500 });
@@ -64,14 +89,25 @@ export function registerPluginProtocolHandler(registry: PluginRegistry): void {
   });
 }
 
-async function handleRequest(registry: PluginRegistry, rawUrl: string): Promise<Response> {
-  const url = new URL(rawUrl);
+async function handleRequest(registry: PluginRegistry, request: Request): Promise<Response> {
+  const url = new URL(request.url);
   const pluginId = url.hostname.toLowerCase();
   const pathname = decodeURIComponent(url.pathname);
 
   // Reserved: host-provided SDK script.
   if (pathname === '/' + PI_SDK_FILENAME) {
     return serveSdk(pluginId);
+  }
+
+  // Reserved: raw workspace-file streaming (binary channel for viewer
+  // plugins). Permission-gated on the requesting plugin's manifest.
+  if (pathname === WS_FILE_ENDPOINT) {
+    return serveWorkspaceFile(registry, pluginId, url, request);
+  }
+
+  // Reserved: user-uploaded in-memory files (chat attachments).
+  if (pathname === MEMORY_ENDPOINT) {
+    return serveMemoryFile(pluginId, url);
   }
 
   const root = registry.getRoot(pluginId);
@@ -128,6 +164,93 @@ function serveSdk(pluginId: string): Response {
     headers: {
       'Content-Type': 'text/javascript; charset=utf-8',
       'Cache-Control': 'no-cache',
+    },
+  });
+}
+
+/**
+ * `pi-plugin://<id>/ws-file?path=<absolute>` → raw bytes of a workspace file.
+ * Only plugins whose manifest declares the `filesystem` permission may stream
+ * through their own origin; cross-origin reads stay blocked (no CORS), so the
+ * bytes never leak to other plugins' frames. Supports HTTP Range so video /
+ * large-file viewers can seek.
+ */
+function serveWorkspaceFile(registry: PluginRegistry, pluginId: string, url: URL, request: Request): Response {
+  const plugin = registry.get(pluginId);
+  const permissions = plugin?.manifest.permissions ?? [];
+  if (!permissions.includes('filesystem')) {
+    return new Response('Forbidden: plugin lacks filesystem permission', { status: 403 });
+  }
+  const filePath = url.searchParams.get('path') ?? '';
+  if (!filePath || !filePath.startsWith('/')) {
+    return new Response('Bad Request: absolute path required', { status: 400 });
+  }
+  if (!existsSync(filePath)) {
+    return new Response('Not found', { status: 404 });
+  }
+  const stat = statSync(filePath);
+  if (!stat.isFile()) {
+    return new Response('Not a file', { status: 400 });
+  }
+
+  const ext = extname(filePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] ?? 'application/octet-stream';
+  const commonHeaders: Record<string, string> = {
+    'Content-Type': contentType,
+    'Cache-Control': 'no-cache',
+    'Accept-Ranges': 'bytes',
+  };
+
+  // Range request → 206 partial content (video seeking, chunked fetch).
+  const range = request.headers.get('range');
+  const rangeMatch = range ? /^bytes=(\d*)-(\d*)$/.exec(range.trim()) : null;
+  if (rangeMatch) {
+    const start = rangeMatch[1] ? Number(rangeMatch[1]) : 0;
+    const end = rangeMatch[2] ? Math.min(Number(rangeMatch[2]), stat.size - 1) : stat.size - 1;
+    if (start >= stat.size || start > end) {
+      return new Response('Range Not Satisfiable', {
+        status: 416,
+        headers: { 'Content-Range': `bytes */${stat.size}` },
+      });
+    }
+    const chunk = Buffer.alloc(end - start + 1);
+    const fd = openSync(filePath, 'r');
+    try {
+      readSync(fd, chunk, 0, chunk.length, start);
+    } finally {
+      closeSync(fd);
+    }
+    return new Response(new Uint8Array(chunk), {
+      status: 206,
+      headers: {
+        ...commonHeaders,
+        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Content-Length': String(chunk.length),
+      },
+    });
+  }
+
+  return new Response(new Uint8Array(readFileSync(filePath)), {
+    headers: { ...commonHeaders, 'Content-Length': String(stat.size) },
+  });
+}
+
+/**
+ * `pi-plugin://<id>/memory-file?name=<key>` → user-uploaded in-memory file
+ * (chat attachment previews). Served to any plugin origin — the renderer only
+ * registers files the user themselves attached.
+ */
+function serveMemoryFile(_pluginId: string, url: URL): Response {
+  const name = url.searchParams.get('name') ?? '';
+  const entry = memoryFiles.get(name);
+  if (!entry) {
+    return new Response('Not found', { status: 404 });
+  }
+  return new Response(new Uint8Array(entry.data), {
+    headers: {
+      'Content-Type': entry.mimeType || 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+      'Accept-Ranges': 'bytes',
     },
   });
 }

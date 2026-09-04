@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hello 演示面板</title>
+<style>
+  :root {
+    --background: #0f1115; --foreground: #e6e9ef;
+    --card: #171a21; --card-foreground: #e6e9ef;
+    --border: #2a2f3a; --muted-foreground: #8b93a3;
+    --primary: #4f8cff; --primary-foreground: #ffffff;
+    --radius: 8px; --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 13px/1.6 var(--font-sans); background: var(--background); color: var(--foreground); padding: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
+  .card h2 { font-size: 12px; font-weight: 600; letter-spacing: .3px; color: var(--muted-foreground); margin-bottom: 9px; }
+  .muted { color: var(--muted-foreground); font-size: 12px; margin-bottom: 6px; }
+  .count { font-size: 22px; font-weight: 700; margin: 4px 0 10px; }
+  .row { display: flex; gap: 7px; }
+  button { font: inherit; background: var(--primary); color: var(--primary-foreground); border: 0; border-radius: 6px; padding: 5px 13px; cursor: pointer; }
+  button.sec { background: #2a2f3a; color: var(--foreground); }
+  button:active { transform: translateY(1px); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>HTML 面板(STANDARD)</h2>
+    <div class="muted">状态住在 backend,面板是纯投影 — 重开面板/重启应用,计数不丢</div>
+    <div class="count" id="count">0</div>
+    <div class="row">
+      <button id="inc">+1</button>
+      <button id="dec" class="sec">-1</button>
+      <button id="reset" class="sec">清零</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>面板能力</h2>
+    <div class="muted">下面的按钮模拟 agent 触发 panel.open(focus=false):不抢焦点,只亮 badge。</div>
+    <button id="quiet" class="sec">静默打开 Hello 面板</button>
+  </div>
+
+  <script>
+    const PLUGIN_ID = 'com.pi.hello';
+    const PANEL_ID = 'demo';
+
+    function send(eventId, data) {
+      window.parent.postMessage({
+        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
+        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
+      }, '*');
+    }
+
+    function render(s) {
+      document.getElementById('count').textContent = String(s.count ?? 0);
+    }
+
+    document.getElementById('inc').addEventListener('click', () => send('demo-increment'));
+    document.getElementById('dec').addEventListener('click', () => send('demo-decrement'));
+    document.getElementById('reset').addEventListener('click', () => send('demo-reset'));
+    document.getElementById('quiet').addEventListener('click', () => send('demo-quiet-open'));
+
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
+      const p = d.payload;
+      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    });
+  </script>
+</body>
+</html>

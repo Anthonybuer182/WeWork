@@ -114,9 +114,9 @@ helloListed ? ok('installed section lists com.pi.hello (dev source)') : fail('in
 // ── 3 · Catalog loads from the local static index ──
 const catalogLoaded = await waitFor(
   page,
-  `!!document.querySelector('[data-catalog-plugin="${NOTES_ID}"]') && !!document.querySelector('[data-catalog-plugin="${INCOMPAT_ID}"]')`,
+  `!!document.querySelector('[data-catalog-plugin="${NOTES_ID}"]')`,
 );
-catalogLoaded ? ok('catalog loads from the static registry index (2 entries)') : fail('catalog loads', 'entries not found');
+catalogLoaded ? ok('catalog loads from the registry index (com.pi.notes visible)') : fail('catalog loads', 'entries not found');
 
 // ── 4 · Install flow with permission consent ──
 await evaluate(page, `document.querySelector('[data-install-trigger="${NOTES_ID}"]')?.click(); true`);

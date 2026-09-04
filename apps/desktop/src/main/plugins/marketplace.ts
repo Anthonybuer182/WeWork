@@ -8,7 +8,7 @@ import type { PluginRegistry } from './registry';
 import { satisfiesVersion } from './semver';
 import { HOST_ENGINE_KEY } from './registry';
 
-/** Placeholder official registry; override via plugins.json#registry for dev. */
+/** Placeholder official registry; override via _state.json#registry for dev. */
 export const DEFAULT_REGISTRY_URL = 'https://plugins.pi-coding.dev/index.json';
 
 /**
@@ -25,7 +25,7 @@ export class PluginMarketplace {
     this.registry = registry;
   }
 
-  /** Registry index URL: plugins.json#registry or the default. */
+  /** Registry index URL: _state.json#registry or the default. */
   get registryUrl(): string {
     return this.registry.registryUrl ?? DEFAULT_REGISTRY_URL;
   }
@@ -34,7 +34,7 @@ export class PluginMarketplace {
     if (!force && this.indexCache && Date.now() - this.indexCache.at < this.cacheMs) {
       return this.indexCache.index.plugins;
     }
-    // Re-read plugins.json so registry URL changes apply without a restart.
+    // Re-read state so registry URL changes apply without a restart.
     this.registry.loadState();
     const index = await this.fetchIndex(this.registryUrl);
     this.indexCache = { at: Date.now(), index };

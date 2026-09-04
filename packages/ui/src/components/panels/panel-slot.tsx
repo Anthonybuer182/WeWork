@@ -31,15 +31,27 @@ function PanelBody({ panel }: { panel: PanelEntry }) {
   }
   if (panel.kind === 'liveview' && panel.pluginId && panel.panelId) {
     // Companion card (e.g. a control bar) renders above the live view —
-    // one rail button, controls and live feed on the same screen.
+    // one rail button, controls and live feed on the same screen. The
+    // companion itself may be an iframe or declarative panel.
     const companion = allPanels.find(
       (p) => p.companionOf === panel.panelId && p.source === panel.source,
     );
     if (companion) {
+      const companionBody =
+        companion.kind === 'iframe' && companion.pluginId && companion.panelId && companion.entry ? (
+          <PluginPanelHost pluginId={companion.pluginId} panelId={companion.panelId} entry={companion.entry} />
+        ) : companion.kind === 'declarative' && companion.pluginId && companion.panelId ? (
+          <DeclarativePanelHost pluginId={companion.pluginId} panelId={companion.panelId} />
+        ) : null;
       return (
         <div className="flex h-full w-full flex-col">
-          <div className="shrink-0 border-b bg-background">
-            <DeclarativePanelHost pluginId={companion.pluginId!} panelId={companion.panelId!} />
+          <div
+            className="shrink-0 border-b bg-background"
+            // iframe companions are fixed-height toolbars (their HTML is
+            // written to fit); declarative companions size to content.
+            style={companion.kind === 'iframe' ? { height: 44 } : undefined}
+          >
+            {companionBody}
           </div>
           <div className="min-h-0 flex-1">
             <LiveViewSlot pluginId={panel.pluginId} panelId={panel.panelId} />

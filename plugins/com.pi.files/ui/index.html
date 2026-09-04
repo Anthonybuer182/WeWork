@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>文件中心</title>
+  <!-- pi-plugin:// SDK injected by the host at serve time -->
+  <style>
+    :root { color-scheme: dark; --bg: #0f1115; --card: #171a21; --border: #2a2f3a; --fg: #e6e9ef; --muted: #8b93a3; --accent: #4f8cff; --ok: #3ecf8e; --err: #f87171; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font: 13px/1.6 -apple-system, "PingFang SC", sans-serif; background: var(--bg); color: var(--fg); }
+    header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    header .name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; }
+    header .meta { color: var(--muted); font-size: 11px; }
+    .zoom { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+    .zoom button { background: #2a2f3a; color: var(--fg); border: 0; border-radius: 6px; padding: 3px 9px; cursor: pointer; font-size: 12px; }
+    .zoom span { color: var(--muted); font-size: 11px; min-width: 40px; text-align: center; }
+    main { padding: 12px; }
+    img.page { display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 2px 14px rgba(0,0,0,0.4); transition: width 0.15s; }
+    pre.text { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font: 12px/1.6 ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-all; color: #b6c2d9; }
+    .state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 60px 20px; color: var(--muted); }
+    .state .big { font-size: 15px; color: var(--fg); }
+    .state .err { color: var(--err); font-size: 12px; max-width: 90%; word-break: break-all; }
+    .spin { width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="name" id="fName">文件中心</span>
+    <span class="meta" id="fMeta"></span>
+    <div class="zoom" id="zoomBar" style="display:none">
+      <button data-z="-">−</button><span id="zLabel">100%</span><button data-z="+">＋</button><button data-z="fit">适应</button>
+    </div>
+  </header>
+  <main id="content">
+    <div class="state"><div class="big">未选择文件</div><div>在左侧文件树点击文件,或让 agent 生成文件</div></div>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let zoom = 100;
+    let imgNaturalW = 0;
+
+    function setLoading(name) {
+      $('fName').textContent = name || '文件中心';
+      $('fMeta').textContent = '';
+      $('zoomBar').style.display = 'none';
+      $('content').innerHTML = '<div class="state"><div class="spin"></div><div>加载中…</div></div>';
+    }
+
+    function renderPng(d) {
+      $('fName').textContent = d.fileName;
+      $('fMeta').textContent = `高保真渲染 · officecli · ${(d.size / 1024).toFixed(1)} KB`;
+      $('zoomBar').style.display = 'flex';
+      zoom = 100;
+      $('content').innerHTML = '';
+      const img = new Image();
+      img.className = 'page';
+      img.id = 'pageImg';
+      img.onload = () => {
+        imgNaturalW = img.naturalWidth;
+        applyZoom();
+      };
+      img.onerror = () => {
+        $('content').innerHTML = '<div class="state"><div class="big err">渲染图加载失败</div></div>';
+      };
+      img.src = d.pngPath;
+      $('content').appendChild(img);
+    }
+
+    function applyZoom() {
+      const img = document.getElementById('pageImg');
+      if (!img || !imgNaturalW) return;
+      const containerW = document.querySelector('main').clientWidth - 24;
+      const fitPct = Math.min(100, Math.round((containerW / imgNaturalW) * 100));
+      const pct = zoom === 0 ? fitPct : zoom; // 0 = fit
+      img.style.width = `${Math.round((imgNaturalW * pct) / 100)}px`;
+      $('zLabel').textContent = pct + '%';
+    }
+
+    document.querySelectorAll('.zoom button').forEach((b) => {
+      b.onclick = () => {
+        if (b.dataset.z === 'fit') zoom = 0;
+        else zoom = Math.max(25, Math.min(400, zoom + (b.dataset.z === '+' ? 25 : -25)));
+        applyZoom();
+      };
+    });
+
+    function renderText(d) {
+      $('fName').textContent = d.fileName;
+      $('fMeta').textContent = `文本 · ${(d.size / 1024).toFixed(1)} KB`;
+      $('zoomBar').style.display = 'none';
+      $('content').innerHTML = `<pre class="text">${escapeHtml(d.text ?? '')}</pre>`;
+    }
+
+    function renderError(d) {
+      $('fName').textContent = d.fileName;
+      $('fMeta').textContent = '错误';
+      $('zoomBar').style.display = 'none';
+      $('content').innerHTML = `<div class="state"><div class="big">无法预览</div><div class="err">${escapeHtml(d.error ?? '')}</div></div>`;
+    }
+
+    function renderEmpty() {
+      $('fName').textContent = '文件中心';
+      $('fMeta').textContent = '';
+      $('zoomBar').style.display = 'none';
+      $('content').innerHTML = '<div class="state"><div class="big">未选择文件</div><div>在左侧文件树点击文件,或让 agent 生成文件</div></div>';
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Backend → viewer render events (direction: backend, panelId: viewer)
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
+      const payload = d.payload;
+      if (payload?.event !== 'ui.render') return;
+      const data = payload.data ?? {};
+      if (data.kind === 'png') { zoom = 100; renderPng(data); }
+      else if (data.kind === 'text') renderText(data);
+      else if (data.kind === 'error') renderError(data);
+      else renderEmpty();
+    });
+  </script>
+</body>
+</html>

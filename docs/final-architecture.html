@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work Agent 插件架构终案</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #FAFAFC;
+    --surface: #FFFFFF;
+    --surface-2: #F4F5F8;
+    --ink: #171922;
+    --muted: #5B6070;
+    --faint: #8A8FA0;
+    --border: #E3E5EC;
+    --border-strong: #C9CCD8;
+    --accent: #2F5FE8;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #EAF0FE;
+    --ok: #0E8A5F;
+    --ok-soft: #E3F5EE;
+    --todo: #A96A14;
+    --todo-soft: #FBF0E0;
+    --code-bg: #F2F3F7;
+    --code-ink: #2A2E3C;
+    --shadow: 0 1px 3px rgba(23,25,34,.07), 0 8px 28px rgba(23,25,34,.05);
+    --font-body: 'IBM Plex Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1015;
+      --surface: #171A21;
+      --surface-2: #1D212A;
+      --ink: #E6E9EF;
+      --muted: #9BA3B4;
+      --faint: #6E7686;
+      --border: #2A2F3A;
+      --border-strong: #3A4150;
+      --accent: #6E9BFF;
+      --accent-ink: #0E1015;
+      --accent-soft: #1D2842;
+      --ok: #3ECF8E;
+      --ok-soft: #14301F;
+      --todo: #E8B96A;
+      --todo-soft: #33280F;
+      --code-bg: #13161D;
+      --code-ink: #C4CCDD;
+      --shadow: 0 1px 3px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0E1015;
+    --surface: #171A21;
+    --surface-2: #1D212A;
+    --ink: #E6E9EF;
+    --muted: #9BA3B4;
+    --faint: #6E7686;
+    --border: #2A2F3A;
+    --border-strong: #3A4150;
+    --accent: #6E9BFF;
+    --accent-ink: #0E1015;
+    --accent-soft: #1D2842;
+    --ok: #3ECF8E;
+    --ok-soft: #14301F;
+    --todo: #E8B96A;
+    --todo-soft: #33280F;
+    --code-bg: #13161D;
+    --code-ink: #C4CCDD;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.75 var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  .band {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .band-inner {
+    max-width: 1080px; margin: 0 auto; padding: 40px 28px 30px;
+  }
+  .kicker {
+    font: 600 11px/1 var(--font-mono);
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: clamp(26px, 4vw, 34px); font-weight: 700;
+    letter-spacing: -.01em; text-wrap: balance; line-height: 1.25;
+  }
+  .lede { margin-top: 10px; color: var(--muted); max-width: 62ch; font-size: 15.5px; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 20px;
+    font: 500 12.5px/1.6 var(--font-mono); color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-row b { color: var(--muted); font-weight: 600; }
+
+  .layout { max-width: 1080px; margin: 0 auto; padding: 0 28px 90px; display: flex; gap: 44px; }
+  nav.toc {
+    width: 200px; flex-shrink: 0; position: sticky; top: 0;
+    align-self: flex-start; padding: 34px 0 30px;
+    font-size: 13px; line-height: 2.1;
+    max-height: 100vh; overflow-y: auto;
+  }
+  nav.toc .toc-title {
+    font: 600 10.5px/1 var(--font-mono); letter-spacing: .13em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 12px;
+  }
+  nav.toc a { color: var(--muted); display: block; text-decoration: none; padding-left: 12px; border-left: 2px solid transparent; }
+  nav.toc a:hover { color: var(--ink); text-decoration: none; }
+  nav.toc a.cur { color: var(--accent); border-left-color: var(--accent); }
+  main { flex: 1; min-width: 0; max-width: 780px; padding-top: 34px; }
+
+  section { margin-bottom: 54px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .sec-no { font: 600 13px/1 var(--font-mono); color: var(--accent); letter-spacing: .04em; }
+  h2 {
+    font-size: 21px; font-weight: 650; letter-spacing: -.008em;
+    text-wrap: balance;
+  }
+  .sec-sub { color: var(--muted); font-size: 14px; margin-bottom: 18px; max-width: 66ch; }
+  h3 { font-size: 15.5px; font-weight: 650; margin: 26px 0 10px; }
+  p { margin-bottom: 12px; max-width: 70ch; }
+  p strong { font-weight: 650; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 5px; max-width: 68ch; }
+  code {
+    font: 500 .88em var(--font-mono); background: var(--code-bg);
+    padding: 1.5px 6px; border-radius: 4px; color: var(--code-ink);
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 18px; overflow-x: auto;
+    margin: 14px 0 18px; box-shadow: var(--shadow);
+  }
+  pre code { background: none; padding: 0; font-size: 12.5px; line-height: 1.7; color: var(--code-ink); }
+  pre .c { color: var(--faint); }
+  pre .k { color: var(--accent); font-weight: 600; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0 20px;
+    font-size: 13.5px; line-height: 1.55;
+  }
+  th {
+    text-align: left; font-weight: 600; font-size: 12px;
+    color: var(--muted); border-bottom: 2px solid var(--border-strong);
+    padding: 7px 12px 7px 0; letter-spacing: .02em;
+  }
+  td { border-bottom: 1px solid var(--border); padding: 8px 12px 8px 0; vertical-align: top; }
+  td:first-child, th:first-child { white-space: nowrap; }
+  table code { white-space: nowrap; }
+  .num, td.n { font-variant-numeric: tabular-nums; }
+
+  .tag {
+    display: inline-block; font: 600 10.5px/1 var(--font-mono);
+    padding: 4px 8px; border-radius: 99px; letter-spacing: .04em;
+    vertical-align: 1px; white-space: nowrap;
+  }
+  .tag.ok { color: var(--ok); background: var(--ok-soft); }
+  .tag.todo { color: var(--todo); background: var(--todo-soft); }
+  .tag.acc { color: var(--accent); background: var(--accent-soft); }
+
+  .callout {
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    background: var(--surface); border-radius: 6px;
+    padding: 13px 18px; margin: 16px 0 20px; font-size: 14px;
+    max-width: 72ch;
+  }
+  .callout b { color: var(--accent); }
+
+  .diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px 24px; margin: 16px 0 20px;
+    box-shadow: var(--shadow);
+    font: 12.5px/1.9 var(--font-mono); color: var(--muted);
+    overflow-x: auto; white-space: pre;
+  }
+  .diagram b { color: var(--ink); font-weight: 600; }
+  .diagram .hl { color: var(--accent); font-weight: 600; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 18px; }
+  .cell {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; font-size: 13.5px;
+  }
+  .cell h4 { font-size: 13.5px; font-weight: 650; margin-bottom: 6px; }
+  .cell p { font-size: 13px; color: var(--muted); margin: 0; max-width: none; }
+
+  .legend { display: flex; gap: 16px; align-items: center; font-size: 12.5px; color: var(--muted); margin: 4px 0 18px; }
+
+  footer {
+    border-top: 1px solid var(--border); margin-top: 20px; padding-top: 18px;
+    font-size: 12.5px; color: var(--faint);
+  }
+
+  @media (max-width: 900px) {
+    nav.toc { display: none; }
+    .layout { padding: 0 18px 70px; }
+    .grid2 { grid-template-columns: 1fr; }
+    .band-inner { padding: 30px 18px 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="band">
+  <div class="band-inner">
+    <div class="kicker">pi-coding-agent-desktop · 定稿 v1.0</div>
+    <h1>Work Agent 插件架构终案</h1>
+    <p class="lede">宿主最小化、对外一套接口、隔离合同级、渲染按面板类型最优化 —— 全部业务能力以插件形态弹性集成,与 agent 双向互动。</p>
+    <div class="meta-row">
+      <span><b>10</b> 个阶段已交付</span>
+      <span><b>9</b> 个第一方插件在运行</span>
+      <span><b>120+</b> 项可重复验收</span>
+      <span>定稿 2026-09-03</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="目录">
+  <div class="toc-title">目录</div>
+  <a href="#s1">§1 设计立场</a>
+  <a href="#s2">§2 宿主边界</a>
+  <a href="#s3">§3 进程模型</a>
+  <a href="#s4">§4 对外接口</a>
+  <a href="#s5">§5 权限与能力</a>
+  <a href="#s6">§6 渲染与交互</a>
+  <a href="#s7">§7 Office 高保真</a>
+  <a href="#s8">§8 Agent 双向集成</a>
+  <a href="#s9">§9 分发与路由</a>
+  <a href="#s10">§10 交付状态与路线</a>
+</nav>
+
+<main>
+
+<section id="s1">
+  <div class="sec-head"><span class="sec-no">§1</span><h2>设计立场</h2></div>
+  <p class="sec-sub">三条原则,决定后面所有取舍。</p>
+  <div class="callout">
+    <b>宿主最小化。</b>宿主只保留「元功能面板 + 内核 + 共享资源」。除模型设置与插件中心外,<b>一切业务功能都是插件</b> —— 浏览器自动化、文件中心、待办、邮件、日历、知识库、ERP,包括未来的会议纪要与行政人事财务。没有特权插件。
+  </div>
+  <ul>
+    <li><strong>先自研后开放。</strong>当前全部插件第一方,但安全边界(独立进程、独立源、权限声明、CSP、授权确认)按未来开放生态的标准设计 —— 切换到第三方分发时架构零改动。</li>
+    <li><strong>对外一套接口。</strong>插件作者面对的是:一个 manifest、一个 HTML 面板、一个后端脚本。iframe 还是 WebContentsView 是宿主的实现细节,不出现在文档里。</li>
+    <li><strong>隔离从实测升格为合同。</strong>插件 UI 已实测独立进程(死循环 5 秒宿主响应 1–3ms);后续以 <code>site-per-process</code> 启动参数强制,堵死策略漂移。</li>
+  </ul>
+</section>
+
+<section id="s2">
+  <div class="sec-head"><span class="sec-no">§2</span><h2>宿主边界</h2></div>
+  <p class="sec-sub">「资源 vs 功能」是唯一的分界线:面板 UI 是业务,归插件;单例共享资源是基础设施,归宿主、经权限门暴露。</p>
+  <table>
+    <tr><th>层</th><th>内容</th><th>性质</th></tr>
+    <tr><td>宿主面板</td><td>模型设置、插件中心</td><td>仅有的两个宿主 UI,均为「配置应用本身」的元功能</td></tr>
+    <tr><td>宿主内核</td><td>面板系统 / Rail / 能力枢纽 / pi-plugin:// 协议 / 市场 / 路由</td><td>机制,不是功能</td></tr>
+    <tr><td>宿主资源</td><td>文件系统访问、存储、通知、剪贴板、<b>浏览器引擎</b></td><td>经权限门暴露给插件的共享资源</td></tr>
+    <tr><td>其它一切</td><td>浏览器自动化、文件中心、待办、邮件、日历、知识库、ERP…</td><td>全部插件,可装卸、可被第三方替代</td></tr>
+  </table>
+  <p><strong>浏览器引擎为什么归宿主:</strong>它是单例资源 —— agent 工具、用户点击、<code>pi-browser</code> CLI 三方驱动同一实例、共享同一份持久登录态(persist 会话)。浏览器自动化插件使用它的方式与使用文件系统完全同构:声明 <code>liveview</code> 面板(挂载点)+ <code>browser</code> 权限(能力调用)。</p>
+</section>
+
+<section id="s3">
+  <div class="sec-head"><span class="sec-no">§3</span><h2>进程模型</h2></div>
+  <p class="sec-sub">每插件独立 UtilityProcess 后端 + 独立源沙箱 UI;双平面通信,主进程只做权限与握手。</p>
+  <div class="diagram">主进程 <b>PluginSystem</b>
+│  Registry(扫描/engines 协商)   CapabilityHub(权限门)   Marketplace   pi-plugin:// 协议
+│
+├─ 控制平面(parentPort / IPC):生命周期 · 能力调用 · 工具执行 · 事件广播
+├─ 数据平面(<span class="hl">MessagePort 点对点</span>):面板 UI 事件直传,主进程只牵线不中继
+│
+├─▶ <b>插件后端 ×N</b>(UtilityProcess,独立进程,crash 自动重启 ×3)
+│      工具实现 · 状态 · officecli 渲染管线 · filesystem/office/browser 能力调用
+│
+├─▶ <b>插件 UI ×N</b>(<span class="hl">pi-plugin://&lt;插件id&gt;/ 唯一源沙箱 iframe</span>,站点隔离实测生效)
+│      standard 面板(HTML + piSDK)
+│
+└─▶ <b>浏览器引擎</b>(宿主单例 BrowserView → 待迁 WebContentsView)
+       liveview 面板 = 挂载点;bounds 槽位机制(0×0 上报 / reload 兜底已防御)</div>
+  <p>关键防御已内置:后端 crash 重启 ×3;file:// 渲染器秒开竞态(<code>whenReady</code> 门控 + 渲染器重试);数据面 outbox 缓冲(port 握手前事件不丢)。</p>
+  <h3>常驻性与定时任务</h3>
+  <div class="diagram">插件 = <b>后端(UtilityProcess)</b> + <b>UI(面板)</b>
+
+后端:app 启动即拉起,<span class="hl">永不因面板关闭而死</span> — 定时器/状态/调度逻辑的唯一归宿
+UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<b>载体选择与常驻无关</b>
+
+定时任务(如日历每日 9 点提醒):
+  后端 setInterval 扫描 + storage 持久化 + 启动补跑(错过的触发一次性重放)
+  触发动作:notify.show(系统通知)· panel.setStatus(角标)· ui.render(面板刷新)· network.fetch
+边界:app 关闭期间不执行(桌面应用物理边界,启动时补跑);UtilityProcess 独立进程,不受渲染器节流影响</div>
+  <div class="callout">
+    <b>定论:</b>定时任务换不来 WebContentsView,WebContentsView 也带不来定时任务 —— 后端进程已经解决一切常驻需求;UI 载体只按「交互质量(standard iframe)vs 原生能力(liveview)」选择。
+  </div>
+</section>
+
+<section id="s4">
+  <div class="sec-head"><span class="sec-no">§4</span><h2>对外接口(唯一一套)</h2></div>
+  <p class="sec-sub">插件作者的全部世界:一个声明文件 + 一个 HTML 页面 + 一个后端脚本。</p>
+  <h3>manifest.json — 唯一声明入口</h3>
+<pre><code><span class="c">// 全部贡献点。panels 之外都是声明式注册,不构成"第二种 UI 写法"</span>
+{
+  <span class="k">"id"</span>: "com.yourco.hr",
+  <span class="k">"name"</span>: "人事系统",
+  <span class="k">"permissions"</span>: ["network:hr.yourco.com", "storage", "filesystem"],
+  <span class="k">"contributes"</span>: {
+    <span class="k">"panels"</span>: [
+      { <span class="k">"id"</span>: "main", <span class="k">"title"</span>: "人事", <span class="k">"entry"</span>: "./ui/index.html" },
+      { <span class="k">"id"</span>: "web", <span class="k">"kind"</span>: "liveview", <span class="k">"title"</span>: "内嵌系统" }
+    ],
+    <span class="k">"tools"</span>: [ ... ],            <span class="c">// agent 工具(MCP inputSchema)</span>
+    <span class="k">"commands"</span>: [ ... ],          <span class="c">// 斜杠命令</span>
+    <span class="k">"selectionActions"</span>: [ ... ], <span class="c">// 滑词菜单动作</span>
+    <span class="k">"contextProviders"</span>: [ ... ], <span class="c">// 发送前上下文注入</span>
+    <span class="k">"settings"</span>: [ ... ],          <span class="c">// 插件中心自动设置表单</span>
+    <span class="k">"messageRenderers"</span>: [ ... ], <span class="c">// 对话内卡片(UiNode 声明式)</span>
+    <span class="k">"filePreview"</span>: [ ... ],       <span class="c">// 文件树点击路由认领</span>
+    <span class="k">"skills"</span>: [ ... ]             <span class="c">// agent 使用说明(可选)</span>
+  }
+}</code></pre>
+  <h3>面板两种 kind</h3>
+  <div class="grid2">
+    <div class="cell">
+      <h4>standard(默认,主接口)</h4>
+      <p>写 HTML/CSS/JS 即可。宿主给独立沙箱源 + piSDK 全套:能力调用、后端消息、主题变量自动注入、选区自动进滑词、右键原生菜单、autoHeight。99% 的插件止步于此。</p>
+    </div>
+    <div class="cell">
+      <h4>liveview(进阶,文档化)</h4>
+      <p>需要原生级能力时声明:宿主为面板创建专属 WebContentsView,内容加载走 <code>nativeview.*</code> 能力(受同一权限模型约束)。适用:嵌第三方网页带独立会话、重 GPU、类浏览器体验。</p>
+    </div>
+  </div>
+  <p><strong>声明式 UiNode 的定位:</strong>不作为面板接口,保留在<b>消息卡片</b>(对话内渲染工具结果 —— 数据驱动场景,声明式天然合适)。第一方插件的原声明式面板迁移至 HTML,顺带 dogfood 自己的 API。</p>
+  <h3>后端契约(Node 子进程)</h3>
+<pre><code>parentPort 收发五种消息:
+  ready        → 握手(超时 10s)
+  tool-call    → agent 调用工具 → 回 tool-result(content + 可选 card)
+  ui-port      → 收 MessagePort,此后 UI 事件点对点直传
+  call-result  → host.* 能力调用结果
+  host-event   → 宿主推送(如 browser.urlChanged)</code></pre>
+</section>
+
+<section id="s5">
+  <div class="sec-head"><span class="sec-no">§5</span><h2>权限与能力</h2></div>
+  <p class="sec-sub">一切宿主能力经 CapabilityHub 权限门;manifest 声明、安装时逐条授权确认。</p>
+  <table>
+    <tr><th>能力</th><th>权限</th><th>说明</th></tr>
+    <tr><td><code>app.info</code></td><td>—</td><td>宿主/插件元信息</td></tr>
+    <tr><td><code>storage.*</code></td><td><code>storage</code></td><td>插件私有 KV(plugins-data/&lt;id&gt;)</td></tr>
+    <tr><td><code>notify.show</code></td><td><code>notify</code></td><td>系统通知</td></tr>
+    <tr><td><code>panel.open / setStatus</code></td><td>贡献面板即可</td><td>focus 分级:no-focus-steal(后台动作只亮 badge)/ 自动展开(用户显式动作)</td></tr>
+    <tr><td><code>filesystem.read</code></td><td><code>filesystem</code></td><td>文本读取(≤2MB)</td></tr>
+    <tr><td><code>filesystem.write</code></td><td><code>filesystem</code></td><td>写回 + <b>mtime 冲突检测</b>(外部已改则拒写)</td></tr>
+    <tr><td><code>office.read</code></td><td><code>filesystem</code></td><td>office 家族文本提取(供 agent 上下文)</td></tr>
+    <tr><td><code>browser.*</code> ×9</td><td><code>browser</code></td><td>navigate / back / forward / reload / getState / screenshot / click / getText / evaluate</td></tr>
+    <tr><td><code>network.fetch</code></td><td><code>network:&lt;host&gt;</code></td><td>出站请求,域名 glob 白名单</td></tr>
+    <tr><td><code>nativeview.*</code></td><td>liveview 声明</td><td>原生视图内容驱动 <span class="tag todo">待交付</span></td></tr>
+    <tr><td><code>agent.trigger</code></td><td><code>agent</code></td><td>插件<b>主动</b>触发 agent 对话(定时汇总、自动流程);带权限确认防滥用 <span class="tag todo">待交付</span></td></tr>
+  </table>
+  <h3>协议文件服务(P9a 已交付)</h3>
+  <ul>
+    <li><code>pi-plugin://&lt;id&gt;/ws-file?path=&lt;abs&gt;</code> — 工作区文件原始字节流;按 manifest 权限门控(无权限 403);<b>HTTP Range/206</b>(视频 seek、大文件流式)</li>
+    <li><code>pi-plugin://&lt;id&gt;/memory-file?name=&lt;key&gt;</code> — 用户上传附件(主进程 LRU 注册表)</li>
+  </ul>
+  <p>跨源隔离天然成立:别的插件读不到你的 <code>pi-plugin://</code> 响应(无 CORS)。</p>
+</section>
+
+<section id="s6">
+  <div class="sec-head"><span class="sec-no">§6</span><h2>渲染与交互</h2></div>
+  <p class="sec-sub">载体按面板类型最优化;交互细节全部已实测交付。</p>
+  <table>
+    <tr><th>机制</th><th>状态</th><th>要点</th></tr>
+    <tr><td>沙箱 iframe 独立源</td><td><span class="tag ok">实测隔离</span></td><td>每插件唯一 <code>pi-plugin://</code> origin + Origin-Agent-Cluster;插件死循环 5s,宿主响应 1–3ms;<code>site-per-process</code> 强制 <span class="tag todo">待加</span></td></tr>
+    <tr><td>滑词引用</td><td><span class="tag ok">已交付</span></td><td>左键选中松手即出菜单(引用到对话 / 复制 / 插件动作);iframe 经 SDK 上报;浏览器面板右键 context-menu 触发;菜单滚动跟随选区</td></tr>
+    <tr><td>companion 面板</td><td><span class="tag ok">已交付</span></td><td><code>companionOf</code>:声明式控制条贴 liveview 同屏;一插件一 Rail 按钮</td></tr>
+    <tr><td>hidden 面板</td><td><span class="tag ok">已交付</span></td><td>不上 Rail、panel.open 可达(文件查看器即此类)</td></tr>
+    <tr><td>autoHeight</td><td><span class="tag ok">已交付</span></td><td>视口无关测量(可涨可缩),ResizeObserver 上报</td></tr>
+    <tr><td>面板生命周期</td><td><span class="tag ok">已交付</span></td><td>默认收起(仅 Rail);人为点击 / agent 事件打开;<b>叉号彻底关闭</b>;无空态</td></tr>
+    <tr><td>插件图标</td><td><span class="tag ok">已交付</span></td><td>自带 SVG(CSS mask 模板,随主题变色)> 词汇表 > Puzzle;上架要求带品牌图标</td></tr>
+    <tr><td>主题桥 / 右键菜单 / CSP</td><td><span class="tag ok">已交付</span></td><td>17 个 CSS 变量自动注入;原生编辑菜单;frame-src/img-src pi-plugin:</td></tr>
+  </table>
+</section>
+
+<section id="s7">
+  <div class="sec-head"><span class="sec-no">§7</span><h2>Office 高保真渲染</h2></div>
+  <p class="sec-sub">文件中心(com.pi.files)以 officecli 为渲染引擎 —— agent 写文档与用户看文档共用同一引擎,所见即 agent 所写。</p>
+  <ul>
+    <li><strong>渲染管线:</strong><code>officecli view screenshot --page 1-50</code> → 单张全页 PNG(docx/pptx 全页、xlsx 活动表)→ 经 <code>ws-file</code> 协议给查看器 iframe → 缩放控件(25–400%/适应)</li>
+    <li><strong>保真度:</strong>真实 Office 排版管线 —— 纸张、页边距、分页边界、字体、形状、背景全部还原(pptx 实测像素级)</li>
+    <li><strong>性能:</strong>mtime 缓存(同文件秒开,LRU 24);写盘竞态防御(空内容延迟重读)</li>
+    <li><strong>引擎矩阵其余部分:</strong>Monaco(代码/文本编辑 + 写回)、pdf.js、docx-preview、Univer <span class="tag todo">P9b 余项</span></li>
+  </ul>
+</section>
+
+<section id="s8">
+  <div class="sec-head"><span class="sec-no">§8</span><h2>与 Agent 的双向集成</h2></div>
+  <p class="sec-sub">「work agent」的灵魂:面板操作与 agent 共享同一后端状态。</p>
+  <h3>Agent → 插件(五条通道)</h3>
+  <table>
+    <tr><th>通道</th><th>机制</th></tr>
+    <tr><td>工具调用</td><td>customTools 注入 createAgentSession;当前 19 个工具,LLM 真实调用(e2e 验收)</td></tr>
+    <tr><td>面板操作</td><td>panel.open(focus 分级)/ badge 推送;文件生成自动预览</td></tr>
+    <tr><td>宿主事件</td><td>browser.urlChanged 等 → 持权限后端 → 面板实时刷新</td></tr>
+    <tr><td>斜杠命令</td><td>命令注册表驱动 composer 菜单</td></tr>
+    <tr><td>结果卡片</td><td>tool-result 携带 UiNode card → 对话时间线渲染(支持 args 流式卡)</td></tr>
+  </table>
+  <h3>插件 → Agent(四条通道)</h3>
+  <table>
+    <tr><th>通道</th><th>机制</th></tr>
+    <tr><td>工具贡献</td><td>面板加的待办 agent 能 list 到 —— 同一后端状态</td></tr>
+    <tr><td>滑词引用</td><td>选区 → composer 引用条(去重、hostname 标签)</td></tr>
+    <tr><td>上下文注入</td><td>contextProviders 发送前注入 [相关上下文](受插件设置开关控制)</td></tr>
+    <tr><td>文件预览</td><td>filePreview 认领 → 文件树点击路由到插件面板</td></tr>
+  </table>
+</section>
+
+<section id="s9">
+  <div class="sec-head"><span class="sec-no">§9</span><h2>分发与路由</h2></div>
+  <ul>
+    <li><strong>市场:</strong>静态 index.json + zip + sha256 校验 + engines 版本协商 + 原子安装;卸载默认保留数据(重装恢复);授权确认对话框逐条列权限</li>
+    <li><strong>多根扫描:</strong>dev(开发)> user(市场安装)> builtin(内置);同名高优先级覆盖</li>
+    <li><strong>filePreview 路由优先级:</strong>dev > user > builtin —— <b>第三方查看器装上即接管同扩展</b>;无认领类型 → 系统默认应用打开(宿主永不渲染业务内容)</li>
+    <li><strong>连接器脚手架:</strong><code>examples/templates/connector-plugin/</code>(对接真实 ERP/HR/财务系统的起点)</li>
+  </ul>
+</section>
+
+<section id="s10">
+  <div class="sec-head"><span class="sec-no">§10</span><h2>交付状态与路线</h2></div>
+  <div class="legend"><span class="tag ok">已交付</span><span>验收脚本可重复执行</span>&nbsp;&nbsp;<span class="tag todo">待办</span><span>P10 起</span></div>
+  <table>
+    <tr><th>阶段</th><th>内容</th><th>状态</th></tr>
+    <tr><td>P1–P2</td><td>内核(双平面/协议/注册表)+ 面板宿主(Rail/keepAlive/badge)</td><td><span class="tag ok">已交付</span></td></tr>
+    <tr><td>P3</td><td>市场分发(sha256/engines/原子安装/授权确认)</td><td><span class="tag ok">已交付</span></td></tr>
+    <tr><td>P4</td><td>浏览器自动化基准插件(liveview/companion/工具/CLI)</td><td><span class="tag ok">已交付</span></td></tr>
+    <tr><td>P5</td><td>官方插件矩阵 + 连接器脚手架</td><td><span class="tag ok">已交付</span></td></tr>
+    <tr><td>P6–P7</td><td>消息卡片 / 滑词 / 网络能力 / 上下文注入 / 设置 / 主题桥</td><td><span class="tag ok">已交付</span></td></tr>
+    <tr><td>P8</td><td>生产加固(CSP / autoHeight / 右键桥 / file:// 竞态)</td><td><span class="tag ok">已交付</span></td></tr>
+    <tr><td>P9a</td><td>数据通道:filesystem.write(mtime 冲突)+ ws-file(Range/权限门)+ memory-file + 路由优先级</td><td><span class="tag ok">已交付</span></td></tr>
+    <tr><td>P9b</td><td>officecli 高保真渲染 + iframe 面板 params 契约;Monaco/pdf.js/Univer 引擎接入</td><td><span class="tag ok">office 已交付</span> <span class="tag todo">引擎余项</span></td></tr>
+    <tr><td>P10</td><td><b>开放准备:</b>第一方声明式面板迁 HTML(dogfood)· <code>site-per-process</code> 强制隔离 · liveview 通用化 + <code>nativeview.*</code> 能力 · BrowserView→WebContentsView(Electron 30+ 已废弃)· 面板崩溃自愈(render-process-gone)· <code>agent.trigger</code> 反向触发能力 · 日历定时提醒实证(后端调度 + 补跑)</td><td><span class="tag todo">待办</span></td></tr>
+    <tr><td>P11</td><td><b>对外文档与试点:</b>文档站(概念→manifest→面板→后端→权限→上架)· 挑 1–2 个第三方照文档写插件验证自解释性 · 市场公开</td><td><span class="tag todo">待办</span></td></tr>
+    <tr><td>业务线</td><td>会议纪要、行政人事财务连接器、邮件/日历真实协议(IMAP/SMTP/CalDAV)</td><td><span class="tag todo">待办</span></td></tr>
+  </table>
+  <p><strong>验收体系:</strong><code>scripts/verify-p1..p9a-plugin.mjs</code> + <code>verify-browser-full.mjs</code>,共 120+ 项检查,raw CDP 零依赖,每阶段交付后全量回归。</p>
+  <footer>
+    pi-coding-agent-desktop 插件系统 · 定稿 v1.0 · 2026-09-03<br>
+    原则一句话:宿主做薄到只剩内核与数据通道,一切业务皆插件,一套接口对外。
+  </footer>
+</section>
+
+</main>
+</div>
+
+<script>
+  // TOC current-section highlight
+  const links = [...document.querySelectorAll('nav.toc a')];
+  const map = new Map(links.map(a => [a.hash.slice(1), a]));
+  const obs = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('cur'));
+        map.get(e.target.id)?.classList.add('cur');
+      }
+    }
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  document.querySelectorAll('main section').forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

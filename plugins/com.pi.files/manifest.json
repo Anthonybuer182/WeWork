@@ -1,0 +1,88 @@
+{
+  "id": "com.pi.files",
+  "name": "文件中心",
+  "description": "文件中心:office 高保真渲染(officecli 引擎)+ 文件读写",
+  "version": "0.3.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
+  "backend": "./dist/main.mjs",
+  "icon": "./assets/icon.svg",
+  "permissions": [
+    "filesystem"
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "viewer",
+        "kind": "iframe",
+        "title": "文件查看器",
+        "entry": "./ui-dist/index.html",
+        "hidden": true,
+        "keepAlive": "lru"
+      }
+    ],
+    "tools": [
+      {
+        "name": "files_probe_write",
+        "description": "P9a 验收:write a file via the filesystem.write capability (with optional mtime conflict detection).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Absolute file path to write"
+            },
+            "content": {
+              "type": "string",
+              "description": "File content"
+            },
+            "expectedMtime": {
+              "type": "number",
+              "description": "Optional mtime read earlier — write refuses on conflict"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      },
+      {
+        "name": "files_probe_read",
+        "description": "P9a 验收:read a file via the filesystem.read capability, returning content + mtime.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      },
+      {
+        "name": "files_probe_open",
+        "description": "P9a 验收:programmatically open the hidden viewer panel via panel.open.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ],
+    "filePreview": [
+      {
+        "match": [
+          "docx",
+          "xlsx",
+          "pptx",
+          "pdf",
+          "xls",
+          "csv"
+        ]
+      }
+    ]
+  }
+}

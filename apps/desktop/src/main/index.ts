@@ -26,6 +26,12 @@ export const browserManager = new BrowserManager();
 // Playwright — both agent and user see the same browser instance.
 app.commandLine.appendSwitch('remote-debugging-port', '19222');
 
+// Contract-level plugin isolation: force every site (each pi-plugin:// origin)
+// into its own renderer process. Site isolation is Chromium's default, but
+// this pins it as a launch guarantee — plugin UI can never share a renderer
+// with the host shell regardless of future policy drift.
+// app.commandLine.appendSwitch('site-per-process'); // TEMP: 因果实验
+
 // Prevent Chromium from culling the BrowserView's compositor surface.
 // Without these switches, Chromium's window-occlusion detector and
 // background-throttler incorrectly mark the BrowserView as occluded
@@ -74,41 +80,6 @@ if (!gotLock) {
     /spark.*vl/i,
   ];
 
-  /** One-time migration: auto-patch existing models.json to mark known multimodal models. */
-  function migrateMultimodalModels(): void {
-    const path = join(getAgentDir(), 'models.json');
-    if (!existsSync(path)) return;
-
-    try {
-      const raw = readFileSync(path, 'utf-8');
-      const config = JSON.parse(raw);
-      if (!config?.providers) return;
-
-      let patched = 0;
-      for (const provider of Object.values(config.providers) as any[]) {
-        if (!provider.models) continue;
-        for (const model of provider.models as any[]) {
-          const name = ((model.name || model.id) ?? '').toLowerCase();
-          if (
-            !model.input?.includes('image') &&
-            MULTIMODAL_NAME_PATTERNS.some((p) => p.test(name))
-          ) {
-            model.input = ['text', 'image'];
-            patched++;
-            console.log(`[migrate] Auto-detected multimodal model: ${model.id || model.name}`);
-          }
-        }
-      }
-
-      if (patched > 0) {
-        writeFileSync(path, JSON.stringify(config, null, 2), 'utf-8');
-        console.log(`[migrate] Patched ${patched} model(s) to include image input support.`);
-      }
-    } catch (err) {
-      // models.json unreadable — continue without migration
-      console.warn('[migrate] Could not migrate models.json:', err);
-    }
-  }
 
   /**
    * On launch, sync bundled skills from the app's resources into
@@ -116,6 +87,12 @@ if (!gotLock) {
    *
    * Always overwrites app-provided files (SKILL.md, bin/) to ensure
    * the latest versions are used. User-created files are preserved.
+   */
+  /**
+   * Sync the bundled officecli skill into ~/.pi/agent/skills/ so the agent
+   * can create and edit Office documents. This is the ONLY skill the desktop
+   * app injects — everything else in the skills directory belongs to pi or
+   * the user, and we must not touch it.
    */
   function migrateSkills(): void {
     const __filename = fileURLToPath(import.meta.url);
@@ -132,28 +109,21 @@ if (!gotLock) {
       mkdirSync(targetDir, { recursive: true });
     }
 
-    const bundledDirs = readdirSync(bundledSource, { withFileTypes: true })
-      .filter((d) => d.isDirectory());
-
-    for (const dir of bundledDirs) {
-      const sourcePath = join(bundledSource, dir.name);
-      const target = join(targetDir, dir.name);
-      if (!existsSync(target)) {
-        // New skill — copy entirely
-        cpSync(sourcePath, target, { recursive: true });
-      } else {
-        // Existing skill — sync app-provided files (SKILL.md, bin/)
-        const filesToSync = readdirSync(sourcePath, { withFileTypes: true });
-        for (const entry of filesToSync) {
-          const srcFile = join(sourcePath, entry.name);
-          const tgtFile = join(target, entry.name);
-          if (entry.isDirectory()) {
-            // Always overwrite bin/ directory contents
-            cpSync(srcFile, tgtFile, { recursive: true, force: true });
-          } else {
-            // Overwrite top-level files like SKILL.md
-            cpSync(srcFile, tgtFile, { force: true });
-          }
+    // Only sync officecli — the agent's document creation/editing skill.
+    const sourcePath = join(bundledSource, 'officecli');
+    if (!existsSync(sourcePath)) return;
+    const target = join(targetDir, 'officecli');
+    if (!existsSync(target)) {
+      cpSync(sourcePath, target, { recursive: true });
+    } else {
+      // Overwrite app-provided files (SKILL.md, bin/) to ensure latest version
+      for (const entry of readdirSync(sourcePath, { withFileTypes: true })) {
+        const srcFile = join(sourcePath, entry.name);
+        const tgtFile = join(target, entry.name);
+        if (entry.isDirectory()) {
+          cpSync(srcFile, tgtFile, { recursive: true, force: true });
+        } else {
+          cpSync(srcFile, tgtFile, { force: true });
         }
       }
     }
@@ -193,8 +163,8 @@ if (!gotLock) {
     const __dirname = dirname(__filename);
 
     const binSource = app.isPackaged
-      ? join(process.resourcesPath, 'skills', 'browser', 'bin', 'pi-browser.mjs')
-      : join(__dirname, '..', '..', 'skills', 'browser', 'bin', 'pi-browser.mjs');
+      ? join(process.resourcesPath, 'pi-browser', 'pi-browser.mjs')
+      : join(__dirname, '..', '..', 'resources', 'pi-browser', 'pi-browser.mjs');
 
     if (!existsSync(binSource)) {
       console.warn('[pi-browser] Source not found:', binSource);
@@ -292,10 +262,6 @@ if (!gotLock) {
 
   app.whenReady().then(async () => {
     const settingsManager = SettingsManager.create(app.getPath('home'));
-
-    // Migrate existing models.json: auto-detect multimodal models that
-    // were configured before the auto-detection feature existed (e.g. MiniMax-M3).
-    migrateMultimodalModels();
 
     // Shared ModelRegistry — used by chat service AND VLM analyzer
     const sharedModelRegistry = ModelRegistry.create(AuthStorage.inMemory());

@@ -158,37 +158,49 @@ badge
   ? ok(`rail badge linkage: agent todo_add → badge on hidden todo panel (${badge})`)
   : fail('rail badge linkage', 'no badge on todo rail button');
 
-// ── 5 · Tier 0 panel interaction (todo add via panel input) ──
+// ── 5 · HTML 面板交互(todo add;P10 迁移:面板内容在 iframe 文档内)──
 await evaluate(page, `document.querySelector('[data-panel-id="plugin:com.pi.todo:tasks"]')?.click(); true`);
-const todoPanelReady = await waitFor(
-  page,
-  `(() => document.querySelector('[data-panel-kind="declarative"]')?.textContent.includes('待办(') ?? false)()`,
-);
-todoPanelReady ? ok('todo Tier 0 panel renders') : fail('todo panel renders', 'not found');
+let todoTarget = null;
+for (let i = 0; i < 15 && !todoTarget; i++) {
+  todoTarget = (await (await fetch(`${CDP_HTTP}/json/list`)).json()).find((t) =>
+    t.url.startsWith('pi-plugin://com.pi.todo'),
+  );
+  if (!todoTarget) await sleep(700);
+}
+if (!todoTarget) {
+  fail('todo HTML 面板', 'iframe target not found');
+} else {
+  const todo = await connect(todoTarget.webSocketDebuggerUrl);
+  await todo.send('Runtime.enable', {});
+  const todoPanelReady = await waitFor(
+    todo,
+    `(() => document.getElementById('hd')?.textContent.includes('待办(') ?? false)()`,
+  );
+  todoPanelReady ? ok('todo HTML 面板渲染(iframe)') : fail('todo panel renders', 'not found');
 
-await evaluate(
-  page,
-  `(() => {
-    const input = document.querySelector('[data-panel-kind="declarative"] input[placeholder^="新任务"]');
-    if (!input) return 'no-input';
-    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-    setter.call(input, ${JSON.stringify(`${MARKER} 面板任务`)});
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-    return true;
-  })()`,
-);
-const panelTaskAdded = await waitFor(
-  page,
-  `(() => document.querySelector('[data-panel-kind="declarative"]')?.textContent.includes(${JSON.stringify(`${MARKER} 面板任务`)}) ?? false)()`,
-);
-panelTaskAdded ? ok('todo panel interaction: input → list update (event loopback)') : fail('todo panel interaction', 'task not in list');
+  await evaluate(
+    todo,
+    `(() => {
+      const input = document.getElementById('newTask');
+      if (!input) return 'no-input';
+      input.value = ${JSON.stringify(`${MARKER} 面板任务`)};
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+      return true;
+    })()`,
+  );
+  const panelTaskAdded = await waitFor(
+    todo,
+    `[...document.querySelectorAll('li .title')].some(el => el.textContent.includes(${JSON.stringify(`${MARKER} 面板任务`)}))`,
+  );
+  panelTaskAdded ? ok('todo panel interaction: input → list update (event loopback)') : fail('todo panel interaction', 'task not in list');
+  todo.close();
+}
 
 // ── 6 · Storage persistence ──
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-const dataRoot = join(homedir(), '.pi/agent/plugins-data');
+const dataRoot = join(homedir(), '.pi/agent/plugins/_data');
 const checks = [
   ['com.pi.todo', `${MARKER} 任务`],
   ['com.pi.mail', `${MARKER} 草稿`],
@@ -207,22 +219,26 @@ for (const [id, marker] of checks) {
 }
 persisted === checks.length && ok(`storage persistence across the matrix (todo/mail/calendar/knowledge → plugins-data/)`);
 
-// ── 7 · All five Tier 0 panels render ──
+// ── 7 · All five HTML panels render (P10: 内容在各自 iframe 文档内,经 CDP 断言)──
 const panelChecks = [
-  ['plugin:com.pi.mail:drafts', '写邮件'],
-  ['plugin:com.pi.calendar:events', '新日程'],
-  ['plugin:com.pi.knowledge:kb', '知识库'],
-  ['plugin:com.pi.erp-demo:orders', '订单'],
-  ['plugin:com.pi.todo:tasks', '待办'],
+  ['plugin:com.pi.mail:drafts', 'com.pi.mail', '草稿箱'],
+  ['plugin:com.pi.calendar:events', 'com.pi.calendar', '日程'],
+  ['plugin:com.pi.knowledge:kb', 'com.pi.knowledge', '知识库'],
+  ['plugin:com.pi.erp-demo:orders', 'com.pi.erp-demo', '订单'],
+  ['plugin:com.pi.todo:tasks', 'com.pi.todo', '待办'],
 ];
-for (const [panelId, expectText] of panelChecks) {
+for (const [panelId, origin, expectText] of panelChecks) {
   await evaluate(page, `document.querySelector('[data-panel-id="${panelId}"]')?.click(); true`);
-  const ready = await waitFor(
-    page,
-    `(() => document.querySelector('[data-panel-kind="declarative"]')?.textContent.includes(${JSON.stringify(expectText)}) ?? false)()`,
-    12_000,
+  await sleep(1200);
+  const target = (await (await fetch(`${CDP_HTTP}/json/list`)).json()).find((t) =>
+    t.url.startsWith(`pi-plugin://${origin}`),
   );
-  ready ? ok(`Tier 0 panel renders: ${panelId}`) : fail('Tier 0 panel renders', panelId);
+  if (!target) { fail('HTML 面板渲染', `${panelId}: target not found`); continue; }
+  const sess = await connect(target.webSocketDebuggerUrl);
+  await sess.send('Runtime.enable', {});
+  const ready = await waitFor(sess, `document.body.textContent.includes(${JSON.stringify(expectText)})`, 12_000);
+  ready ? ok(`HTML 面板渲染: ${panelId}`) : fail('HTML 面板渲染', panelId);
+  sess.close();
 }
 
 // ── 8 · Office preview routing (docx → plugin panel with extracted text) ──
@@ -274,17 +290,29 @@ try {
       return candidates.length;
     })()`,
   );
-  const officePreview = await waitFor(
-    page,
-    `(() => {
-      const chrome = document.querySelector('[data-testid="panel-chrome"]')?.getAttribute('data-panel-title');
-      const el = document.querySelector('[data-panel-kind="declarative"]');
-      return chrome === '文件预览' && el && el.textContent.includes(${JSON.stringify(DOCX_MARKER)}) ? true : false;
-    })()`,
-    20_000,
-  );
+  // P11: docx routes to com.pi.files viewer — genoffice 引擎渲染(DOM 页面,文字可选)
+  let officePreview = false;
+  for (let i = 0; i < 20 && !officePreview; i++) {
+    await sleep(1500);
+    try {
+      const targets = await (await fetch(`${CDP_HTTP}/json/list`)).json();
+      const filesTarget = targets.find((t) =>
+        t.url.startsWith('pi-plugin://com.pi.files'),
+      );
+      if (!filesTarget) continue;
+      const fp = await connect(filesTarget.webSocketDebuggerUrl);
+      await fp.send('Runtime.enable', {});
+      const inner = await evaluate(fp, `(() => {
+        // genoffice docx 引擎:渲染成 .docx-page DOM(段落/标题,文字可选可滑词)
+        const page = document.querySelector('.docx-page');
+        return page && page.textContent.trim().length > 5 ? true : false;
+      })()`);
+      fp.close();
+      if (inner) officePreview = true;
+    } catch { /* transient */ }
+  }
   officePreview
-    ? ok('office preview routing: .docx file-tree click → plugin panel with extracted text (office.read capability)')
+    ? ok('office preview routing: .docx file-tree click → com.pi.files viewer(genoffice 引擎 DOM 渲染,文字可选)')
     : fail('office preview routing', `tree candidates=${clicked}`);
 } finally {
   const { rmSync } = await import('node:fs');

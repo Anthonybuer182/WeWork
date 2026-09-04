@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ERP 订单</title>
+<style>
+  :root {
+    --background: #0f1115; --foreground: #e6e9ef;
+    --card: #171a21; --card-foreground: #e6e9ef;
+    --border: #2a2f3a; --muted-foreground: #8b93a3;
+    --primary: #4f8cff; --primary-foreground: #ffffff;
+    --radius: 8px; --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 13px/1.6 var(--font-sans); background: var(--background); color: var(--foreground); padding: 14px; font-variant-numeric: tabular-nums; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .card h2 { font-size: 12px; font-weight: 600; letter-spacing: .3px; color: var(--muted-foreground); margin-bottom: 9px; }
+  input { width: 100%; font: inherit; color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; outline: none; }
+  input:focus { border-color: var(--primary); }
+  .tabs { display: flex; gap: 5px; flex-wrap: wrap; margin: 8px 0 4px; }
+  .tabs button { font: inherit; font-size: 12px; background: var(--background); color: var(--muted-foreground); border: 1px solid var(--border); border-radius: 99px; padding: 3px 11px; cursor: pointer; }
+  .tabs button.on { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+  ul { list-style: none; }
+  li { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 6px; }
+  li:hover { background: rgba(127,127,127,.08); }
+  li .no { font-weight: 600; font-size: 12.5px; }
+  li .meta { color: var(--muted-foreground); font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge { font-size: 10.5px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted-foreground); flex-shrink: 0; }
+  .empty { color: var(--muted-foreground); text-align: center; padding: 16px 0; font-size: 12.5px; }
+  .hint { color: var(--muted-foreground); font-size: 11.5px; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="hd">订单</h2>
+    <input id="kw" placeholder="客户/单号关键词(回车过滤)…" />
+    <div class="tabs" id="tabs"></div>
+    <ul id="list"></ul>
+    <div class="empty" id="empty" style="display:none">没有匹配订单</div>
+  </div>
+  <div class="hint">连接器示例(mock 数据) · agent 可用 erp_query_orders 工具查询</div>
+
+  <script>
+    const PLUGIN_ID = 'com.pi.erp-demo';
+    const PANEL_ID = 'orders';
+    const TABS = [['', '全部'], ['pending', '待付款'], ['paid', '已付款'], ['shipped', '已发货'], ['done', '已完成']];
+
+    function send(eventId, data) {
+      window.parent.postMessage({
+        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
+        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
+      }, '*');
+    }
+
+    function render(s) {
+      const orders = s.orders ?? [];
+      const filter = s.filter ?? { keyword: '', status: '' };
+      document.getElementById('hd').textContent = `订单(${orders.length})`;
+      const kw = document.getElementById('kw');
+      if (document.activeElement !== kw && kw.value !== filter.keyword) kw.value = filter.keyword ?? '';
+      const tabs = document.getElementById('tabs');
+      tabs.innerHTML = '';
+      for (const [code, label] of TABS) {
+        const b = document.createElement('button');
+        b.textContent = label;
+        b.className = filter.status === code ? 'on' : '';
+        b.addEventListener('click', () => send('erp-status', { label }));
+        tabs.appendChild(b);
+      }
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      for (const o of orders) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="no"></span><span class="meta"></span><span class="badge"></span>`;
+        li.querySelector('.no').textContent = o.no;
+        li.querySelector('.meta').textContent = `${o.customer} · ¥${o.amount}`;
+        li.querySelector('.badge').textContent = s.statusLabel?.[o.status] ?? o.status;
+        list.appendChild(li);
+      }
+      document.getElementById('empty').style.display = orders.length ? 'none' : 'block';
+    }
+
+    document.getElementById('kw').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') send('erp-keyword', e.target.value);
+    });
+
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
+      const p = d.payload;
+      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    });
+  </script>
+</body>
+</html>

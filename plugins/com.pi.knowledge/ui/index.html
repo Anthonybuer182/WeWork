@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>知识库</title>
+<style>
+  :root {
+    --background: #0f1115; --foreground: #e6e9ef;
+    --card: #171a21; --card-foreground: #e6e9ef;
+    --border: #2a2f3a; --muted-foreground: #8b93a3;
+    --primary: #4f8cff; --primary-foreground: #ffffff;
+    --radius: 8px; --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 13px/1.6 var(--font-sans); background: var(--background); color: var(--foreground); padding: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .card h2 { font-size: 12px; font-weight: 600; letter-spacing: .3px; color: var(--muted-foreground); margin-bottom: 9px; }
+  input { width: 100%; font: inherit; color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; outline: none; margin-bottom: 7px; }
+  input:focus { border-color: var(--primary); }
+  ul { list-style: none; }
+  li { padding: 7px 6px; border-radius: 6px; cursor: pointer; }
+  li:hover { background: rgba(127,127,127,.08); }
+  li .t { font-weight: 600; }
+  li .d { color: var(--muted-foreground); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { color: var(--muted-foreground); text-align: center; padding: 16px 0; font-size: 12.5px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="hd">知识库</h2>
+    <input id="add" placeholder="添加:标题 | 内容(回车保存)…" />
+    <input id="search" placeholder="搜索…" />
+    <ul id="list"></ul>
+    <div class="empty" id="empty" style="display:none"></div>
+  </div>
+
+  <script>
+    const PLUGIN_ID = 'com.pi.knowledge';
+    const PANEL_ID = 'kb';
+
+    function send(eventId, data) {
+      window.parent.postMessage({
+        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
+        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
+      }, '*');
+    }
+
+    function render(s) {
+      const all = s.total ?? 0;
+      const shown = s.shown ?? [];
+      document.getElementById('hd').textContent =
+        `知识库(${all} 条${s.search ? `,匹配 ${shown.length} 条` : ''})`;
+      const se = document.getElementById('search');
+      if (document.activeElement !== se && se.value !== s.search) se.value = s.search ?? '';
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      for (const e of shown) {
+        const li = document.createElement('li');
+        li.innerHTML = `<div class="t"></div><div class="d"></div>`;
+        li.querySelector('.t').textContent = e.title;
+        li.querySelector('.d').textContent = (e.content ?? '').slice(0, 90);
+        li.addEventListener('click', () => send('kb-delete', { key: String(e.id) }));
+        list.appendChild(li);
+      }
+      const empty = document.getElementById('empty');
+      empty.style.display = shown.length ? 'none' : 'block';
+      empty.innerHTML = s.search ? '无匹配条目' : '知识库为空<br>agent 可用 kb_save 保存知识';
+    }
+
+    document.getElementById('add').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        send('kb-add', e.target.value);
+        e.target.value = '';
+      }
+    });
+    document.getElementById('search').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') send('kb-search', e.target.value);
+    });
+
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
+      const p = d.payload;
+      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    });
+  </script>
+</body>
+</html>

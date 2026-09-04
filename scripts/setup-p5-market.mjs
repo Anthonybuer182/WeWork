@@ -17,7 +17,7 @@ const REPO = new URL('..', import.meta.url).pathname;
 const MARKET_DIR = '/tmp/pi-market';
 const PLUGINS_JSON = join(homedir(), '.pi', 'agent', 'plugins.json');
 
-/** Official catalog: id → source dir (all under examples/plugins/). */
+/** Official catalog: id → source dir (all under plugins/). */
 const OFFICIAL = [
   { id: 'com.pi.todo', dir: 'com.pi.todo' },
   { id: 'com.pi.mail', dir: 'com.pi.mail' },
@@ -53,7 +53,7 @@ function packagePlugin(sourceDir) {
 
 const entries = [];
 for (const { dir } of OFFICIAL) {
-  const sourceDir = join(REPO, 'examples/plugins', dir);
+  const sourceDir = join(REPO, 'plugins', dir);
   if (!existsSync(join(sourceDir, 'manifest.json'))) {
     console.warn(`skip (no manifest): ${dir}`);
     continue;

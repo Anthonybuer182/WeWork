@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>待办</title>
+<!-- pi-plugin:// SDK injected by the host at serve time -->
+<style>
+  :root {
+    /* Dark fallbacks until the theme bridge pushes host tokens */
+    --background: #0f1115; --foreground: #e6e9ef;
+    --card: #171a21; --card-foreground: #e6e9ef;
+    --border: #2a2f3a; --muted-foreground: #8b93a3;
+    --primary: #4f8cff; --primary-foreground: #ffffff;
+    --radius: 8px; --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font: 13px/1.6 var(--font-sans);
+    background: var(--background); color: var(--foreground);
+    padding: 14px;
+  }
+  .card {
+    background: var(--card); color: var(--card-foreground);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .card h2 {
+    font-size: 12px; font-weight: 600; letter-spacing: .3px;
+    color: var(--muted-foreground); margin-bottom: 9px;
+  }
+  input {
+    width: 100%; font: inherit; color: var(--foreground);
+    background: var(--background); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; outline: none;
+  }
+  input:focus { border-color: var(--primary); }
+  ul { list-style: none; margin-top: 10px; }
+  li {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 6px; border-radius: 6px; cursor: pointer;
+  }
+  li:hover { background: rgba(127,127,127,.08); }
+  li .mark { width: 16px; text-align: center; color: var(--muted-foreground); flex-shrink: 0; }
+  li.done .mark { color: var(--primary); }
+  li .title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  li.done .title { color: var(--muted-foreground); text-decoration: line-through; }
+  li .del {
+    border: 0; background: none; color: var(--muted-foreground);
+    cursor: pointer; font-size: 14px; padding: 0 3px; flex-shrink: 0;
+    visibility: hidden;
+  }
+  li:hover .del { visibility: visible; }
+  li .del:hover { color: var(--foreground); }
+  .empty { color: var(--muted-foreground); text-align: center; padding: 18px 0; font-size: 12.5px; }
+  .hint { color: var(--muted-foreground); font-size: 11.5px; margin-top: 2px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="hd">待办</h2>
+    <input id="newTask" placeholder="新任务,回车添加…" />
+    <ul id="list"></ul>
+    <div class="empty" id="empty" style="display:none">没有任务<br>上方输入添加,或让 agent 用 todo_add 记录</div>
+  </div>
+  <div class="hint">点击任务切换完成 · × 删除 · agent 可用 todo_add / todo_list / todo_done 工具</div>
+
+  <script>
+    const PLUGIN_ID = 'com.pi.todo';
+    const PANEL_ID = 'tasks';
+
+    function send(eventId, data) {
+      window.parent.postMessage({
+        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
+        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
+      }, '*');
+    }
+
+    function render(s) {
+      const tasks = s.tasks ?? [];
+      document.getElementById('hd').textContent = `待办(${s.open} 项进行中)`;
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      for (const t of tasks) {
+        const li = document.createElement('li');
+        li.className = t.done ? 'done' : '';
+        li.innerHTML = `<span class="mark">${t.done ? '✓' : '○'}</span>` +
+          `<span class="title"></span><button class="del" title="删除">×</button>`;
+        li.querySelector('.title').textContent = t.title;
+        li.addEventListener('click', (e) => {
+          if (e.target.classList.contains('del')) {
+            send('task-delete', { key: String(t.id) });
+          } else {
+            send('task-toggle', { key: String(t.id) });
+          }
+        });
+        list.appendChild(li);
+      }
+      document.getElementById('empty').style.display = tasks.length ? 'none' : 'block';
+    }
+
+    document.getElementById('newTask').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        send('task-add', e.target.value);
+        e.target.value = '';
+      }
+    });
+
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
+      const p = d.payload;
+      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    });
+  </script>
+</body>
+</html>

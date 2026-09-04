@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>文件中心</title>
+  <!-- pi-plugin:// SDK injected by the host at serve time -->
+  <style>
+    :root { color-scheme: dark; --bg: #0f1115; --card: #171a21; --border: #2a2f3a; --fg: #e6e9ef; --muted: #8b93a3; --accent: #4f8cff; --ok: #3ecf8e; --err: #f87171; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font: 13px/1.6 -apple-system, "PingFang SC", sans-serif; background: var(--bg); color: var(--fg); }
+    header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    header .name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; }
+    header .meta { color: var(--muted); font-size: 11px; }
+    main { padding: 12px; }
+    /* docx 页面 */
+    .docx-page { background: #fff; color: #1a1a1a; max-width: 720px; margin: 0 auto; padding: 48px 56px; border-radius: 4px; box-shadow: 0 2px 16px rgba(0,0,0,.45); font-size: 11.5pt; line-height: 1.6; }
+    .docx-page p { margin: 0 0 4pt; min-height: 1em; }
+    .docx-page p.blank { min-height: 1em; }
+    .docx-page h1,.docx-page h2,.docx-page h3 { margin: 12pt 0 6pt; line-height: 1.25; }
+    .docx-page h1 { font-size: 18pt; } .docx-page h2 { font-size: 15pt; } .docx-page h3 { font-size: 13pt; }
+    .docx-page .li { display: flex; gap: 8px; margin: 2pt 0; }
+    .docx-page .mark { color: #555; min-width: 18px; }
+    .docx-page .imgwrap { text-align: center; margin: 8pt 0; }
+    .docx-page .imgwrap img { max-width: 100%; border-radius: 2px; }
+    .docx-page .passthrough { background: #f3f4f6; border: 1px dashed #ccc; border-radius: 6px; padding: 8px 12px; color: #666; font-size: 10pt; margin: 6pt 0; }
+    .docx-page .pv { margin-left: 8px; color: #999; }
+    /* pptx 幻灯片 */
+    .slide { position: relative; max-width: 760px; margin: 0 auto 18px; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,.45); }
+    .slide svg { display: block; width: 100%; height: auto; }
+    .slide .pageno { position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: rgba(0,0,0,.45); background: rgba(255,255,255,.7); border-radius: 8px; padding: 1px 8px; }
+    /* xlsx 表格 */
+    .sheet { background: #fff; border-radius: 4px; overflow: hidden; margin: 0 auto 16px; max-width: 100%; box-shadow: 0 2px 16px rgba(0,0,0,.45); }
+    .sheet-name { font-size: 11px; color: #666; padding: 6px 12px; background: #f5f5f5; border-bottom: 1px solid #e5e5e5; }
+    .sheet table { border-collapse: collapse; font-size: 11px; color: #222; }
+    .sheet td { border: 1px solid #e8e8e8; padding: 3px 8px; min-width: 48px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sheet tr:first-child td { background: #f0f4f8; font-weight: 600; }
+    /* 通用 */
+    pre.text { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font: 12px/1.6 ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-all; color: #b6c2d9; }
+    img.page { display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 2px 14px rgba(0,0,0,.4); max-width: 100%; }
+    .state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 60px 20px; color: var(--muted); }
+    .state .big { font-size: 15px; color: var(--fg); }
+    .state .err { color: var(--err); font-size: 12px; max-width: 90%; word-break: break-all; }
+    .spin { width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="name" id="fName">文件中心</span>
+    <span class="meta" id="fMeta"></span>
+  </header>
+  <main id="content">
+    <div class="state"><div class="big">未选择文件</div><div>在左侧文件树点击文件,或让 agent 生成文件</div></div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

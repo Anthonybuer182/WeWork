@@ -10,7 +10,7 @@
  *  4. Liveview panel: BrowserView target navigates + slot mounts
  *  5. Tier 0 control panel reflects live browser state (host-event push)
  *  6. Skill contribution synced into ~/.pi/agent/skills/
- *  7. filePreview routing: .md → preview plugin, .docx → host fallback
+ *  7. filePreview routing: .md → preview plugin, .docx → com.pi.files (officecli hi-fi), .pdf → null (P9: no host fallback)
  *  8. Preview plugin renders file content via filesystem capability (real file-tree click)
  */
 const CDP_HTTP = 'http://127.0.0.1:19222';
@@ -170,21 +170,28 @@ browserTarget
   : fail('BrowserView target', 'no data: URL target found');
 
 // ── 5 · Companion toolbar reflects live state (control merged into the
-//      liveview panel: one plugin, one rail button) ──
-const controlReady = await waitFor(
-  page,
-  `(() => {
-    const slot = document.querySelector('[data-testid="panel-slot"]');
-    const input = slot?.querySelector('input');
-    return input && (input.placeholder || '').includes('data:text/html') ? true : false;
-  })()`,
+//      liveview panel: one plugin, one rail button). P10: the toolbar is an
+//      iframe companion — assert its URL display via the iframe CDP target.
+const toolbarTarget = (await listTargets()).find(
+  (t) => t.url.startsWith('pi-plugin://com.pi.browser') && t.url.includes('toolbar'),
 );
+let controlReady = false;
+if (toolbarTarget) {
+  const tb = await connect(toolbarTarget.webSocketDebuggerUrl);
+  await tb.send('Runtime.enable', {});
+  controlReady = !!(await waitFor(
+    tb,
+    `(() => { const el = document.getElementById('url'); return el && (el.placeholder || '').includes('data:text/html') ? true : false; })()`,
+    15_000,
+  ));
+  tb.close();
+}
 const railCount = await evaluate(
   page,
   `[...document.querySelectorAll('[data-panel-id]')].filter(b => b.dataset.panelId.includes('com.pi.browser')).length`,
 );
 controlReady && railCount === 1
-  ? ok('companion 工具栏随 liveview 同屏渲染,显示实时 URL(host-event 链)+ 浏览器插件仅占 1 个 rail 按钮')
+  ? ok('companion 工具栏(iframe)随 liveview 同屏渲染,显示实时 URL(host-event 链)+ 浏览器插件仅占 1 个 rail 按钮')
   : fail('companion toolbar', `controlReady=${controlReady} railButtons=${railCount}`);
 
 // ── 6 · Skills: browser plugin contributes tools only (no skill needed —
@@ -202,8 +209,8 @@ const pluginSkillDir = join(homedir(), '.pi/agent/skills/com.pi.browser');
 const mdRoute = await evaluate(page, `window.pluginBridge.findPreview('/tmp/p4-test.md')`);
 const docxRoute = await evaluate(page, `window.pluginBridge.findPreview('/tmp/p4-test.docx')`);
 const pdfRoute = await evaluate(page, `window.pluginBridge.findPreview('/tmp/p4-test.pdf')`);
-mdRoute?.panelId === 'plugin:com.pi.preview:preview' && docxRoute?.panelId === 'plugin:com.pi.preview:preview' && pdfRoute?.panelId === null
-  ? ok('filePreview routing: .md/.docx → preview plugin (P5 office), unclaimed .pdf → host fallback')
+mdRoute?.panelId === 'plugin:com.pi.preview:preview' && docxRoute?.panelId === 'plugin:com.pi.files:viewer' && pdfRoute?.panelId === 'plugin:com.pi.files:viewer'
+  ? ok('filePreview routing: .md → preview plugin; .docx/.pdf → com.pi.files(四引擎矩阵)')
   : fail('filePreview routing', JSON.stringify({ mdRoute, docxRoute, pdfRoute }));
 
 // ── 8 · Preview plugin end-to-end (real file-tree click) ──

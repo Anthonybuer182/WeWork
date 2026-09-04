@@ -189,24 +189,30 @@ afterClick.startsWith('CLICKED-')
   : fail('CLI click', `${clicked.slice(0, 80)} | after=${afterClick.slice(0, 80)}`);
 
 // ── 4 · companion 工具栏双向(与 liveview 同屏,一个 rail 按钮)──
+// P10: 工具栏是 iframe companion — 输入操作经其 CDP target(toolbar.html)。
 await evaluate(page, `document.querySelector('[data-panel-id="plugin:com.pi.browser:preview"]')?.click(); true`);
 await sleep(1500);
+const tbTarget = (await (await fetch(`${CDP_HTTP}/json/list`)).json()).find(
+  (t) => t.url.startsWith('pi-plugin://com.pi.browser') && t.url.includes('toolbar'),
+);
+const tb = tbTarget ? await connect(tbTarget.webSocketDebuggerUrl) : null;
+if (tb) await tb.send('Runtime.enable', {});
 // 输入 URL 回车 → browser-open → navigate → host-event urlChanged → 实况刷新
 const PAGE2 = 'data:text/html;charset=utf-8,' + encodeURIComponent(
   `<title>控制面板${MARKER}</title><body><h1>panel-driven</h1></body>`,
 );
-const typed = await evaluate(page, `(() => {
-  const input = document.querySelector('[data-testid="panel-slot"] input');
-  if (!input) return false;
-  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-  setter.call(input, ${JSON.stringify(PAGE2)});
-  input.dispatchEvent(new Event('input', { bubbles: true }));
-  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-  return true;
-})()`);
-const panelState = typed
-  ? await waitFor(page, `(() => {
-      const input = document.querySelector('[data-testid="panel-slot"] input');
+const typed = tb
+  ? await evaluate(tb, `(() => {
+      const input = document.getElementById('url');
+      if (!input) return false;
+      input.value = ${JSON.stringify(PAGE2)};
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+      return true;
+    })()`)
+  : false;
+const panelState = typed && tb
+  ? await waitFor(tb, `(() => {
+      const input = document.getElementById('url');
       return input && (input.placeholder || '').startsWith(${JSON.stringify(PAGE2.slice(0, 35))}) ? 'synced' : null;
     })()`, 15_000)
   : null;
@@ -216,28 +222,24 @@ panelState === 'synced' && oneButton === 1
   : fail('companion 工具栏双向', `typed=${typed} state=${panelState} buttons=${oneButton}`);
 
 // ── 5 · 工具栏按钮(后退/前进)──
-await evaluate(page, `(() => {
-  const btn = [...document.querySelectorAll('[data-testid="panel-slot"] button')].find(b => b.textContent.trim() === '←');
-  btn?.click();
-  return !!btn;
-})()`);
-const backState = await waitFor(page, `(() => {
-  const input = document.querySelector('[data-testid="panel-slot"] input');
-  return input && (input.placeholder || '').startsWith(${JSON.stringify(PAGE.slice(0, 35))}) ? 'back-ok' : null;
-})()`, 10_000);
+await evaluate(tb, `document.getElementById('back')?.click(); true`);
+const backState = tb
+  ? await waitFor(tb, `(() => {
+      const input = document.getElementById('url');
+      return input && (input.placeholder || '').startsWith(${JSON.stringify(PAGE.slice(0, 35))}) ? 'back-ok' : null;
+    })()`, 10_000)
+  : null;
 backState === 'back-ok'
   ? ok('工具栏 ←: 后退生效,地址栏 placeholder 回切到上一页 URL')
   : fail('工具栏后退', backState ?? 'no state change');
 
-await evaluate(page, `(() => {
-  const btn = [...document.querySelectorAll('[data-testid="panel-slot"] button')].find(b => b.textContent.trim() === '→');
-  btn?.click();
-  return !!btn;
-})()`);
-const fwdState = await waitFor(page, `(() => {
-  const input = document.querySelector('[data-testid="panel-slot"] input');
-  return input && (input.placeholder || '').startsWith(${JSON.stringify(PAGE2.slice(0, 35))}) ? 'fwd-ok' : null;
-})()`, 10_000);
+await evaluate(tb, `document.getElementById('fwd')?.click(); true`);
+const fwdState = tb
+  ? await waitFor(tb, `(() => {
+      const input = document.getElementById('url');
+      return input && (input.placeholder || '').startsWith(${JSON.stringify(PAGE2.slice(0, 35))}) ? 'fwd-ok' : null;
+    })()`, 10_000)
+  : null;
 fwdState === 'fwd-ok'
   ? ok('工具栏 →: 前进生效,地址栏回到控制面板页 URL(history 往返)')
   : fail('工具栏前进', fwdState ?? 'no state change');
@@ -411,6 +413,7 @@ ap.active === 'plugin:com.pi.browser:preview' && ap.liveview
   }
 }
 
+tb?.close();
 page.close();
 console.log(process.exitCode ? '\nRESULT: FAIL' : '\nRESULT: ALL PASS');
 process.exit(process.exitCode ?? 0);

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日历</title>
+<style>
+  :root {
+    --background: #0f1115; --foreground: #e6e9ef;
+    --card: #171a21; --card-foreground: #e6e9ef;
+    --border: #2a2f3a; --muted-foreground: #8b93a3;
+    --primary: #4f8cff; --primary-foreground: #ffffff;
+    --radius: 8px; --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 13px/1.6 var(--font-sans); background: var(--background); color: var(--foreground); padding: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
+  .card h2 { font-size: 12px; font-weight: 600; letter-spacing: .3px; color: var(--muted-foreground); margin-bottom: 9px; }
+  .row { display: flex; gap: 7px; }
+  input { flex: 1; min-width: 0; font: inherit; color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; outline: none; margin-bottom: 7px; }
+  input:focus { border-color: var(--primary); }
+  button { font: inherit; background: var(--primary); color: var(--primary-foreground); border: 0; border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+  ul { list-style: none; }
+  li { display: flex; align-items: baseline; gap: 8px; padding: 7px 6px; border-radius: 6px; cursor: pointer; }
+  li:hover { background: rgba(127,127,127,.08); }
+  li .t { font-weight: 600; }
+  li .meta { color: var(--muted-foreground); font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { color: var(--muted-foreground); text-align: center; padding: 16px 0; font-size: 12.5px; }
+  .hint { color: var(--muted-foreground); font-size: 11.5px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>新日程</h2>
+    <input id="title" placeholder="标题…" />
+    <div class="row">
+      <input id="time" placeholder="时间(如:明天 14:00)…" />
+      <button id="add">添加</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2 id="hd">日程</h2>
+    <ul id="list"></ul>
+    <div class="empty" id="empty" style="display:none">暂无日程<br>agent 可用 calendar_add_event 工具添加</div>
+  </div>
+  <div class="hint">点击日程删除 · CalDAV / Google 日历将在连接器版本接入</div>
+
+  <script>
+    const PLUGIN_ID = 'com.pi.calendar';
+    const PANEL_ID = 'events';
+
+    function send(eventId, data) {
+      window.parent.postMessage({
+        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
+        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
+      }, '*');
+    }
+
+    function render(s) {
+      const c = s.composing ?? {};
+      const events = s.events ?? [];
+      document.getElementById('hd').textContent = `日程(${events.length})`;
+      const sync = (id, v) => {
+        const el = document.getElementById(id);
+        if (document.activeElement !== el && el.value !== v) el.value = v ?? '';
+      };
+      sync('title', c.title); sync('time', c.time);
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      for (const ev of events) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="t"></span><span class="meta"></span>`;
+        li.querySelector('.t').textContent = ev.title;
+        li.querySelector('.meta').textContent = ev.time + (ev.note ? ` · ${ev.note}` : '');
+        li.addEventListener('click', () => send('event-delete', { key: String(ev.id) }));
+        list.appendChild(li);
+      }
+      document.getElementById('empty').style.display = events.length ? 'none' : 'block';
+    }
+
+    document.getElementById('title').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') send('event-title', e.target.value);
+    });
+    document.getElementById('time').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') send('event-time', e.target.value);
+    });
+    document.getElementById('add').addEventListener('click', () => send('event-add'));
+
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
+      const p = d.payload;
+      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    });
+  </script>
+</body>
+</html>

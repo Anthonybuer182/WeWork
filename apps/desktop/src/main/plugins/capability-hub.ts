@@ -1,6 +1,6 @@
 import { app, Notification, net } from 'electron';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import type { CapabilityMethod, PluginEvent, PluginPanelStatus } from '@pi/types';
 import type { PluginRegistry } from './registry';
 import type { BrowserManager } from '@main/browser/browser-manager';
@@ -139,6 +139,37 @@ export class CapabilityHub {
         })();
         if (size > 2 * 1024 * 1024) throw new Error('file too large (>2MB) for filesystem.read');
         return { path, content: readFileSync(path, 'utf-8'), size };
+      },
+    });
+
+    // ── filesystem.write (permission: filesystem) — plugin write-back with
+    // conflict detection: an expectedMtime older than the on-disk mtime means
+    // the file changed since the plugin last read it; refuse to clobber. ──
+    this.capabilities.set('filesystem.write', {
+      permission: 'filesystem',
+      handler: ({ params }) => {
+        const path = String(params.path ?? '');
+        if (!path) throw new Error('missing path');
+        const expectedMtime = typeof params.expectedMtime === 'number' ? params.expectedMtime : undefined;
+        if (expectedMtime !== undefined && existsSync(path)) {
+          const actual = statSync(path).mtimeMs;
+          if (Math.abs(actual - expectedMtime) > 1) {
+            throw new Error(
+              `conflict: file changed on disk (mtime ${Math.round(actual)}) since read (expected ${Math.round(expectedMtime)}) — re-read before writing`,
+            );
+          }
+        }
+        // Binary write: contentB64 (base64) — zip-based formats (docx/xlsx/
+        // pptx) must not round-trip through utf-8 strings.
+        let bytes: Buffer;
+        if (typeof params.contentB64 === 'string') {
+          bytes = Buffer.from(params.contentB64, 'base64');
+        } else {
+          bytes = Buffer.from(String(params.content ?? ''), 'utf-8');
+        }
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, bytes);
+        return { path, size: bytes.length, mtime: statSync(path).mtimeMs };
       },
     });
 

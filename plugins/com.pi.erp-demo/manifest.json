@@ -1,0 +1,60 @@
+{
+  "id": "com.pi.erp-demo",
+  "name": "ERP 连接器(示例)",
+  "description": "连接器模式示例:订单查询面板 + erp_query_orders 工具,mock 数据演示外部业务系统接入形态",
+  "version": "0.1.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
+  "backend": "./dist/main.mjs",
+  "permissions": [
+    "storage",
+    "network:localhost"
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "orders",
+        "kind": "iframe",
+        "title": "ERP 订单",
+        "entry": "./ui/index.html",
+        "keepAlive": "lru"
+      }
+    ],
+    "tools": [
+      {
+        "name": "erp_query_orders",
+        "description": "Query ERP orders. Optional status filter (pending/paid/shipped/done). Returns order lines with customer, amount and status.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Filter by status: pending | paid | shipped | done"
+            },
+            "keyword": {
+              "type": "string",
+              "description": "Filter by customer or order number keyword"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "erp_fetch_live",
+        "description": "Fetch live order data from the configured ERP API endpoint over HTTP (network.fetch capability). Falls back to the local mock when the endpoint is unreachable.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "API URL to fetch (host must be granted in the manifest)"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "icon": "./assets/icon.svg"
+}

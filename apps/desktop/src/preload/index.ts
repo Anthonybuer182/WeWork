@@ -225,7 +225,7 @@ const pluginBridge = (() => {
     const queued = outbox.get(meta.pluginId);
     outbox.delete(meta.pluginId);
     for (const payload of queued ?? []) {
-      try { port.postMessage(payload); } catch { /* dropped */ }
+      try { port.postMessage(payload); } catch (e) { console.log('[preload] flush FAILED:', String(e).slice(0, 80)); }
     }
   });
 

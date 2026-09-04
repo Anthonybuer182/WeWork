@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>浏览器工具栏</title>
+<style>
+  :root {
+    --background: #0f1115; --foreground: #e6e9ef;
+    --border: #2a2f3a; --muted-foreground: #8b93a3;
+    --primary: #4f8cff; --primary-foreground: #ffffff;
+    --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font: 12.5px/1 var(--font-sans);
+    background: var(--background); color: var(--foreground);
+    display: flex; align-items: center; gap: 6px; padding: 0 8px;
+  }
+  button {
+    font: inherit; background: none; border: 0; color: var(--muted-foreground);
+    cursor: pointer; padding: 4px 7px; border-radius: 6px; flex-shrink: 0;
+  }
+  button:hover { color: var(--foreground); background: rgba(127,127,127,.12); }
+  input {
+    flex: 1; min-width: 0; font: inherit; color: var(--foreground);
+    background: var(--background); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; outline: none;
+  }
+  input:focus { border-color: var(--primary); }
+</style>
+</head>
+<body>
+  <button id="back" title="后退">←</button>
+  <button id="fwd" title="前进">→</button>
+  <button id="reload" title="刷新">⟳</button>
+  <input id="url" placeholder="输入网址,回车打开…" spellcheck="false" />
+
+  <script>
+    const PLUGIN_ID = 'com.pi.browser';
+    const PANEL_ID = 'control';
+
+    function send(eventId, data) {
+      window.parent.postMessage({
+        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
+        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
+      }, '*');
+    }
+
+    function render(s) {
+      const el = document.getElementById('url');
+      if (document.activeElement !== el) {
+        const url = s.url ?? '';
+        el.value = '';
+        el.placeholder = url.length > 42 ? url.slice(0, 39) + '…' : (url || '输入网址,回车打开…');
+      }
+    }
+
+    document.getElementById('back').addEventListener('click', () => send('browser-back'));
+    document.getElementById('fwd').addEventListener('click', () => send('browser-forward'));
+    document.getElementById('reload').addEventListener('click', () => send('browser-reload'));
+    document.getElementById('url').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        send('browser-open', e.target.value.trim());
+        e.target.value = '';
+      }
+    });
+
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
+      const p = d.payload;
+      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    });
+  </script>
+</body>
+</html>

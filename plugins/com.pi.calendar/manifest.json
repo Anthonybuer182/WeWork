@@ -1,0 +1,63 @@
+{
+  "id": "com.pi.calendar",
+  "name": "日历",
+  "description": "官方插件:日程面板 + agent 工具(calendar_add_event / calendar_list_upcoming)",
+  "version": "0.1.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
+  "backend": "./dist/main.mjs",
+  "permissions": [
+    "storage",
+    "notify"
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "events",
+        "kind": "iframe",
+        "title": "日历",
+        "entry": "./ui/index.html",
+        "keepAlive": "lru"
+      }
+    ],
+    "tools": [
+      {
+        "name": "calendar_add_event",
+        "description": "Add a calendar event. Use when the user mentions a meeting, deadline, or schedule.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Event title"
+            },
+            "time": {
+              "type": "string",
+              "description": "When the event happens, free-form (e.g. 明天下午 3 点 / 2026-09-01 10:00)"
+            },
+            "note": {
+              "type": "string",
+              "description": "Optional details"
+            }
+          },
+          "required": [
+            "title",
+            "time"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "calendar_list_upcoming",
+        "description": "List upcoming calendar events.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "icon": "./assets/icon.svg"
+}

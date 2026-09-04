@@ -1,0 +1,75 @@
+{
+  "id": "com.pi.browser",
+  "name": "浏览器自动化",
+  "description": "P4 标杆插件:agent 工具 + Tier 0 控制面板 + liveview 实时预览 + skill 贡献",
+  "version": "0.1.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
+  "backend": "./dist/main.mjs",
+  "permissions": [
+    "browser"
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "preview",
+        "kind": "liveview",
+        "title": "浏览器",
+        "keepAlive": "always"
+      },
+      {
+        "id": "control",
+        "kind": "iframe",
+        "title": "浏览器控制",
+        "icon": "sliders",
+        "companionOf": "preview",
+        "entry": "./ui/toolbar.html",
+        "keepAlive": "lru"
+      }
+    ],
+    "tools": [
+      {
+        "name": "browser_navigate",
+        "description": "Navigate the built-in browser to a URL and wait for it to load. Returns the final URL and page title.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to open, e.g. https://example.com"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_get_state",
+        "description": "Get the current state of the built-in browser: current URL and page title.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_screenshot",
+        "description": "Take a screenshot of the current page in the built-in browser. Returns a base64 PNG image.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "fullPage": {
+              "type": "boolean",
+              "description": "Capture the full scrollable page instead of the viewport"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "icon": "./assets/icon.svg"
+}
