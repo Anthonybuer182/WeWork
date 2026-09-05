@@ -557,7 +557,12 @@ async function previewPdf(url: string, fileName: string): Promise<void> {
 
 async function previewXlsx(url: string, fileName: string): Promise<void> {
   const buf = new Uint8Array(await (await fetch(url)).arrayBuffer());
-  const wb = XLSX.read(buf, { type: 'array' });
+  // CSV/TSV have no zip magic — decode as UTF-8 text. SheetJS array parsing
+  // without a codepage mangles non-ASCII bytes as Latin-1.
+  const isZip = buf[0] === 0x50 && buf[1] === 0x4b;
+  const wb = isZip
+    ? XLSX.read(buf, { type: 'array' })
+    : XLSX.read(new TextDecoder('utf-8').decode(buf), { type: 'string' });
   const parts: string[] = [];
   for (const name of wb.SheetNames) {
     const ws = wb.Sheets[name];

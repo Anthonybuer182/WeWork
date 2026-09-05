@@ -39,14 +39,13 @@ const queryClient = new QueryClient({
 });
 
 /**
- * The host is the zeroth panel contributor: preview / settings / plugin-center
- * flow through the same panel registry, rail and lifecycle as plugins.
- * (The browser preview is contributed by the com.pi.browser plugin.)
+ * The host is the zeroth panel contributor: settings / plugin-center flow
+ * through the same panel registry, rail and lifecycle as plugins. File
+ * preview and the browser are plugin-owned — no host fallback panels.
  */
 const HOST_PANELS = [
   { id: 'host:plugins', title: '插件中心', icon: 'puzzle', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
   { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
-  { id: 'host:preview', title: '预览', icon: 'preview', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
 ];
 
 function AppContent() {

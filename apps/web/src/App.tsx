@@ -37,10 +37,10 @@ const queryClient = new QueryClient({
  * The web build registers the same host panels as desktop. There is no
  * plugin bridge here, so plugin panels simply never appear — the panel
  * system degrades gracefully. (The browser preview is Electron-only.)
+ * File preview is plugin-owned — no host fallback panel.
  */
 const HOST_PANELS = [
   { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
-  { id: 'host:preview', title: '预览', icon: 'preview', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
 ];
 
 function AppContent() {

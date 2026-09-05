@@ -8,28 +8,6 @@ export const PI_PLUGIN_SCHEME = 'pi-plugin';
 
 /** Reserved first path segments (host-provided, not plugin files). */
 const WS_FILE_ENDPOINT = '/ws-file';
-const MEMORY_ENDPOINT = '/memory-file';
-
-/** In-memory store for user-uploaded files (chat attachments) served to
- *  plugins over `pi-plugin://<id>/memory-file?name=…`. LRU-bounded. */
-interface MemoryEntry {
-  fileName: string;
-  mimeType: string;
-  data: Buffer;
-}
-const memoryFiles = new Map<string, MemoryEntry>();
-const MEMORY_LRU_LIMIT = 32;
-
-export function registerMemoryFile(name: string, fileName: string, mimeType: string, base64: string): void {
-  memoryFiles.set(name, { fileName, mimeType, data: Buffer.from(base64, 'base64') });
-  while (memoryFiles.size > MEMORY_LRU_LIMIT) {
-    memoryFiles.delete(memoryFiles.keys().next().value as string);
-  }
-}
-
-export function clearMemoryFile(name: string): void {
-  memoryFiles.delete(name);
-}
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -103,11 +81,6 @@ async function handleRequest(registry: PluginRegistry, request: Request): Promis
   // plugins). Permission-gated on the requesting plugin's manifest.
   if (pathname === WS_FILE_ENDPOINT) {
     return serveWorkspaceFile(registry, pluginId, url, request);
-  }
-
-  // Reserved: user-uploaded in-memory files (chat attachments).
-  if (pathname === MEMORY_ENDPOINT) {
-    return serveMemoryFile(pluginId, url);
   }
 
   const root = registry.getRoot(pluginId);
@@ -232,26 +205,6 @@ function serveWorkspaceFile(registry: PluginRegistry, pluginId: string, url: URL
 
   return new Response(new Uint8Array(readFileSync(filePath)), {
     headers: { ...commonHeaders, 'Content-Length': String(stat.size) },
-  });
-}
-
-/**
- * `pi-plugin://<id>/memory-file?name=<key>` → user-uploaded in-memory file
- * (chat attachment previews). Served to any plugin origin — the renderer only
- * registers files the user themselves attached.
- */
-function serveMemoryFile(_pluginId: string, url: URL): Response {
-  const name = url.searchParams.get('name') ?? '';
-  const entry = memoryFiles.get(name);
-  if (!entry) {
-    return new Response('Not found', { status: 404 });
-  }
-  return new Response(new Uint8Array(entry.data), {
-    headers: {
-      'Content-Type': entry.mimeType || 'application/octet-stream',
-      'Cache-Control': 'no-cache',
-      'Accept-Ranges': 'bytes',
-    },
   });
 }
 

@@ -4,12 +4,6 @@ import { usePanelStore } from './panel-store';
 
 type ConnectionStatus = 'connected' | 'disconnected' | 'connecting';
 
-interface MemoryPreview {
-  fileName: string;
-  mimeType: string;
-  data: string;
-}
-
 interface UIState {
   activeWorkspaceId: string | null;
   activeSessionId: string | null;
@@ -21,8 +15,6 @@ interface UIState {
   selectedSkills: string[];
   connectionStatus: ConnectionStatus;
   searchQuery: string;
-  memoryPreviews: Record<string, MemoryPreview>;
-  browserUrl: string;
 
   setActiveWorkspace: (id: string | null) => void;
   setActiveSession: (id: string | null) => void;
@@ -35,9 +27,6 @@ interface UIState {
   toggleSkill: (skillId: string) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
   setSearchQuery: (query: string) => void;
-  setMemoryPreview: (id: string, info: MemoryPreview) => void;
-  clearMemoryPreview: (id: string) => void;
-  setBrowserUrl: (url: string) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -53,43 +42,36 @@ export const useUIStore = create<UIState>()(
       selectedSkills: [],
       connectionStatus: 'connecting',
       searchQuery: '',
-      memoryPreviews: {},
-      browserUrl: 'about:blank',
 
       setActiveWorkspace: (id) => set({ activeWorkspaceId: id, activeSessionId: null }),
       setActiveSession: (id) => set({ activeSessionId: id }),
       // File selection routes through the filePreview contribution chain:
-      // a plugin panel claims the extension, otherwise the host preview.
+      // a plugin panel claims the extension — there is no host fallback
+      // (preview is fully plugin-owned).
       setActivePreviewFile: (path) => {
-        set({ activePreviewFilePath: path, rightPanelOpen: true });
+        set({ activePreviewFilePath: path });
         if (!path) return;
         const api = (window as unknown as {
           electronAPI?: { invoke?: (channel: string, ...args: unknown[]) => Promise<unknown> };
         }).electronAPI;
-        const openFallback = () =>
-          usePanelStore.getState().openPanel('host:preview', { focus: true, params: { file: path } });
-        if (!api?.invoke) {
-          openFallback();
-          return;
-        }
+        if (!api?.invoke) return;
         api
           .invoke('pi:plugin:find-preview', { path })
           .then((res) => {
             const panelId = (res as { panelId?: string | null } | undefined)?.panelId;
             if (panelId) {
+              set({ rightPanelOpen: true });
               usePanelStore.getState().openPanel(panelId, { focus: true, params: { file: path } });
-            } else {
-              openFallback();
             }
           })
-          .catch(() => openFallback());
+          .catch(() => {});
       },
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
       setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
-      setCompactMode: (compact) => set({ compactMode: compact }),
-      toggleSkill: (skillId) =>
+      setCompactMode: (compact: boolean) => set({ compactMode: compact }),
+      toggleSkill: (skillId: string) =>
         set((s) => ({
           selectedSkills: s.selectedSkills.includes(skillId)
             ? s.selectedSkills.filter((id) => id !== skillId)
@@ -97,15 +79,6 @@ export const useUIStore = create<UIState>()(
         })),
       setConnectionStatus: (status) => set({ connectionStatus: status }),
       setSearchQuery: (query) => set({ searchQuery: query }),
-      setMemoryPreview: (id, info) =>
-        set((s) => ({ memoryPreviews: { ...s.memoryPreviews, [id]: info } })),
-      clearMemoryPreview: (id) =>
-        set((s) => {
-          const next = { ...s.memoryPreviews };
-          delete next[id];
-          return { memoryPreviews: next };
-        }),
-      setBrowserUrl: (url) => set({ browserUrl: url }),
     }),
     {
       name: 'pi-ui-storage',

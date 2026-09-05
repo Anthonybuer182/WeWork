@@ -188,7 +188,23 @@ function writeModelsConfig(config: ModelsConfig): void {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
+  for (const provider of Object.values(config.providers)) {
+    provider.baseUrl = normalizeProviderBaseUrl(provider.baseUrl);
+  }
   writeFileSync(path, JSON.stringify(config, null, 2), 'utf-8');
+}
+
+/**
+ * Normalize a provider baseUrl: the OpenAI-compatible client appends the
+ * endpoint path itself, so a user-entered full path like
+ * "https://api.example.com/v1/chat/completions" would double up
+ * (…/chat/completions/chat/completions → 404). Strip the endpoint suffix.
+ */
+function normalizeProviderBaseUrl(url: string): string {
+  return String(url ?? '')
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/chat\/completions$/i, '');
 }
 
 /**

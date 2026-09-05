@@ -7,7 +7,7 @@ export type PanelKeepAlive = 'always' | 'lru' | 'never';
 
 /** Unified panel entry — host panels and plugin panels share this shape. */
 export interface PanelEntry {
-  /** 'host:preview' | 'host:browser' | 'host:settings' | 'plugin:<pluginId>:<panelId>' */
+  /** 'host:settings' | 'host:plugins' | 'plugin:<pluginId>:<panelId>' */
   id: string;
   title: string;
   /** Icon key resolved by the rail (see panel-icons.tsx). */
@@ -211,11 +211,13 @@ export const usePanelStore = create<PanelStoreState>()(
         const activePanelId =
           p.activePanelId ??
           (current.activePanelId as string | null);
-        // Legacy value mapping from the old ui-store tab state
+        // Migrate legacy ui-store tab values and drop ids of panels that no
+        // longer exist (host preview/browser are plugin-owned now).
         const legacy = activePanelId as string | null;
-        const mapped =
-          legacy === 'preview' ? 'host:preview'
-          : legacy === 'browser' ? 'host:browser'
+        const dead = legacy === null
+          || legacy === 'preview' || legacy === 'browser'
+          || legacy === 'host:preview' || legacy === 'host:browser';
+        const mapped = dead ? null
           : legacy === 'settings' ? 'host:settings'
           : legacy;
         return { ...current, activePanelId: mapped };

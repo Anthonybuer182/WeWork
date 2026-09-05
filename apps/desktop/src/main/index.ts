@@ -287,7 +287,6 @@ if (!gotLock) {
         // the BrowserView can go permanently white while the webContents still
         // has rendered content (this is what caused the zhipin.com blanking bug).
         backgroundThrottling: false,
-        paintWhenInitiallyHidden: true,
       },
     });
     // Hide initially — bounds are set by the renderer when the Browser tab opens.

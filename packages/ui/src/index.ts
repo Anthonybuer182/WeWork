@@ -44,15 +44,11 @@ export { WorkspaceDropdown, WorkspaceCreateButton } from './components/workspace
 export { SessionList, SessionItem, SessionCreateButton, SessionGroupHeader } from './components/session';
 export { ChatTimeline, MessageBubble, ThinkingBlock, ToolCallDisplay, EmptyChat, StreamingIndicator, QuoteBlockDisplay } from './components/chat';
 export { Composer, ComposerInput, SendButton, SlashCommandMenu, MentionMenu, AttachmentPreviewBar, FileUploadButton } from './components/composer';
-export { DocumentPreview, CodeEditor, MarkdownPreview, HTMLPreview, DocxPreview, XlsxPreview, PptxPreview, PDFPreview, EmptyPreview, BrowserPreview } from './components/document';
 export { ModelSelector, ThinkLevelSelector, CompactToggle, SkillSelector } from './components/model';
 export { ProviderSettings } from './components/settings';
 export { UsageBar } from './components/usage';
 export { ErrorBoundary, LoadingSpinner, EmptyState, ErrorState, ConfirmDialog } from './components/common';
 export { FileTree, FileTreeNode } from './components/file';
-
-export { QuotePreviewBar } from './components/composer/quote-preview-bar';
-export { QuoteToChatWrapper } from './components/document/quote-to-chat-wrapper';
 export { createQuote, formatQuotesForPrompt } from './lib/quote-helpers';
 
 export { PluginPanelHost } from './components/plugins/plugin-panel';

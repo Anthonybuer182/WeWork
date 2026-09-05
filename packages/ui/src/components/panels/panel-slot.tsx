@@ -1,6 +1,5 @@
 import type { ComponentType } from 'react';
 import { usePanelStore, type PanelEntry } from '@/stores/panel-store';
-import { DocumentPreview } from '@/components/document';
 import { ProviderSettings } from '@/components/settings';
 import { PluginCenter } from '@/components/plugins/plugin-center';
 import { PluginPanelHost } from '@/components/plugins/plugin-panel';
@@ -9,10 +8,10 @@ import { LiveViewSlot } from './live-view-slot';
 
 /**
  * Host panels ("the host is the zeroth contributor") — rendered through the
- * same panel registry/lifecycle/rail as plugin panels.
+ * same panel registry/lifecycle/rail as plugin panels. File preview is
+ * plugin-owned: no host preview panel.
  */
 const HOST_COMPONENTS: Record<string, ComponentType> = {
-  'host:preview': DocumentPreview,
   'host:settings': ProviderSettings,
   'host:plugins': PluginCenter,
 };

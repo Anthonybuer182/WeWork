@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Image, ImageOff, Maximize2, X, Loader2, PanelRightOpen } from 'lucide-react';
+import { Image, ImageOff, Maximize2, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useUIStore } from '@/stores/ui-store';
 import type { ImageBlock } from '@pi/types';
 
 interface ImageBlockDisplayProps {
@@ -13,8 +12,6 @@ interface ImageBlockDisplayProps {
 export function ImageBlockDisplay({ block, isStreaming }: ImageBlockDisplayProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
-  const setMemoryPreview = useUIStore((s) => s.setMemoryPreview);
   const dataUrl = block.data
     ? `data:${block.mimeType};base64,${block.data}`
     : block.content.startsWith('data:')
@@ -62,25 +59,6 @@ export function ImageBlockDisplay({ block, isStreaming }: ImageBlockDisplayProps
           />
           {!isStreaming && (
             <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const displayName = block.content || 'image.png';
-                  const virtualPath = `__memory__/${displayName}`;
-                  if (block.data) {
-                    setMemoryPreview(virtualPath, {
-                      fileName: displayName,
-                      mimeType: block.mimeType,
-                      data: block.data,
-                    });
-                  }
-                  setActivePreviewFile(virtualPath);
-                }}
-                className="rounded-md bg-background/80 p-1.5 hover:bg-background"
-                aria-label="Open in panel"
-              >
-                <PanelRightOpen className="h-3.5 w-3.5" />
-              </button>
               <button
                 onClick={() => setLightboxOpen(true)}
                 className="rounded-md bg-background/80 p-1.5 hover:bg-background"

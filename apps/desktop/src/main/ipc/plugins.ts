@@ -1,7 +1,6 @@
 import { ipcMain, BrowserWindow, Menu, app } from 'electron';
 import type { InstallPhase } from '@pi/types';
 import type { PluginSystem } from '@main/plugins';
-import { registerMemoryFile, clearMemoryFile } from '@main/plugins';
 
 /**
  * IPC surface for the renderer (see preload `pluginBridge`):
@@ -17,21 +16,6 @@ import { registerMemoryFile, clearMemoryFile } from '@main/plugins';
  *   pi:plugin:event           ← push channel (status/state/plugins-changed/install-phase)
  */
 export function registerPluginIpcHandlers(system: PluginSystem): void {
-  // In-memory (user-attached) files served to plugins over
-  // `pi-plugin://<id>/memory-file?name=…` — the renderer registers content it
-  // already holds (chat attachments / optimistic file blocks).
-  ipcMain.handle('pi:files:memory:register', (_event, payload: { name?: string; fileName?: string; mimeType?: string; base64?: string }) => {
-    const { name, fileName, mimeType, base64 } = payload ?? {};
-    if (!name || typeof base64 !== 'string') return { ok: false, error: 'missing name/base64' };
-    registerMemoryFile(name, fileName ?? name, mimeType ?? 'application/octet-stream', base64);
-    return { ok: true };
-  });
-
-  ipcMain.handle('pi:files:memory:clear', (_event, payload: { name?: string }) => {
-    if (payload?.name) clearMemoryFile(String(payload.name));
-    return { ok: true };
-  });
-
   // `list`/`list-all`/`ensure-port` gate on kernel boot — in packaged builds the
   // file:// renderer fires its first plugin IPC within milliseconds, possibly
   // before `PluginSystem.init()` (spawn backends, protocol) has finished.

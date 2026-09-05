@@ -18,7 +18,7 @@ import { registerPluginProtocolHandler } from './protocol';
 import { PluginMarketplace } from './marketplace';
 import type { BrowserManager } from '@main/browser/browser-manager';
 
-export { registerPluginSchemePrivileges, PI_PLUGIN_SCHEME, registerMemoryFile, clearMemoryFile } from './protocol';
+export { registerPluginSchemePrivileges, PI_PLUGIN_SCHEME } from './protocol';
 export { PluginRegistry } from './registry';
 export { PluginMarketplace, DEFAULT_REGISTRY_URL } from './marketplace';
 
@@ -249,7 +249,20 @@ export class PluginSystem {
     if (!proc) {
       throw new Error(`plugin "${pluginId}" has no backend (tool "${name}")`);
     }
-    return proc.executeTool(name, params);
+    const result = await proc.executeTool(name, params);
+    // Agent-activity linkage: a tool that just ran means the plugin is doing
+    // visible work — surface its primary panel so the effect is shown
+    // (e.g. browser_navigate → the liveview preview opens automatically).
+    this.openPanelForActivity(pluginId);
+    return result;
+  }
+
+  /** Open a plugin's first rail-visible panel (hidden panels need panel.open). */
+  private openPanelForActivity(pluginId: string): void {
+    const plugin = this.registry.get(pluginId);
+    const panel = plugin?.manifest.contributes?.panels?.find((p) => !p.hidden);
+    if (!panel) return;
+    this.emitEvent({ type: 'panel-open', pluginId, panelId: panel.id, focus: true });
   }
 
   /** Collect auto-injected context from one provider (pre-send hook). */

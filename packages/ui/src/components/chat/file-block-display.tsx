@@ -80,14 +80,12 @@ function formatFileSize(bytes?: number): string {
 export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
   const [expanded, setExpanded] = useState(false);
   const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
-  const setMemoryPreview = useUIStore((s) => s.setMemoryPreview);
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const displayName = block.fileName || block.content || 'Unknown file';
   const Icon = getFileIcon(block.mimeType, block.fileName);
   const showPreview = PRESENTABLE_TEXT_TYPES.has(block.mimeType) && block.data;
   const expandable = isExpandable(block.mimeType);
   const canOpenInPanel = !!block.workspacePath && isPreviewableInRightPanel(block.workspacePath);
-  const hasMemoryData = !block.workspacePath && !!block.data;
 
   let previewText = '';
   if (showPreview && block.data) {
@@ -105,16 +103,9 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
   }
 
   const handleClick = () => {
-    // Always open in right panel if possible — same behavior as Files sidebar
-    if (hasMemoryData && block.data) {
-      const virtualPath = `__memory__/${displayName}`;
-      setMemoryPreview(virtualPath, {
-        fileName: displayName,
-        mimeType: block.mimeType,
-        data: block.data,
-      });
-      setActivePreviewFile(virtualPath);
-    } else if (canOpenInPanel && block.workspacePath) {
+    // Open in the right panel via the plugin filePreview chain — same
+    // behavior as the Files sidebar.
+    if (canOpenInPanel && block.workspacePath) {
       setActivePreviewFile(block.workspacePath);
     } else {
       setExpanded(!expanded);
@@ -122,7 +113,7 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
   };
 
   // Whether the click action opens the right panel (like Files sidebar click)
-  const opensRightPanel = canOpenInPanel || hasMemoryData;
+  const opensRightPanel = canOpenInPanel;
 
   return (
     <div className="my-1 rounded-lg border bg-muted/30 overflow-hidden">
@@ -149,7 +140,7 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
                 e.stopPropagation();
                 if (canOpenInPanel && block.workspacePath) {
                   openWithSystemApp(block.workspacePath, activeWorkspaceId ?? undefined);
-                } else if (hasMemoryData && block.data) {
+                } else if (block.data) {
                   const a = document.createElement('a');
                   a.href = `data:${block.mimeType};base64,${block.data}`;
                   a.download = displayName;

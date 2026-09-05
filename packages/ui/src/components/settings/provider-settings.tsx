@@ -70,9 +70,10 @@ export function ProviderSettings() {
   // Add/Edit provider dialog
   const [providerDialog, setProviderDialog] = useState<{
     open: boolean;
+    editMode: boolean;
     name: string;
     data: ProviderEntry;
-  }>({ open: false, name: '', data: { ...DEFAULT_PROVIDER } });
+  }>({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } });
 
   // Add/Edit model dialog
   const [modelDialog, setModelDialog] = useState<{
@@ -102,7 +103,7 @@ export function ProviderSettings() {
   // --- Provider operations ---
 
   const handleAddProvider = useCallback(() => {
-    setProviderDialog({ open: true, name: '', data: { ...DEFAULT_PROVIDER } });
+    setProviderDialog({ open: true, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } });
   }, []);
 
   const handleEditProvider = useCallback((name: string) => {
@@ -110,6 +111,7 @@ export function ProviderSettings() {
     if (!p) return;
     setProviderDialog({
       open: true,
+      editMode: true,
       name,
       data: { ...p, models: [...p.models], compat: { ...p.compat } },
     });
@@ -124,7 +126,7 @@ export function ProviderSettings() {
         return;
       }
       await sdk.config.upsertProvider(name.trim(), data);
-      setProviderDialog({ open: false, name: '', data: { ...DEFAULT_PROVIDER } });
+      setProviderDialog({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } });
       queryClient.invalidateQueries({ queryKey: ['modelsConfig'] });
       queryClient.invalidateQueries({ queryKey: ['models'] });
     } catch (e) {
@@ -336,22 +338,22 @@ export function ProviderSettings() {
       </ScrollArea>
 
       {/* Provider dialog */}
-      <Dialog open={providerDialog.open} onOpenChange={(open) => !open && setProviderDialog({ open: false, name: '', data: { ...DEFAULT_PROVIDER } })}>
+      <Dialog open={providerDialog.open} onOpenChange={(open) => !open && setProviderDialog({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } })}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{providerDialog.name ? 'Edit Provider' : 'Add Provider'}</DialogTitle>
+            <DialogTitle>{providerDialog.editMode ? 'Edit Provider' : 'Add Provider'}</DialogTitle>
             <DialogDescription>
-              {providerDialog.name ? `Modify ${providerDialog.name} configuration` : 'Add a new model provider'}
+              {providerDialog.editMode ? `Modify ${providerDialog.name} configuration` : 'Add a new model provider'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            {!providerDialog.name && (
+            {!providerDialog.editMode && (
               <div>
                 <Label htmlFor="providerName">Name *</Label>
                 <Input
                   id="providerName"
                   placeholder="e.g. minimax, openai, dashscope"
-                  value={providerDialog.name ? undefined : ''}
+                  value={providerDialog.name}
                   onChange={(e) => setProviderDialog((d) => ({ ...d, name: e.target.value }))}
                 />
               </div>
@@ -386,7 +388,7 @@ export function ProviderSettings() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setProviderDialog({ open: false, name: '', data: { ...DEFAULT_PROVIDER } })}>
+            <Button variant="outline" onClick={() => setProviderDialog({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } })}>
               Cancel
             </Button>
             <Button onClick={handleSaveProvider}>Save</Button>

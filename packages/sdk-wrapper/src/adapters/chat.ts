@@ -475,8 +475,17 @@ export function createRealChatService(
           }
           case 'message_end': {
             messageEndTime = Date.now();
-            // Forward usage data from the completed message
+            // Surface API errors: the SDK records stopReason "error" +
+            // errorMessage on the assistant message instead of throwing —
+            // without this the UI shows an empty response with no feedback.
             const endMsg = event.message;
+            if (endMsg?.stopReason === 'error') {
+              safeChunk({
+                type: 'error',
+                error: endMsg.errorMessage || `Model request failed (${endMsg.provider ?? ''} ${endMsg.model ?? ''}). Check the provider baseUrl / API key in Settings.`,
+              });
+            }
+            // Forward usage data from the completed message
             const msgUsage = endMsg?.usage;
             if (msgUsage) {
               const tokenUsage = sdkUsageToTokenUsage(msgUsage);
