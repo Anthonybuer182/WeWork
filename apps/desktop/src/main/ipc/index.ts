@@ -7,7 +7,7 @@ import {
   createRealConfigService,
   createRealChatService,
 } from '@pi/sdk-wrapper/adapters';
-import type { WorkspaceService, SessionService, FileService, ConfigService, ChatService, SendMessageParams } from '@pi/sdk-wrapper';
+import type { WorkspaceService, SessionService, FileService, ConfigService, ChatService, SendMessageParams, FileSearchOptions } from '@pi/sdk-wrapper';
 
 // Services are created during registerIpcHandlers() (called from app.whenReady)
 // to avoid module-load-time initialization in packaged builds.
@@ -173,7 +173,10 @@ async function handleFile(action: string, params: unknown): Promise<unknown> {
     case 'read': return fileService.read(p.workspaceId as string, p.path as string);
     case 'list': return fileService.list(p.workspaceId as string, (p.directory ?? p.dirPath) as string | undefined);
     case 'write': return fileService.write(p.workspaceId as string, p.path as string, p.content as string);
+    case 'delete': return fileService.delete(p.workspaceId as string, p.path as string);
     case 'readOffice': return fileService.readOffice(p.workspaceId as string, p.path as string);
+    case 'search': return fileService.search(p.workspaceId as string, p.query as string, p.options as FileSearchOptions | undefined);
+    case 'cancelSearch': return fileService.cancelSearch(p.searchId as string);
     default: throw new Error(`Unknown file action: ${action}`);
   }
 }

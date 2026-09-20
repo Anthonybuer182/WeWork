@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -216,15 +216,20 @@ export function ProviderSettings() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Top action bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
-        <div>
-          <h3 className="text-sm font-semibold">Model Provider Configuration</h3>
-          <p className="text-xs text-muted-foreground">
-            Manage providers and models in ~/.pi/agent/models.json
+      {/* Action bar. Stacked rather than side-by-side: this panel lives in the
+          narrow left sidebar, where the old title + trailing button row
+          overflowed. */}
+      <div className="flex flex-col gap-2 px-3 py-2.5 border-b">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold truncate">Model Providers</h3>
+          <p
+            className="text-[11px] text-muted-foreground truncate"
+            title="~/.pi/agent/models.json"
+          >
+            ~/.pi/agent/models.json
           </p>
         </div>
-        <Button size="sm" onClick={handleAddProvider}>
+        <Button size="sm" className="w-full" onClick={handleAddProvider}>
           <Plus className="h-4 w-4 mr-1" />
           Add Provider
         </Button>
@@ -232,17 +237,23 @@ export function ProviderSettings() {
 
       {/* Error message */}
       {error && (
-        <div className="mx-4 mt-2 flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <div className="mx-3 mt-2 flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-          <Button variant="ghost" size="sm" className="ml-auto h-6 px-2" onClick={() => setError(null)}>
+          <span className="min-w-0 flex-1 break-words">{error}</span>
+          <Button variant="ghost" size="sm" className="ml-auto h-6 px-2 shrink-0" onClick={() => setError(null)}>
             &times;
           </Button>
         </div>
       )}
 
-      {/* Provider list */}
-      <ScrollArea className="flex-1 px-4 py-3">
+      {/* Constrains Radix's max-content table wrapper — otherwise a long
+          provider URL or API key widens this panel instead of wrapping.
+          `!important` is required: Radix sets `display: table` as an inline
+          style, which a plain class rule cannot override. */}
+      <ScrollArea
+        className="flex-1 px-3 py-3"
+        viewportClassName="[&>div]:!block [&>div]:!min-w-0"
+      >
         <div className="space-y-4">
           {Object.keys(providers).length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
@@ -252,13 +263,12 @@ export function ProviderSettings() {
           )}
           {Object.entries(providers).map(([name, provider]) => (
             <Card key={name} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm">{name}</CardTitle>
-                    <Badge variant="secondary" className="text-[10px]">{provider.api}</Badge>
+              <CardHeader className="p-3 pb-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <CardTitle className="text-sm truncate">{name}</CardTitle>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditProvider(name)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -267,31 +277,43 @@ export function ProviderSettings() {
                     </Button>
                   </div>
                 </div>
-                <CardDescription className="text-xs space-y-0.5">
-                  <div>URL: {provider.baseUrl}</div>
-                  <div className="flex items-center gap-1">
-                    <span>Key:</span>
-                    <code className="text-[10px] bg-muted px-1 rounded">
+                {/* The API badge sits on its own line rather than beside the
+                    title: this panel renders in the narrow left sidebar, where
+                    "openai-completions" plus two action buttons does not fit. */}
+                {/* A plain div, not CardDescription: that renders a <p>, and
+                    this block holds block-level children (badges, buttons,
+                    rows) which are invalid inside a paragraph — the browser
+                    closes the <p> early and React's DOM stops matching. */}
+                <div className="text-xs text-muted-foreground space-y-0.5 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Badge variant="secondary" className="text-[10px] shrink-0">{provider.api}</Badge>
+                  </div>
+                  <div className="break-all" title={provider.baseUrl}>
+                    URL: {provider.baseUrl}
+                  </div>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="shrink-0">Key:</span>
+                    <code className="text-[10px] bg-muted px-1 rounded break-all" title={provider.apiKey}>
                       {visibleKeys.has(name) ? provider.apiKey : maskApiKey(provider.apiKey)}
                     </code>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-5 w-5"
+                      className="h-5 w-5 shrink-0"
                       onClick={() => toggleKeyVisibility(name)}
                     >
                       {visibleKeys.has(name) ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                     </Button>
                   </div>
-                </CardDescription>
+                </div>
               </CardHeader>
-              <CardContent className="pb-3 pt-0">
+              <CardContent className="px-3 pb-3 pt-0">
                 <Separator className="mb-2" />
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-muted-foreground">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-xs font-medium text-muted-foreground truncate">
                     Models ({provider.models.length})
                   </span>
-                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleAddModel(name)}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs shrink-0" onClick={() => handleAddModel(name)}>
                     <Plus className="h-3 w-3 mr-1" />Add Model
                   </Button>
                 </div>
@@ -302,17 +324,23 @@ export function ProviderSettings() {
                     {provider.models.map((model) => {
                       const inputType = getModelInputType(model);
                       return (
-                      <div key={model.id} className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-1.5 text-xs">
-                        <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        key={model.id}
+                        className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2 py-1.5 text-xs"
+                        // The API model id is shown on hover rather than inline:
+                        // at sidebar width it crowds out the display name, and
+                        // it is visible/editable in the edit dialog anyway.
+                        title={model.id}
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <span className="font-medium truncate">{model.name}</span>
-                          <code className="text-[10px] text-muted-foreground truncate">{model.id}</code>
                           {inputType === 'multimodal' ? (
-                            <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">
+                            <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 shrink-0">
                               <EyeIcon className="h-2.5 w-2.5 mr-0.5" />
                               Vision
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 text-muted-foreground">
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 text-muted-foreground shrink-0">
                               <FileText className="h-2.5 w-2.5 mr-0.5" />
                               Text
                             </Badge>

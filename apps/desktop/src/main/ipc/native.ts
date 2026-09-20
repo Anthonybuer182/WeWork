@@ -1,6 +1,7 @@
 import { ipcMain, dialog, shell, clipboard, app, BrowserWindow, nativeImage } from 'electron';
 import fs from 'fs';
 import path from 'path';
+import { TITLE_BAR_HEIGHT } from '../window-manager.js';
 
 export function registerNativeIpcHandlers(): void {
   // ── Window Management ──
@@ -25,6 +26,25 @@ export function registerNativeIpcHandlers(): void {
   ipcMain.handle('pi:window:isMaximized', () => {
     return BrowserWindow.getFocusedWindow()?.isMaximized() ?? false;
   });
+
+  // Keep the Windows titleBarOverlay in step with the app theme. Throws (and is
+  // swallowed) on macOS/Linux, which have no overlay to update.
+  ipcMain.handle(
+    'pi:window:setTitleBarOverlay',
+    (_event, options: { color: string; symbolColor: string }) => {
+      const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+      if (!win) return;
+      try {
+        win.setTitleBarOverlay({
+          color: options.color,
+          symbolColor: options.symbolColor,
+          height: TITLE_BAR_HEIGHT,
+        });
+      } catch {
+        // Not supported on this platform.
+      }
+    },
+  );
 
   // ── File Dialogs ──
 

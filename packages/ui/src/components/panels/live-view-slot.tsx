@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { MonitorX } from 'lucide-react';
 
 /**
  * Tier 2 liveview slot: a native WebContentsView mount point. The component
@@ -7,12 +8,17 @@ import { useEffect, useRef } from 'react';
  */
 export function LiveViewSlot({ pluginId, panelId }: { pluginId: string; panelId: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const api = (window as unknown as {
       electronAPI?: { invoke: (channel: string, ...args: unknown[]) => Promise<unknown> };
     }).electronAPI;
-    if (!api) return;
+    if (!api) {
+      // Browser build: there is no host to create a native view.
+      setError('原生视图仅在桌面端可用');
+      return;
+    }
 
     const slotId = `${pluginId}:${panelId}`;
     let lastBounds = '';
@@ -39,9 +45,24 @@ export function LiveViewSlot({ pluginId, panelId }: { pluginId: string; panelId:
       api.invoke('pi:liveview:set-bounds', bounds).catch(() => {});
     };
 
-    api.invoke('pi:liveview:attach', { slotId }).then(() => {
-      reportBounds();
-    }).catch(() => {});
+    api
+      .invoke('pi:liveview:attach', { slotId })
+      .then((res) => {
+        // The host answers `{ok:false}` for a slot it has no handler for. That
+        // resolves rather than rejects, so an unchecked call would leave the
+        // panel silently empty — the plugin author's only clue would be a
+        // blank box. Surface it instead.
+        const r = res as { ok?: boolean; error?: string } | undefined;
+        if (r && r.ok === false) {
+          setError(r.error ?? '该面板没有可用的原生视图');
+          return;
+        }
+        setError(null);
+        reportBounds();
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : String(err));
+      });
 
     const observer = new ResizeObserver(() => {
       if (timer) clearTimeout(timer);
@@ -62,6 +83,20 @@ export function LiveViewSlot({ pluginId, panelId }: { pluginId: string; panelId:
       api.invoke('pi:liveview:detach', { slotId }).catch(() => {});
     };
   }, [pluginId, panelId]);
+
+  if (error) {
+    return (
+      <div
+        className="flex h-full w-full flex-col items-center justify-center gap-2 p-6 text-center"
+        data-panel-kind="liveview-error"
+        data-liveview-slot={`${pluginId}:${panelId}`}
+      >
+        <MonitorX className="h-6 w-6 text-muted-foreground/60" />
+        <p className="text-sm text-muted-foreground">此面板需要原生视图支持</p>
+        <p className="text-[11px] text-muted-foreground/70 break-all max-w-full">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div

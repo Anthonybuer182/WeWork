@@ -6,6 +6,25 @@ export interface FileEntry {
   modifiedAt: string;
 }
 
+/**
+ * Directory names never traversed and never shown: VCS metadata, dependency
+ * trees, build output, caches.
+ *
+ * Shared by the server-side search walk and the client-side file tree so both
+ * agree on what "exists" — otherwise search would surface files the tree
+ * refuses to display, and a recursive walk would return tens of thousands of
+ * node_modules hits.
+ */
+export const IGNORED_DIR_NAMES: ReadonlySet<string> = new Set([
+  '.git',
+  'node_modules',
+  '.vite',
+  'dist',
+  '.next',
+  '__pycache__',
+  '.DS_Store',
+]);
+
 export interface FileContent {
   path: string;
   content: string;
@@ -197,10 +216,46 @@ export interface OfficeContent {
   doc: OfficeDocContent;
 }
 
+export interface FileSearchOptions {
+  /** Maximum number of matches returned. Defaults to 200. */
+  limit?: number;
+  /** Maximum number of directories visited. Defaults to 2000. */
+  maxDirs?: number;
+  /**
+   * Caller-chosen id used to cancel an in-flight walk via `cancelSearch`.
+   * Omit for a search that always runs to completion.
+   */
+  searchId?: string;
+}
+
+/**
+ * Search outcome. Deliberately a payload rather than an error: "no matches",
+ * "hit the cap" and "some subtrees were unreadable" are three different states
+ * the UI must be able to tell apart, and the transport collapses every error to
+ * a bare message.
+ */
+export interface FileSearchResult {
+  entries: FileEntry[];
+  /** True when a cap (limit/maxDirs) stopped the walk early. */
+  truncated: boolean;
+  /** Directories actually visited — lets the UI explain a truncated result. */
+  scanned: number;
+  /** Per-directory failures (EACCES etc). Partial results are still returned. */
+  errors?: { path: string; message: string }[];
+}
+
 export interface FileService {
   list(workspaceId: string, directory?: string): Promise<FileEntry[]>;
   read(workspaceId: string, filePath: string): Promise<FileContent>;
   write(workspaceId: string, filePath: string, content: string): Promise<void>;
   delete(workspaceId: string, filePath: string): Promise<void>;
   readOffice(workspaceId: string, filePath: string): Promise<OfficeContent>;
+  /** Recursive filename search within a workspace. */
+  search(
+    workspaceId: string,
+    query: string,
+    options?: FileSearchOptions,
+  ): Promise<FileSearchResult>;
+  /** Ask an in-flight search to stop at the next directory boundary. */
+  cancelSearch(searchId: string): Promise<void>;
 }

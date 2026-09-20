@@ -1,12 +1,12 @@
 import { useRef, useMemo, useState, useCallback, useEffect, useLayoutEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
-import { ArrowDown, AlertTriangle, RefreshCw, MessageSquare, Copy, Check } from 'lucide-react';
+import { ArrowDown, AlertTriangle, RefreshCw, MessageSquare } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { useComposerStore } from '@/stores/composer-store';
 import { Button } from '@/components/ui/button';
-import { copyText, stripAppendedContext } from '@/lib/quote-helpers';
+import { stripAppendedContext } from '@/lib/quote-helpers';
 import { MessageBubble } from './message-bubble';
 import { EmptyChat } from './empty-chat';
 import { StreamingIndicator } from './streaming-indicator';
@@ -14,6 +14,9 @@ import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { ErrorState } from '@/components/common/error-state';
 import type { Message, ContentBlock, TokenUsage } from '@pi/types';
 import type { AssistantMessage } from '@pi/types';
+
+/** Shared empty map so non-active messages keep a stable prop identity. */
+const EMPTY_TOOL_TIMINGS = new Map<string, number>();
 
 // ----------------------------------------------------------------
 // Types
@@ -131,6 +134,13 @@ export function ChatTimeline() {
     queryFn: () => sdk.session.get(activeSessionId!),
     enabled: !!activeSessionId,
     staleTime: 30_000,
+    // Hold the current conversation on screen while the next one loads.
+    // Without this the whole chat area is swapped for a "Loading messages..."
+    // spinner on every first visit to a session — a hard flash. Sessions
+    // visited within `staleTime` come from cache, which is why switching back
+    // never flashed. The local read is ~70ms, so the swap is imperceptible;
+    // showing stale content briefly beats blanking the panel.
+    placeholderData: keepPreviousData,
   });
 
   const storedMessages = session?.messages ?? [];
@@ -172,21 +182,6 @@ export function ChatTimeline() {
   }, [isStreaming, messages.length]);
 
   const chatItems = useMemo(() => addDateSeparators(messages), [messages]);
-
-  // Copy-conversation (bulk export) — declared before any early returns so
-  // hook order stays stable between empty and non-empty sessions.
-  const [copiedAll, setCopiedAll] = useState(false);
-  const handleCopyConversation = useCallback(async () => {
-    const lines = messages.map((m) => {
-      const who = m.role === 'user' ? '🧑 我' : '🤖 助手';
-      return `${who}(${new Date(m.createdAt).toLocaleString()}):\n${m.content}`;
-    });
-    try {
-      await copyText(lines.join('\n\n---\n\n'));
-      setCopiedAll(true);
-      setTimeout(() => setCopiedAll(false), 1600);
-    } catch { /* clipboard unavailable */ }
-  }, [messages]);
 
   // Scroll to bottom when a slash command inserts a message via setQueryData
   // or when the composer triggers a manual scroll (e.g. after optimistic update).
@@ -314,21 +309,6 @@ export function ChatTimeline() {
 
   return (
     <div className="flex flex-col flex-1 relative">
-      {/* Conversation toolbar: copy-all for bulk export — DOM selections
-          cannot span virtualized windows, so bulk copy must not rely on them. */}
-      {messages.length > 0 && (
-        <div className="absolute right-3 top-2 z-20 rounded-md border bg-background/90 backdrop-blur-sm shadow-sm">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-            onClick={handleCopyConversation}
-          >
-            {copiedAll ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-            {copiedAll ? '已复制' : '复制对话'}
-          </Button>
-        </div>
-      )}
       {/* Stream error banner */}
       {streamError && (
         <div className="flex items-center gap-3 mx-4 mt-3 px-4 py-3 rounded-lg border border-destructive/30 bg-destructive/10 text-sm">
@@ -382,7 +362,7 @@ export function ChatTimeline() {
                 isStreaming={isStreaming && isLast && isAssistant}
                 contextUsage={isLast ? contextUsage ?? undefined : undefined}
                 messageTiming={isLast && isAssistant ? messageTiming ?? undefined : undefined}
-                toolTimings={isLast && isAssistant ? toolTimings : new Map()}
+                toolTimings={isLast && isAssistant ? toolTimings : EMPTY_TOOL_TIMINGS}
                 onEditMessage={handleEditMessage}
                 onConfirmEdit={handleConfirmEdit}
                 onCancelEdit={handleCancelEdit}

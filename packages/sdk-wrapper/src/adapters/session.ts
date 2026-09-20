@@ -659,8 +659,13 @@ export function createRealSessionService(): SessionService {
       try {
         const sessions = await SessionManager.list(workspaceId);
         return sessions.map(toSession);
-      } catch {
-        return [];
+      } catch (err) {
+        // `SessionManager.list` already returns [] for a workspace whose
+        // session directory is missing, so reaching here means something
+        // genuinely failed (unreadable dir, corrupt store). Surface it rather
+        // than reporting "no sessions", which reads as a valid empty state.
+        const message = err instanceof Error ? err.message : String(err);
+        throw new Error(`Cannot list sessions for ${workspaceId}: ${message}`);
       }
     },
 

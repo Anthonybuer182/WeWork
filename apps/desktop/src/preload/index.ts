@@ -13,6 +13,20 @@ export interface ElectronAPI {
     isMaximized: () => Promise<boolean>;
   };
 
+  /**
+   * Window-chrome facts the renderer's title bar needs. Exposed explicitly so
+   * the shared UI never has to sniff the user agent.
+   */
+  chrome: {
+    platform: 'darwin' | 'win32' | 'linux';
+    /** px reserved on the left for native controls (macOS traffic lights). */
+    insetLeft: number;
+    /** px reserved on the right for native controls (Windows caption buttons). */
+    insetRight: number;
+    /** Host draws its own minimize/maximize/close (Linux frameless). */
+    customControls: boolean;
+  };
+
   // ── Dialogs ──
   dialog: {
     openFile: (options?: Record<string, unknown>) => Promise<Electron.OpenDialogReturnValue>;
@@ -113,6 +127,15 @@ const electronAPI: ElectronAPI = {
     maximize: () => ipcRenderer.invoke('pi:window:maximize'),
     close: () => ipcRenderer.invoke('pi:window:close'),
     isMaximized: () => ipcRenderer.invoke('pi:window:isMaximized'),
+  },
+
+  chrome: {
+    platform: process.platform as 'darwin' | 'win32' | 'linux',
+    // macOS traffic lights float over the top-left of a hiddenInset window.
+    insetLeft: process.platform === 'darwin' ? 78 : 0,
+    // Windows caption buttons are drawn by titleBarOverlay on the right.
+    insetRight: process.platform === 'win32' ? 138 : 0,
+    customControls: process.platform === 'linux',
   },
 
   dialog: {

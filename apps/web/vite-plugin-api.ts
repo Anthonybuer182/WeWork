@@ -265,7 +265,10 @@ async function handleRequest(server: ViteDevServer, method: string, params: any)
         case 'read': return fileService.read(params.workspaceId, params.path);
         case 'list': return fileService.list(params.workspaceId, params.directory ?? params.dirPath);
         case 'write': return fileService.write(params.workspaceId, params.path, params.content);
+        case 'delete': return fileService.delete(params.workspaceId, params.path);
         case 'readOffice': return fileService.readOffice(params.workspaceId, params.path);
+        case 'search': return fileService.search(params.workspaceId, params.query, params.options);
+        case 'cancelSearch': return fileService.cancelSearch(params.searchId);
       }
       break;
 

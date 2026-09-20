@@ -1,4 +1,4 @@
-import { app, BrowserWindow, BrowserView } from 'electron';
+import { app, BrowserWindow, WebContentsView } from 'electron';
 import { createMainWindow } from '@main/window-manager';
 import { registerIpcHandlers } from '@main/ipc/index';
 import { registerNativeIpcHandlers } from '@main/ipc/native';
@@ -12,7 +12,7 @@ import { BrowserManager, startBrowserHttpServer, VlmAnalyzer } from '@main/brows
 import { registerBrowserIpcHandlers } from '@main/ipc/browser';
 import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
 import { registerPluginIpcHandlers } from '@main/ipc/plugins';
-import { registerLiveViewIpcHandlers } from '@main/plugins/liveview';
+import { registerLiveViewIpcHandlers, LiveViewRegistry, BROWSER_LIVEVIEW_SLOT } from '@main/plugins/liveview';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -20,8 +20,12 @@ let mainWindow: BrowserWindow | null = null;
 // The HTTP server (port 19223) is the entry point for the pi-browser CLI tool.
 export const browserManager = new BrowserManager();
 
+// Native-view slots. Each slot owns its own WebContentsView; the renderer only
+// reports where its slot sits, and the registry positions the view to match.
+export const liveViews = new LiveViewRegistry();
+
 // Enable Chrome DevTools Protocol so Playwright can connect to the
-// Electron app's own webContents (including BrowserView) via CDP.
+// Electron app's own webContents (including the embedded browser view) via CDP.
 // The CLI tool (pi-browser) talks to a local HTTP server which drives
 // Playwright — both agent and user see the same browser instance.
 app.commandLine.appendSwitch('remote-debugging-port', '19222');
@@ -32,14 +36,14 @@ app.commandLine.appendSwitch('remote-debugging-port', '19222');
 // with the host shell regardless of future policy drift.
 // app.commandLine.appendSwitch('site-per-process'); // TEMP: 因果实验
 
-// Prevent Chromium from culling the BrowserView's compositor surface.
+// Prevent Chromium from culling the embedded browser view's compositor surface.
 // Without these switches, Chromium's window-occlusion detector and
-// background-throttler incorrectly mark the BrowserView as occluded
+// background-throttler incorrectly mark the view as occluded
 // after certain page navigations (notably zhipin.com's anti-bot
 // triggered sub-frame loads). The GPU process then fails to produce
 // compositor overlays ("Invalid mailbox" / "non-existent mailbox"
 // errors in skia_output_device_buffer_queue.cc and
-// shared_image_manager.cc), leaving the BrowserView permanently white
+// shared_image_manager.cc), leaving the view permanently white
 // while the underlying webContents still renders correctly.
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
@@ -274,34 +278,54 @@ if (!gotLock) {
 
     mainWindow = createMainWindow();
 
-    // Create BrowserView (replaces <webview> to avoid guest-instance crashes on redirects).
-    // BrowserView uses a persistent webContents — no guest recreation, no use-after-free.
-    const browserView = new BrowserView({
+    // Create the embedded browser as a WebContentsView (the modern replacement
+    // for BrowserView, which is deprecated since Electron 30). Like BrowserView
+    // it owns a persistent webContents — no guest recreation on redirects, no
+    // use-after-free — but it attaches through `contentView.addChildView`, which
+    // is the API that can hold MORE than one view (BrowserWindow.setBrowserView
+    // is limited to a single one, which is what caps liveview at one slot today).
+    const browserView = new WebContentsView({
       webPreferences: {
         partition: 'persist:pi-browser',
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
-        // Prevent Chromium from throttling/hiding the BrowserView's compositor
+        // Prevent Chromium from throttling/hiding the view's compositor
         // surface when the window is occluded or backgrounded — without this,
-        // the BrowserView can go permanently white while the webContents still
+        // the view can go permanently white while the webContents still
         // has rendered content (this is what caused the zhipin.com blanking bug).
         backgroundThrottling: false,
       },
     });
-    // Hide initially — bounds are set by the renderer when the Browser tab opens.
+    // Hide initially — bounds are set by the renderer when the browser panel opens.
+    // (No setAutoResize: WebContentsView keeps exactly the bounds it is given,
+    // which is what we want — the renderer owns layout.)
     browserView.setBounds({ x: 0, y: 0, width: 0, height: 0 });
-    browserView.setAutoResize({ width: false, height: false });
-    mainWindow.setBrowserView(browserView);
+    mainWindow.contentView.addChildView(browserView);
     browserManager.setBrowserView(browserView, mainWindow);
 
-    // A renderer reload never runs React cleanup, so the liveview detach is
-    // lost — the BrowserView would keep stale bounds and invisibly occlude
-    // the UI (eating real mouse clicks). Reset it on any renderer
-    // navigation; the slot re-reports its bounds after remounting.
+    // The browser plugin's preview panel is the first liveview slot. Bounds and
+    // visibility are the registry's job; the browser-specific extras (CDP
+    // warm-up on attach, device metrics for auto-zoom) ride along here.
+    liveViews.register(BROWSER_LIVEVIEW_SLOT, {
+      attach: () =>
+        // Ensure CDP is attached so navigation events flow.
+        browserManager.connect().catch(() => {}) as Promise<void>,
+      show: async ({ x, y, width, height }) => {
+        browserManager.setBounds(x, y, width, height);
+        // Keep device metrics in sync for auto-zoom (mirrors the legacy preview).
+        await browserManager.setDeviceMetrics(width, height).catch(() => {});
+      },
+      hide: () => browserManager.hide(),
+    });
+
+    // A renderer reload never runs React cleanup, so slots vanish without
+    // calling detach — their views would keep stale bounds and invisibly
+    // occlude the UI (eating real mouse clicks). Reset every slot on any
+    // renderer navigation; each slot re-reports its bounds after remounting.
     mainWindow.webContents.on('did-start-navigation', () => {
-      console.log('[liveview] renderer navigation — resetting BrowserView bounds (stale-overlay guard)');
-      browserManager.hide();
+      console.log('[liveview] renderer navigation — hiding all native views (stale-overlay guard)');
+      liveViews.hideAll();
     });
 
     // Warm up the CDP connection at boot. The legacy preview panel used to do
@@ -322,7 +346,7 @@ if (!gotLock) {
     // queue behind kernel boot (whenReady) instead of rejecting outright.
     registerPluginIpcHandlers(pluginSystem);
     await pluginSystem.init();
-    registerLiveViewIpcHandlers(browserManager);
+    registerLiveViewIpcHandlers(liveViews);
 
     const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {
       customToolsProvider: () => pluginSystem.aggregateTools(),

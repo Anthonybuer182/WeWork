@@ -1,48 +1,137 @@
 import { ipcMain } from 'electron';
-import type { BrowserManager } from '@main/browser/browser-manager';
 
 /**
- * LiveView panel slots — generic WebContentsView mount points in the renderer.
+ * LiveView panel slots — generic native-view mount points.
  *
- * P4 ships one slot: the browser plugin's preview panel, backed by the shared
- * BrowserView owned by the host BrowserManager. Future liveview providers
- * register additional slot handlers here.
+ * A liveview panel is backed by a real `WebContentsView` that lives OUTSIDE the
+ * renderer's DOM. The renderer therefore cannot lay it out: it only measures the
+ * rectangle its slot occupies and reports it here, and the host positions the
+ * view to match.
+ *
+ * Two consequences drive this design:
+ *  - A view that is not hidden **occludes the DOM and swallows clicks**. Hiding
+ *    is not cosmetic; the renderer reports degenerate (0×0) bounds when its slot
+ *    is unmounted or display:none, and that must map to a hidden view.
+ *  - A renderer reload skips React cleanup entirely, so a slot can vanish
+ *    without ever calling detach. `hideAll()` is the guard for that case.
+ *
+ * Multiple slots are supported: each registers its own handler, and each owns
+ * its own view, so slots never fight over bounds (which they would if they all
+ * drove one shared view).
  */
+export interface LiveViewBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface LiveViewHandler {
+  /** Called when the slot mounts. Use for one-time warm-up (e.g. connect CDP). */
+  attach?(): void | Promise<void>;
+  /** Position and reveal the view. Bounds are in window-content coordinates. */
+  show(bounds: LiveViewBounds): void | Promise<void>;
+  /** Hide the view so it neither paints nor intercepts input. */
+  hide(): void;
+}
+
+/** The browser plugin's preview panel — the first registered liveview slot. */
 export const BROWSER_LIVEVIEW_SLOT = 'com.pi.browser:preview';
 
-export function registerLiveViewIpcHandlers(browserManager: BrowserManager): void {
-  ipcMain.handle('pi:liveview:attach', async (_event, payload: { slotId?: string }) => {
-    if (payload?.slotId !== BROWSER_LIVEVIEW_SLOT) {
-      return { ok: false, error: `unknown liveview slot: ${payload?.slotId}` };
-    }
-    // Ensure CDP is attached so navigation events flow.
-    await browserManager.connect().catch(() => {});
-    return { ok: true };
-  });
+export class LiveViewRegistry {
+  private handlers = new Map<string, LiveViewHandler>();
 
-  ipcMain.handle('pi:liveview:set-bounds', async (_event, payload: {
-    slotId?: string;
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-  }) => {
-    if (payload?.slotId !== BROWSER_LIVEVIEW_SLOT) return { ok: false };
-    const { x = 0, y = 0, width = 0, height = 0 } = payload;
+  register(slotId: string, handler: LiveViewHandler): void {
+    if (this.handlers.has(slotId)) {
+      console.warn(`[liveview] slot "${slotId}" is already registered — replacing`);
+    }
+    this.handlers.set(slotId, handler);
+  }
+
+  unregister(slotId: string): void {
+    this.handlers.get(slotId)?.hide();
+    this.handlers.delete(slotId);
+  }
+
+  has(slotId: string): boolean {
+    return this.handlers.has(slotId);
+  }
+
+  slots(): string[] {
+    return [...this.handlers.keys()];
+  }
+
+  async attach(slotId: string): Promise<{ ok: boolean; error?: string }> {
+    const handler = this.handlers.get(slotId);
+    if (!handler) return { ok: false, error: `unknown liveview slot: ${slotId}` };
+    await handler.attach?.();
+    return { ok: true };
+  }
+
+  async setBounds(
+    slotId: string,
+    bounds: LiveViewBounds,
+  ): Promise<{ ok: boolean; error?: string }> {
+    const handler = this.handlers.get(slotId);
+    if (!handler) return { ok: false, error: `unknown liveview slot: ${slotId}` };
+
+    const { x, y, width, height } = bounds;
+    // Degenerate bounds mean "not laid out" — a collapsed sidebar, a hidden
+    // panel, or an unmounted slot. Hide rather than position a zero-size view.
     if (width <= 0 || height <= 0) {
-      console.log('[liveview] slot reported 0×0 — hiding BrowserView');
-      browserManager.hide();
+      handler.hide();
       return { ok: true };
     }
-    browserManager.setBounds(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
-    // Keep device metrics in sync for auto-zoom (mirrors the legacy preview).
-    await browserManager.setDeviceMetrics(Math.round(width), Math.round(height)).catch(() => {});
+    await handler.show({
+      x: Math.round(x),
+      y: Math.round(y),
+      width: Math.round(width),
+      height: Math.round(height),
+    });
     return { ok: true };
-  });
+  }
 
-  ipcMain.handle('pi:liveview:detach', (_event, payload: { slotId?: string }) => {
-    if (payload?.slotId !== BROWSER_LIVEVIEW_SLOT) return { ok: false };
-    browserManager.hide();
+  detach(slotId: string): { ok: boolean } {
+    this.handlers.get(slotId)?.hide();
     return { ok: true };
-  });
+  }
+
+  /**
+   * Hide every view. Called when the renderer navigates: a reload never runs
+   * React cleanup, so slots would otherwise keep stale bounds and invisibly
+   * occlude the UI, eating real mouse clicks.
+   */
+  hideAll(): void {
+    for (const handler of this.handlers.values()) {
+      try {
+        handler.hide();
+      } catch (err) {
+        console.error('[liveview] hide failed:', err);
+      }
+    }
+  }
+}
+
+export function registerLiveViewIpcHandlers(registry: LiveViewRegistry): void {
+  ipcMain.handle('pi:liveview:attach', (_event, payload: { slotId?: string }) =>
+    registry.attach(String(payload?.slotId ?? '')),
+  );
+
+  ipcMain.handle(
+    'pi:liveview:set-bounds',
+    (
+      _event,
+      payload: { slotId?: string; x?: number; y?: number; width?: number; height?: number },
+    ) =>
+      registry.setBounds(String(payload?.slotId ?? ''), {
+        x: payload?.x ?? 0,
+        y: payload?.y ?? 0,
+        width: payload?.width ?? 0,
+        height: payload?.height ?? 0,
+      }),
+  );
+
+  ipcMain.handle('pi:liveview:detach', (_event, payload: { slotId?: string }) =>
+    registry.detach(String(payload?.slotId ?? '')),
+  );
 }

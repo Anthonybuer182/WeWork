@@ -15,19 +15,19 @@ import {
   getPluginBridge,
 } from '@pi/ui';
 import { AppShell } from '@pi/ui';
+import { TitleBar, LayoutToggles } from '@pi/ui';
 import { ThreeColumnLayout } from '@pi/ui';
 import { LeftSidebar } from '@pi/ui';
 import { CenterPanel } from '@pi/ui';
-import { PanelHost, PanelRail, SelectionService } from '@pi/ui';
+import { PanelHost, SelectionService } from '@pi/ui';
 import { WorkspaceDropdown } from '@pi/ui';
 import { WorkspaceCreateButton } from '@pi/ui';
-import { SessionList } from '@pi/ui';
+import { HOST_LEFT_PANELS } from '@pi/ui';
+import type { PanelEntry } from '@pi/ui';
 import { ChatTimeline } from '@pi/ui';
 import { Composer } from '@pi/ui';
 import { UsageBar } from '@pi/ui';
 import { ErrorBoundary } from '@pi/ui';
-import { FileTree } from '@pi/ui';
-import { Separator } from '@pi/ui';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,9 +43,13 @@ const queryClient = new QueryClient({
  * through the same panel registry, rail and lifecycle as plugins. File
  * preview and the browser are plugin-owned — no host fallback panels.
  */
-const HOST_PANELS = [
-  { id: 'host:plugins', title: '插件中心', icon: 'puzzle', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
-  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
+const HOST_PANELS: PanelEntry[] = [
+  { id: 'host:plugins', title: '插件中心', icon: 'puzzle', kind: 'host', source: 'host', keepAlive: 'never', region: 'right' },
+  // Settings is a left-sidebar view pinned to the rail's bottom — the VS Code
+  // gear position. It reads as configuration rather than navigation.
+  // keepAlive 'always' so in-progress form edits survive switching views.
+  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host', source: 'host', keepAlive: 'always', region: 'left', anchor: 'bottom', order: 100 },
+  ...HOST_LEFT_PANELS,
 ];
 
 function AppContent() {
@@ -56,6 +60,8 @@ function AppContent() {
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth);
+  const leftPanelWidth = useUIStore((s) => s.leftPanelWidth);
+  const setLeftPanelWidth = useUIStore((s) => s.setLeftPanelWidth);
   const setConnectionStatus = useUIStore((s) => s.setConnectionStatus);
 
   // ── Panel registry: host panels + plugin panels ──
@@ -75,11 +81,14 @@ function AppContent() {
   useEffect(() => {
     if (!rightPanelOpen) return;
     const panelState = usePanelStore.getState();
-    if (panelState.activePanelId) return;
+    // Scope to the right region: a left-sidebar view being active says nothing
+    // about what the right side should show.
+    if (panelState.activePanelIds.right) return;
+    const rightPanels = panelState.panels.filter((p) => p.region === 'right');
     const fallback =
-      panelState.recency.find((id) => panelState.panels.some((p) => p.id === id)) ??
-      panelState.panels.find((p) => p.id === 'host:plugins')?.id ??
-      panelState.panels[0]?.id;
+      panelState.recency.find((id) => rightPanels.some((p) => p.id === id)) ??
+      rightPanels.find((p) => p.id === 'host:plugins')?.id ??
+      rightPanels[0]?.id;
     if (fallback) panelState.openPanel(fallback, { focus: true });
   }, [rightPanelOpen]);
 
@@ -165,28 +174,24 @@ function AppContent() {
     <TooltipProvider delayDuration={300}>
       <SelectionService />
       <AppShell>
+        <TitleBar
+          leading={<WorkspaceDropdown />}
+          leadingAction={<WorkspaceCreateButton />}
+          // Match the left column so the "+" lands on the sidebar's edge line.
+          leadingWidth={sidebarOpen ? leftPanelWidth : undefined}
+          trailing={<LayoutToggles />}
+        />
         <ThreeColumnLayout
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
-          topLeftContent={
-            <>
-              <WorkspaceDropdown />
-              <WorkspaceCreateButton />
-            </>
-          }
+          leftWidth={leftPanelWidth}
+          onLeftWidthChange={setLeftPanelWidth}
           rightPanel={<PanelHost />}
-          rightCollapsedContent={<PanelRail />}
           leftSidebar={
             <LeftSidebar>
-              <div className="flex flex-col min-h-0 flex-1 p-2 gap-0">
-                <div className="max-h-[45%] overflow-auto flex-shrink-0">
-                  <FileTree />
-                </div>
-                <Separator className="my-1" />
-                <SessionList />
-              </div>
+              <PanelHost region="left" chrome={false} />
             </LeftSidebar>
           }
           centerPanel={

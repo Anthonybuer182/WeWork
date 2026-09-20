@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FolderGit2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { switchWorkspace } from '@/lib/switch-workspace';
 import {
   Select,
   SelectContent,
@@ -35,6 +36,22 @@ export function WorkspaceDropdown() {
     queryFn: () => sdk.workspace.list(),
   });
 
+  // A persisted activeWorkspaceId can point at a workspace that no longer
+  // exists (directory deleted, or the workspace was removed). The services
+  // swallow fs errors and return empty arrays, so the file tree and session
+  // list silently render as "empty" with no way for the user to tell. Fall
+  // back to the first available workspace instead of leaving a dead id.
+  useEffect(() => {
+    if (!workspaces) return;
+    if (activeWorkspaceId && workspaces.some((w) => w.id === activeWorkspaceId)) return;
+    // Don't clobber a deliberate "no workspace" state on a fresh install with
+    // zero workspaces — there is nothing to fall back to.
+    if (!activeWorkspaceId && workspaces.length === 0) return;
+    const fallback = workspaces[0]?.id;
+    if (fallback) switchWorkspace(sdk, queryClient, fallback);
+    else setActiveWorkspace(null);
+  }, [workspaces, activeWorkspaceId, setActiveWorkspace, sdk, queryClient]);
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => sdk.workspace.delete(id),
     onSuccess: () => {
@@ -44,9 +61,9 @@ export function WorkspaceDropdown() {
           .getQueryData<Workspace[]>(['workspaces'])
           ?.filter((w) => w.id !== deleteTarget.id);
         if (remaining && remaining.length > 0) {
-          setActiveWorkspace(remaining[0].id);
+          switchWorkspace(sdk, queryClient, remaining[0].id);
         } else {
-          setActiveWorkspace('');
+          setActiveWorkspace(null);
         }
       }
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
@@ -54,19 +71,32 @@ export function WorkspaceDropdown() {
     },
   });
 
+  const activeWorkspaceName = workspaces?.find((w) => w.id === activeWorkspaceId)?.name;
+
   if (isLoading) {
-    return <Skeleton className="h-9 w-[200px]" />;
+    return <Skeleton className="h-8 w-full" />;
   }
 
   return (
     <>
       <Select
         value={activeWorkspaceId ?? undefined}
-        onValueChange={(id) => setActiveWorkspace(id)}
+        onValueChange={(id) => switchWorkspace(sdk, queryClient, id)}
       >
-        <SelectTrigger className="w-[200px] h-9 border-0 bg-transparent hover:bg-accent" aria-label="Select workspace">
-          <FolderGit2 className="mr-2 h-4 w-4 text-muted-foreground" />
-          <SelectValue placeholder="Select workspace..." />
+        <SelectTrigger
+          // w-auto, not w-full: the icon/name/chevron sit next to each other.
+          // min-w-0 + [&>span]:min-w-0 let the name ellipsize when the whole
+          // group is clamped by the title bar's max-width.
+          className="h-8 w-auto min-w-0 max-w-full gap-1.5 border-0 bg-transparent px-2 hover:bg-accent [&>span]:min-w-0"
+          aria-label="Select workspace"
+          title={activeWorkspaceName}
+        >
+          <FolderGit2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+          {/* Explicit children override Radix's default, which mirrors the
+              selected item's full text (name + session count). The trigger is
+              a tight title-bar slot — the count belongs in the list, where it
+              helps you pick, not here where it truncates the name. */}
+          <SelectValue placeholder="Select workspace...">{activeWorkspaceName}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {workspaces?.map((ws) => (

@@ -11,14 +11,10 @@ interface ThreeColumnLayoutProps {
   rightPanel: ReactNode;
   /** Content for the top bar left section (workspace controls). Shown in sidebar column when sidebar is open. */
   topLeftContent?: ReactNode;
-  /** Header content for the right panel (tabs). Only rendered when rightPanelOpen. */
-  rightPanelHeader?: ReactNode;
-  /** Shown in place of the collapsed right panel (e.g. the panel rail), so badges stay visible. */
-  rightCollapsedContent?: ReactNode;
-  /** Callback when the right panel toggle button is clicked. */
-  onToggleRightPanel?: () => void;
   /** Callback when right panel width changes (after drag/arrow-key resize finishes). */
   onRightWidthChange?: (width: number) => void;
+  /** Callback when left sidebar width changes (after drag/arrow-key resize finishes). */
+  onLeftWidthChange?: (width: number) => void;
   leftWidth?: number;
   rightWidth?: number;
   minLeftWidth?: number;
@@ -34,10 +30,8 @@ export function ThreeColumnLayout({
   centerPanel,
   rightPanel,
   topLeftContent,
-  rightPanelHeader,
-  rightCollapsedContent,
-  onToggleRightPanel,
   onRightWidthChange,
+  onLeftWidthChange,
   leftWidth = 260,
   rightWidth = 600,
   minLeftWidth = 200,
@@ -51,12 +45,32 @@ export function ThreeColumnLayout({
   const [currentRightWidth, setCurrentRightWidth] = useState(rightWidth);
   const [dragging, setDragging] = useState<'left' | 'right' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const leftWidthRef = useRef(currentLeftWidth);
   const rightWidthRef = useRef(currentRightWidth);
+  const onLeftWidthChangeRef = useRef(onLeftWidthChange);
   const onRightWidthChangeRef = useRef(onRightWidthChange);
 
-  // Keep refs in sync
+  // Keep refs in sync. During a drag the refs are also written directly by the
+  // handlers below so that rapid events accumulate correctly even when React
+  // has not re-rendered yet.
+  leftWidthRef.current = currentLeftWidth;
   rightWidthRef.current = currentRightWidth;
+  onLeftWidthChangeRef.current = onLeftWidthChange;
   onRightWidthChangeRef.current = onRightWidthChange;
+
+  const applyLeftWidth = useCallback((next: number) => {
+    const clamped = Math.max(minLeftWidth, Math.min(maxLeftWidth, next));
+    leftWidthRef.current = clamped;
+    setCurrentLeftWidth(clamped);
+    return clamped;
+  }, [minLeftWidth, maxLeftWidth]);
+
+  const applyRightWidth = useCallback((next: number) => {
+    const clamped = Math.max(minRightWidth, Math.min(maxRightWidth, next));
+    rightWidthRef.current = clamped;
+    setCurrentRightWidth(clamped);
+    return clamped;
+  }, [minRightWidth, maxRightWidth]);
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -65,35 +79,37 @@ export function ThreeColumnLayout({
       const x = e.clientX - rect.left;
 
       if (dragging === 'left') {
-        const newWidth = Math.max(minLeftWidth, Math.min(maxLeftWidth, x));
-        setCurrentLeftWidth(newWidth);
+        applyLeftWidth(x);
       } else if (dragging === 'right') {
-        const newWidth = Math.max(
-          minRightWidth,
-          Math.min(maxRightWidth, rect.width - x),
-        );
-        setCurrentRightWidth(newWidth);
-        onRightWidthChangeRef.current?.(newWidth);
+        applyRightWidth(rect.width - x);
+        onRightWidthChangeRef.current?.(rightWidthRef.current);
       }
     },
-    [dragging, minLeftWidth, maxLeftWidth, minRightWidth, maxRightWidth],
+    [dragging, applyLeftWidth, applyRightWidth],
   );
 
   const handleMouseUp = useCallback(() => {
+    // Persist only the side that was actually dragged. This used to call
+    // onRightWidthChange unconditionally, so releasing a left-handle drag
+    // wrote the right panel's width.
+    if (dragging === 'left') {
+      onLeftWidthChangeRef.current?.(leftWidthRef.current);
+    } else if (dragging === 'right') {
+      onRightWidthChangeRef.current?.(rightWidthRef.current);
+    }
     setDragging(null);
-    onRightWidthChangeRef.current?.(rightWidthRef.current);
-  }, []);
+  }, [dragging]);
 
-  const handleKeyboardResize = useCallback((delta: number) => {
-    setCurrentRightWidth((prev) => {
-      const next = Math.max(minRightWidth, Math.min(maxRightWidth, prev + delta));
-      return next;
-    });
-    // Need to read the new value after state update, so schedule a microtask
-    queueMicrotask(() => {
-      onRightWidthChangeRef.current?.(rightWidthRef.current + delta);
-    });
-  }, [minRightWidth, maxRightWidth]);
+  const handleKeyboardResize = useCallback(
+    (side: 'left' | 'right', delta: number) => {
+      if (side === 'left') {
+        onLeftWidthChangeRef.current?.(applyLeftWidth(leftWidthRef.current + delta));
+      } else {
+        onRightWidthChangeRef.current?.(applyRightWidth(rightWidthRef.current + delta));
+      }
+    },
+    [applyLeftWidth, applyRightWidth],
+  );
 
   useEffect(() => {
     if (dragging) {
@@ -115,6 +131,10 @@ export function ThreeColumnLayout({
       {/* ============== Left + Center column ============== */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Top bar */}
+        {/* Legacy top bar. Apps that render a full-width <TitleBar/> in the
+            AppShell above pass no topLeftContent, and this bar disappears —
+            which also removes its overlap with the right resize handle. */}
+        {topLeftContent && (
         <div className="flex h-12 shrink-0 items-center border-b bg-background">
           {sidebarOpen ? (
             <>
@@ -134,6 +154,7 @@ export function ThreeColumnLayout({
             </div>
           )}
         </div>
+        )}
 
         {/* Sidebar + Center */}
         <div className="flex flex-1 overflow-hidden">
@@ -157,14 +178,8 @@ export function ThreeColumnLayout({
                 className="w-1 cursor-col-resize hover:bg-primary/50 transition-colors"
                 onMouseDown={() => setDragging('left')}
                 onKeyDown={(e) => {
-                  if (e.key === 'ArrowLeft')
-                    setCurrentLeftWidth(
-                      Math.max(minLeftWidth, currentLeftWidth - 10),
-                    );
-                  if (e.key === 'ArrowRight')
-                    setCurrentLeftWidth(
-                      Math.min(maxLeftWidth, currentLeftWidth + 10),
-                    );
+                  if (e.key === 'ArrowLeft') handleKeyboardResize('left', -10);
+                  if (e.key === 'ArrowRight') handleKeyboardResize('left', 10);
                 }}
               />
             </>
@@ -181,8 +196,8 @@ export function ThreeColumnLayout({
             style={{ width: '8px' }}
             onMouseDown={() => setDragging('right')}
             onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') handleKeyboardResize(-10);
-              if (e.key === 'ArrowRight') handleKeyboardResize(10);
+              if (e.key === 'ArrowLeft') handleKeyboardResize('right', -10);
+              if (e.key === 'ArrowRight') handleKeyboardResize('right', 10);
             }}
             role="separator"
             tabIndex={0}
@@ -199,17 +214,10 @@ export function ThreeColumnLayout({
             style={{ width: currentRightWidth }}
             className="flex-shrink-0 overflow-hidden border-l flex flex-col"
           >
-            {rightPanelHeader && (
-              <div className="shrink-0">{rightPanelHeader}</div>
-            )}
             <div className="flex-1 overflow-hidden">{rightPanel}</div>
           </div>
         </>
-      ) : (
-        rightCollapsedContent && (
-          <div className="flex-shrink-0 border-l">{rightCollapsedContent}</div>
-        )
-      )}
+      ) : null}
     </div>
   );
 }

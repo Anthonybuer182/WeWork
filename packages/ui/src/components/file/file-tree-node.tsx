@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, File, FileCode, FileText, FileImage, FileVideo, Folder, FolderOpen, Loader2 } from 'lucide-react';
+import { ChevronRight, CircleAlert, File, FileCode, FileText, FileImage, FileVideo, Folder, FolderOpen, Loader2 } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { cn } from '@/lib/utils';
@@ -39,7 +39,7 @@ export function FileTreeNode({ entry, workspaceId, depth, onFileClick }: FileTre
   const activePreviewFilePath = useUIStore((s) => s.activePreviewFilePath);
   const [expanded, setExpanded] = useState(false);
 
-  const { data: children, isLoading } = useQuery({
+  const { data: children, isLoading, error } = useQuery({
     queryKey: ['files', workspaceId, entry.path],
     queryFn: () => sdk.file.list(workspaceId, entry.path),
     enabled: expanded && entry.type === 'directory',
@@ -129,6 +129,16 @@ export function FileTreeNode({ entry, workspaceId, depth, onFileClick }: FileTre
             >
               <Loader2 className="h-3 w-3 animate-spin" />
               Loading...
+            </div>
+          )}
+          {error && (
+            <div
+              className="flex items-center gap-1 py-1 text-xs text-destructive/80"
+              style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}
+              title={error instanceof Error ? error.message : undefined}
+            >
+              <CircleAlert className="h-3 w-3 shrink-0" />
+              Failed to read
             </div>
           )}
           {children

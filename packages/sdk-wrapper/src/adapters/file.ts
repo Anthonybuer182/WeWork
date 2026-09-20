@@ -1,8 +1,41 @@
 import type { FileService, FileEntry, FileContent, OfficeContent, DocxContent, XlsxContent, XlsxSheet, XlsxRow, XlsxCell, PptxContent, PptxSlide, PptxShape, PptxParagraph, PptxTextRun, PptxShapeFill, PptxShapeOutline, PptxTable, PptxTableCell, PptxTableRow } from '../services/file.js';
-import { readFileSync, writeFileSync, readdirSync, statSync, unlinkSync } from 'fs';
+import { IGNORED_DIR_NAMES } from '../services/file.js';
+import { readFileSync, writeFileSync, readdirSync, statSync, unlinkSync, type Dirent } from 'fs';
+import { readdir, stat } from 'fs/promises';
 import { join, extname } from 'path';
 import ExcelJS from 'exceljs';
 import AdmZip from 'adm-zip';
+
+const DEFAULT_SEARCH_LIMIT = 200;
+const DEFAULT_SEARCH_MAX_DIRS = 2000;
+/** Directories walked concurrently. Keeps fd usage and event-loop pressure bounded. */
+const SEARCH_CONCURRENCY = 12;
+/** Cap reported per-directory failures so a broken tree can't grow the payload. */
+const MAX_REPORTED_ERRORS = 20;
+
+/**
+ * In-flight searches keyed by caller-supplied id. The transport is a plain
+ * request/response with no cancellation signal (`ipcRenderer.invoke` cannot be
+ * aborted either), so cancellation is cooperative: the walk checks this between
+ * directories.
+ */
+const activeSearches = new Map<string, { cancelled: boolean }>();
+
+/** Run `fn` over `items` with at most `limit` in flight. */
+async function mapLimit<T>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const item = items[cursor++];
+      await fn(item);
+    }
+  });
+  await Promise.all(workers);
+}
 
 const LANGUAGE_MAP: Record<string, string> = {
   '.ts': 'typescript',
@@ -71,18 +104,128 @@ export function createRealFileService(): FileService {
   return {
     async list(workspaceId: string, dirPath?: string): Promise<FileEntry[]> {
       const dir = dirPath || workspaceId;
+      let entries: Dirent[];
       try {
-        const entries = readdirSync(dir, { withFileTypes: true });
-        return entries.map((entry) => ({
-          name: entry.name,
-          path: join(dir, entry.name),
-          type: entry.isDirectory() ? 'directory' : 'file',
-          size: entry.isFile() ? statSync(join(dir, entry.name)).size : undefined,
-          modifiedAt: statSync(join(dir, entry.name)).mtime.toISOString(),
-        }));
-      } catch {
-        return [];
+        entries = readdirSync(dir, { withFileTypes: true });
+      } catch (err) {
+        // Surface the failure instead of returning []. A missing or unreadable
+        // directory must not be indistinguishable from an empty one — that is
+        // what made a stale workspace render as "No files found" with no hint.
+        const code = (err as NodeJS.ErrnoException).code ?? 'UNKNOWN';
+        throw new Error(`Cannot list directory ${dir} (${code})`);
       }
+      return entries.map((entry) => {
+        const full = join(dir, entry.name);
+        const isDirectory = entry.isDirectory();
+        // Single stat: the previous code called statSync twice per entry
+        // (once for size, once for mtime).
+        const st = statSync(full);
+        return {
+          name: entry.name,
+          path: full,
+          type: isDirectory ? ('directory' as const) : ('file' as const),
+          size: isDirectory ? undefined : st.size,
+          modifiedAt: st.mtime.toISOString(),
+        };
+      });
+    },
+
+    /**
+     * Recursive filename search, breadth-first, with bounded concurrency.
+     *
+     * Deliberately async (`fs/promises`): the previous synchronous walk shape
+     * would run inside the desktop main process and block IPC, window and
+     * liveview work; on web it shares the event loop with the chat stream and
+     * would visibly stall streaming output.
+     */
+    async search(workspaceId, query, options) {
+      const limit = options?.limit ?? DEFAULT_SEARCH_LIMIT;
+      const maxDirs = options?.maxDirs ?? DEFAULT_SEARCH_MAX_DIRS;
+      const searchId = options?.searchId;
+      const needle = (query ?? '').trim().toLowerCase();
+
+      const entries: FileEntry[] = [];
+      const errors: { path: string; message: string }[] = [];
+      let scanned = 0;
+      let truncated = false;
+
+      const state = searchId ? { cancelled: false } : undefined;
+      if (searchId && state) activeSearches.set(searchId, state);
+      const isCancelled = () => state?.cancelled === true;
+
+      try {
+        // An empty query would otherwise match every file in the workspace.
+        if (!needle) return { entries, truncated: false, scanned: 0 };
+
+        let level: string[] = [workspaceId];
+        while (level.length > 0) {
+          if (isCancelled()) break;
+          if (scanned >= maxDirs || entries.length >= limit) {
+            truncated = true;
+            break;
+          }
+
+          const nextLevel: string[] = [];
+          await mapLimit(level, SEARCH_CONCURRENCY, async (dir) => {
+            if (isCancelled() || scanned >= maxDirs || entries.length >= limit) return;
+            scanned++;
+
+            let dirents: Dirent[];
+            try {
+              dirents = await readdir(dir, { withFileTypes: true });
+            } catch (err) {
+              // A single unreadable directory must not abort the whole search.
+              if (errors.length < MAX_REPORTED_ERRORS) {
+                errors.push({
+                  path: dir,
+                  message: (err as NodeJS.ErrnoException).code ?? String(err),
+                });
+              }
+              return;
+            }
+
+            for (const dirent of dirents) {
+              const full = join(dir, dirent.name);
+              if (dirent.isDirectory()) {
+                if (!IGNORED_DIR_NAMES.has(dirent.name)) nextLevel.push(full);
+                continue;
+              }
+              if (entries.length >= limit) return;
+              if (!dirent.name.toLowerCase().includes(needle)) continue;
+
+              // Stat only matches — bounded by `limit`, so this stays cheap.
+              let size: number | undefined;
+              let modifiedAt = new Date(0).toISOString();
+              try {
+                const st = await stat(full);
+                size = st.size;
+                modifiedAt = st.mtime.toISOString();
+              } catch {
+                // Vanished between readdir and stat — keep the entry.
+              }
+              entries.push({ name: dirent.name, path: full, type: 'file', size, modifiedAt });
+            }
+          });
+
+          level = nextLevel;
+        }
+
+        return {
+          // Workers check the limit independently, so concurrent pushes can
+          // overshoot it slightly — trim to the hard cap before returning.
+          entries: entries.slice(0, limit),
+          truncated,
+          scanned,
+          ...(errors.length > 0 ? { errors } : {}),
+        };
+      } finally {
+        if (searchId) activeSearches.delete(searchId);
+      }
+    },
+
+    async cancelSearch(searchId) {
+      const state = activeSearches.get(searchId);
+      if (state) state.cancelled = true;
     },
 
     async read(_workspaceId: string, filePath: string): Promise<FileContent> {

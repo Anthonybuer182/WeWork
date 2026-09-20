@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, session } from 'electron';
+import { WebContentsView, BrowserWindow, session } from 'electron';
 import { BROWSER_HELPERS_JS } from './browser-helpers';
 import type { VlmAnalyzer } from './vlm-analyzer';
 
@@ -64,7 +64,7 @@ type SwitchToBrowserTabCallback = () => void;
  * `type: "webview"` CDP targets (Electron 38).
  */
 export class BrowserManager {
-  private browserView: BrowserView | null = null;
+  private browserView: WebContentsView | null = null;
   private mainWindow: BrowserWindow | null = null;
   private debuggerAttached = false;
   private urlChangedCallbacks: UrlChangedCallback[] = [];
@@ -77,10 +77,10 @@ export class BrowserManager {
 
   constructor() {}
 
-  /** ——— BrowserView lifecycle ——— */
+  /** ——— Browser view lifecycle ——— */
 
-  /** Set the BrowserView and wire navigation events. Call once at startup. */
-  setBrowserView(bv: BrowserView, mainWindow: BrowserWindow): void {
+  /** Set the embedded browser view and wire navigation events. Call once at startup. */
+  setBrowserView(bv: WebContentsView, mainWindow: BrowserWindow): void {
     this.browserView = bv;
     this.mainWindow = mainWindow;
     const wc = bv.webContents;
@@ -114,7 +114,7 @@ export class BrowserManager {
     );
 
     // Ignore certificate errors for user-browsed content (equivalent to
-    // clicking "Proceed anyway" in a regular browser). The BrowserView
+    // clicking "Proceed anyway" in a regular browser). the browser view
     // loads arbitrary user-chosen URLs, so strict cert rejection is
     // counterproductive.
     wc.on('certificate-error', (event, _url, _error, _certificate, callback) => {
@@ -146,7 +146,7 @@ export class BrowserManager {
         this.injectQuoteButton();
         this.scheduleAutoZoom();
       }
-      // BrowserView compositing workaround: after a page load (especially
+      // embedded-view compositing workaround: after a page load (especially
       // SPA navigations like zhipin.com's anti-bot triggered ones), the
       // native composited surface can go blank while the webContents still
       // has rendered content. Re-applying the bounds nudges the compositor
@@ -155,7 +155,7 @@ export class BrowserManager {
     });
 
     // Log renderer crashes for diagnosis (GPU/renderer process death causes
-    // the BrowserView surface to go permanently white).
+    // the embedded view's surface to go permanently white).
     wc.on('render-process-gone', (_event, details) => {
       console.error('[BrowserManager] render-process-gone:', details.reason, details);
     });
@@ -170,9 +170,9 @@ export class BrowserManager {
   private refreshCompositorTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
-   * Force the BrowserView's compositor to redraw by re-applying the
+   * Force the embedded view's compositor to redraw by re-applying the
    * current bounds. This fixes the "page loads then goes white" issue
-   * caused by Chromium's compositor culling the BrowserView surface
+   * caused by Chromium's compositor culling the embedded view's surface
    * after certain navigations. Debounced to avoid hammering during
    * rapid SPA route changes (zhipin.com triggers many of these).
    */
@@ -185,7 +185,7 @@ export class BrowserManager {
       this.refreshCompositorTimer = null;
       try {
         // Nudge bounds by 1px then restore — forces the compositor to
-        // re-evaluate and redraw the BrowserView surface.
+        // re-evaluate and redraw the embedded view's surface.
         this.browserView!.setBounds({ x, y, width: width + 1, height });
         this.browserView!.setBounds({ x, y, width, height });
       } catch {
@@ -194,7 +194,7 @@ export class BrowserManager {
     }, 50);
   }
 
-  /** Get the BrowserView's webContents. */
+  /** Get the embedded browser view's webContents. */
   private get wc(): Electron.WebContents | null {
     if (!this.browserView) return null;
     try {
@@ -206,7 +206,7 @@ export class BrowserManager {
   }
 
   /**
-   * Set BrowserView bounds (viewport-relative position and size).
+   * Set the browser view's bounds (viewport-relative position and size).
    * Call from renderer via IPC to position the native overlay over the placeholder div.
    */
   setBounds(x: number, y: number, width: number, height: number): void {
@@ -223,14 +223,14 @@ export class BrowserManager {
     }
   }
 
-  /** Hide the BrowserView (set zero-size bounds). */
+  /** Hide the browser view (set zero-size bounds). */
   hide(): void {
     if (!this.browserView) return;
     this.browserView.setBounds({ x: 0, y: 0, width: 0, height: 0 });
     this.lastBounds = null;
   }
 
-  /** Get current BrowserView bounds. */
+  /** Get current browser view bounds. */
   getBounds(): { x: number; y: number; width: number; height: number } {
     if (!this.browserView) return { x: 0, y: 0, width: 0, height: 0 };
     return this.browserView.getBounds();
@@ -238,11 +238,11 @@ export class BrowserManager {
 
   /** ─── Connection ─── */
 
-  /** Connect to the BrowserView's webContents via the debugger API. */
+  /** Connect to the browser view's webContents via the debugger API. */
   async connect(): Promise<void> {
     const wc = this.wc;
     if (!wc) {
-      throw new Error('BrowserView not initialized. Call setBrowserView() first.');
+      throw new Error('Browser view not initialized. Call setBrowserView() first.');
     }
 
     // Increase max listeners
@@ -306,10 +306,10 @@ export class BrowserManager {
     this.injectHelpers();
     this.injectQuoteButton();
 
-    console.log('[BrowserManager] Connected to BrowserView via debugger API');
+    console.log('[BrowserManager] Connected to browser view via debugger API');
   }
 
-  /** Check if the debugger is attached and the BrowserView is alive. */
+  /** Check if the debugger is attached and the browser view is alive. */
   isConnected(): boolean {
     if (!this.browserView || !this.debuggerAttached) return false;
     try {
@@ -321,7 +321,7 @@ export class BrowserManager {
 
   /**
    * Ensure the browser is connected before executing a command.
-   * If the BrowserView doesn't exist (Browser tab not open), notify the
+   * If the browser view doesn't exist (browser panel not open), notify the
    * renderer to switch to the Browser tab.
    */
   async ensureConnected(timeoutMs = 15000): Promise<void> {
@@ -515,7 +515,7 @@ export class BrowserManager {
     try {
       // Use webContents.loadURL() for navigation — handles redirects natively
       const wc = this.wc;
-      if (!wc) throw new Error('BrowserView not available');
+      if (!wc) throw new Error('Browser view not available');
       wc.loadURL(url);
       // Wait for page to load (DOM complete)
       await this.waitForPageLoad();

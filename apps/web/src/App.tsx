@@ -10,19 +10,19 @@ import {
   usePanelStore,
 } from '@pi/ui';
 import { AppShell } from '@pi/ui';
+import { TitleBar, LayoutToggles } from '@pi/ui';
 import { ThreeColumnLayout } from '@pi/ui';
 import { LeftSidebar } from '@pi/ui';
 import { CenterPanel } from '@pi/ui';
-import { PanelHost, PanelRail } from '@pi/ui';
+import { PanelHost } from '@pi/ui';
 import { WorkspaceDropdown } from '@pi/ui';
 import { WorkspaceCreateButton } from '@pi/ui';
-import { SessionList } from '@pi/ui';
+import { HOST_LEFT_PANELS } from '@pi/ui';
+import type { PanelEntry } from '@pi/ui';
 import { ChatTimeline } from '@pi/ui';
 import { Composer } from '@pi/ui';
 import { UsageBar } from '@pi/ui';
 import { ErrorBoundary } from '@pi/ui';
-import { FileTree } from '@pi/ui';
-import { Separator } from '@pi/ui';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,8 +39,12 @@ const queryClient = new QueryClient({
  * system degrades gracefully. (The browser preview is Electron-only.)
  * File preview is plugin-owned — no host fallback panel.
  */
-const HOST_PANELS = [
-  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host' as const, source: 'host', keepAlive: 'never' as const },
+const HOST_PANELS: PanelEntry[] = [
+  // Settings is a left-sidebar view pinned to the rail's bottom — the VS Code
+  // gear position. It reads as configuration rather than navigation.
+  // keepAlive 'always' so in-progress form edits survive switching views.
+  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host', source: 'host', keepAlive: 'always', region: 'left', anchor: 'bottom', order: 100 },
+  ...HOST_LEFT_PANELS,
 ];
 
 function AppContent() {
@@ -51,6 +55,8 @@ function AppContent() {
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth);
+  const leftPanelWidth = useUIStore((s) => s.leftPanelWidth);
+  const setLeftPanelWidth = useUIStore((s) => s.setLeftPanelWidth);
   const setConnectionStatus = useUIStore((s) => s.setConnectionStatus);
 
   const setHostPanels = usePanelStore((s) => s.setHostPanels);
@@ -70,28 +76,24 @@ function AppContent() {
   return (
     <TooltipProvider delayDuration={300}>
       <AppShell>
+        <TitleBar
+          leading={<WorkspaceDropdown />}
+          leadingAction={<WorkspaceCreateButton />}
+          // Match the left column so the "+" lands on the sidebar's edge line.
+          leadingWidth={sidebarOpen ? leftPanelWidth : undefined}
+          trailing={<LayoutToggles />}
+        />
         <ThreeColumnLayout
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
-          topLeftContent={
-            <>
-              <WorkspaceDropdown />
-              <WorkspaceCreateButton />
-            </>
-          }
+          leftWidth={leftPanelWidth}
+          onLeftWidthChange={setLeftPanelWidth}
           rightPanel={<PanelHost />}
-          rightCollapsedContent={<PanelRail />}
           leftSidebar={
             <LeftSidebar>
-              <div className="flex flex-col min-h-0 flex-1 p-2 gap-0">
-                <div className="max-h-[45%] overflow-auto flex-shrink-0">
-                  <FileTree />
-                </div>
-                <Separator className="my-1" />
-                <SessionList />
-              </div>
+              <PanelHost region="left" chrome={false} />
             </LeftSidebar>
           }
           centerPanel={

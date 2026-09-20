@@ -1,5 +1,5 @@
 import type { Transport } from '../transport/base.js';
-import type { FileService } from '../services/file.js';
+import type { FileService, FileSearchOptions } from '../services/file.js';
 
 export function createProxyFileService(transport: Transport): FileService {
   return {
@@ -17,6 +17,12 @@ export function createProxyFileService(transport: Transport): FileService {
     },
     async readOffice(workspaceId: string, filePath: string) {
       return transport.request('file.readOffice', { workspaceId, path: filePath }) as ReturnType<FileService['readOffice']>;
+    },
+    async search(workspaceId: string, query: string, options?: FileSearchOptions) {
+      return transport.request('file.search', { workspaceId, query, options }) as ReturnType<FileService['search']>;
+    },
+    async cancelSearch(searchId: string) {
+      return transport.request('file.cancelSearch', { searchId }) as ReturnType<FileService['cancelSearch']>;
     },
   };
 }

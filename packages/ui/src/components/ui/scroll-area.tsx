@@ -2,12 +2,24 @@ import * as React from 'react';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import { cn } from '@/lib/utils';
 
+/**
+ * `viewportClassName` targets Radix's inner Viewport. It exists because Radix
+ * wraps children in a `display: table` div that sizes to max-content — content
+ * with no break opportunity (a long URL, an API key) widens the panel instead
+ * of being clipped. Pass `[&>div]:!block [&>div]:!min-w-0` to constrain it (the
+ * `!` is required: Radix sets that style inline).
+ * `className` lands on Root, which cannot reach that wrapper.
+ */
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
+    viewportClassName?: string;
+  }
+>(({ className, viewportClassName, children, ...props }, ref) => (
   <ScrollAreaPrimitive.Root ref={ref} className={cn('relative overflow-hidden', className)} {...props}>
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+    <ScrollAreaPrimitive.Viewport
+      className={cn('h-full w-full rounded-[inherit]', viewportClassName)}
+    >
       {children}
     </ScrollAreaPrimitive.Viewport>
     <ScrollBar />

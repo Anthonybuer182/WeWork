@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { usePanelStore, type PanelEntry } from '@/stores/panel-store';
+import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
 import { useUIStore } from '@/stores/ui-store';
 import { panelIcon } from './panel-icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -51,8 +51,8 @@ function RailIcon({ panel }: { panel: PanelEntry }) {
   return <Icon className="h-4.5 w-4.5" />;
 }
 
-function RailButton({ panel }: { panel: PanelEntry }) {
-  const activePanelId = usePanelStore((s) => s.activePanelId);
+function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion }) {
+  const activePanelId = usePanelStore((s) => s.activePanelIds[region]);
   const openPanel = usePanelStore((s) => s.openPanel);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const runtime = usePanelStore((s) => s.runtime[panel.id]);
@@ -60,6 +60,9 @@ function RailButton({ panel }: { panel: PanelEntry }) {
   const active = activePanelId === panel.id;
   const badge = runtime?.badge;
   const pending = runtime?.pending;
+  // The rail sits beside its content column, so the indicator goes on the
+  // inner edge: right edge for a left rail, left edge for a right rail.
+  const isLeft = region === 'left';
 
   return (
     <Tooltip>
@@ -73,8 +76,10 @@ function RailButton({ panel }: { panel: PanelEntry }) {
           data-pending={pending ? 'true' : undefined}
           onClick={() => {
             openPanel(panel.id, { focus: true });
-            // A rail click is an explicit open — surface the panel side.
-            setRightPanelOpen(true);
+            // A rail click on the right is an explicit open — surface that side.
+            // The left column is toggled from the title bar and is already
+            // visible whenever its rail is reachable.
+            if (region === 'right') setRightPanelOpen(true);
           }}
           className={cn(
             'relative flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition-colors',
@@ -87,39 +92,69 @@ function RailButton({ panel }: { panel: PanelEntry }) {
           {badge !== undefined && badge !== null && badge !== '' && (
             <span
               data-panel-badge
-              className="absolute -right-0.5 -top-0.5 min-w-[16px] rounded-full bg-primary px-1 text-[10px] font-medium leading-4 text-primary-foreground"
+              className={cn(
+                'absolute -top-0.5 min-w-[16px] rounded-full bg-primary px-1 text-[10px] font-medium leading-4 text-primary-foreground',
+                isLeft ? '-left-0.5' : '-right-0.5',
+              )}
             >
               {badge}
             </span>
           )}
           {pending && badge === undefined && (
-            <span className="absolute right-1 top-1 h-2 w-2 animate-pulse rounded-full bg-primary" />
+            <span className={cn('absolute top-1 h-2 w-2 animate-pulse rounded-full bg-primary', isLeft ? 'left-1' : 'right-1')} />
           )}
-          {active && <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" />}
+          {active && (
+            <span
+              className={cn(
+                'absolute top-1/2 h-5 w-0.5 -translate-y-1/2 bg-primary',
+                isLeft ? 'right-0 rounded-l' : 'left-0 rounded-r',
+              )}
+            />
+          )}
         </button>
       </TooltipTrigger>
-      <TooltipContent side="left">{panel.title}</TooltipContent>
+      <TooltipContent side={isLeft ? 'right' : 'left'}>{panel.title}</TooltipContent>
     </Tooltip>
   );
 }
 
 /**
- * Right-edge icon rail: the plugin panel switcher. Host panels and plugin
- * panels live side by side; badges/active dots stay visible even when the
- * panel body is collapsed. The plugin center is a regular rail entry
- * (host:plugins, first) — no separate bottom "+" launcher.
+ * Icon rail for one sidebar column: the panel switcher. Host panels and plugin
+ * panels live side by side; badges/active dots stay visible even when the panel
+ * body is collapsed. The plugin center is a regular rail entry (host:plugins) —
+ * no separate bottom "+" launcher.
+ *
+ * Panels are split into two groups by `anchor`; the bottom group is pushed to
+ * the far end, which is where configuration-style panels belong.
  */
-export function PanelRail() {
+export function PanelRail({ region = 'right' }: { region?: PanelRegion }) {
   const panels = usePanelStore((s) => s.panels);
   // Auxiliary panels (hidden / companion) are not listed — one plugin, one
   // rail button. Companions render inside their primary panel's body.
-  const railPanels = panels.filter((p) => !p.hidden && !p.companionOf);
+  const railPanels = panels
+    .filter((p) => p.region === region && !p.hidden && !p.companionOf)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const topGroup = railPanels.filter((p) => p.anchor !== 'bottom');
+  const bottomGroup = railPanels.filter((p) => p.anchor === 'bottom');
 
   return (
-    <div className="flex h-full w-12 shrink-0 flex-col items-center gap-1 border-r bg-background py-2" data-testid="panel-rail">
-      {railPanels.map((panel) => (
-        <RailButton key={panel.id} panel={panel} />
+    <div
+      className="flex h-full w-12 shrink-0 flex-col items-center gap-1 border-r bg-background py-2"
+      data-testid={`panel-rail-${region}`}
+      data-panel-rail-region={region}
+    >
+      {topGroup.map((panel) => (
+        <RailButton key={panel.id} panel={panel} region={region} />
       ))}
+      {bottomGroup.length > 0 && (
+        <>
+          <div className="flex-1" />
+          {bottomGroup.map((panel) => (
+            <RailButton key={panel.id} panel={panel} region={region} />
+          ))}
+        </>
+      )}
     </div>
   );
 }

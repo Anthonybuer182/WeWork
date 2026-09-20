@@ -21,7 +21,9 @@ const SelectTrigger = React.forwardRef<
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 opacity-50" />
+      {/* shrink-0: the chevron must not be squashed when a trigger is sized to
+          its content and the value has to ellipsize. */}
+      <ChevronDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));

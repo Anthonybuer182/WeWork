@@ -44,6 +44,38 @@ export function Composer() {
   const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
   const activePreviewFilePath = useUIStore((s) => s.activePreviewFilePath);
   const setActiveSession = useUIStore((s) => s.setActiveSession);
+
+  // Always keep a conversation ready. A workspace with no selected session is
+  // exactly the state you land in when the app opens or you switch workspaces —
+  // it should not be a dead end with no input box.
+  //
+  // Creating a session is free: no file is written and it stays out of the
+  // session list until the first message, so this produces no clutter even if
+  // you switch workspaces without typing.
+  useEffect(() => {
+    if (activeSessionId || !activeWorkspaceId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const created = await sdk.session.create(activeWorkspaceId);
+        // Read it back and seed the cache: without data for the new id the
+        // session query has nothing to render and ChatTimeline flashes its
+        // "Loading messages..." spinner. A fresh session has no messages, so
+        // this is cheap.
+        const session = await sdk.session.get(created.id);
+        if (cancelled) return;
+        queryClient.setQueryData(['session', created.id], session);
+        queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        setActiveSession(created.id);
+      } catch {
+        // Leave the empty state in place; the next workspace change retries.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSessionId, activeWorkspaceId, sdk, queryClient, setActiveSession]);
+
   const {
     value,
     setValue,
@@ -1160,7 +1192,11 @@ export function Composer() {
     else if (showMentionMenu) handleMentionSelect();
   }, [showSlashMenu, showMentionMenu, handleSlashSelect, handleMentionSelect]);
 
-  if (!activeSessionId) return null;
+  // Deliberately NOT `if (!activeSessionId) return null`: switching workspace
+  // clears the session for a moment while the new one is created, and
+  // unmounting here makes the input box blink. The input is already disabled
+  // when there is no session, so rendering it dimmed is both truthful and
+  // flicker-free.
 
   return (
     <div

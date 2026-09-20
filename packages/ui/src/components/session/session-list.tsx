@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { SessionItem } from './session-item';
-import { SessionGroupHeader } from './session-group-header';
 import { SessionCreateButton } from './session-create-button';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { ErrorState } from '@/components/common/error-state';
@@ -26,11 +25,6 @@ export function SessionList() {
     },
   });
 
-  const { data: workspaces } = useQuery({
-    queryKey: ['workspaces'],
-    queryFn: () => sdk.workspace.list(),
-  });
-
   const { data: sessions, isLoading, error, refetch } = useQuery({
     queryKey: ['sessions', activeWorkspaceId],
     queryFn: async () => {
@@ -40,8 +34,6 @@ export function SessionList() {
     enabled: !!activeWorkspaceId,
     refetchInterval: 5000,
   });
-
-  const workspaceName = workspaces?.find((w) => w.id === activeWorkspaceId)?.name ?? 'Sessions';
 
   if (!activeWorkspaceId) {
     return (
@@ -58,7 +50,6 @@ export function SessionList() {
 
   return (
     <div className="flex flex-col gap-1 min-h-0 flex-1">
-      <SessionGroupHeader workspaceName={workspaceName} count={items.length} />
       <SessionCreateButton />
       <Virtuoso
         className="flex-1"

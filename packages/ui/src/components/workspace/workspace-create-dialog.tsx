@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { switchWorkspace } from '@/lib/switch-workspace';
 import { Button } from '@/components/ui/button';
 import type { Workspace } from '@pi/types';
 
@@ -27,8 +28,9 @@ export function WorkspaceCreateButton() {
         queryClient.setQueryData<Workspace[]>(['workspaces'], (old) =>
           old ? [result, ...old] : [result],
         );
-        // Auto-select the new workspace
-        setActiveWorkspace(result.id);
+        // Auto-select the new workspace (with its conversation prepared, so the
+        // centre panel doesn't flash through a session-less frame).
+        switchWorkspace(sdk, queryClient, result.id);
         // Background refresh for eventual consistency
         queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       }

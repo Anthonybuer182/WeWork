@@ -1,5 +1,5 @@
 import { X, Loader2, CircleAlert } from 'lucide-react';
-import { usePanelStore } from '@/stores/panel-store';
+import { usePanelStore, type PanelRegion } from '@/stores/panel-store';
 import { useUIStore } from '@/stores/ui-store';
 import { panelIcon } from './panel-icons';
 
@@ -7,16 +7,17 @@ import { panelIcon } from './panel-icons';
  * Host-owned panel chrome: every panel (host or plugin) gets the same
  * title bar — title, activity indicator, badge — for a consistent look.
  */
-export function PanelChrome() {
-  const activePanelId = usePanelStore((s) => s.activePanelId);
+export function PanelChrome({ region = 'right' }: { region?: PanelRegion }) {
+  const activePanelId = usePanelStore((s) => s.activePanelIds[region]);
   const panels = usePanelStore((s) => s.panels);
   const runtime = usePanelStore((s) => (activePanelId ? s.runtime[activePanelId] : undefined));
   const closePanel = usePanelStore((s) => s.closePanel);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const handleClose = () => {
-    closePanel();
-    // X collapses the whole right side — only the plugin icon rail remains.
-    setRightPanelOpen(false);
+    closePanel(region);
+    // On the right the X collapses the whole side, leaving only the icon rail.
+    // The left column has no collapse gesture — that is the title bar toggle.
+    if (region === 'right') setRightPanelOpen(false);
   };
 
   const panel = panels.find((p) => p.id === activePanelId);

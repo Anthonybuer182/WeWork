@@ -28,8 +28,9 @@ export { useUIStore } from './stores/ui-store';
 export { useThemeStore } from './stores/theme-store';
 export { useComposerStore } from './stores/composer-store';
 export { usePluginStore, getPluginBridge } from './stores/plugin-store';
-export { usePanelStore, pluginPanelId } from './stores/panel-store';
-export type { PanelEntry, PanelKind, PanelKeepAlive, PanelRuntimeState } from './stores/panel-store';
+export { usePanelStore, pluginPanelId, usePanelActivation } from './stores/panel-store';
+export type { PanelEntry, PanelKind, PanelKeepAlive, PanelRuntimeState, PanelRegion, PanelAnchor } from './stores/panel-store';
+export { HOST_LEFT_PANELS } from './components/panels/host-panels';
 export { useCommandStore, HOST_COMMANDS } from './stores/command-store';
 export type { RegisteredCommand } from './stores/command-store';
 
@@ -39,9 +40,10 @@ export { useMediaQuery } from './hooks/use-media-query';
 export { useKeyboardShortcut } from './hooks/use-keyboard-shortcut';
 export { useResizeObserver } from './hooks/use-resize-observer';
 
-export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel, RightPanel } from './components/layout';
+export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel, RightPanel, TitleBar, LayoutToggles, getHostChrome } from './components/layout';
+export type { HostChrome, HostPlatform } from './components/layout';
 export { WorkspaceDropdown, WorkspaceCreateButton } from './components/workspace';
-export { SessionList, SessionItem, SessionCreateButton, SessionGroupHeader } from './components/session';
+export { SessionList, SessionItem, SessionCreateButton } from './components/session';
 export { ChatTimeline, MessageBubble, ThinkingBlock, ToolCallDisplay, EmptyChat, StreamingIndicator, QuoteBlockDisplay } from './components/chat';
 export { Composer, ComposerInput, SendButton, SlashCommandMenu, MentionMenu, AttachmentPreviewBar, FileUploadButton } from './components/composer';
 export { ModelSelector, ThinkLevelSelector, CompactToggle, SkillSelector } from './components/model';

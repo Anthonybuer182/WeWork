@@ -11,22 +11,29 @@ interface UIState {
   sidebarOpen: boolean;
   rightPanelOpen: boolean;
   rightPanelWidth: number;
+  leftPanelWidth: number;
   compactMode: boolean;
   selectedSkills: string[];
   connectionStatus: ConnectionStatus;
-  searchQuery: string;
 
   setActiveWorkspace: (id: string | null) => void;
+  /**
+   * Set workspace and session in one update. Use when the session for the new
+   * workspace is already prepared — see `switchWorkspace()` in lib/. Setting
+   * them separately renders a frame with a workspace but no session, which
+   * makes the centre panel flash.
+   */
+  setActiveWorkspaceAndSession: (workspaceId: string | null, sessionId: string | null) => void;
   setActiveSession: (id: string | null) => void;
   setActivePreviewFile: (path: string | null) => void;
   toggleSidebar: () => void;
   toggleRightPanel: () => void;
   setRightPanelOpen: (open: boolean) => void;
   setRightPanelWidth: (width: number) => void;
+  setLeftPanelWidth: (width: number) => void;
   setCompactMode: (compact: boolean) => void;
   toggleSkill: (skillId: string) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
-  setSearchQuery: (query: string) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -38,12 +45,16 @@ export const useUIStore = create<UIState>()(
       sidebarOpen: true,
       rightPanelOpen: false,
       rightPanelWidth: 600,
+      // Wider than the old hardcoded 260 default: the left sidebar hosts
+      // settings as a view, whose forms need the room.
+      leftPanelWidth: 300,
       compactMode: false,
       selectedSkills: [],
       connectionStatus: 'connecting',
-      searchQuery: '',
 
       setActiveWorkspace: (id) => set({ activeWorkspaceId: id, activeSessionId: null }),
+      setActiveWorkspaceAndSession: (workspaceId, sessionId) =>
+        set({ activeWorkspaceId: workspaceId, activeSessionId: sessionId }),
       setActiveSession: (id) => set({ activeSessionId: id }),
       // File selection routes through the filePreview contribution chain:
       // a plugin panel claims the extension — there is no host fallback
@@ -70,6 +81,7 @@ export const useUIStore = create<UIState>()(
       toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
       setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
+      setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),
       setCompactMode: (compact: boolean) => set({ compactMode: compact }),
       toggleSkill: (skillId: string) =>
         set((s) => ({
@@ -78,7 +90,6 @@ export const useUIStore = create<UIState>()(
             : [...s.selectedSkills, skillId],
         })),
       setConnectionStatus: (status) => set({ connectionStatus: status }),
-      setSearchQuery: (query) => set({ searchQuery: query }),
     }),
     {
       name: 'pi-ui-storage',
@@ -90,6 +101,7 @@ export const useUIStore = create<UIState>()(
         // defaults to the icon rail only — panels open on explicit action
         // (rail click) or agent event, never restored open across restarts.
         rightPanelWidth: state.rightPanelWidth,
+        leftPanelWidth: state.leftPanelWidth,
         compactMode: state.compactMode,
         selectedSkills: state.selectedSkills,
       }),

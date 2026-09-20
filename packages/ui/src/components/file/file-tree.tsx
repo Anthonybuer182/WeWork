@@ -29,10 +29,16 @@ export function FileTree() {
     }
   };
 
-  if (!activeWorkspaceId) return null;
+  if (!activeWorkspaceId) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-4 text-sm text-muted-foreground">
+        Select a workspace to view files
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-0">
+    <div className="flex flex-col flex-1 min-h-0">
       <div className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground">
         <Folder className="h-3.5 w-3.5" />
         <span className="flex-1">Files</span>
@@ -67,7 +73,7 @@ export function FileTree() {
         </div>
       )}
 
-      <div className="overflow-auto min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {files
           ?.filter((f) => (f.type === 'directory' && !HIDDEN_DIRS.has(f.name)) || f.type === 'file')
           .sort((a, b) => {

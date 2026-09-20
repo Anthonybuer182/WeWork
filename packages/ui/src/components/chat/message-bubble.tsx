@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import type { Message, ContentBlock, ThinkingBlock as ThinkingBlockType, ToolCallBlock, ToolResultBlock, ImageBlock, FileBlock, QuoteBlock as QuoteBlockType, AssistantMessage, TokenUsage, ContextUsageInfo, MessageTiming } from '@pi/types';
 import { cn } from '@/lib/utils';
 import { UserIcon, Bot, Clock, Zap, FileText, Copy, Pencil, Check, X } from 'lucide-react';
@@ -154,12 +154,18 @@ function MessageMetrics({ timing, contentLength, isStreaming }: { timing?: Messa
   );
 }
 
-export function MessageBubble({
+/**
+ * Stable empty map. An inline `new Map()` default (or one built at the call
+ * site) gives a fresh identity every render, which alone defeats memoization.
+ */
+const EMPTY_TOOL_TIMINGS = new Map<string, number>();
+
+function MessageBubbleImpl({
   message,
   isStreaming,
   contextUsage,
   messageTiming,
-  toolTimings = new Map(),
+  toolTimings = EMPTY_TOOL_TIMINGS,
   onEditMessage,
   onConfirmEdit,
   onCancelEdit,
@@ -372,3 +378,10 @@ export function MessageBubble({
     </div>
   );
 }
+
+/**
+ * Memoized: the streaming message changes on every chunk, which re-renders the
+ * whole timeline. Stored messages keep their object identity, so with stable
+ * props they bail out here instead of re-parsing their markdown each time.
+ */
+export const MessageBubble = memo(MessageBubbleImpl);

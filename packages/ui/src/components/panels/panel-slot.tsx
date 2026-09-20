@@ -1,7 +1,10 @@
 import type { ComponentType } from 'react';
-import { usePanelStore, type PanelEntry } from '@/stores/panel-store';
+import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
 import { ProviderSettings } from '@/components/settings';
 import { PluginCenter } from '@/components/plugins/plugin-center';
+import { FileTree } from '@/components/file/file-tree';
+import { SessionList } from '@/components/session/session-list';
+import { SearchView } from '@/components/search/search-view';
 import { PluginPanelHost } from '@/components/plugins/plugin-panel';
 import { DeclarativePanelHost } from '@/components/plugins/declarative/declarative-panel';
 import { LiveViewSlot } from './live-view-slot';
@@ -14,6 +17,9 @@ import { LiveViewSlot } from './live-view-slot';
 const HOST_COMPONENTS: Record<string, ComponentType> = {
   'host:settings': ProviderSettings,
   'host:plugins': PluginCenter,
+  'host:files': FileTree,
+  'host:sessions': SessionList,
+  'host:search': SearchView,
 };
 
 function PanelBody({ panel }: { panel: PanelEntry }) {
@@ -68,14 +74,23 @@ function PanelBody({ panel }: { panel: PanelEntry }) {
  * mounted hidden (iframe state preserved, BrowserView alive), everything
  * else unmounts.
  */
-export function PanelSlot() {
+export function PanelSlot({ region = 'right' }: { region?: PanelRegion }) {
   const panels = usePanelStore((s) => s.panels);
-  const activePanelId = usePanelStore((s) => s.activePanelId);
+  const activePanelId = usePanelStore((s) => s.activePanelIds[region]);
   const mountedIds = usePanelStore((s) => s.mountedIds);
 
+  // `mountedIds` is flat across regions; each slot renders only its own.
+  const regionMountedIds = mountedIds.filter(
+    (id) => panels.find((p) => p.id === id)?.region === region,
+  );
+
   return (
-    <div className="relative flex-1 min-h-0 overflow-hidden" data-testid="panel-slot">
-      {mountedIds.map((id) => {
+    <div
+      className="relative flex-1 min-h-0 overflow-hidden"
+      data-testid={`panel-slot-${region}`}
+      data-panel-slot-region={region}
+    >
+      {regionMountedIds.map((id) => {
         const panel = panels.find((p) => p.id === id);
         if (!panel) return null;
         const visible = id === activePanelId;
@@ -83,16 +98,22 @@ export function PanelSlot() {
           <div
             key={id}
             data-panel-container={id}
-            className="absolute inset-0"
+            // `flex flex-col` is load-bearing: panel components size themselves
+            // with `flex-1`, which only has meaning against a flex parent.
+            // Without it their height collapses to 0 and virtualized lists
+            // (the session list) render nothing.
+            className="absolute inset-0 flex flex-col"
             style={{ display: visible ? undefined : 'none' }}
           >
             <PanelBody panel={panel} />
           </div>
         );
       })}
-      {mountedIds.length === 0 && (
+      {regionMountedIds.length === 0 && (
         <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
-          <span className="text-sm">从右侧图标栏选择一个面板</span>
+          <span className="text-sm">
+            {region === 'left' ? '从左侧图标栏选择一个视图' : '从右侧图标栏选择一个面板'}
+          </span>
         </div>
       )}
     </div>
