@@ -2,10 +2,10 @@ import { app, BrowserWindow, WebContentsView } from 'electron';
 import { createMainWindow } from '@main/window-manager';
 import { registerIpcHandlers } from '@main/ipc/index';
 import { registerNativeIpcHandlers } from '@main/ipc/native';
-import { SettingsManager, getAgentDir, ModelRegistry, AuthStorage } from '@earendil-works/pi-coding-agent';
-import { existsSync, mkdirSync, readdirSync, readFileSync, cpSync, writeFileSync } from 'fs';
+import { SettingsManager, ModelRegistry, AuthStorage } from '@earendil-works/pi-coding-agent';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import { join, dirname, delimiter } from 'path';
 import { fileURLToPath } from 'url';
 import { BrowserManager, startBrowserHttpServer, VlmAnalyzer } from '@main/browser';
@@ -13,6 +13,7 @@ import { registerBrowserIpcHandlers } from '@main/ipc/browser';
 import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
 import { registerPluginIpcHandlers } from '@main/ipc/plugins';
 import { registerLiveViewIpcHandlers, LiveViewRegistry, BROWSER_LIVEVIEW_SLOT } from '@main/plugins/liveview';
+import { PluginWebViews } from '@main/plugins/plugin-webview';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -86,75 +87,17 @@ if (!gotLock) {
 
 
   /**
-   * On launch, sync bundled skills from the app's resources into
-   * ~/.pi/agent/skills/ so the pi-coding-agent SDK auto-discovers them.
+   * Pre-install CLI tools the app bundles. Runs non-blocking: failures are
+   * silent, because the agent can still install what it needs on demand.
    *
-   * Always overwrites app-provided files (SKILL.md, bin/) to ensure
-   * the latest versions are used. User-created files are preserved.
+   * Office documents are NOT handled here any more. They used to arrive as an
+   * `officecli` skill plus a binary fetched over the network at startup; now
+   * the `com.pi.files` plugin owns them, running the vendored GenOffice engines
+   * in its own backend and exposing them as plugin tools. Nothing to install,
+   * nothing to download, and it works offline.
    */
-  /**
-   * Sync the bundled officecli skill into ~/.pi/agent/skills/ so the agent
-   * can create and edit Office documents. This is the ONLY skill the desktop
-   * app injects — everything else in the skills directory belongs to pi or
-   * the user, and we must not touch it.
-   */
-  function migrateSkills(): void {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-
-    const bundledSource = app.isPackaged
-      ? join(process.resourcesPath, 'skills')
-      : join(__dirname, '..', '..', 'skills');
-
-    if (!existsSync(bundledSource)) return;
-
-    const targetDir = join(getAgentDir(), 'skills');
-    if (!existsSync(targetDir)) {
-      mkdirSync(targetDir, { recursive: true });
-    }
-
-    // Only sync officecli — the agent's document creation/editing skill.
-    const sourcePath = join(bundledSource, 'officecli');
-    if (!existsSync(sourcePath)) return;
-    const target = join(targetDir, 'officecli');
-    if (!existsSync(target)) {
-      cpSync(sourcePath, target, { recursive: true });
-    } else {
-      // Overwrite app-provided files (SKILL.md, bin/) to ensure latest version
-      for (const entry of readdirSync(sourcePath, { withFileTypes: true })) {
-        const srcFile = join(sourcePath, entry.name);
-        const tgtFile = join(target, entry.name);
-        if (entry.isDirectory()) {
-          cpSync(srcFile, tgtFile, { recursive: true, force: true });
-        } else {
-          cpSync(srcFile, tgtFile, { force: true });
-        }
-      }
-    }
-  }
-
-  /**
-   * Pre-install CLI tools required by bundled skills during app startup.
-   * Runs non-blocking: failures are silent (Agent can install on demand).
-   */
-  function ensureSkillBinaries(): void {
-    // Install pi-browser CLI (bundled with the app)
+  function ensureBundledBinaries(): void {
     ensurePiBrowserBinary();
-
-    try {
-      execSync('command -v officecli', { stdio: 'ignore' });
-      return; // Already in PATH
-    } catch {
-      // Not installed — download in background
-    }
-
-    exec('curl -fsSL https://d.officecli.ai/install.sh | bash', (error) => {
-      if (error) {
-        console.error('[officecli] Install failed:', error.message);
-        return;
-      }
-      console.log('[officecli] Installed successfully');
-    });
   }
 
   /**
@@ -272,8 +215,7 @@ if (!gotLock) {
     // VLM analyzer for error recovery (gracefully handles missing VLM config)
     const vlmAnalyzer = new VlmAnalyzer(sharedModelRegistry, { timeoutMs: 15000 });
 
-    migrateSkills();
-    ensureSkillBinaries();
+    ensureBundledBinaries();
     injectBundledShell(settingsManager);
 
     mainWindow = createMainWindow();
@@ -340,7 +282,11 @@ if (!gotLock) {
     // spawn backend UtilityProcesses, serve pi-plugin:// and expose IPC.
     // Created BEFORE the SDK IPC handlers so plugin tools can be injected
     // into the agent session (customTools).
-    const pluginSystem = new PluginSystem({ browserManager });
+    const pluginSystem = new PluginSystem({
+      browserManager,
+      // chat.send: relay a plugin's message to the renderer, which owns the composer.
+      sendToRenderer: (channel, payload) => mainWindow?.webContents.send(channel, payload),
+    });
     // Register IPC handlers BEFORE init completes — the file:// renderer loads
     // in milliseconds in packaged builds, and its first `pi:plugin:list` must
     // queue behind kernel boot (whenReady) instead of rejecting outright.
@@ -348,11 +294,27 @@ if (!gotLock) {
     await pluginSystem.init();
     registerLiveViewIpcHandlers(liveViews);
 
+    // Plugin web panels are hosted in native views, not iframes: a panel gets a
+    // real top-level frame (correct IME, working print/alert/download, its own
+    // renderer process). Registered against the same liveview registry as the
+    // browser preview, so `hideAll()`'s renderer-navigation guard covers them.
+    const pluginWebViews = new PluginWebViews({
+      registry: pluginSystem.registry,
+      liveViews,
+      getWindow: () => mainWindow,
+    });
+    pluginWebViews.installIpc();
+    pluginWebViews.sync();
+
     const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {
       customToolsProvider: () => pluginSystem.aggregateTools(),
     });
-    // Plugin tool/skill set changed at runtime → rebuild agent sessions.
-    pluginSystem.onExtensionsChanged = () => chatService.invalidateSessions?.();
+    // Plugin tool/skill set changed at runtime → rebuild agent sessions, and
+    // pick up panels of plugins that were just installed or enabled.
+    pluginSystem.onExtensionsChanged = () => {
+      pluginWebViews.sync();
+      chatService.invalidateSessions?.();
+    };
 
     // Push browser URL changes to plugin backends holding "browser" permission.
     browserManager.onUrlChanged((url) => {

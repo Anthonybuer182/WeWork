@@ -1,11 +1,11 @@
-import type { ComponentType } from 'react';
+import { useEffect, type ComponentType } from 'react';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
 import { ProviderSettings } from '@/components/settings';
 import { PluginCenter } from '@/components/plugins/plugin-center';
 import { FileTree } from '@/components/file/file-tree';
 import { SessionList } from '@/components/session/session-list';
 import { SearchView } from '@/components/search/search-view';
-import { PluginPanelHost } from '@/components/plugins/plugin-panel';
+import { PluginPanelHost, ensureRelayInstalled } from '@/components/plugins/plugin-panel';
 import { DeclarativePanelHost } from '@/components/plugins/declarative/declarative-panel';
 import { LiveViewSlot } from './live-view-slot';
 
@@ -22,6 +22,38 @@ const HOST_COMPONENTS: Record<string, ComponentType> = {
   'host:search': SearchView,
 };
 
+/**
+ * Whether this host can put a panel in a native WebContentsView.
+ *
+ * Plugin web panels are hosted natively on desktop. A native view is a real
+ * top-level frame, which is what gives a panel correct IME and working
+ * print / alert / download — an iframe sandbox blocks all three. The web build
+ * has no such host, and does not show plugin panels at all.
+ */
+function hasNativeViewHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const api = (window as unknown as { electronAPI?: { invoke?: unknown } }).electronAPI;
+  return typeof api?.invoke === 'function';
+}
+
+/**
+ * A plugin web panel hosted natively. Reads the panel's open params (e.g.
+ * `{ file }` for the viewer) and hands them to the slot, which forwards them to
+ * the backend as the `panel.mounted` event the backend renders from.
+ *
+ * It also installs the relay. That used to happen inside `PluginPanelHost`, so
+ * when panels moved to native views nothing ran it any more — which silently
+ * broke both the theme push and the `onRelay` subscription that carries a
+ * panel's selection frames back to the shell.
+ */
+function PluginWebViewPanel({ pluginId, panelId }: { pluginId: string; panelId: string }) {
+  const params = usePanelStore((s) => s.params[`plugin:${pluginId}:${panelId}`]);
+  useEffect(() => {
+    ensureRelayInstalled();
+  }, []);
+  return <LiveViewSlot pluginId={pluginId} panelId={panelId} notifyMounted params={params} />;
+}
+
 function PanelBody({ panel }: { panel: PanelEntry }) {
   const allPanels = usePanelStore((s) => s.panels);
   if (panel.kind === 'host') {
@@ -29,6 +61,9 @@ function PanelBody({ panel }: { panel: PanelEntry }) {
     return Host ? <Host /> : null;
   }
   if (panel.kind === 'iframe' && panel.pluginId && panel.panelId && panel.entry) {
+    if (hasNativeViewHost()) {
+      return <PluginWebViewPanel pluginId={panel.pluginId} panelId={panel.panelId} />;
+    }
     return <PluginPanelHost pluginId={panel.pluginId} panelId={panel.panelId} entry={panel.entry} autoHeight={panel.autoHeight} />;
   }
   if (panel.kind === 'declarative' && panel.pluginId && panel.panelId) {

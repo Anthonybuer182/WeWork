@@ -143,7 +143,6 @@ export class BrowserManager {
     wc.on('did-finish-load', () => {
       if (!this.isNavigating) {
         this.injectHelpers();
-        this.injectQuoteButton();
         this.scheduleAutoZoom();
       }
       // embedded-view compositing workaround: after a page load (especially
@@ -278,7 +277,6 @@ export class BrowserManager {
         }
         if (!this.isNavigating) {
           this.injectHelpers();
-          this.injectQuoteButton();
           this.scheduleAutoZoom();
         }
       }
@@ -287,7 +285,6 @@ export class BrowserManager {
         console.log('[BrowserManager] Page.loadEventFired');
         if (!this.isNavigating) {
           this.injectHelpers();
-          this.injectQuoteButton();
           this.scheduleAutoZoom();
         }
         // Refresh compositor surface after every load event (fixes the
@@ -304,7 +301,6 @@ export class BrowserManager {
 
     // Inject the helpers immediately
     this.injectHelpers();
-    this.injectQuoteButton();
 
     console.log('[BrowserManager] Connected to browser view via debugger API');
   }
@@ -562,7 +558,6 @@ export class BrowserManager {
       // Re-inject helpers and compute auto-zoom now that navigation is complete.
       // This compensates for skipped calls in the CDP event handler during navigation.
       this.injectHelpers();
-      this.injectQuoteButton();
       await this.computeAutoZoom();
 
       return { url: currentUrl, title, page };
@@ -1662,95 +1657,6 @@ export class BrowserManager {
 
   getZoom(): number {
     return this.currentZoom;
-  }
-
-  /** ——— Quote button ——— */
-
-  /**
-   * Inject a self-contained quote button script into the page.
-   * Renders an HTML button when text is selected, sends selected text + URL
-   * to the main process via fetch to the /quote HTTP endpoint.
-   */
-  injectQuoteButton(): void {
-    const wc = this.wc;
-    if (!wc) return;
-    try {
-      if (wc.isDestroyed()) return;
-    } catch {
-      return;
-    }
-
-    wc.executeJavaScript(`
-      (function() {
-        if (window.__piQuoteInjected) return;
-        window.__piQuoteInjected = true;
-
-        var btn = document.createElement('div');
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>Quote';
-        btn.style.cssText = 'position:fixed;z-index:2147483647;display:none;align-items:center;padding:6px 12px;background:#fff;border:1px solid #d4d4d8;border-radius:8px;font-size:12px;color:#18181b;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;user-select:none;transition:opacity 0.15s';
-        document.body.appendChild(btn);
-
-        var timeout = null;
-        var hidden = true;
-
-        function hideButton() {
-          if (!hidden) {
-            btn.style.display = 'none';
-            hidden = true;
-          }
-        }
-
-        function showButton(x, y) {
-          btn.style.left = x + 'px';
-          btn.style.top = y + 'px';
-          btn.style.display = 'flex';
-          hidden = false;
-        }
-
-        document.addEventListener('mouseup', function(e) {
-          clearTimeout(timeout);
-          timeout = setTimeout(function() {
-            var sel = window.getSelection();
-            var text = sel ? sel.toString().trim() : '';
-            if (!text || text.length < 2) {
-              hideButton();
-              return;
-            }
-            var range = sel.getRangeAt(0);
-            var rect = range.getBoundingClientRect();
-            var x = rect.left + rect.width / 2 - 40;
-            var y = rect.top + window.scrollY - 36;
-            if (y < window.scrollY + 4) y = window.scrollY + 4;
-            showButton(x, y);
-          }, 200);
-        });
-
-        document.addEventListener('mousedown', function(e) {
-          if (e.target === btn || btn.contains(e.target)) return;
-          hideButton();
-        });
-
-        btn.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var sel = window.getSelection();
-          var text = sel ? sel.toString().trim() : '';
-          if (!text) return;
-          fetch('http://127.0.0.1:19223/quote', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              text: text,
-              url: window.location.href,
-              title: document.title
-            })
-          }).then(function() {
-            sel.removeAllRanges();
-            hideButton();
-          }).catch(function() {});
-        });
-      })();
-    `).catch(() => {});
   }
 
   /** ——— Cleanup ——— */

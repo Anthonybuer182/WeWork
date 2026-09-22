@@ -16,7 +16,6 @@ import { MentionMenu } from './mention-menu';
 import { SlashCommandDialog, type SlashCommandDialogData } from './slash-command-dialog';
 import type { MentionItem } from './mention-menu';
 import { AttachmentPreviewBar } from './attachment-preview-bar';
-import { QuotePreviewBar } from './quote-preview-bar';
 import { QueueIndicator } from './queue-indicator';
 import { ModelSelector } from '../model/model-selector';
 import { ThinkLevelSelector } from '../model/think-level-selector';
@@ -24,10 +23,8 @@ import { SkillSelector } from '../model/skill-selector';
 import { CompactToggle } from '../model/compact-toggle';
 import { useCommandStore, type RegisteredCommand } from '@/stores/command-store';
 import { usePluginStore } from '@/stores/plugin-store';
-import { formatQuotesForPrompt, createQuote, extractMetaFromSelection } from '@/lib/quote-helpers';
 import type { ContentBlock, Config, Skill } from '@pi/types';
 import type { Attachment } from '@pi/types';
-import type { Quote, QuoteSource } from '@pi/types';
 
 export function Composer() {
   const sdk = useSDK();
@@ -94,10 +91,6 @@ export function Composer() {
     updateAttachmentData,
     removeAttachment,
     clearAttachments,
-    pendingQuotes,
-    addQuote,
-    removeQuote,
-    clearQuotes,
     clearStreamingBlocks,
     setStreamingBlocks,
     setStreamingUsage,
@@ -330,35 +323,10 @@ export function Composer() {
     }
   }, [triggerSend]);
 
-  // Global Cmd/Ctrl+Shift+Q shortcut: quote selected preview content to chat
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'q') {
-        e.preventDefault();
-        const sel = window.getSelection();
-        const text = sel?.toString().trim() ?? '';
-        if (!text || !activePreviewFilePath) return;
-        // Infer source from file extension
-        const ext = activePreviewFilePath.split('.').pop()?.toLowerCase() ?? '';
-        const sourceMap: Record<string, QuoteSource> = {
-          md: 'markdown', html: 'html', docx: 'docx', xlsx: 'xlsx', pptx: 'pptx', pdf: 'pdf-text',
-        };
-        const source = sourceMap[ext] ?? 'code-editor';
-        const meta = source === 'code-editor' ? {} : extractMetaFromSelection();
-        addQuote(createQuote(text, activePreviewFilePath, source, meta));
-        sel?.removeAllRanges();
-      }
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [activePreviewFilePath, addQuote]);
-
   // Store last user message for potential retry
   const lastUserMessageRef = useRef<string>('');
   // Captured attachments so mutationFn can read them even after clearAttachments()
   const capturedAttachmentsRef = useRef<typeof pendingAttachments>([]);
-  // Captured quotes so mutationFn can read them even after clearQuotes()
-  const capturedQuotesRef = useRef<Quote[]>([]);
 
   const sendMutation = useMutation({
     onMutate: async (content: string) => {
@@ -368,7 +336,6 @@ export function Composer() {
       // in cancelQueries yields control allowing clearAttachments to run.
       const currentAttachments = useComposerStore.getState().pendingAttachments;
       capturedAttachmentsRef.current = currentAttachments;
-      capturedQuotesRef.current = useComposerStore.getState().pendingQuotes;
 
       // Cancel outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: ['session', activeSessionId] });
@@ -413,25 +380,6 @@ export function Composer() {
         }
       }
 
-      // Append quote blocks for referenced preview content so they render
-      // as cards under the user message bubble (same pattern as file blocks).
-      const currentQuotes = capturedQuotesRef.current;
-      for (const q of currentQuotes) {
-        userBlocks.push({
-          id: `b-quote-opt-${q.id}`,
-          type: 'quote',
-          content: q.content,
-          fileName: q.fileName,
-          filePath: q.filePath,
-          source: q.source,
-          startLine: q.meta.startLine,
-          endLine: q.meta.endLine,
-          pageNumber: q.meta.pageNumber,
-          slideNumber: q.meta.slideNumber,
-          sheetName: q.meta.sheetName,
-        });
-      }
-
       // Append text references for non-image attachments to the prompt content.
       // For text-based files, decode and include the actual file content so the
       // AI can analyze it directly.
@@ -470,11 +418,6 @@ export function Composer() {
           }
         }
         promptContent = `${content}\n\n${fileSections.join('\n\n')}`;
-      }
-
-      // Append quoted preview content to the prompt
-      if (currentQuotes.length > 0) {
-        promptContent = `${promptContent}${formatQuotesForPrompt(currentQuotes)}`;
       }
 
       // Optimistically show the user message immediately
@@ -560,12 +503,6 @@ export function Composer() {
           }
         }
         promptContent = `${content}\n\n${fileSections.join('\n\n')}`;
-      }
-
-      // Append quoted preview content to the prompt
-      const currentQuotes = capturedQuotesRef.current;
-      if (currentQuotes.length > 0) {
-        promptContent = `${promptContent}${formatQuotesForPrompt(currentQuotes)}`;
       }
 
       // Plugin auto context (contextProviders contribution): collect
@@ -759,10 +696,9 @@ export function Composer() {
       setStreamError(error.message || 'Failed to send message');
     },
     onSettled: () => {
-      // Clear attachments and quotes after mutation completes (success or error),
+      // Clear attachments after mutation completes (success or error),
       // so the mutationFn can read them from the store during execution.
       useComposerStore.getState().clearAttachments();
-      useComposerStore.getState().clearQuotes();
     },
   });
 
@@ -807,7 +743,6 @@ export function Composer() {
               { name: 'Ctrl+Enter', desc: 'Steer agent during streaming' },
               { name: '/', desc: 'Open command menu for quick actions' },
               { name: '@', desc: 'Mention files, workspaces, or sessions' },
-              { name: 'Cmd+Shift+Q', desc: 'Quote selected preview content to chat' },
             ],
           },
           {
@@ -927,7 +862,7 @@ export function Composer() {
   );
 
   const handleSubmit = useCallback(() => {
-    if ((!value.trim() && pendingAttachments.length === 0 && pendingQuotes.length === 0) || !activeSessionId || sendMutation.isPending) return;
+    if ((!value.trim() && pendingAttachments.length === 0) || !activeSessionId || sendMutation.isPending) return;
 
     const trimmed = value.trim();
 
@@ -953,7 +888,6 @@ export function Composer() {
       handleSlashCommand(value);
       setValue('');
       clearAttachments();
-      clearQuotes();
       triggerScrollToBottom();
 
       sdk.chat.compact(activeSessionId).then((result) => {
@@ -1004,15 +938,13 @@ export function Composer() {
     if (slashHandled) {
       setValue('');
       clearAttachments();
-      clearQuotes();
       return;
     }
 
     sendMutation.mutate(value);
     setValue('');
     clearAttachments();
-    clearQuotes();
-  }, [value, activeSessionId, sendMutation, setValue, handleSlashCommand, sdk, queryClient, triggerScrollToBottom, pendingAttachments, pendingQuotes]);
+  }, [value, activeSessionId, sendMutation, setValue, handleSlashCommand, sdk, queryClient, triggerScrollToBottom, pendingAttachments]);
 
   /** Queue a steering message via the SDK. It will be delivered after the
    *  current assistant turn's tool calls complete, redirecting the agent.
@@ -1205,19 +1137,14 @@ export function Composer() {
         isDragging && 'ring-2 ring-primary/50 border-primary',
       )}
     >
-      {/* Attachment & quote previews */}
-      {(pendingAttachments.length > 0 || pendingQuotes.length > 0) && (
+      {/* Attachment previews */}
+      {pendingAttachments.length > 0 && (
         <div className="px-3 pt-3 space-y-2">
-          {pendingAttachments.length > 0 && (
-            <AttachmentPreviewBar
-              attachments={pendingAttachments}
-              onRemove={removeAttachment}
-              onPreview={handlePreviewAttachment}
-            />
-          )}
-          {pendingQuotes.length > 0 && (
-            <QuotePreviewBar quotes={pendingQuotes} onRemove={removeQuote} />
-          )}
+          <AttachmentPreviewBar
+            attachments={pendingAttachments}
+            onRemove={removeAttachment}
+            onPreview={handlePreviewAttachment}
+          />
         </div>
       )}
 
@@ -1335,7 +1262,7 @@ export function Composer() {
         ) : (
           <SendButton
             onClick={handleSubmit}
-            disabled={(!value.trim() && pendingAttachments.length === 0 && pendingQuotes.length === 0) || !activeSessionId}
+            disabled={(!value.trim() && pendingAttachments.length === 0) || !activeSessionId}
             isLoading={sendMutation.isPending}
           />
         )}

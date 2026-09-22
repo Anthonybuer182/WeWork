@@ -51,12 +51,17 @@ export class PluginSystem {
   /** Resolves when init() has finished — IPC handlers gate reads on this. */
   private initPromise: Promise<void> | null = null;
 
-  constructor(opts?: { agentDir?: string; browserManager?: BrowserManager }) {
+  constructor(opts?: {
+    agentDir?: string;
+    browserManager?: BrowserManager;
+    sendToRenderer?: (channel: string, payload: unknown) => void;
+  }) {
     this.registry = new PluginRegistry({ ...opts, appVersion: app.getVersion() });
     this.capabilityHub = new CapabilityHub({
       registry: this.registry,
       emitEvent: (evt) => this.emitEvent(evt),
       browserManager: opts?.browserManager,
+      sendToRenderer: opts?.sendToRenderer,
     });
     this.marketplace = new PluginMarketplace(this.registry);
   }

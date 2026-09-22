@@ -6,7 +6,7 @@ export type MessageStatus = 'pending' | 'streaming' | 'complete' | 'error';
 
 export interface ContentBlock {
   id: string;
-  type: 'text' | 'thinking' | 'tool_call' | 'tool_result' | 'image' | 'file' | 'quote';
+  type: 'text' | 'thinking' | 'tool_call' | 'tool_result' | 'image' | 'file';
   content: string;
   metadata?: Record<string, unknown>;
   // Subtype-specific optional properties
@@ -26,7 +26,7 @@ export interface ContentBlock {
   fileSize?: number;
   workspacePath?: string;
   durationMs?: number;
-  // Quote specific
+  // Source position (quoting / preview provenance)
   filePath?: string;
   source?: string;
   startLine?: number;
@@ -81,20 +81,6 @@ export interface FileBlock {
   fileSize?: number;
   /** Workspace-relative path for opening file in right-panel preview */
   workspacePath?: string;
-}
-
-export interface QuoteBlock {
-  id: string;
-  type: 'quote';
-  content: string;        // quoted text content
-  fileName: string;       // source file name
-  filePath: string;       // source file path
-  source: string;         // QuoteSource
-  startLine?: number;
-  endLine?: number;
-  pageNumber?: number;
-  slideNumber?: number;
-  sheetName?: string;
 }
 
 export interface Message {

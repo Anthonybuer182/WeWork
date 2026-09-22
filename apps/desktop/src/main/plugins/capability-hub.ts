@@ -11,6 +11,8 @@ export interface CapabilityDeps {
   emitEvent: (evt: PluginEvent) => void;
   /** Browser automation capability (host-owned; plugins need "browser" permission). */
   browserManager?: BrowserManager;
+  /** Push a message to the renderer (used by chat.send). */
+  sendToRenderer?: (channel: string, payload: unknown) => void;
 }
 
 interface CapabilitySpec {
@@ -27,17 +29,36 @@ export class CapabilityHub {
   private readonly registry: PluginRegistry;
   private readonly emitEvent: (evt: PluginEvent) => void;
   private readonly browserManager?: BrowserManager;
+  private readonly sendToRenderer?: (channel: string, payload: unknown) => void;
   private readonly capabilities = new Map<string, CapabilitySpec>();
 
   constructor(deps: CapabilityDeps) {
     this.registry = deps.registry;
     this.emitEvent = deps.emitEvent;
     this.browserManager = deps.browserManager;
+    this.sendToRenderer = deps.sendToRenderer;
 
     this.registerCapabilities();
   }
 
   private registerCapabilities(): void {
+    // ── chat.send (always allowed) ──
+    // Deliberately unpermissioned: this is precisely what the user typing in
+    // the composer does, and the plugin already runs with the user's
+    // authority. The renderer owns the composer, so the message is relayed
+    // there and sent through the same path as a keystroke — streaming, tool
+    // calls and persistence behave identically. The plugin owns the input UI;
+    // the host only provides the ability to reach the conversation.
+    this.capabilities.set('chat.send', {
+      handler: ({ params }) => {
+        const text = String(params.text ?? '').trim();
+        if (!text) throw new Error('chat.send: text is required');
+        if (!this.sendToRenderer) throw new Error('chat.send: no renderer attached');
+        this.sendToRenderer('pi:chat:send', { text });
+        return { ok: true };
+      },
+    });
+
     // ── app.info (always allowed) ──
     this.capabilities.set('app.info', {
       handler: ({ pluginId }) => ({

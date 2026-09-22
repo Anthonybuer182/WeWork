@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { copyText, createQuote } from '@/lib/quote-helpers';
-import { useComposerStore } from '@/stores/composer-store';
+import { copyText } from '@/lib/quote-helpers';
 import { usePluginStore } from '@/stores/plugin-store';
 import type { QuoteSource } from '@pi/types';
 
@@ -38,10 +37,10 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 /**
- * 滑词引用 (selection quoting): a floating action menu appears on text
+ * 滑词菜单 (selection menu): a floating action menu appears on text
  * selection anywhere in the shell (chat timeline, panels, plugin iframes via
- * the injected SDK). Default action quotes into the composer; plugins
- * contribute extra actions through `contributes.selectionActions`.
+ * the injected SDK). Built-in actions are copy; plugins contribute extra
+ * actions through `contributes.selectionActions`.
  */
 export function SelectionService() {
   const [state, setState] = useState<SelectionState | null>(null);
@@ -83,7 +82,7 @@ export function SelectionService() {
     };
     // Scroll: re-anchor the menu to the selection's current viewport
     // position instead of hiding it — scrolling a long chat must not kill
-    // the quote/copy flow. (Host-window selections only; plugin-sourced
+    // the copy flow. (Host-window selections only; plugin-sourced
     // selections have no host selection to track, so those still hide.)
     const onScroll = () => {
       if (!stateRef.current) return;
@@ -124,7 +123,7 @@ export function SelectionService() {
       const detail = data as { text?: string; x?: number; y?: number; url?: string } | undefined;
       if (!detail?.text?.trim()) return;
       // data: URLs are unreadable as a label — fall back to the page origin
-      // or a plain label; createQuote derives hostname for real URLs.
+      // or a plain label; real URLs get their hostname as the label.
       const url = detail.url ?? '';
       const label = url.startsWith('data:')
         ? '浏览器页面'
@@ -147,12 +146,6 @@ export function SelectionService() {
 
   if (!state) return null;
 
-  const quoteToComposer = () => {
-    const quote = createQuote(state.text, state.source.label, state.source.kind, {});
-    useComposerStore.getState().addQuote(quote);
-    hide();
-  };
-
   const pluginActions = plugins.flatMap((plugin) =>
     (plugin.selectionActions ?? []).map((action) => ({ pluginId: plugin.id, action })),
   );
@@ -164,14 +157,6 @@ export function SelectionService() {
       style={{ position: 'fixed', left: state.x, top: Math.max(8, state.y - 44), zIndex: 80 }}
       className="flex items-center gap-0.5 rounded-lg border bg-popover p-1 shadow-md"
     >
-      <button
-        type="button"
-        data-selection-action="quote"
-        onClick={quoteToComposer}
-        className="rounded-md px-2.5 py-1 text-xs font-medium hover:bg-accent"
-      >
-        引用到对话
-      </button>
       <button
         type="button"
         data-selection-action="copy"

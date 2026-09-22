@@ -1,7 +1,7 @@
 {
   "id": "com.pi.files",
   "name": "文件中心",
-  "description": "文件中心:office 高保真渲染(officecli 引擎)+ 文件读写",
+  "description": "文件中心 — 自包含的 office 引擎（创建/编辑/预览 docx/pptx/xlsx/pdf），基于内置的 GenOffice 引擎（Apache-2.0），无需外部工具或联网安装",
   "version": "0.3.0",
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -17,12 +17,67 @@
         "id": "viewer",
         "kind": "iframe",
         "title": "文件查看器",
-        "entry": "./ui-dist/index.html",
+        "entry": "./ui-dist/panel/index.html",
         "hidden": true,
         "keepAlive": "lru"
       }
     ],
     "tools": [
+      {
+        "name": "office_guide",
+        "description": "The Office op vocabulary for this plugin's engine. Call with no group for the grouped op list and a one-line signature for each; call with a group for that group's field tables, examples and common mistakes. Read this BEFORE writing ops — guessing field names is the usual cause of a rejected batch.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "enum": ["pptx", "docx", "xlsx"],
+              "description": "Which document family. Only pptx is wired so far; the others answer with a plain \"not wired yet\"."
+            },
+            "group": {
+              "type": "string",
+              "description": "Return one op group's full guide instead of the vocabulary. An unknown group lists the valid ones."
+            },
+            "style": {
+              "type": "string",
+              "enum": ["vocabulary", "signatures"],
+              "description": "vocabulary (default) = grouped names, cheapest. signatures = one signature line per op."
+            }
+          },
+          "required": ["domain"]
+        }
+      },
+      {
+        "name": "office_read",
+        "description": "Read a document's structure: slides and their elements (with the ids ops target). Ids are what office_edit takes — read first, then edit.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string", "description": "Absolute path to the document." }
+          },
+          "required": ["path"]
+        }
+      },
+      {
+        "name": "office_edit",
+        "description": "Apply a batch of ops to a document and save it. The batch is atomic: if any op is rejected, nothing is written and the failures say what to fix. Use dryRun to validate a batch without touching the file.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string", "description": "Absolute path to the document." },
+            "ops": {
+              "type": "array",
+              "description": "The ops to apply, in order. Get the shape of each op from office_guide.",
+              "items": { "type": "object" }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "description": "Validate and report the plan without writing anything."
+            }
+          },
+          "required": ["path", "ops"]
+        }
+      },
       {
         "name": "files_probe_write",
         "description": "P9a 验收:write a file via the filesystem.write capability (with optional mtime conflict detection).",
@@ -65,10 +120,19 @@
       },
       {
         "name": "files_probe_open",
-        "description": "P9a 验收:programmatically open the hidden viewer panel via panel.open.",
+        "description": "P9a 验收:programmatically open a panel via panel.open. Defaults to the viewer; pass panelId to open another contributed panel.",
         "inputSchema": {
           "type": "object",
-          "properties": {}
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "File to show in the viewer (viewer panel only)"
+            },
+            "panelId": {
+              "type": "string",
+              "description": "Panel to open. Defaults to \"viewer\"."
+            }
+          }
         }
       }
     ],
@@ -80,7 +144,13 @@
           "pptx",
           "pdf",
           "xls",
-          "csv"
+          "csv",
+          "txt",
+          "md",
+          "markdown",
+          "json",
+          "log",
+          "html"
         ]
       }
     ]

@@ -89,7 +89,6 @@ export interface ElectronAPI {
     hide: () => Promise<void>;
     onUrlChanged: (callback: (url: string) => void) => void;
     onSwitchToBrowserTab: (callback: () => void) => void;
-    onQuote: (callback: (data: { text: string; url: string; title: string }) => void) => void;
   };
 
   // ── Plugin System ──
@@ -198,9 +197,6 @@ const electronAPI: ElectronAPI = {
     onSwitchToBrowserTab: (callback) => {
       ipcRenderer.on('pi:browser:switchToBrowserTab', () => callback());
     },
-    onQuote: (callback) => {
-      ipcRenderer.on('pi:browser:quote', (_event, data) => callback(data));
-    },
   },
 
 };
@@ -302,6 +298,19 @@ const pluginBridge = (() => {
     },
     onEvent: (callback: (event: unknown) => void): void => {
       eventCallback = callback;
+    },
+    /**
+     * Wire frames relayed from plugin panels hosted in native views. A view is
+     * a top-level frame, so it cannot post to the shell the way an iframe could;
+     * main forwards its host-bound frames (selection, resize) here instead, and
+     * the shell handles them with the same code path as before.
+     */
+    onRelay: (callback: (frame: unknown) => void): void => {
+      ipcRenderer.on('pi:plugin:relay', (_event, frame) => callback(frame));
+    },
+    /** Hand the shell's theme tokens to main, which fans them out to plugin views. */
+    setTheme: (tokens: Record<string, string>): void => {
+      ipcRenderer.send('pi:plugin:set-theme', tokens);
     },
   };
 })();

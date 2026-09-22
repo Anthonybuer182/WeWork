@@ -214,17 +214,6 @@ async function routeRequest(
           vlmAnalyzer,
           (body.maxSteps as number) ?? 5,
         );
-      case '/quote':
-        // Forward quote from injected page script to all renderer windows.
-        // This is a fire-and-forget — no browser connection needed.
-        BrowserWindow.getAllWindows().forEach((win) => {
-          win.webContents.send('pi:browser:quote', {
-            text: body.text as string,
-            url: body.url as string,
-            title: body.title as string,
-          });
-        });
-        return { ok: true };
       default:
         throw new Error(`Unknown POST route: ${path}`);
     }

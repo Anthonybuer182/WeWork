@@ -6,9 +6,40 @@ import { MonitorX } from 'lucide-react';
  * reports its viewport-relative bounds to the main process, which positions
  * the view over this slot; on unmount the view detaches (hidden).
  */
-export function LiveViewSlot({ pluginId, panelId }: { pluginId: string; panelId: string }) {
+export function LiveViewSlot({
+  pluginId,
+  panelId,
+  /**
+   * Plugin web panels: tell the backend the panel mounted, and re-tell it when
+   * the open params change (switching files in the same panel). The event has
+   * to travel over the panel's own MessagePort, which lives in the view's
+   * preload — so it goes shell → main → view rather than straight to the
+   * backend, unlike the iframe path where the shell held the port itself.
+   *
+   * Off by default: host-managed slots (the browser preview) have no backend
+   * panel to mount.
+   */
+  notifyMounted = false,
+  params,
+}: {
+  pluginId: string;
+  panelId: string;
+  notifyMounted?: boolean;
+  params?: unknown;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!notifyMounted) return;
+    const api = (window as unknown as {
+      electronAPI?: { invoke: (channel: string, ...args: unknown[]) => Promise<unknown> };
+    }).electronAPI;
+    if (!api?.invoke) return;
+    // Re-fires whenever params change; the view's preload queues it if the
+    // panel's page (and its port) are not up yet.
+    api.invoke('pi:plugin:panel-mounted', { pluginId, panelId, params }).catch(() => {});
+  }, [pluginId, panelId, params, notifyMounted]);
 
   useEffect(() => {
     const api = (window as unknown as {

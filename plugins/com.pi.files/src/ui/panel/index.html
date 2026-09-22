@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>文件查看器</title>
+    <!--
+      The file viewer panel. `main.js` dispatches by extension: `.docx` loads
+      GenOffice's own renderer (see src/ui/docx/), everything else still loads
+      the previous previewers until each format is ported.
+
+      The host injects __pi_sdk.js into this document at serve time; that is how
+      the panel — and the GenOffice renderer inside it — reaches the backend.
+    -->
+    <style>
+      /* Before the renderer's stylesheets load, so the panel is not a white
+         flash inside a dark shell. */
+      html, body, #root { height: 100%; margin: 0; }
+      body { background: var(--background, #0f1115); }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

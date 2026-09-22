@@ -22,11 +22,10 @@ asarUnpack:
   - "node_modules/@earendil-works/pi-coding-agent/**/*"
   - "node_modules/@mariozechner/clipboard*/**/*"
 
-# Bundled skills (officecli, skill-creator, etc.) shipped as extraResources
-# so users get them out of the box without installing via CLI.
-extraResources:
-  - from: "skills/"
-    to: "skills/"
+# Office document support used to ship here as a bundled `officecli` skill
+# plus a binary fetched at startup. It is now a plugin (com.pi.files) running
+# the vendored GenOffice engines in its own backend — nothing to bundle and
+# nothing to download.
 
 mac:
   category: public.app-category.developer-tools
@@ -43,11 +42,9 @@ mac:
 win:
   # Bundle MinGit BusyBox (shell + git + coreutils) so Windows users
   # get bash-like command execution out of the box.
-  # Note: platform-level extraResources override the top-level list,
-  # so bundled skills must be repeated here.
+  # Note: platform-level extraResources OVERRIDE the top-level list rather than
+  # extending it, so anything the top level ships must be repeated here.
   extraResources:
-    - from: "skills/"
-      to: "skills/"
     - from: "bash-bundle/"
       to: "bash-bundle/"
   target:

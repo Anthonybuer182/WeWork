@@ -8,7 +8,6 @@ import {
   useUIStore,
   TooltipProvider,
   useComposerStore,
-  createQuote,
   usePluginStore,
   usePanelStore,
   useCommandStore,
@@ -59,6 +58,7 @@ function AppContent() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
+  const rightPanelMaximized = useUIStore((s) => s.rightPanelMaximized);
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth);
   const leftPanelWidth = useUIStore((s) => s.leftPanelWidth);
   const setLeftPanelWidth = useUIStore((s) => s.setLeftPanelWidth);
@@ -143,6 +143,23 @@ function AppContent() {
     });
   }, [sdk, setConnectionStatus]);
 
+  // A plugin can drive the conversation via the `chat.send` capability. The
+  // renderer owns the composer, so the message is relayed here and sent
+  // through the same path as typing a message — which also makes it work from
+  // a fullscreen plugin panel, where the composer is hidden but still mounted.
+  // The plugin owns the input UI; the host only provides the ability to reach
+  // the agent.
+  useEffect(() => {
+    const api = (window as unknown as {
+      electronAPI?: { on?: (channel: string, cb: (payload: unknown) => void) => void };
+    }).electronAPI;
+    if (!api?.on) return;
+    api.on('pi:chat:send', (payload) => {
+      const text = (payload as { text?: string } | undefined)?.text;
+      if (text) useComposerStore.getState().setTriggerSend(text);
+    });
+  }, []);
+
   // Listen for "switch to Browser tab" signals from the main process.
   // The browser preview is now contributed by the com.pi.browser plugin —
   // open its liveview panel so the BrowserView has a slot to render into.
@@ -156,19 +173,6 @@ function AppContent() {
     }
   }, [openPanel]);
 
-  // Listen for quote events from the injected page script.
-  // The injected quote button in the BrowserView page sends {text, url, title}
-  // via fetch to http://127.0.0.1:19223/quote, which forwards to the renderer.
-  useEffect(() => {
-    const api = (window as unknown as { electronAPI?: { browser?: { onQuote?: (cb: (data: { text: string; url: string; title: string }) => void) => void } } }).electronAPI?.browser;
-    if (api?.onQuote) {
-      api.onQuote((data) => {
-        const url = data.url || '';
-        const source = url || 'browser';
-        useComposerStore.getState().addQuote(createQuote(data.text, source, 'browser'));
-      });
-    }
-  }, []);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -184,6 +188,7 @@ function AppContent() {
         <ThreeColumnLayout
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
+          rightPanelMaximized={rightPanelMaximized}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
           leftWidth={leftPanelWidth}

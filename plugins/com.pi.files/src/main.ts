@@ -1,15 +1,24 @@
 /**
- * com.pi.files viewer — engine dispatch (genoffice engines, Apache-2.0).
+ * com.pi.files viewer — engine dispatch (vendored GenOffice engines, Apache-2.0).
  *
  * docx → docx-engine parseDocx → Block 树 → HTML 渲染(DOM,文字可选)
  * pptx → pptx-engine openPptx → pptx-render buildRenderSlide → SVG 渲染
- * 其它类型走 text/图片 兜底;officecli 渲染路径已退役(查看器对生产者无感知)。
+ * pdf  → pdfjs-dist;xlsx/csv → SheetJS(待 1d 换成 xlsx-gateway)
+ * 其它类型走 text/图片 兜底。
+ *
+ * 引擎全部来自插件自带的 vendor/genoffice,不调用任何外部工具。
+ * (这里以前走 officecli 渲染,那条路径连同它的二进制和 skill 已整体移除。)
  */
 import { parseDocx } from '@genoffice/docx-engine';
 import { openPptx } from '@genoffice/pptx-engine';
 import { buildRenderSlide } from '@genoffice/pptx-render';
 import * as pdfjsLib from 'pdfjs-dist';
 import * as XLSX from 'xlsx';
+import { renderTextPreview } from './text-preview';
+
+/** 文本类扩展名 —— 交给 GenOffice 的 Markdown 组件渲染(见 text-preview.tsx)。 */
+const TEXT_EXTS = new Set(['txt', 'md', 'markdown', 'json', 'log', 'html', 'htm']);
+const MAX_TEXT_CHARS = 200_000;
 
 // ── 宿主消息协议(与 P9b/P10 一致)──
 
@@ -627,6 +636,30 @@ async function loadFile(data: { path?: string; kind?: string; text?: string; err
     return;
   }
 
+  // 文本类:txt / md / markdown / json / log / html。
+  // 以前这是独立插件 com.pi.preview 的活,它把原文倒进一张声明式卡片里 ——
+  // markdown 到屏幕上就是字面的 # 和 *。现在用 GenOffice 自己的 Markdown
+  // 组件渲染,md 看起来才像它描述的那份文档。
+  if (TEXT_EXTS.has(ext)) {
+    setLoading(fileName);
+    try {
+      const res = await fetch(url);
+      const raw = await res.text();
+      renderTextPreview({
+        fileName,
+        ext,
+        text: raw.slice(0, MAX_TEXT_CHARS),
+        size: Number(res.headers.get('content-length')) || raw.length,
+      });
+      setText('fName', fileName);
+      setText('fMeta', `${ext.toUpperCase()} · ${((res.headers.get('content-length') ? Number(res.headers.get('content-length')) : raw.length) / 1024).toFixed(1)} KB`);
+      setDisplay('zoomBar', 'none');
+    } catch (e) {
+      renderTextPreview({ fileName, ext, text: '', size: 0, error: String((e as Error).message ?? e) });
+    }
+    return;
+  }
+
   // 图片/文本兜底
   const head = await fetch(url, { headers: { Range: 'bytes=0-3' } });
   const magic = new Uint8Array(await (head).arrayBuffer());
@@ -667,3 +700,72 @@ window.addEventListener('message', (e) => {
   showEmpty();
 });
 
+
+// ── 选中内容 → 悬浮输入框 → 交给 agent ──
+//
+// 输入框是插件自己的 UI —— 宿主只提供"能调用对话"这一个能力(chat.send)。
+// 在查看器里选中任意文字，选中位置下方会浮出一个输入框，并把选中的内容
+// 带入其中；接着写下要 agent 做什么，回车即发送。agent 收到后可以调用本
+// 插件的工具来操作这个查看器。
+
+let selBox: HTMLElement | null = null;
+
+function closeSelBox(): void {
+  if (selBox) { selBox.remove(); selBox = null; }
+}
+
+function openSelBox(rect: DOMRect, selected: string): void {
+  closeSelBox();
+  const box = document.createElement('div');
+  box.className = 'sel-box';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'sel-input';
+  // 选中内容直接引入输入框；光标落在末尾，方便接着写指令。
+  input.value = selected.replace(/\s+/g, ' ').trim();
+
+  const go = document.createElement('button');
+  go.className = 'sel-go';
+  go.textContent = '发给 agent';
+
+  const submit = (): void => {
+    const text = input.value.trim();
+    if (!text) return;
+    send('chat-send', { text });
+    closeSelBox();
+  };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeSelBox(); }
+  });
+  // mousedown + preventDefault so clicking the button does not clear the
+  // selection before the handler runs.
+  go.addEventListener('mousedown', (e) => { e.preventDefault(); submit(); });
+
+  box.append(input, go);
+  document.body.appendChild(box);
+
+  // iframe 不能溢出自身边界，所以放不下时向上翻转。
+  const w = box.offsetWidth || 360;
+  const h = box.offsetHeight || 40;
+  const above = rect.bottom + h + 12 > window.innerHeight;
+  box.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - w - 8))}px`;
+  box.style.top = `${above ? Math.max(8, rect.top - h - 8) : rect.bottom + 8}px`;
+
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+}
+
+document.addEventListener('mouseup', (e) => {
+  if (selBox && selBox.contains(e.target as Node)) return;
+  const sel = window.getSelection();
+  const text = sel?.toString().trim() ?? '';
+  if (!text || sel!.rangeCount === 0) { closeSelBox(); return; }
+  openSelBox(sel!.getRangeAt(0).getBoundingClientRect(), text);
+});
+
+// 滚动或窗口变化时收起，避免浮框停在旧位置。
+document.addEventListener('scroll', closeSelBox, true);
+window.addEventListener('resize', closeSelBox);

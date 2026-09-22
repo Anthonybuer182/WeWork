@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, memo } from 'react';
-import type { Message, ContentBlock, ThinkingBlock as ThinkingBlockType, ToolCallBlock, ToolResultBlock, ImageBlock, FileBlock, QuoteBlock as QuoteBlockType, AssistantMessage, TokenUsage, ContextUsageInfo, MessageTiming } from '@pi/types';
+import type { Message, ContentBlock, ThinkingBlock as ThinkingBlockType, ToolCallBlock, ToolResultBlock, ImageBlock, FileBlock, AssistantMessage, TokenUsage, ContextUsageInfo, MessageTiming } from '@pi/types';
 import { cn } from '@/lib/utils';
 import { UserIcon, Bot, Clock, Zap, FileText, Copy, Pencil, Check, X } from 'lucide-react';
 import { ThinkingBlock } from './thinking-block';
@@ -8,7 +8,6 @@ import { MarkdownContent } from './markdown-content';
 import { renderTokenizedText } from '@/lib/token-parser';
 import { ImageBlockDisplay } from './image-block-display';
 import { FileBlockDisplay } from './file-block-display';
-import { QuoteBlockDisplay } from './quote-block-display';
 import { extractAppendedQuotes } from '@/lib/quote-helpers';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,11 +87,6 @@ function renderBlocks(blocks: ContentBlock[], isStreaming: boolean, toolTimings:
       case 'image':
         elements.push(
           <ImageBlockDisplay key={block.id} block={block as ImageBlock} isStreaming={isStreaming} />,
-        );
-        break;
-      case 'quote':
-        elements.push(
-          <QuoteBlockDisplay key={block.id} block={block as QuoteBlockType} />,
         );
         break;
       default:
@@ -188,29 +182,15 @@ function MessageBubbleImpl({
     ? message.blocks.filter((b) => b.type === 'text')
     : [];
   const userMediaBlocks = isUser && hasBlocks
-    ? message.blocks.filter((b) => b.type === 'image' || b.type === 'file' || b.type === 'quote')
+    ? message.blocks.filter((b) => b.type === 'image' || b.type === 'file')
     : [];
   const hasUserMedia = userMediaBlocks.length > 0;
 
-  // User bubbles show what the user typed — context the composer appends for
-  // the model (quoted text, plugin context) renders as cards instead. The
-  // session record persists only text (no quote blocks), so quotes are
-  // re-synthesized from the appended section — exactly one card in both the
-  // live and reloaded views.
-  const { display: displayContent, quotes: extractedQuotes } = isUser
-    ? extractAppendedQuotes(message.content)
-    : { display: message.content, quotes: [] };
-  const hasPersistedQuoteBlocks = userMediaBlocks.some((b) => b.type === 'quote');
-  const synthesizedQuoteBlocks = !hasPersistedQuoteBlocks && extractedQuotes.length > 0
-    ? extractedQuotes.map((q, i) => ({
-        id: `quote-synth-${message.id}-${i}`,
-        type: 'quote' as const,
-        content: q.text,
-        fileName: q.fileName,
-        filePath: q.filePath,
-        source: q.source,
-      }))
-    : [];
+  // User bubbles show only what the user typed. Older sessions still carry the
+  // quote markup the composer used to append for the model; strip it so those
+  // messages read cleanly. (The quote feature itself is gone — this is purely
+  // for conversations recorded before its removal.)
+  const displayContent = isUser ? extractAppendedQuotes(message.content).display : message.content;
 
   const handleCopy = async () => {
     try {
@@ -300,13 +280,6 @@ function MessageBubbleImpl({
             {hasUserMedia && (
               <div className="flex flex-col gap-1 mt-1 max-w-full">
                 {renderBlocks(userMediaBlocks, !!isStreaming, toolTimings)}
-              </div>
-            )}
-            {synthesizedQuoteBlocks.length > 0 && (
-              <div className="flex flex-col gap-1 mt-1 max-w-full">
-                {synthesizedQuoteBlocks.map((block) => (
-                  <QuoteBlockDisplay key={block.id} block={block} />
-                ))}
               </div>
             )}
           </div>

@@ -1,0 +1,13 @@
+# Plugin-local dependencies (this plugin is its own npm project, not a pnpm
+# workspace member — see its package-lock.json).
+node_modules/
+
+# esbuild output from scripts/run-tests.mjs
+tests/.build/
+
+# Build output. Reproducible with `npm run build` — scripts/build-panel.mjs
+# emits the bundle, the panel HTML, the fonts, the ribbon assets and the
+# pdf.js worker, all from vendored sources or node_modules. Committing it
+# meant a 43 MB tree in git and a `ui-dist/` that no clean checkout could
+# reproduce.
+ui-dist/

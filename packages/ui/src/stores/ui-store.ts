@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { usePanelStore } from './panel-store';
+import { openWithSystemApp } from '@/lib/utils';
 
 type ConnectionStatus = 'connected' | 'disconnected' | 'connecting';
 
@@ -10,6 +11,12 @@ interface UIState {
   activePreviewFilePath: string | null;
   sidebarOpen: boolean;
   rightPanelOpen: boolean;
+  /**
+   * Right panel expanded over the centre area for focused work. Deliberately
+   * not persisted, like `rightPanelOpen` — the panel should not come back
+   * fullscreen on the next launch.
+   */
+  rightPanelMaximized: boolean;
   rightPanelWidth: number;
   leftPanelWidth: number;
   compactMode: boolean;
@@ -29,6 +36,8 @@ interface UIState {
   toggleSidebar: () => void;
   toggleRightPanel: () => void;
   setRightPanelOpen: (open: boolean) => void;
+  toggleRightPanelMaximized: () => void;
+  setRightPanelMaximized: (maximized: boolean) => void;
   setRightPanelWidth: (width: number) => void;
   setLeftPanelWidth: (width: number) => void;
   setCompactMode: (compact: boolean) => void;
@@ -44,6 +53,7 @@ export const useUIStore = create<UIState>()(
       activePreviewFilePath: null,
       sidebarOpen: true,
       rightPanelOpen: false,
+      rightPanelMaximized: false,
       rightPanelWidth: 600,
       // Wider than the old hardcoded 260 default: the left sidebar hosts
       // settings as a view, whose forms need the room.
@@ -73,13 +83,22 @@ export const useUIStore = create<UIState>()(
             if (panelId) {
               set({ rightPanelOpen: true });
               usePanelStore.getState().openPanel(panelId, { focus: true, params: { file: path } });
+            } else {
+              // No preview plugin claims this extension. `isPreviewableInRightPanel`
+              // also covers images, video, html and plain code files, which no
+              // plugin handles — that combination used to fall through silently
+              // and made the click look broken. Hand it to the system instead.
+              openWithSystemApp(path, useUIStore.getState().activeWorkspaceId ?? undefined);
             }
           })
           .catch(() => {});
       },
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
-      setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
+      setRightPanelOpen: (open) =>
+        set(open ? { rightPanelOpen: true } : { rightPanelOpen: false, rightPanelMaximized: false }),
+      toggleRightPanelMaximized: () => set((s) => ({ rightPanelMaximized: !s.rightPanelMaximized })),
+      setRightPanelMaximized: (maximized) => set({ rightPanelMaximized: maximized }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
       setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),
       setCompactMode: (compact: boolean) => set({ compactMode: compact }),

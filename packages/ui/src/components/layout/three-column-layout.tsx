@@ -23,6 +23,11 @@ interface ThreeColumnLayoutProps {
   maxRightWidth?: number;
   rightPanelOpen?: boolean;
   sidebarOpen?: boolean;
+  /**
+   * Expand the right panel over the centre area for focused work. The left
+   * sidebar stays visible — it carries the workspace/session context.
+   */
+  rightPanelMaximized?: boolean;
 }
 
 export function ThreeColumnLayout({
@@ -40,6 +45,7 @@ export function ThreeColumnLayout({
   maxRightWidth = 1200,
   rightPanelOpen = true,
   sidebarOpen = true,
+  rightPanelMaximized = false,
 }: ThreeColumnLayoutProps) {
   const [currentLeftWidth, setCurrentLeftWidth] = useState(leftWidth);
   const [currentRightWidth, setCurrentRightWidth] = useState(rightWidth);
@@ -129,7 +135,14 @@ export function ThreeColumnLayout({
   return (
     <div ref={containerRef} className="flex flex-1 overflow-hidden">
       {/* ============== Left + Center column ============== */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div
+        className={cn(
+          'flex flex-col min-w-0 overflow-hidden',
+          // Maximized: shrink to just the sidebar so the right panel gets all
+          // the remaining width. Two `flex-1` siblings would split it instead.
+          rightPanelMaximized ? 'flex-none' : 'flex-1',
+        )}
+      >
         {/* Top bar */}
         {/* Legacy top bar. Apps that render a full-width <TitleBar/> in the
             AppShell above pass no topLeftContent, and this bar disappears —
@@ -184,13 +197,19 @@ export function ThreeColumnLayout({
               />
             </>
           )}
-          <div className="flex-1 min-w-0 overflow-hidden">{centerPanel}</div>
+          {/* Hidden, not unmounted: the centre column owns the composer, and a
+              plugin panel can trigger a send from fullscreen (`chat.send`).
+              Unmounting would take that path with it. */}
+          <div className={cn('flex-1 min-w-0 overflow-hidden', rightPanelMaximized && 'hidden')}>
+            {centerPanel}
+          </div>
         </div>
       </div>
 
       {/* ============== Right column ============== */}
       {rightPanelOpen ? (
         <>
+          {!rightPanelMaximized ? (
           <div
             className="relative flex-shrink-0 cursor-col-resize group"
             style={{ width: '8px' }}
@@ -210,9 +229,13 @@ export function ThreeColumnLayout({
             <div className="absolute inset-y-0 -left-2 -right-2 z-10" />
             <div className="h-full w-full bg-border group-hover:bg-primary/50 group-active:bg-primary/30 transition-colors" />
           </div>
+          ) : null}
           <div
-            style={{ width: currentRightWidth }}
-            className="flex-shrink-0 overflow-hidden border-l flex flex-col"
+            style={rightPanelMaximized ? undefined : { width: currentRightWidth }}
+            className={cn(
+              'overflow-hidden border-l flex flex-col',
+              rightPanelMaximized ? 'flex-1 min-w-0' : 'flex-shrink-0',
+            )}
           >
             <div className="flex-1 overflow-hidden">{rightPanel}</div>
           </div>

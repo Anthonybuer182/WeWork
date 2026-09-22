@@ -87,6 +87,10 @@ function collectThemeTokens(): Record<string, string> {
 
 function pushThemeToFrames(reason: string): void {
   const tokens = collectThemeTokens();
+  // Native-view panels are not reachable by postMessage — they are top-level
+  // frames outside this DOM. Hand the tokens to main, which fans them out to
+  // every plugin view.
+  getPluginBridge()?.setTheme?.(tokens);
   for (const target of panelTargets.values()) {
     if (target.kind !== 'iframe') continue;
     const win = target.win();
@@ -116,6 +120,30 @@ function showPluginContextMenu(pluginId: string, payload?: { x?: number; y?: num
   bridge.showContextMenu({ x: payload?.x ?? 0, y: payload?.y ?? 0 }).catch(() => {});
 }
 
+/**
+ * Handle one wire frame from a plugin panel.
+ *
+ * Reached two ways, and deliberately shared so the two containers cannot drift:
+ *   - iframe panels: the panel posts to `window.parent` → `window` message event
+ *   - native view panels: the panel cannot post to us at all, so main relays
+ *     the frame over `pi:plugin:relay`
+ */
+function handleWireFrame(bridge: NonNullable<ReturnType<typeof getPluginBridge>>, data: WireFrame | null): void {
+  if (!data || data.__piPlugin !== true) return;
+  if (data.direction === 'ui') {
+    bridge.send(data.pluginId, data.payload);
+  } else if (data.direction === 'selection') {
+    // Selection made inside a plugin panel — surface to the selection service.
+    window.dispatchEvent(new CustomEvent('pi-plugin-selection', { detail: data.payload }));
+  } else if (data.direction === 'resize') {
+    // autoHeight panels: size the iframe to its reported content height.
+    applyAutoHeight(data.pluginId, (data.payload as { height?: number } | undefined)?.height);
+  } else if (data.direction === 'contextmenu') {
+    // Native context menu for sandboxed plugin iframes (main-process Menu).
+    showPluginContextMenu(data.pluginId, data.payload as { x?: number; y?: number } | undefined);
+  }
+}
+
 function ensureRelayInstalled(): void {
   if (relayInstalled) return;
   relayInstalled = true;
@@ -132,21 +160,12 @@ function ensureRelayInstalled(): void {
   setTimeout(() => pushThemeToFrames('init'), 300);
 
   window.addEventListener('message', (event) => {
-    const data = event.data as WireFrame | null;
-    if (!data || data.__piPlugin !== true) return;
-    if (data.direction === 'ui') {
-      bridge.send(data.pluginId, data.payload);
-    } else if (data.direction === 'selection') {
-      // Selection made inside a plugin iframe — surface to the selection service.
-      window.dispatchEvent(new CustomEvent('pi-plugin-selection', { detail: data.payload }));
-    } else if (data.direction === 'resize') {
-      // autoHeight panels: size the iframe to its reported content height.
-      applyAutoHeight(data.pluginId, (data.payload as { height?: number } | undefined)?.height);
-    } else if (data.direction === 'contextmenu') {
-      // Native context menu for sandboxed plugin iframes (main-process Menu).
-      showPluginContextMenu(data.pluginId, data.payload as { x?: number; y?: number } | undefined);
-    }
+    handleWireFrame(bridge, event.data as WireFrame | null);
   });
+
+  // Frames from native-view panels, relayed by main. A view is a top-level
+  // frame so it has no way to post to us directly.
+  bridge.onRelay?.((frame) => handleWireFrame(bridge, frame as WireFrame | null));
 }
 
 /** Fire-and-forget event to a plugin backend over the UI data plane. */

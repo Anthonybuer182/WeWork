@@ -1,21 +1,43 @@
 {
   "name": "com.pi.files",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "文件中心插件 — 自包含引擎预览(docx/pptx/xlsx/pdf/图片),genoffice 引擎(Apache-2.0)",
+  "description": "文件中心插件 — 自包含的 office 引擎（创建/编辑/预览 docx/pptx/xlsx/pdf），基于 vendor 的 GenOffice 引擎（Apache-2.0）",
   "type": "module",
   "scripts": {
-    "build": "node build-ui.mjs"
+    "build": "node scripts/build-backend.mjs && node scripts/build-panel.mjs",
+    "build:backend": "node scripts/build-backend.mjs",
+    "build:ui": "node build-ui.mjs",
+    "test": "node scripts/run-tests.mjs",
+    "test:backend": "node scripts/smoke-backend.mjs",
+    "vendor": "node scripts/vendor-genoffice.mjs",
+    "vendor:check": "node scripts/vendor-genoffice.mjs --check",
+    "build:panel": "node scripts/build-panel.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.24.0"
   },
   "dependencies": {
+    "@embedpdf/pdfium": "^2.15.1",
+    "@noble/hashes": "^2.4.0",
+    "@tiptap/core": "3.31.0",
+    "@tiptap/extensions": "3.31.0",
+    "@tiptap/pm": "3.31.0",
+    "@tiptap/react": "3.31.0",
     "bidi-js": "^1.0.3",
     "buffer": "^6.0.3",
-    "fast-xml-parser": "^4.5.0",
+    "fast-xml-parser": "^5.3.4",
+    "fflate": "^0.8.3",
     "jszip": "^3.10.1",
-    "opentype.js": "^1.3.4",
-    "utif2": "^4.1.0"
+    "konva": "^9.3.22",
+    "marked": "^18.0.13",
+    "opentype.js": "^2.0.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.3.289",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-konva": "^19.3.0",
+    "utif2": "^4.1.0",
+    "xlsx": "^0.18.5"
   }
 }

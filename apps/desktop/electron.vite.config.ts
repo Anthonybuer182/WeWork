@@ -42,6 +42,9 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve(__dirname, 'src/preload/index.ts'),
+          // Preload for plugin WebContentsViews — plugin panels are top-level
+          // frames, so they need their own bridge (see src/preload/plugin-view.ts).
+          'plugin-view': resolve(__dirname, 'src/preload/plugin-view.ts'),
         },
       },
     },

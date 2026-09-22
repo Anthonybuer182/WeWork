@@ -114,12 +114,12 @@ function stripAttachmentSections(text: string, cwd?: string): { content: string;
 }
 
 /**
- * Strip the quoted-context sections that the composer appends to the prompt
- * (via formatQuotesForPrompt) before sending, so the displayed user content
- * matches what the user actually typed. Reconstructs quote blocks so the
- * quote cards render consistently on reload.
+ * Strip the quoted-context sections an earlier version of the composer
+ * appended to the outgoing prompt, so the displayed user content matches what
+ * the user actually typed. The quote feature is gone, but sessions recorded
+ * before its removal still contain these sections.
  *
- * Format produced by formatQuotesForPrompt:
+ * Format that was produced:
  *   \n\n--- Quoted Context ---\n
  *   File: <name> | Lines: x-y | Page: z | Slide: n | Sheet: <name>\n
  *   ```<ext>\n<content>\n```  (code-editor source)
@@ -290,21 +290,6 @@ function agentMessageToBlocks(msg: any, cwd?: string): ContentBlock[] {
           workspacePath: f.workspacePath,
         });
       }
-      for (const q of quotes) {
-        blocks.push({
-          id: `b-quote-${msg.timestamp || Date.now()}-${q.fileName}`,
-          type: 'quote',
-          content: q.content,
-          fileName: q.fileName,
-          filePath: q.filePath,
-          source: q.source,
-          startLine: q.startLine,
-          endLine: q.endLine,
-          pageNumber: q.pageNumber,
-          slideNumber: q.slideNumber,
-          sheetName: q.sheetName,
-        });
-      }
     } else if (Array.isArray(msg.content)) {
       for (const c of msg.content as any[]) {
         if (c.type === 'text') {
@@ -324,21 +309,6 @@ function agentMessageToBlocks(msg: any, cwd?: string): ContentBlock[] {
               fileName: f.fileName,
               fileSize: f.fileSize,
               workspacePath: f.workspacePath,
-            });
-          }
-          for (const q of quotes) {
-            blocks.push({
-              id: `b-quote-${msg.timestamp || Date.now()}-${blocks.length}-${q.fileName}`,
-              type: 'quote',
-              content: q.content,
-              fileName: q.fileName,
-              filePath: q.filePath,
-              source: q.source,
-              startLine: q.startLine,
-              endLine: q.endLine,
-              pageNumber: q.pageNumber,
-              slideNumber: q.slideNumber,
-              sheetName: q.sheetName,
             });
           }
         } else if (c.type === 'image') {

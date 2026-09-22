@@ -44,14 +44,14 @@ export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel,
 export type { HostChrome, HostPlatform } from './components/layout';
 export { WorkspaceDropdown, WorkspaceCreateButton } from './components/workspace';
 export { SessionList, SessionItem, SessionCreateButton } from './components/session';
-export { ChatTimeline, MessageBubble, ThinkingBlock, ToolCallDisplay, EmptyChat, StreamingIndicator, QuoteBlockDisplay } from './components/chat';
+export { ChatTimeline, MessageBubble, ThinkingBlock, ToolCallDisplay, EmptyChat, StreamingIndicator } from './components/chat';
 export { Composer, ComposerInput, SendButton, SlashCommandMenu, MentionMenu, AttachmentPreviewBar, FileUploadButton } from './components/composer';
 export { ModelSelector, ThinkLevelSelector, CompactToggle, SkillSelector } from './components/model';
 export { ProviderSettings } from './components/settings';
 export { UsageBar } from './components/usage';
 export { ErrorBoundary, LoadingSpinner, EmptyState, ErrorState, ConfirmDialog } from './components/common';
 export { FileTree, FileTreeNode } from './components/file';
-export { createQuote, formatQuotesForPrompt } from './lib/quote-helpers';
+export { copyText } from './lib/quote-helpers';
 
 export { PluginPanelHost } from './components/plugins/plugin-panel';
 export { PluginCenter } from './components/plugins/plugin-center';

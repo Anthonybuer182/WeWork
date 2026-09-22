@@ -1,4 +1,4 @@
-import { X, Loader2, CircleAlert } from 'lucide-react';
+import { X, Loader2, CircleAlert, Maximize2, Minimize2 } from 'lucide-react';
 import { usePanelStore, type PanelRegion } from '@/stores/panel-store';
 import { useUIStore } from '@/stores/ui-store';
 import { panelIcon } from './panel-icons';
@@ -13,10 +13,13 @@ export function PanelChrome({ region = 'right' }: { region?: PanelRegion }) {
   const runtime = usePanelStore((s) => (activePanelId ? s.runtime[activePanelId] : undefined));
   const closePanel = usePanelStore((s) => s.closePanel);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
+  const maximized = useUIStore((s) => s.rightPanelMaximized);
+  const toggleMaximized = useUIStore((s) => s.toggleRightPanelMaximized);
   const handleClose = () => {
     closePanel(region);
     // On the right the X collapses the whole side, leaving only the icon rail.
     // The left column has no collapse gesture — that is the title bar toggle.
+    // `setRightPanelOpen(false)` also clears the maximized state.
     if (region === 'right') setRightPanelOpen(false);
   };
 
@@ -43,6 +46,16 @@ export function PanelChrome({ region = 'right' }: { region?: PanelRegion }) {
         <span className="rounded-full bg-primary/10 px-1.5 text-[10px] font-medium text-primary">{runtime.badge}</span>
       ) : null}
       <span className="ml-auto" />
+      {region === 'right' && (
+        <button
+          type="button"
+          aria-label={maximized ? '退出全屏' : '全屏'}
+          onClick={toggleMaximized}
+          className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+        </button>
+      )}
       <button
         type="button"
         aria-label="关闭面板"

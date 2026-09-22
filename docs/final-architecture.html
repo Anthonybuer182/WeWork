@@ -285,7 +285,7 @@
 ├─ 数据平面(<span class="hl">MessagePort 点对点</span>):面板 UI 事件直传,主进程只牵线不中继
 │
 ├─▶ <b>插件后端 ×N</b>(UtilityProcess,独立进程,crash 自动重启 ×3)
-│      工具实现 · 状态 · officecli 渲染管线 · filesystem/office/browser 能力调用
+│      工具实现 · 状态 · GenOffice 引擎(vendored) · filesystem/office/browser 能力调用
 │
 ├─▶ <b>插件 UI ×N</b>(<span class="hl">pi-plugin://&lt;插件id&gt;/ 唯一源沙箱 iframe</span>,站点隔离实测生效)
 │      standard 面板(HTML + piSDK)
@@ -395,13 +395,15 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
 </section>
 
 <section id="s7">
-  <div class="sec-head"><span class="sec-no">§7</span><h2>Office 高保真渲染</h2></div>
-  <p class="sec-sub">文件中心(com.pi.files)以 officecli 为渲染引擎 —— agent 写文档与用户看文档共用同一引擎,所见即 agent 所写。</p>
+  <div class="sec-head"><span class="sec-no">§7</span><h2>Office 文档能力</h2></div>
+  <p class="sec-sub">文件中心(com.pi.files)自带 GenOffice 引擎(Apache-2.0,vendored 到插件目录)—— agent 写文档与用户看文档共用同一套引擎,<b>不依赖任何外部工具,也不需要联网安装</b>。</p>
   <ul>
-    <li><strong>渲染管线:</strong><code>officecli view screenshot --page 1-50</code> → 单张全页 PNG(docx/pptx 全页、xlsx 活动表)→ 经 <code>ws-file</code> 协议给查看器 iframe → 缩放控件(25–400%/适应)</li>
-    <li><strong>保真度:</strong>真实 Office 排版管线 —— 纸张、页边距、分页边界、字体、形状、背景全部还原(pptx 实测像素级)</li>
-    <li><strong>性能:</strong>mtime 缓存(同文件秒开,LRU 24);写盘竞态防御(空内容延迟重读)</li>
-    <li><strong>引擎矩阵其余部分:</strong>Monaco(代码/文本编辑 + 写回)、pdf.js、docx-preview、Univer <span class="tag todo">P9b 余项</span></li>
+    <li><strong>引擎:</strong><code>vendor/genoffice/packages/</code> 下的 docx-engine / pptx-engine / pptx-ops / pptx-render / xlsx-gateway / pdf2docx,全部纯 TypeScript、无原生依赖。上游 commit 由 <code>scripts/vendor-genoffice.mjs</code> 钉死,<code>--check</code> 检测漂移</li>
+    <li><strong>agent 工具:</strong><code>contributes.tools</code> 暴露 <code>office_guide</code> / <code>office_read</code> / <code>office_edit</code>。op 词表当<b>数据</b>按需下发,不做一个 op 一个工具 —— 否则 70 个 op 的 schema 会在每次请求都付一遍</li>
+    <li><strong>编辑语义:</strong>pptx 走 <code>pptx-ops</code> 的 <code>runTxn</code>(注册表 + 快照回滚 + 引导式错误,整批原子,失败时明确告知"什么都没应用");docx 走 <code>saveDocx</code>(未触碰的块按原文子串拼接,全无改动则返回原字节)</li>
+    <li><strong>执行位置:</strong>引擎跑在<b>插件后端</b>(UtilityProcess),拥有字节和权威文档模型;渲染跑在插件自己的 <b>WebContentsView</b> 里,拥有像素和交互。共享的 planner 是两边唯一的契约</li>
+    <li><strong>保真度:</strong>真实排版管线 —— 纸张、页边距、分页边界、字体、形状、背景。docx 的分页由 <code>line-metrics</code> + <code>pagination*</code> 对着真 DOM 测量得出,配套 11.8MB 度量兼容字体</li>
+    <li><strong>引擎矩阵其余部分:</strong>pdf.js 查看、pdf2docx 转换、Univer 表格网格 <span class="tag todo">待 1c/1d</span></li>
   </ul>
 </section>
 
@@ -449,7 +451,7 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
     <tr><td>P6–P7</td><td>消息卡片 / 滑词 / 网络能力 / 上下文注入 / 设置 / 主题桥</td><td><span class="tag ok">已交付</span></td></tr>
     <tr><td>P8</td><td>生产加固(CSP / autoHeight / 右键桥 / file:// 竞态)</td><td><span class="tag ok">已交付</span></td></tr>
     <tr><td>P9a</td><td>数据通道:filesystem.write(mtime 冲突)+ ws-file(Range/权限门)+ memory-file + 路由优先级</td><td><span class="tag ok">已交付</span></td></tr>
-    <tr><td>P9b</td><td>officecli 高保真渲染 + iframe 面板 params 契约;Monaco/pdf.js/Univer 引擎接入</td><td><span class="tag ok">office 已交付</span> <span class="tag todo">引擎余项</span></td></tr>
+    <tr><td>P9b</td><td>office 高保真渲染 + 面板 params 契约;Monaco/pdf.js/Univer 引擎接入</td><td><span class="tag ok">已交付</span> <span class="tag ok">officecli 已整体移除,改由插件自带 GenOffice 引擎</span></td></tr>
     <tr><td>P10</td><td><b>开放准备:</b>第一方声明式面板迁 HTML(dogfood)· <code>site-per-process</code> 强制隔离 · liveview 通用化 + <code>nativeview.*</code> 能力 · BrowserView→WebContentsView(Electron 30+ 已废弃)· 面板崩溃自愈(render-process-gone)· <code>agent.trigger</code> 反向触发能力 · 日历定时提醒实证(后端调度 + 补跑)</td><td><span class="tag todo">待办</span></td></tr>
     <tr><td>P11</td><td><b>对外文档与试点:</b>文档站(概念→manifest→面板→后端→权限→上架)· 挑 1–2 个第三方照文档写插件验证自解释性 · 市场公开</td><td><span class="tag todo">待办</span></td></tr>
     <tr><td>业务线</td><td>会议纪要、行政人事财务连接器、邮件/日历真实协议(IMAP/SMTP/CalDAV)</td><td><span class="tag todo">待办</span></td></tr>

@@ -212,4 +212,6 @@ export type CapabilityMethod =
   | 'browser.click'
   | 'browser.getText'
   | 'browser.evaluate'
-  | 'network.fetch';
+  | 'network.fetch'
+  /** Put a message into the conversation, exactly as typing it would. */
+  | 'chat.send';
