@@ -45,7 +45,6 @@ declare global {
   interface Window {
     piSDK?: PiSdk;
     __piViewBridge?: PiViewBridge;
-    desktop?: Record<string, unknown>;
     /** Set by index.html so the shim knows which file to open. */
     __PI_OPEN_PATH__?: string;
     __PI_PLUGIN_ID__?: string;
@@ -427,7 +426,13 @@ export function installDesktopShim(): void {
     respondToZotero: () => undefined,
   };
 
-  window.desktop = api;
+  // Assigned through a cast rather than a `declare global` of our own:
+  // GenOffice's `apps/docs/src/renderer/env.d.ts` already declares
+  // `window.desktop: DesktopApi`, and merging a second declaration whose
+  // modifier differs is a hard error (TS2687) — as would restating the type
+  // (TS2717). Their declaration is the accurate one; ours only needs to write
+  // to it.
+  (window as unknown as { desktop: Record<string, unknown> }).desktop = api;
 }
 
 // Install on import, not via a call from the entry.

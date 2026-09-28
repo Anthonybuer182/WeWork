@@ -1,0 +1,83 @@
+/**
+ * Stubs for GenOffice's `DesktopApi` (window.desktopApi).
+ *
+ * 66 members, of which the renderer calls a scattered handful during bootstrap —
+ * none of them guessable from the outside (the first slides run died on
+ * `clipboardProbe`). Each returns the SHAPE its declaration promises, so a
+ * stubbed call degrades to "feature unavailable" rather than blowing up
+ * somewhere far from the cause.
+ *
+ * Every real implementation lives in the shim next to this file, spread over
+ * the top of this object.
+ *
+ * Generated from apps/sheets/src/shared/desktop-api.ts by scripts/gen-api-stubs.mjs. Regenerate rather
+ * than edit — but do check it in: it is read far more often than written.
+ */
+export const sheetsApiStubs: Record<string, unknown> = {
+  getLanguage: () => Promise.resolve(null),
+  onLanguageChanged: () => undefined,
+  getTheme: () => Promise.resolve(null),
+  onThemeChanged: () => () => undefined,
+  getAutoSaveDefault: () => Promise.resolve(null),
+  onAutoSaveDefaultChanged: () => () => undefined,
+  getAiPanelPrefs: () => Promise.resolve(null),
+  setAiPanelPrefs: () => Promise.resolve(null),
+  onAiPanelPrefsChanged: () => () => undefined,
+  onChromePressed: () => () => undefined,
+  selectWorkbook: () => Promise.resolve(null),
+  selectWorkbooksForMerge: () => Promise.resolve([]),
+  openWorkbooksForMerge: () => Promise.resolve([]),
+  readWorkbookRange: () => Promise.resolve(null),
+  readWorkbookFormulas: () => Promise.resolve(null),
+  recalcWorkbook: () => Promise.resolve(null),
+  readWorkbookMedia: () => Promise.resolve(null),
+  readPivotDefinition: () => Promise.resolve(null),
+  readLocalImage: () => Promise.resolve(null),
+  captureScreenSources: () => Promise.resolve(null),
+  captureScreenSource: () => Promise.resolve(null),
+  saveWorkbookEdits: () => Promise.resolve(null),
+  beginSaveEditsTransfer: () => Promise.resolve(),
+  sendSaveEditsChunk: () => Promise.resolve(),
+  abortSaveEditsTransfer: () => Promise.resolve(),
+  writeWorkbookRecovery: () => Promise.resolve(false),
+  autoRenameWorkbook: () => undefined,
+  exportPdf: () => Promise.resolve(null),
+  printWorkbook: () => Promise.resolve(null),
+  exportCsv: () => Promise.resolve(null),
+  confirmCsvSave: () => Promise.resolve(null),
+  createDocument: () => Promise.resolve(null),
+  closeWorkbook: () => Promise.resolve(),
+  openExternal: () => Promise.resolve(),
+  onMenuAction: () => () => undefined,
+  onWorkbookRenamed: () => () => undefined,
+  notifyPendingEdits: () => undefined,
+  onCloseSaveRequest: () => () => undefined,
+  reportCloseSaveResult: () => undefined,
+  onRecoveryPrompt: () => () => undefined,
+  replyRecoveryPrompt: () => undefined,
+  consumeNewBlankWorkbook: () => Promise.resolve(false),
+  onMcpCommand: () => () => undefined,
+  reportMcpResult: () => undefined,
+  signalMcpReady: () => undefined,
+  hasQueuedWorkbook: () => Promise.resolve(false),
+  consumeHeadlessExport: () => Promise.resolve(null),
+  headlessExportDone: () => undefined,
+  getAiSettings: () => Promise.resolve(null),
+  setAiSettings: () => Promise.resolve(),
+  aiChat: () => Promise.resolve(null),
+  aiStream: () => Promise.resolve(),
+  aiStreamCancel: () => Promise.resolve(),
+  aiGskStatus: () => Promise.resolve(null),
+  aiGskLogin: () => Promise.resolve(),
+  webSearch: () => Promise.resolve(null),
+  imageSearch: () => Promise.resolve(null),
+  generateImage: () => Promise.resolve(null),
+  fetchImage: () => Promise.resolve(null),
+  onAiStream: () => () => undefined,
+  pickAttachments: () => Promise.resolve(null),
+  addAttachmentPaths: () => Promise.resolve(null),
+  addPastedImage: () => Promise.resolve(null),
+  readAttachment: () => Promise.resolve(null),
+  readAttachmentImage: () => Promise.resolve(null),
+  getPathForFile: () => undefined,
+};

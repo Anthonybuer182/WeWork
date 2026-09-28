@@ -127,7 +127,7 @@ export function main(parentPort: HostPort): void {
   async function toolGuide(p: Record<string, unknown>): Promise<ToolResult> {
     const domain = String(p.domain ?? 'pptx');
     if (domain !== 'pptx') {
-      return text(`domain "${domain}" is not wired yet — only pptx is. See the plugin skill for what is planned.`);
+      return text(`domain "${domain}" is not wired yet — only pptx is. Do not retry with another argument; tell the user this format has no structural editing yet.`);
     }
     const group = p.group === undefined ? undefined : String(p.group);
     if (group !== undefined) {
@@ -151,7 +151,7 @@ export function main(parentPort: HostPort): void {
     if (!path) throw new Error('office_read: path is required');
     const ext = path.toLowerCase().split('.').pop();
     if (ext !== 'pptx') {
-      return text(`office_read: "${ext}" is not wired yet — only pptx is.`);
+      return text(`office_read: "${ext}" is not wired yet — only pptx is. Do not retry; this format has no structural reading yet.`);
     }
     const opened = await openPptx(await readOfficeBytes(path));
     const slides = opened.deck.slides.map((s, i) => ({
@@ -188,7 +188,7 @@ export function main(parentPort: HostPort): void {
     const dryRun = p.dryRun === true;
     const ext = path.toLowerCase().split('.').pop();
     if (ext !== 'pptx') {
-      return text(`office_edit: "${ext}" is not wired yet — only pptx is.`);
+      return text(`office_edit: "${ext}" is not wired yet — only pptx is. Do not retry; this format has no structural editing yet.`);
     }
 
     // The mtime read here is the baseline the host's conflict check compares
@@ -314,6 +314,28 @@ export function main(parentPort: HostPort): void {
             const path = String(params.path ?? '');
             const info = await stat(path);
             return { path, size: info.size, mtime: info.mtimeMs };
+          }
+          case 'pdf.save': {
+            // GenOffice's PDF surgery, run here rather than reimplemented.
+            //
+            // `applySaveRequest` is pure bytes-in/bytes-out (1,027 lines of
+            // pdf-lib work in apps/pdf/src/main/save-pdf.ts) and imports no
+            // Electron. The renderer has already staged every edit — markups,
+            // drawings, text edits, page ops — into the request, so all this
+            // side has to do is read, apply, write.
+            const path = String(params.path ?? '');
+            if (!path) throw new Error('pdf.save: path is required');
+            const { applySaveRequest } = await import('../../vendor/genoffice/apps/pdf/src/main/save-pdf');
+            const { bytes, ...skips } = await applySaveRequest(
+              new Uint8Array(await readFile(path)),
+              params as never,
+            );
+            const written = (await call('filesystem.write', {
+              path,
+              contentB64: Buffer.from(bytes).toString('base64'),
+              expectedMtime: typeof params.expectedMtime === 'number' ? params.expectedMtime : undefined,
+            })) as { mtime?: number } | undefined;
+            return { ok: true, mtime: written?.mtime, skips };
           }
           case 'font.metrics': {
             const family = String(params.family ?? '');

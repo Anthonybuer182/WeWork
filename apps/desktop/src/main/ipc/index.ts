@@ -7,6 +7,7 @@ import {
   createRealConfigService,
   createRealChatService,
 } from '@pi/sdk-wrapper/adapters';
+import type { PluginDoc } from '@pi/sdk-wrapper/adapters';
 import type { WorkspaceService, SessionService, FileService, ConfigService, ChatService, SendMessageParams, FileSearchOptions } from '@pi/sdk-wrapper';
 
 // Services are created during registerIpcHandlers() (called from app.whenReady)
@@ -26,6 +27,8 @@ interface SdkRequest {
 export interface RegisterIpcHandlersOptions {
   /** Supplies plugin-contributed agent tools (customTools for the SDK). */
   customToolsProvider?: () => unknown[];
+  /** Supplies the installed-plugins index (each plugin's PLUGIN.md) for the system prompt. */
+  pluginDocsProvider?: () => PluginDoc[];
 }
 
 export function registerIpcHandlers(
@@ -47,6 +50,7 @@ export function registerIpcHandlers(
   configService = createRealConfigService(defaultCwd, undefined, sharedModelRegistry, settingsManager);
   chatService = createRealChatService(defaultCwd, sharedModelRegistry, settingsManager, {
     customToolsProvider: options?.customToolsProvider,
+    pluginDocsProvider: options?.pluginDocsProvider,
   });
 
   // ── Standard request/response ──

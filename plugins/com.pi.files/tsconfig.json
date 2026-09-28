@@ -1,42 +1,37 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+
     "strict": false,
     "skipLibCheck": true,
     "noEmit": true,
+
+    // The panel imports stylesheets (GenOffice's and ours) the way the bundler
+    // expects; without this TS refuses to look at the `.css` specifier at all.
+    "allowArbitraryExtensions": true,
+    "resolveJsonModule": true,
+
     "baseUrl": ".",
     "paths": {
-      "@genoffice/docx-engine": [
-        "./vendor/docx-engine/src/index.ts"
-      ],
-      "@genoffice/docx-engine/*": [
-        "./vendor/docx-engine/src/*.ts"
-      ],
-      "@genoffice/pptx-engine": [
-        "./vendor/pptx-engine/src/index.ts"
-      ],
-      "@genoffice/pptx-engine/*": [
-        "./vendor/pptx-engine/src/*.ts"
-      ],
-      "@genoffice/pptx-render": [
-        "./vendor/pptx-render/src/index.ts"
-      ],
-      "@genoffice/pptx-render/*": [
-        "./vendor/pptx-render/src/*.ts"
-      ]
-    },
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "types": [
-      "node"
-    ]
+      // The three that `build-panel.mjs` answers with our own code rather than
+      // GenOffice's. Mapped the same way here, so `tsc` reads the module that
+      // actually ships instead of one that is absent from vendor/.
+      "@genoffice/ai-provider": ["./src/ui/docx/shims/ai-provider.ts"],
+      "@genoffice/ai-provider/browser": ["./src/ui/docx/shims/ai-provider.ts"],
+      "@genoffice/agent-core": ["./src/ui/docx/shims/agent-core.ts"],
+      "@genoffice/electron-utils/headless-export": ["./src/ui/docx/shims/electron-utils.ts"],
+
+      // Vendored packages, at the layout `vendor-genoffice.mjs` mirrors from
+      // upstream. A bare specifier is the package index; a subpath is a file
+      // inside it (`@genoffice/ui/Markdown` → packages/ui/src/Markdown.tsx).
+      "@genoffice/ui/*": ["./vendor/genoffice/packages/ui/src/*"],
+      "@genoffice/*": ["./vendor/genoffice/packages/*/src/index.ts"]
+    }
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

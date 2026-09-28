@@ -93,6 +93,36 @@ const genofficeResolver = {
   },
 };
 
+
+/**
+ * Vite's `?url` imports: the module is replaced by a URL to the asset.
+ *
+ * Used for the pdf.js worker (`pdfjs-dist/.../pdf.worker.min.mjs?url`) and for
+ * the Carlito TTFs sheets falls back to for cell text. esbuild's `file` loader
+ * does exactly this — emits the asset next to the bundle and yields its path.
+ */
+const urlAsset = {
+  name: 'url-asset',
+  setup(b) {
+    // Resolve the specifier WITHOUT the suffix through esbuild's own resolver
+    // first: `pdfjs-dist/legacy/build/pdf.worker.min.mjs?url` is an npm package,
+    // and joining it against the importer's directory produces a path that does
+    // not exist.
+    b.onResolve({ filter: /\?url$/ }, async (args) => {
+      const r = await b.resolve(args.path.replace(/\?url$/, ''), {
+        resolveDir: args.resolveDir,
+        kind: args.kind,
+      });
+      if (r.errors.length) return { errors: r.errors };
+      return { path: r.path, namespace: 'url-asset' };
+    });
+    b.onLoad({ filter: /.*/, namespace: 'url-asset' }, (args) => ({
+      contents: readFileSync(args.path),
+      loader: 'file',
+    }));
+  },
+};
+
 /** Vite-style `?raw` imports (used by the op catalogs). */
 const rawText = {
   name: 'raw-text',
@@ -108,12 +138,34 @@ const rawText = {
   },
 };
 
-/** Our panel replaces GenOffice's. */
+/**
+ * GenOffice's AI surface, replaced by nothing.
+ *
+ * The host already has an agent, so a second chat inside a document panel is
+ * both redundant and 360px of every panel. The panel markup that remains is
+ * hidden by `src/ui/ai/strip-genoffice-ai.css`; these aliases are what stop the
+ * components from running at all.
+ *
+ * `ai/AiChatPanel` is the one that matters most: sheets renders its sidebar from
+ * `ExcelShell.tsx`, not from an `AiPanel` import, so aliasing only `ai/AiPanel`
+ * silently left GenOffice's own branded chat in place there.
+ */
 const aiPanelSwap = {
   name: 'ai-panel-swap',
   setup(b) {
     b.onResolve({ filter: /(^|\/)ai\/AiPanel$/ }, () => ({
-      path: join(ROOT, 'src', 'ui', 'docx', 'AiPanel.tsx'),
+      path: join(ROOT, 'src', 'ui', 'ai', 'no-ai-surface.tsx'),
+    }));
+    b.onResolve({ filter: /(^|\/)ai\/AiChatPanel$/ }, () => ({
+      path: join(ROOT, 'src', 'ui', 'ai', 'no-ai-surface.tsx'),
+    }));
+    // Every app's ai/transport builds the channel to GenOffice's own agent, and
+    // the vendor script excludes the real module from all four apps — so this
+    // alias is load-bearing, not cosmetic: without it the import does not
+    // resolve and the build fails. sheets still constructs an AgentLoop from
+    // App.tsx, which the inert transport is what keeps harmless.
+    b.onResolve({ filter: /(^|\/)ai\/transport$/ }, () => ({
+      path: join(ROOT, 'src', 'ui', 'docx', 'shims', 'ai-transport.ts'),
     }));
   },
 };
@@ -193,7 +245,13 @@ const cssInject = {
   setup(b) {
     b.onLoad({ filter: /\.css$/ }, (args) => {
       let css = readFileSync(args.path, 'utf-8');
-      css = css.replace(/url\(\s*(['"]?)\.\/([^'")]+)\1\s*\)/g, (_m, _q, file) => `url('/fonts/${file}')`);
+      // Two shapes appear in the vendored CSS: relative (`./Caladea-Bold.ttf`,
+      // resolved against the stylesheet) and the Vite alias
+      // (`@genoffice/ui/fonts/Carlito-Regular.ttf`, resolved by Vite). Both
+      // become root-absolute, which is correct from wherever the CSS lands.
+      css = css
+        .replace(/url\(\s*(['"]?)\.\/([^'")]+)\1\s*\)/g, (_m, _q, f) => `url('/fonts/${f}')`)
+        .replace(/url\(\s*(['"]?)@genoffice\/ui\/fonts\/([^'")]+)\1\s*\)/g, (_m, _q, f) => `url('/fonts/${f}')`);
       return {
         loader: 'js',
         resolveDir: dirname(args.path),
@@ -227,6 +285,12 @@ const result = await build({
   logLevel: 'warning',
   define: {
     'process.env.NODE_ENV': '"production"',
+    // Vite's env object. The renderers use it for dev-only branches
+    // (`import.meta.env.DEV`) and one Univer call path reads it unguarded, so
+    // leaving it undefined is a runtime crash rather than a dead branch.
+    'import.meta.env.DEV': 'false',
+    'import.meta.env.PROD': 'true',
+    'import.meta.env.MODE': '"production"',
     global: 'globalThis',
   },
   inject: [join(ROOT, 'src', 'buffer-shim.ts')],
@@ -249,24 +313,25 @@ const result = await build({
   },
   assetNames: 'assets/[name]-[hash]',
   resolveExtensions: ['.tsx', '.ts', '.js'],
-  plugins: [aiPanelSwap, shimSwap, genofficeResolver, rawText, cssInject, nodeBuiltins],
+  plugins: [aiPanelSwap, shimSwap, urlAsset, genofficeResolver, rawText, cssInject, nodeBuiltins],
 });
 
 // Fonts: the layout-fidelity payload. Served at /fonts/* so the rewritten
 // url()s resolve.
-const fontsSrc = join(DOCS, 'fonts');
+const fontSources = [join(DOCS, 'fonts'), join(VENDOR, 'packages', 'ui', 'src', 'fonts')];
 const fontsDst = join(OUT, 'fonts');
-if (existsSync(fontsSrc)) {
-  mkdirSync(fontsDst, { recursive: true });
-  let n = 0;
-  for (const f of readdirSync(fontsSrc)) {
+mkdirSync(fontsDst, { recursive: true });
+let n = 0;
+for (const dir of fontSources) {
+  if (!existsSync(dir)) continue;
+  for (const f of readdirSync(dir)) {
     if (['.ttf', '.woff2', '.otf', '.woff'].includes(extname(f).toLowerCase())) {
-      copyFileSync(join(fontsSrc, f), join(fontsDst, f));
+      copyFileSync(join(dir, f), join(fontsDst, f));
       n++;
     }
   }
-  console.log(`[panel] copied ${n} font file(s) → ui-dist/panel/fonts/`);
 }
+console.log(`[panel] copied ${n} font file(s) → ui-dist/panel/fonts/`);
 
 // pdf.js worker: the legacy previewer loads it same-origin at runtime. It used
 // to be a hand-committed 1.4 MB file, which meant `ui-dist/` was not

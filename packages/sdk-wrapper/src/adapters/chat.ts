@@ -18,8 +18,60 @@ import { migrateModelsConfig } from './config.js';
  * they are snapshotted at session creation — call `invalidateSessions()`
  * (wired to the plugin system's extensions-changed hook) to rebuild.
  */
+/**
+ * A plugin's usage doc, as it reaches the prompt.
+ *
+ * `description` is the entire match surface — the agent only opens the file
+ * when that line fits the task at hand.
+ */
+export interface PluginDoc {
+  name: string;
+  pluginId?: string;
+  description: string;
+  /** Absolute path to the plugin's PLUGIN.md. */
+  location: string;
+}
+
+/**
+ * The plugin index, shaped like the SDK's own `<available_skills>` block.
+ *
+ * Same contract as skills, and for the same reason: only name, description and
+ * path go in the prompt, and the body is read on demand. A plugin's full doc
+ * would be a permanent tax on every request; its one-line description is not.
+ * The agent reads the file itself when that line matches.
+ */
+export function formatPluginDocsForPrompt(docs: PluginDoc[]): string {
+  if (docs.length === 0) return '';
+  const lines = [
+    '',
+    'The following plugins are installed. Each one ships a PLUGIN.md describing what it can do and how to drive it.',
+    "Use the read tool to load a plugin's file when the task matches its description.",
+    '',
+    '<available_plugins>',
+  ];
+  for (const doc of docs) {
+    lines.push('  <plugin>');
+    lines.push(`    <name>${escapeXml(doc.name)}</name>`);
+    lines.push(`    <description>${escapeXml(doc.description)}</description>`);
+    lines.push(`    <location>${escapeXml(doc.location)}</location>`);
+    lines.push('  </plugin>');
+  }
+  lines.push('</available_plugins>');
+  return lines.join('\n');
+}
+
+const escapeXml = (str: string): string =>
+  str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
 export interface RealChatServiceOptions {
   customToolsProvider?: () => unknown[];
+  /** Enabled plugins' PLUGIN.md index. Read per session, so installs take effect without a restart. */
+  pluginDocsProvider?: () => PluginDoc[];
 }
 
 export function createRealChatService(
@@ -71,11 +123,15 @@ export function createRealChatService(
   // detectWrittenFiles and getMimeType are imported from ../utils/file-detection.js
 
   async function createResourceLoader(workCwd: string, selectedSkillIds?: string[]) {
+    // Read at session creation, not cached: enabling a plugin takes effect on
+    // the next conversation instead of needing an app restart.
+    const pluginDocs = formatPluginDocsForPrompt(options?.pluginDocsProvider?.() ?? []);
     const resourceLoader = new DefaultResourceLoader({
       cwd: workCwd,
       agentDir: getAgentDir(),
       appendSystemPrompt: [
         'You are equipped with vision capabilities. When users attach images or when the read tool loads image files, analyze the visual content directly. This includes: screenshots of code/errors, UI designs, architecture diagrams, charts, photos, and any other images the user shares. Describe what you see clearly and use it to provide better coding assistance.',
+        ...(pluginDocs ? [pluginDocs] : []),
       ],
       skillsOverride: selectedSkillIds
         ? (base) => {

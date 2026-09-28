@@ -249,9 +249,8 @@ const api: Record<string, unknown> = {
 };
 
 // `window.slidesApi` is what GenOffice's slides renderer reads.
-declare global {
-  interface Window {
-    slidesApi?: Record<string, unknown>;
-  }
-}
-window.slidesApi = api;
+// Assigned through a cast rather than a `declare global` of our own: GenOffice's
+// slides app declares `window.slidesApi: SlidesApi` itself (shared/ipc.ts and
+// renderer/env.d.ts), and merging a second declaration whose modifier differs is
+// a hard error (TS2687) — as would restating the type (TS2717).
+(window as unknown as { slidesApi: Record<string, unknown> }).slidesApi = api;

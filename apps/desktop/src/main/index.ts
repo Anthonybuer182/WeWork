@@ -308,8 +308,9 @@ if (!gotLock) {
 
     const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {
       customToolsProvider: () => pluginSystem.aggregateTools(),
+      pluginDocsProvider: () => pluginSystem.listPluginDocs(),
     });
-    // Plugin tool/skill set changed at runtime → rebuild agent sessions, and
+    // Plugin tool/doc set changed at runtime → rebuild agent sessions, and
     // pick up panels of plugins that were just installed or enabled.
     pluginSystem.onExtensionsChanged = () => {
       pluginWebViews.sync();

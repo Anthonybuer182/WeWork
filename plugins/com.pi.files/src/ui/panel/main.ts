@@ -14,7 +14,13 @@
  * shim persists the target path and reloads, and we pick the renderer afresh.
  * See `reloadForOtherFormat` in src/ui/shims/common.ts.
  */
+// Removes GenOffice's AI surface (sidebar, ribbon group, canvas bar, ask
+// popover) from every renderer this page loads. Must be part of the entry chunk:
+// the renderers arrive via dynamic import, and this has to be in <head> by then.
+import '../ai/strip-genoffice-ai.css';
+
 import { persistPendingPath, readPersistedPath } from '../shims/common';
+import { mountEmptyState } from './empty-state';
 import { mountLegacyShell } from './legacy-shell';
 
 /** The last `ui.render` the backend pushed, kept so a late listener can replay it. */
@@ -44,9 +50,43 @@ void (async () => {
   // MOUNTS, and this panel never unmounted. So the path the previous load
   // recorded is the only source, and we wait only briefly for a fresh one.
   const persisted = readPersistedPath();
-  const payload = (await awaitRender(persisted ? 1200 : 5000)) as { data?: { path?: string } } | null;
+  // A reload already knows which file it is for: `reloadForOtherFormat` wrote
+  // the path before navigating (see shims/common.ts). So it dispatches at once
+  // instead of waiting for a fresh `ui.render` — the host does not re-raise
+  // `panel.mounted` when the open params are unchanged, so that wait always ran
+  // to its full timeout and cost a flat 1.2s on every file switch, for a
+  // message that never came. If a newer render does arrive, the loaded
+  // renderer handles it exactly as it handles any other switch.
+  const payload = persisted
+    ? null
+    : ((await awaitRender(5000)) as { data?: { path?: string } } | null);
   const path = payload?.data?.path ?? persisted;
   if (path) persistPendingPath(path);
+
+  // No file to show — the normal case when the panel is opened from the rail
+  // rather than by clicking a file. This is its own state rather than a fall
+  // through to the legacy previewer below: that one draws its empty state from
+  // `legacy-shell.ts`, whose palette is hardcoded dark, and it would drag the
+  // whole legacy bundle in to draw a screen with nothing on it.
+  if (!path) {
+    mountEmptyState();
+    // The empty state has to keep listening. This dispatcher runs once — the
+    // long-lived `ui.render` listeners are the loaded renderers, which is how
+    // switching files inside one panel works (see reloadForOtherFormat in
+    // shims/common). With no renderer loaded nothing else is listening, so
+    // without this a file opened after the panel had already shown its empty
+    // state would arrive with no one to receive it.
+    window.piSDK?.onMessage((payload) => {
+      const msg = payload as { event?: string; data?: { path?: string } } | null;
+      if (msg?.event !== 'ui.render') return;
+      const next = msg.data?.path;
+      // No path means "nothing open" — reloading on that would loop.
+      if (!next) return;
+      persistPendingPath(next);
+      location.reload();
+    });
+    return;
+  }
 
   const ext = path.toLowerCase().split('.').pop() ?? '';
 
@@ -61,6 +101,16 @@ void (async () => {
 
   if (ext === 'pptx') {
     await import('../slides/main');
+    return;
+  }
+
+  if (ext === 'pdf') {
+    await import('../pdf/main');
+    return;
+  }
+
+  if (ext === 'xlsx' || ext === 'xls' || ext === 'xlsm' || ext === 'csv' || ext === 'ods') {
+    await import('../sheets/main');
     return;
   }
 

@@ -12,6 +12,7 @@ import type {
   UiNode,
 } from '@pi/types';
 import { PluginRegistry, HOST_API_VERSION } from './registry';
+import { parseFrontmatter } from '@earendil-works/pi-coding-agent';
 import { CapabilityHub } from './capability-hub';
 import { PluginProcess, spawnBackend } from './plugin-process';
 import { registerPluginProtocolHandler } from './protocol';
@@ -21,6 +22,20 @@ import type { BrowserManager } from '@main/browser/browser-manager';
 export { registerPluginSchemePrivileges, PI_PLUGIN_SCHEME } from './protocol';
 export { PluginRegistry } from './registry';
 export { PluginMarketplace, DEFAULT_REGISTRY_URL } from './marketplace';
+
+/**
+ * A plugin's own usage doc, in the shape the prompt index needs.
+ *
+ * Only these three fields reach the agent; the file's body is read on demand.
+ */
+export interface PluginDoc {
+  name: string;
+  pluginId: string;
+  /** From PLUGIN.md's frontmatter — says WHEN to use the plugin, not what it is. */
+  description: string;
+  /** Absolute path to PLUGIN.md, for the agent to `read`. */
+  location: string;
+}
 
 /** Agent tool definition shape expected by createAgentSession({ customTools }). */
 export interface AgentCustomTool {
@@ -46,6 +61,11 @@ export class PluginSystem {
   private processes = new Map<string, PluginProcess>();
   /** Active UI port pairs: `${pluginId}:${webContentsId}` — ensureUiPort is idempotent on these. */
   private uiPortKeys = new Map<string, boolean>();
+  /**
+   * WebContents we have already subscribed to navigation events, so the
+   * per-document port reset below is installed exactly once per renderer.
+   */
+  private uiPortNavigating = new Set<number>();
   /** Notified whenever the aggregate tool/skill set changes. */
   onExtensionsChanged: (() => void) | null = null;
   /** Resolves when init() has finished — IPC handlers gate reads on this. */
@@ -202,6 +222,49 @@ export class PluginSystem {
     try {
       rmSync(pluginSkillDir, { recursive: true, force: true });
     } catch { /* best-effort */ }
+  }
+
+  /**
+   * Every enabled plugin that ships a `PLUGIN.md`, indexed for the prompt.
+   *
+   * The contract mirrors skills deliberately: only name, one-line description
+   * and path reach the system prompt, and the agent reads the file itself when
+   * that description matches the task. So the description carries the whole
+   * matching burden — a plugin whose line does not say WHEN to reach for it is
+   * a plugin the agent never opens. That is why a missing description is
+   * reported rather than silently shipped.
+   *
+   * Read from the plugin directory directly: nothing is copied, so installing,
+   * enabling or uninstalling a plugin changes this on the next session, and
+   * `~/.pi/agent/skills/` stays the user's own.
+   */
+  listPluginDocs(): PluginDoc[] {
+    const docs: PluginDoc[] = [];
+    for (const plugin of this.registry.all()) {
+      if (!plugin.enabled || plugin.state === 'incompatible') continue;
+      const file = join(plugin.rootPath, 'PLUGIN.md');
+      if (!existsSync(file)) continue;
+      try {
+        const { frontmatter } = parseFrontmatter(readFileSync(file, 'utf-8'));
+        const description =
+          typeof frontmatter.description === 'string' ? frontmatter.description.trim() : '';
+        if (!description) {
+          console.warn(
+            `[plugins] ${plugin.manifest.id}: PLUGIN.md has no description — the agent will not see this plugin`,
+          );
+          continue;
+        }
+        docs.push({
+          name: plugin.manifest.name,
+          pluginId: plugin.manifest.id,
+          description,
+          location: file,
+        });
+      } catch (err) {
+        console.warn(`[plugins] ${plugin.manifest.id}: PLUGIN.md unreadable:`, err);
+      }
+    }
+    return docs;
   }
 
   /** Push a host event to every running backend holding the permission. */
@@ -487,11 +550,45 @@ export class PluginSystem {
     if (!proc) {
       return { ok: false, error: `plugin "${pluginId}" has no backend` };
     }
+
+    const portKey = `${pluginId}:${sender.id}`;
+
+    // A reload keeps the WebContents id but builds a renderer whose preload has
+    // no port. Left alone, the idempotence check below would answer that new
+    // renderer with `reused` forever and it would never reach its backend
+    // again — every piSDK.request would hang, with no error anywhere, because
+    // the SDK's request() has no timeout and the preload buffers silently.
+    //
+    // It is not an edge case: the viewer switches renderers by reloading the
+    // whole page on every format change (see reloadForOtherFormat in the files
+    // plugin), so this is the path a user takes by opening a second document.
+    //
+    // Cleared on `did-start-loading`, which fires before the new document's
+    // preload runs its own ensurePort — so the fresh transfer that follows is
+    // not raced. The transfer is safe to repeat: the preload closes the old
+    // port and flushes its outbox onto the new one.
+    if (!this.uiPortNavigating.has(sender.id)) {
+      this.uiPortNavigating.add(sender.id);
+      const drop = (): void => {
+        for (const key of [...this.uiPortKeys.keys()]) {
+          // Keys are `${pluginId}:${webContentsId}`, and plugin ids are
+          // reverse-DNS with no colon, so the id is always the last segment.
+          if (key.slice(key.lastIndexOf(':') + 1) === String(sender.id)) {
+            this.uiPortKeys.delete(key);
+          }
+        }
+      };
+      sender.on('did-start-loading', drop);
+      sender.once('destroyed', () => {
+        drop();
+        this.uiPortNavigating.delete(sender.id);
+      });
+    }
+
     // Idempotent per (plugin, renderer): each new port pair replaces the
     // backend's state.uiPort, so a second ensurePort while the renderer's
     // FIRST port is still queued would leave the renderer's outbox messages
     // stranded on a port pair the backend no longer listens to.
-    const portKey = `${pluginId}:${sender.id}`;
     if (this.uiPortKeys.get(portKey)) {
       return { ok: true, reused: true };
     }

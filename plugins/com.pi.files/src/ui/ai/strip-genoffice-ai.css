@@ -1,0 +1,74 @@
+/*
+ * Strip GenOffice's AI surface from the panels.
+ *
+ * The host owns AI: one composer, one conversation, one tool registry. What
+ * GenOffice ships is a second one branded Genspark — a 360px column of every
+ * panel, a ribbon group of preset buttons wired to an agent that no longer
+ * exists, a floating bar over the slides canvas, and an "ask AI" popover on
+ * every selection.
+ *
+ * This lives in a stylesheet because `vendor/` is byte-identical to upstream and
+ * guarded by `vendor-genoffice.mjs --check`; CSS is the one thing that can reach
+ * vendored markup without touching it.
+ *
+ * Every rule is `!important`, for two separate reasons:
+ *
+ *   - Insertion order is not ours to rely on. This file is imported by the panel
+ *     entry, GenOffice's stylesheets by the renderer, which is loaded through a
+ *     dynamic import — so the order they land in <head> is an implementation
+ *     detail of the bundler, not a guarantee.
+ *   - One rule has to beat a more specific GenOffice selector
+ *     (`.app-shell.copilot-collapsed .sheet-body`, see below).
+ */
+
+/*
+ * docs / slides / pdf: the sidebar.
+ *
+ * The width lives on the DOCK, not on the panel inside it
+ * (`.ai-dock { width: var(--ai-panel-width, 360px); flex-shrink: 0 }`), so
+ * replacing the panel's contents alone would have left a 360px empty column —
+ * which is exactly what it looked like before this.
+ *
+ * The collapsed rail goes with it: it is inside the dock and is itself another
+ * Genspark entry point.
+ */
+.ai-dock,
+.ai-rail {
+  display: none !important;
+}
+
+/*
+ * The ribbon's AI groups, across all four apps.
+ *
+ * Every button in them carries `ai-entry`, so `:has` picks out exactly those
+ * groups — and with them the "Genspark AI" caption. The group element is spelled
+ * differently per app (`<div className="ribbon-group">` in docs and pdf,
+ * `<Group>` in slides, `<RibbonGroup>` in sheets) but all three render
+ * `ribbon-group`, so one selector covers them.
+ */
+.ribbon-group:has(.ai-entry) {
+  display: none !important;
+}
+
+/* slides: the floating AI bar pinned over the canvas. */
+.stage-ai-bar {
+  display: none !important;
+}
+
+/* The selection popovers ("ask about this") in all four apps. The trigger is the
+   affordance that appears next to a selection; the pop is the panel it opens. */
+.ai-ask-trigger,
+.ai-ask-pop {
+  display: none !important;
+}
+
+/*
+ * sheets: its panel is a GRID COLUMN, not a floated dock —
+ * `.sheet-body { grid-template-columns: var(--copilot-width, 360px) minmax(0, 1fr) }`.
+ * Hiding the panel would leave that first track empty and 360px wide, so the
+ * track itself has to collapse. This also overrides the `.copilot-collapsed`
+ * variant, which would otherwise keep a 34px rail.
+ */
+.app-shell .sheet-body {
+  grid-template-columns: minmax(0, 1fr) !important;
+}

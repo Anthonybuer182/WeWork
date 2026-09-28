@@ -18,7 +18,6 @@
         "kind": "iframe",
         "title": "文件查看器",
         "entry": "./ui-dist/panel/index.html",
-        "hidden": true,
         "keepAlive": "lru"
       }
     ],

@@ -11,3 +11,6 @@ export {
   createRealFileService,
   createRealConfigService,
 };
+
+export type { PluginDoc, RealChatServiceOptions } from './chat.js';
+export { formatPluginDocsForPrompt } from './chat.js';

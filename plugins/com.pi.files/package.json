@@ -10,6 +10,7 @@
     "build:ui": "node build-ui.mjs",
     "test": "node scripts/run-tests.mjs",
     "test:backend": "node scripts/smoke-backend.mjs",
+    "typecheck": "node scripts/typecheck.mjs",
     "vendor": "node scripts/vendor-genoffice.mjs",
     "vendor:check": "node scripts/vendor-genoffice.mjs --check",
     "build:panel": "node scripts/build-panel.mjs"
@@ -19,11 +20,27 @@
   },
   "dependencies": {
     "@embedpdf/pdfium": "^2.15.1",
+    "@fluentui/react-icons": "^2.0.341",
     "@noble/hashes": "^2.4.0",
     "@tiptap/core": "3.31.0",
     "@tiptap/extensions": "3.31.0",
     "@tiptap/pm": "3.31.0",
     "@tiptap/react": "3.31.0",
+    "@univerjs/core": "^0.25.1",
+    "@univerjs/data-validation": "^0.25.1",
+    "@univerjs/engine-render": "^0.25.1",
+    "@univerjs/find-replace": "^0.25.1",
+    "@univerjs/preset-sheets-conditional-formatting": "^0.25.1",
+    "@univerjs/preset-sheets-core": "^0.25.1",
+    "@univerjs/preset-sheets-data-validation": "^0.25.1",
+    "@univerjs/preset-sheets-drawing": "^0.25.1",
+    "@univerjs/preset-sheets-filter": "^0.25.1",
+    "@univerjs/preset-sheets-find-replace": "^0.25.1",
+    "@univerjs/preset-sheets-note": "^0.25.1",
+    "@univerjs/preset-sheets-sort": "^0.25.1",
+    "@univerjs/preset-sheets-table": "^0.25.1",
+    "@univerjs/sheets-filter": "^0.25.1",
+    "@univerjs/themes": "^0.25.1",
     "bidi-js": "^1.0.3",
     "buffer": "^6.0.3",
     "fast-xml-parser": "^5.3.4",
@@ -38,6 +55,7 @@
     "react-dom": "^19.3.0",
     "react-konva": "^19.3.0",
     "utif2": "^4.1.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.6.5"
   }
 }

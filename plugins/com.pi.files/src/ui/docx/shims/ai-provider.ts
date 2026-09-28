@@ -66,3 +66,9 @@ export interface GenSparkAccountStatus {
   email?: string | null;
   [key: string]: unknown;
 }
+
+/** Whether GenOffice's provider layer can generate images. The plugin has no
+ *  provider layer — the host owns models — so this is always false. */
+export function imageGenerationAvailable(..._args: unknown[]): boolean {
+  return false;
+}

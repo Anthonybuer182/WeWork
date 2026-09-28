@@ -125,7 +125,11 @@ export async function readDocument(path: string): Promise<{
   const res = await fetch(wsFileUrl(path));
   if (!res.ok) throw new Error(`cannot read ${path}: ${res.status} ${res.statusText}`);
   const data = await res.arrayBuffer();
-  const meta = await backend<{ mtime?: number }>('file.stat', { path }).catch(() => ({}));
+  // The fallback is annotated, not left as `{}`: an unannotated `() => ({})`
+  // widens the awaited type to `{ mtime?: number } | {}`, and reading `.mtime`
+  // off that union is an error on the `{}` branch.
+  const meta = await backend<{ mtime?: number }>('file.stat', { path })
+    .catch((): { mtime?: number } => ({}));
   return {
     path,
     name: baseName(path),
@@ -151,7 +155,9 @@ export function commonApi(): Record<string, unknown> {
     getAutoSaveDefault: async () => 'on',
     onAutoSaveDefaultChanged: (h: (v: string) => void) => signals.autoSave.on(h),
 
-    // AI: the host's agent owns this. See AiPanel.tsx for the panel itself.
+    // AI: the host's agent owns this, and the panel that would consume these
+    // prefs is replaced by nothing — see src/ui/ai/no-ai-surface.tsx. The apps
+    // still call them during boot, so they have to answer; the values are inert.
     getAiPanelPrefs: async () => ({}),
     setAiPanelPrefs: async (p: unknown) => p,
     onAiPanelPrefsChanged: () => () => undefined,
