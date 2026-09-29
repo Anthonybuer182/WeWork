@@ -33,6 +33,8 @@ const APPS = {
   pdf: { file: 'apps/pdf/src/shared/ipc.ts', iface: 'PdfApi', global: 'pdfApi' },
   slides: { file: 'apps/slides/src/shared/ipc.ts', iface: 'SlidesApi', global: 'slidesApi' },
   sheets: { file: 'apps/sheets/src/shared/desktop-api.ts', iface: 'DesktopApi', global: 'desktopApi' },
+  markdown: { file: 'apps/markdown/src/shared/ipc.ts', iface: 'MarkdownApi', global: 'markdownApi' },
+  html: { file: 'apps/html/src/shared/ipc.ts', iface: 'HtmlApi', global: 'htmlApi' },
 };
 
 const app = process.argv[2];

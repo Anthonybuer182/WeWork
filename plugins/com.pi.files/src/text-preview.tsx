@@ -30,15 +30,30 @@ export interface TextPreviewInput {
  * `.ai-md-*` blocks; these wrap them and style the plain-text branches.
  * Colours come from the host's theme tokens (injected into every panel), with
  * fallbacks so the panel still reads on its own.
+ *
+ * The tokens are HSL COMPONENTS — the host sends `--foreground: 222.2 84% 4.9%`
+ * — so each one has to be wrapped in `hsl()`. Written bare, `var(--foreground)`
+ * substitutes a value that is not a colour: the declaration is dropped as
+ * invalid at computed-value time, the `var()` fallback does NOT apply (it only
+ * fires for an UNDEFINED variable), and the property silently inherits. That is
+ * how these previews ended up with the legacy shell's colours instead of the
+ * host's.
  */
 const LAYOUT_CSS = `
-.pi-txt-root { height: 100%; overflow: auto; }
-.pi-txt { padding: 16px 20px 40px; font: 13px/1.6 -apple-system, "PingFang SC", sans-serif; color: var(--foreground, #e6e9ef); }
-.pi-txt-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border, #2a2f3a); }
+/* GenOffice's markdown.css styles its table headers and fenced code with ITS
+   OWN token names (--surface-subtle, --color-bg-subtle), which the app that
+   normally provides them is not here to define — so those two backgrounds were
+   resolving to nothing. Point them at the host's muted surface. */
+.pi-txt-root { height: 100%; overflow: auto;
+  --surface-subtle: hsl(var(--muted, 210 40% 96.1%));
+  --color-bg-subtle: hsl(var(--muted, 210 40% 96.1%));
+}
+.pi-txt { padding: 16px 20px 40px; font: 13px/1.6 -apple-system, "PingFang SC", sans-serif; color: hsl(var(--foreground, 222.2 84% 4.9%)); }
+.pi-txt-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid hsl(var(--border, 214.3 31.8% 91.4%)); }
 .pi-txt-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pi-txt-meta { color: var(--muted-foreground, #8b93a3); font-size: 11px; flex: none; }
+.pi-txt-meta { color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%)); font-size: 11px; flex: none; }
 .pi-txt-md { max-width: 780px; }
-.pi-txt-pre { white-space: pre-wrap; word-break: break-word; font: 12px/1.55 ui-monospace, "SF Mono", Menlo, monospace; background: var(--card, #171a21); border: 1px solid var(--border, #2a2f3a); border-radius: 6px; padding: 12px 14px; overflow: auto; margin: 0; }
+.pi-txt-pre { white-space: pre-wrap; word-break: break-word; font: 12px/1.55 ui-monospace, "SF Mono", Menlo, monospace; background: hsl(var(--muted, 210 40% 96.1%)); border: 1px solid hsl(var(--border, 214.3 31.8% 91.4%)); border-radius: 6px; padding: 12px 14px; overflow: auto; margin: 0; }
 .pi-txt-error { color: var(--err, #f87171); padding: 12px 0; }
 `;
 

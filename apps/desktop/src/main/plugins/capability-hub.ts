@@ -1,4 +1,5 @@
-import { app, Notification, net } from 'electron';
+import { app, BrowserWindow, dialog, Notification, net } from 'electron';
+import type { OpenDialogOptions, SaveDialogOptions } from 'electron';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import type { CapabilityMethod, PluginEvent, PluginPanelStatus } from '@pi/types';
@@ -141,6 +142,56 @@ export class CapabilityHub {
         const focus = params.focus === true;
         this.emitEvent({ type: 'panel-open', pluginId, panelId, focus });
         return { ok: true, panelId, focus };
+      },
+    });
+
+    // ── dialog.openFile / dialog.saveFile (always allowed) ──
+    //
+    // Deliberately unpermissioned, for the same reason `chat.send` is: the user
+    // is the one who answers. A plugin cannot name a path — it can only put a
+    // native picker in front of the user and receive what the user picks, which
+    // is exactly the authorization. There is nothing here for a manifest to
+    // pre-approve.
+    //
+    // Without this, a plugin had no way at all to ask for a path: the panel-side
+    // shim (`com.pi.files/src/ui/docx/desktop-shim.ts`) has always called
+    // `file.pickOpenPath` / `file.pickSavePath`, and the plugin backend answered
+    // `unknown ui request` — so "open" and "save as" silently did nothing.
+    this.capabilities.set('dialog.openFile', {
+      handler: async ({ params }) => {
+        const options: OpenDialogOptions = {
+          properties: params.multi === true ? ['openFile', 'multiSelections'] : ['openFile'],
+          ...(typeof params.title === 'string' ? { title: params.title.slice(0, 120) } : {}),
+          ...(sanitizeFilters(params.filters) ? { filters: sanitizeFilters(params.filters) } : {}),
+        };
+        const window = dialogParentWindow();
+        const result = window
+          ? await dialog.showOpenDialog(window, options)
+          : await dialog.showOpenDialog(options);
+        return {
+          canceled: result.canceled,
+          path: result.canceled ? null : (result.filePaths[0] ?? null),
+          paths: result.canceled ? [] : result.filePaths,
+        };
+      },
+    });
+    this.capabilities.set('dialog.saveFile', {
+      handler: async ({ params }) => {
+        const defaultName =
+          typeof params.defaultName === 'string' ? params.defaultName.slice(0, 200) : '';
+        const options: SaveDialogOptions = {
+          ...(typeof params.title === 'string' ? { title: params.title.slice(0, 120) } : {}),
+          ...(defaultName ? { defaultPath: defaultName } : {}),
+          ...(typeof params.defaultPath === 'string'
+            ? { defaultPath: params.defaultPath.slice(0, 1000) }
+            : {}),
+          ...(sanitizeFilters(params.filters) ? { filters: sanitizeFilters(params.filters) } : {}),
+        };
+        const window = dialogParentWindow();
+        const result = window
+          ? await dialog.showSaveDialog(window, options)
+          : await dialog.showSaveDialog(options);
+        return { canceled: result.canceled, path: result.canceled ? null : (result.filePath ?? null) };
       },
     });
 
@@ -353,4 +404,44 @@ function hostMatches(hostname: string, pattern: string): boolean {
   if (patternParts.length > parts.length) return false;
   const offset = parts.length - patternParts.length;
   return patternParts.every((p, i) => p === '*' || p === parts[offset + i]);
+}
+
+/**
+ * The window a plugin's dialog should hang off.
+ *
+ * Parented where possible so the picker is a sheet on the app rather than a
+ * free-floating window that can end up behind it — but never required: a dialog
+ * with no parent still works, so a plugin calling during startup is not an
+ * error.
+ */
+function dialogParentWindow(): BrowserWindow | undefined {
+  return BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+}
+
+/**
+ * A plugin-supplied filter list, reduced to something Electron will accept.
+ *
+ * The shapes differ enough to matter: Electron wants `{ name, extensions }`
+ * with bare extensions, while a plugin is likely to write what its own file
+ * pickers use — `.docx` with the dot, or a bare extension string. A malformed
+ * entry makes `showOpenDialog` throw, which would surface to the user as a
+ * broken picker, so bad entries are dropped rather than passed through.
+ */
+function sanitizeFilters(raw: unknown): { name: string; extensions: string[] }[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out: { name: string; extensions: string[] }[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const name = String((entry as { name?: unknown }).name ?? '').slice(0, 80);
+    const extensions = (entry as { extensions?: unknown }).extensions;
+    if (!name || !Array.isArray(extensions)) continue;
+    const cleaned = extensions
+      .filter((e): e is string => typeof e === 'string')
+      .map((e) => e.replace(/^\.+/, '').trim())
+      .filter(Boolean)
+      .slice(0, 30);
+    if (cleaned.length > 0) out.push({ name, extensions: cleaned });
+    if (out.length >= 12) break;
+  }
+  return out.length > 0 ? out : undefined;
 }

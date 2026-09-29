@@ -44,6 +44,36 @@ export function backend<T>(method: string, params: Record<string, unknown> = {})
 export const wsFileUrl = (path: string): string =>
   `pi-plugin://${PLUGIN_ID}/ws-file?path=${encodeURIComponent(path)}`;
 
+/**
+ * Write UTF-8 text through the plugin backend.
+ *
+ * `file.write` takes base64 of the BYTES under the key `base64` — the same call
+ * carries a .docx, so a text round-trip through a JS string would mangle
+ * anything outside Latin-1. Two things went wrong when each shim rolled its own:
+ * one passed `content` (the backend reads `base64`, so the file was written
+ * empty — a silent 0-byte write, not an error), and `btoa(text)` throws on CJK.
+ * Encoding here, once, is so neither can happen again.
+ */
+export async function writeTextFile(
+  path: string,
+  text: string,
+  expectedMtime?: number,
+): Promise<unknown> {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  // Chunked: `String.fromCharCode(...bytes)` on a large buffer overflows the
+  // argument stack, and these can be whole documents.
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return backend('file.write', {
+    path,
+    base64: btoa(binary),
+    ...(expectedMtime !== undefined ? { expectedMtime } : {}),
+  });
+}
+
 export const baseName = (path: string): string => path.split('/').pop() ?? path;
 
 export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
@@ -218,8 +248,39 @@ export function readPersistedPath(): string {
  * Returns 'reloading' when the panel is being reloaded for a different format,
  * or null when the caller should handle the file itself.
  */
-export function reloadForOtherFormat(path: string, myExts: readonly string[]): 'reloading' | null {
-  if (myExts.includes(extOf(path))) return null;
+/**
+ * Decide what to do when the host hands this panel a new file.
+ *
+ * Returns `'reloading'` when it has taken over — the caller must stop, because
+ * the page is going away.
+ *
+ * ## Why a same-format switch reloads
+ *
+ * The panel is keepAlive, so the mounted renderer stays mounted. Two files of
+ * the SAME format could therefore be handed straight to it… but only docs can
+ * actually take one: it has an `onOpenDocx` channel and an in-place open path.
+ * The other five (sheets, slides, pdf, markdown, html) have neither, so a second
+ * file used to arrive, be recorded, and change nothing — the panel kept showing
+ * the FIRST file indefinitely, which reads as the viewer hanging on click.
+ *
+ * Reloading is the one mechanism that already works for every renderer (a
+ * cross-format switch has always done it, measured at ~120–350 ms), so it is
+ * what they get. The cost is the panel's in-memory state — scroll position, an
+ * unsaved edit — which is why `handlesSameFormat` exists for the one renderer
+ * that can do better.
+ */
+export function reloadForOtherFormat(
+  path: string,
+  myExts: readonly string[],
+  opts: { handlesSameFormat?: boolean } = {},
+): 'reloading' | null {
+  const own = myExts.includes(extOf(path));
+  if (own) {
+    if (opts.handlesSameFormat) return null; // the shim opens it in place
+    // Nothing to do if this is the file already on screen — the host can repeat
+    // a `ui.render` for the same path, and reloading on that would loop.
+    if (readPersistedPath() === path) return null;
+  }
   persistPendingPath(path);
   location.reload();
   return 'reloading';

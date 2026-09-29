@@ -15,9 +15,10 @@
  *         (no args = every tests/*.ts)
  */
 import { build } from 'esbuild';
+import { spawnSync } from 'node:child_process';
 import { readdirSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const VENDOR = join(ROOT, 'vendor', 'genoffice');
@@ -86,11 +87,19 @@ for (const name of names) {
   });
 
   console.log(`\n━━━ ${name} ${'━'.repeat(Math.max(0, 50 - name.length))}`);
-  try {
-    await import(pathToFileURL(outfile).href);
-  } catch (err) {
+
+  // Each test runs in its OWN process, for one reason: a test file naturally
+  // ends with `process.exit(failures ? 1 : 0)`, and importing it into this
+  // process lets that exit take the whole run down with it. It did — the first
+  // file alphabetically called an unconditional exit, so every test after it
+  // was silently skipped while the runner still reported success. Spawning
+  // contains the exit and makes its code the result.
+  const result = spawnSync(process.execPath, [outfile], { stdio: 'inherit' });
+  if (result.status !== 0) {
     failed++;
-    console.error(`  ✗ threw: ${err?.stack ?? err}`);
+    if (result.error) console.error(`  ✗ could not run: ${result.error.message}`);
+    else if (result.signal) console.error(`  ✗ killed by ${result.signal}`);
+    else console.error(`  ✗ exited ${result.status}`);
   }
 }
 

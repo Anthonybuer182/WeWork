@@ -39,9 +39,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// node_modules/process-nextick-args/index.js
+// ../../node_modules/.pnpm/process-nextick-args@2.0.1/node_modules/process-nextick-args/index.js
 var require_process_nextick_args = __commonJS({
-  "node_modules/process-nextick-args/index.js"(exports2, module) {
+  "../../node_modules/.pnpm/process-nextick-args@2.0.1/node_modules/process-nextick-args/index.js"(exports2, module) {
     "use strict";
     if (typeof process === "undefined" || !process.version || process.version.indexOf("v0.") === 0 || process.version.indexOf("v1.") === 0 && process.version.indexOf("v1.8.") !== 0) {
       module.exports = { nextTick };
@@ -85,9 +85,9 @@ var require_process_nextick_args = __commonJS({
   }
 });
 
-// node_modules/isarray/index.js
+// ../../node_modules/.pnpm/isarray@1.0.0/node_modules/isarray/index.js
 var require_isarray = __commonJS({
-  "node_modules/isarray/index.js"(exports2, module) {
+  "../../node_modules/.pnpm/isarray@1.0.0/node_modules/isarray/index.js"(exports2, module) {
     var toString = {}.toString;
     module.exports = Array.isArray || function(arr) {
       return toString.call(arr) == "[object Array]";
@@ -95,16 +95,16 @@ var require_isarray = __commonJS({
   }
 });
 
-// node_modules/readable-stream/lib/internal/streams/stream.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/stream.js
 var require_stream = __commonJS({
-  "node_modules/readable-stream/lib/internal/streams/stream.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/stream.js"(exports2, module) {
     module.exports = __require("stream");
   }
 });
 
-// node_modules/safe-buffer/index.js
+// ../../node_modules/.pnpm/safe-buffer@5.1.2/node_modules/safe-buffer/index.js
 var require_safe_buffer = __commonJS({
-  "node_modules/safe-buffer/index.js"(exports2, module) {
+  "../../node_modules/.pnpm/safe-buffer@5.1.2/node_modules/safe-buffer/index.js"(exports2, module) {
     var buffer = __require("buffer");
     var Buffer2 = buffer.Buffer;
     function copyProps(src, dst) {
@@ -161,9 +161,9 @@ var require_safe_buffer = __commonJS({
   }
 });
 
-// node_modules/core-util-is/lib/util.js
+// ../../node_modules/.pnpm/core-util-is@1.0.3/node_modules/core-util-is/lib/util.js
 var require_util = __commonJS({
-  "node_modules/core-util-is/lib/util.js"(exports2) {
+  "../../node_modules/.pnpm/core-util-is@1.0.3/node_modules/core-util-is/lib/util.js"(exports2) {
     function isArray(arg) {
       if (Array.isArray) {
         return Array.isArray(arg);
@@ -246,9 +246,9 @@ var require_util = __commonJS({
   }
 });
 
-// node_modules/inherits/inherits_browser.js
+// ../../node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits_browser.js
 var require_inherits_browser = __commonJS({
-  "node_modules/inherits/inherits_browser.js"(exports2, module) {
+  "../../node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits_browser.js"(exports2, module) {
     if (typeof Object.create === "function") {
       module.exports = /* @__PURE__ */ __name(function inherits(ctor, superCtor) {
         if (superCtor) {
@@ -278,9 +278,9 @@ var require_inherits_browser = __commonJS({
   }
 });
 
-// node_modules/inherits/inherits.js
+// ../../node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits.js
 var require_inherits = __commonJS({
-  "node_modules/inherits/inherits.js"(exports2, module) {
+  "../../node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits.js"(exports2, module) {
     try {
       util = __require("util");
       if (typeof util.inherits !== "function") throw "";
@@ -292,9 +292,9 @@ var require_inherits = __commonJS({
   }
 });
 
-// node_modules/readable-stream/lib/internal/streams/BufferList.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/BufferList.js
 var require_BufferList = __commonJS({
-  "node_modules/readable-stream/lib/internal/streams/BufferList.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/BufferList.js"(exports2, module) {
     "use strict";
     function _classCallCheck(instance, Constructor) {
       if (!(instance instanceof Constructor)) {
@@ -341,7 +341,7 @@ var require_BufferList = __commonJS({
         this.head = this.tail = null;
         this.length = 0;
       }, "clear");
-      BufferList.prototype.join = /* @__PURE__ */ __name(function join4(s) {
+      BufferList.prototype.join = /* @__PURE__ */ __name(function join5(s) {
         if (this.length === 0) return "";
         var p = this.head;
         var ret = "" + p.data;
@@ -373,9 +373,9 @@ var require_BufferList = __commonJS({
   }
 });
 
-// node_modules/readable-stream/lib/internal/streams/destroy.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/destroy.js
 var require_destroy = __commonJS({
-  "node_modules/readable-stream/lib/internal/streams/destroy.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/destroy.js"(exports2, module) {
     "use strict";
     var pna = require_process_nextick_args();
     function destroy(err, cb) {
@@ -445,16 +445,16 @@ var require_destroy = __commonJS({
   }
 });
 
-// node_modules/util-deprecate/node.js
+// ../../node_modules/.pnpm/util-deprecate@1.0.2/node_modules/util-deprecate/node.js
 var require_node = __commonJS({
-  "node_modules/util-deprecate/node.js"(exports2, module) {
+  "../../node_modules/.pnpm/util-deprecate@1.0.2/node_modules/util-deprecate/node.js"(exports2, module) {
     module.exports = __require("util").deprecate;
   }
 });
 
-// node_modules/readable-stream/lib/_stream_writable.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_writable.js
 var require_stream_writable = __commonJS({
-  "node_modules/readable-stream/lib/_stream_writable.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_writable.js"(exports2, module) {
     "use strict";
     var pna = require_process_nextick_args();
     module.exports = Writable;
@@ -915,9 +915,9 @@ var require_stream_writable = __commonJS({
   }
 });
 
-// node_modules/readable-stream/lib/_stream_duplex.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_duplex.js
 var require_stream_duplex = __commonJS({
-  "node_modules/readable-stream/lib/_stream_duplex.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_duplex.js"(exports2, module) {
     "use strict";
     var pna = require_process_nextick_args();
     var objectKeys = Object.keys || function(obj) {
@@ -995,9 +995,9 @@ var require_stream_duplex = __commonJS({
   }
 });
 
-// node_modules/string_decoder/lib/string_decoder.js
+// ../../node_modules/.pnpm/string_decoder@1.1.1/node_modules/string_decoder/lib/string_decoder.js
 var require_string_decoder = __commonJS({
-  "node_modules/string_decoder/lib/string_decoder.js"(exports2) {
+  "../../node_modules/.pnpm/string_decoder@1.1.1/node_modules/string_decoder/lib/string_decoder.js"(exports2) {
     "use strict";
     var Buffer2 = require_safe_buffer().Buffer;
     var isEncoding = Buffer2.isEncoding || function(encoding) {
@@ -1248,9 +1248,9 @@ var require_string_decoder = __commonJS({
   }
 });
 
-// node_modules/readable-stream/lib/_stream_readable.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_readable.js
 var require_stream_readable = __commonJS({
-  "node_modules/readable-stream/lib/_stream_readable.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_readable.js"(exports2, module) {
     "use strict";
     var pna = require_process_nextick_args();
     module.exports = Readable;
@@ -1970,9 +1970,9 @@ var require_stream_readable = __commonJS({
   }
 });
 
-// node_modules/readable-stream/lib/_stream_transform.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_transform.js
 var require_stream_transform = __commonJS({
-  "node_modules/readable-stream/lib/_stream_transform.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_transform.js"(exports2, module) {
     "use strict";
     module.exports = Transform;
     var Duplex = require_stream_duplex();
@@ -2074,9 +2074,9 @@ var require_stream_transform = __commonJS({
   }
 });
 
-// node_modules/readable-stream/lib/_stream_passthrough.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_passthrough.js
 var require_stream_passthrough = __commonJS({
-  "node_modules/readable-stream/lib/_stream_passthrough.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_passthrough.js"(exports2, module) {
     "use strict";
     module.exports = PassThrough;
     var Transform = require_stream_transform();
@@ -2094,9 +2094,9 @@ var require_stream_passthrough = __commonJS({
   }
 });
 
-// node_modules/readable-stream/readable.js
+// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/readable.js
 var require_readable = __commonJS({
-  "node_modules/readable-stream/readable.js"(exports2, module) {
+  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/readable.js"(exports2, module) {
     var Stream = __require("stream");
     if (process.env.READABLE_STREAM === "disable" && Stream) {
       module.exports = Stream;
@@ -2119,9 +2119,9 @@ var require_readable = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/support.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/support.js
 var require_support = __commonJS({
-  "node_modules/jszip/lib/support.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/support.js"(exports2) {
     "use strict";
     exports2.base64 = true;
     exports2.array = true;
@@ -2159,9 +2159,9 @@ var require_support = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/base64.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/base64.js
 var require_base64 = __commonJS({
-  "node_modules/jszip/lib/base64.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/base64.js"(exports2) {
     "use strict";
     var utils = require_utils();
     var support = require_support();
@@ -2236,9 +2236,9 @@ var require_base64 = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/nodejsUtils.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejsUtils.js
 var require_nodejsUtils = __commonJS({
-  "node_modules/jszip/lib/nodejsUtils.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejsUtils.js"(exports2, module) {
     "use strict";
     module.exports = {
       /**
@@ -2292,9 +2292,9 @@ var require_nodejsUtils = __commonJS({
   }
 });
 
-// node_modules/immediate/lib/index.js
+// ../../node_modules/.pnpm/immediate@3.0.6/node_modules/immediate/lib/index.js
 var require_lib = __commonJS({
-  "node_modules/immediate/lib/index.js"(exports2, module) {
+  "../../node_modules/.pnpm/immediate@3.0.6/node_modules/immediate/lib/index.js"(exports2, module) {
     "use strict";
     var Mutation = global.MutationObserver || global.WebKitMutationObserver;
     var scheduleDrain;
@@ -2368,9 +2368,9 @@ var require_lib = __commonJS({
   }
 });
 
-// node_modules/lie/lib/index.js
+// ../../node_modules/.pnpm/lie@3.3.0/node_modules/lie/lib/index.js
 var require_lib2 = __commonJS({
-  "node_modules/lie/lib/index.js"(exports2, module) {
+  "../../node_modules/.pnpm/lie@3.3.0/node_modules/lie/lib/index.js"(exports2, module) {
     "use strict";
     var immediate = require_lib();
     function INTERNAL() {
@@ -2659,9 +2659,9 @@ var require_lib2 = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/external.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/external.js
 var require_external = __commonJS({
-  "node_modules/jszip/lib/external.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/external.js"(exports2, module) {
     "use strict";
     var ES6Promise = null;
     if (typeof Promise !== "undefined") {
@@ -2675,9 +2675,9 @@ var require_external = __commonJS({
   }
 });
 
-// node_modules/setimmediate/setImmediate.js
+// ../../node_modules/.pnpm/setimmediate@1.0.5/node_modules/setimmediate/setImmediate.js
 var require_setImmediate = __commonJS({
-  "node_modules/setimmediate/setImmediate.js"(exports2) {
+  "../../node_modules/.pnpm/setimmediate@1.0.5/node_modules/setimmediate/setImmediate.js"(exports2) {
     (function(global2, undefined2) {
       "use strict";
       if (global2.setImmediate) {
@@ -2833,9 +2833,9 @@ var require_setImmediate = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/utils.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/utils.js
 var require_utils = __commonJS({
-  "node_modules/jszip/lib/utils.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/utils.js"(exports2) {
     "use strict";
     var support = require_support();
     var base64 = require_base64();
@@ -3163,9 +3163,9 @@ var require_utils = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/stream/GenericWorker.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/GenericWorker.js
 var require_GenericWorker = __commonJS({
-  "node_modules/jszip/lib/stream/GenericWorker.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/GenericWorker.js"(exports2, module) {
     "use strict";
     function GenericWorker(name) {
       this.name = name || "default";
@@ -3391,9 +3391,9 @@ var require_GenericWorker = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/utf8.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/utf8.js
 var require_utf8 = __commonJS({
-  "node_modules/jszip/lib/utf8.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/utf8.js"(exports2) {
     "use strict";
     var utils = require_utils();
     var support = require_support();
@@ -3583,9 +3583,9 @@ var require_utf8 = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/stream/ConvertWorker.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/ConvertWorker.js
 var require_ConvertWorker = __commonJS({
-  "node_modules/jszip/lib/stream/ConvertWorker.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/ConvertWorker.js"(exports2, module) {
     "use strict";
     var GenericWorker = require_GenericWorker();
     var utils = require_utils();
@@ -3605,9 +3605,9 @@ var require_ConvertWorker = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/nodejs/NodejsStreamOutputAdapter.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejs/NodejsStreamOutputAdapter.js
 var require_NodejsStreamOutputAdapter = __commonJS({
-  "node_modules/jszip/lib/nodejs/NodejsStreamOutputAdapter.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejs/NodejsStreamOutputAdapter.js"(exports2, module) {
     "use strict";
     var Readable = require_readable().Readable;
     var utils = require_utils();
@@ -3637,9 +3637,9 @@ var require_NodejsStreamOutputAdapter = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/stream/StreamHelper.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/StreamHelper.js
 var require_StreamHelper = __commonJS({
-  "node_modules/jszip/lib/stream/StreamHelper.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/StreamHelper.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var ConvertWorker = require_ConvertWorker();
@@ -3801,9 +3801,9 @@ var require_StreamHelper = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/defaults.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/defaults.js
 var require_defaults = __commonJS({
-  "node_modules/jszip/lib/defaults.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/defaults.js"(exports2) {
     "use strict";
     exports2.base64 = false;
     exports2.binary = false;
@@ -3818,9 +3818,9 @@ var require_defaults = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/stream/DataWorker.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/DataWorker.js
 var require_DataWorker = __commonJS({
-  "node_modules/jszip/lib/stream/DataWorker.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/DataWorker.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var GenericWorker = require_GenericWorker();
@@ -3907,9 +3907,9 @@ var require_DataWorker = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/crc32.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/crc32.js
 var require_crc32 = __commonJS({
-  "node_modules/jszip/lib/crc32.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/crc32.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     function makeTable() {
@@ -3957,9 +3957,9 @@ var require_crc32 = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/stream/Crc32Probe.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/Crc32Probe.js
 var require_Crc32Probe = __commonJS({
-  "node_modules/jszip/lib/stream/Crc32Probe.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/Crc32Probe.js"(exports2, module) {
     "use strict";
     var GenericWorker = require_GenericWorker();
     var crc322 = require_crc32();
@@ -3978,9 +3978,9 @@ var require_Crc32Probe = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/stream/DataLengthProbe.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/DataLengthProbe.js
 var require_DataLengthProbe = __commonJS({
-  "node_modules/jszip/lib/stream/DataLengthProbe.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/DataLengthProbe.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var GenericWorker = require_GenericWorker();
@@ -4002,9 +4002,9 @@ var require_DataLengthProbe = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/compressedObject.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/compressedObject.js
 var require_compressedObject = __commonJS({
-  "node_modules/jszip/lib/compressedObject.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/compressedObject.js"(exports2, module) {
     "use strict";
     var external = require_external();
     var DataWorker = require_DataWorker();
@@ -4048,9 +4048,9 @@ var require_compressedObject = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/zipObject.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipObject.js
 var require_zipObject = __commonJS({
-  "node_modules/jszip/lib/zipObject.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipObject.js"(exports2, module) {
     "use strict";
     var StreamHelper = require_StreamHelper();
     var DataWorker = require_DataWorker();
@@ -4165,9 +4165,9 @@ var require_zipObject = __commonJS({
   }
 });
 
-// node_modules/pako/lib/utils/common.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/utils/common.js
 var require_common = __commonJS({
-  "node_modules/pako/lib/utils/common.js"(exports2) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/utils/common.js"(exports2) {
     "use strict";
     var TYPED_OK = typeof Uint8Array !== "undefined" && typeof Uint16Array !== "undefined" && typeof Int32Array !== "undefined";
     function _has(obj, key) {
@@ -4257,9 +4257,9 @@ var require_common = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/trees.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/trees.js
 var require_trees = __commonJS({
-  "node_modules/pako/lib/zlib/trees.js"(exports2) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/trees.js"(exports2) {
     "use strict";
     var utils = require_common();
     var Z_FIXED = 4;
@@ -4928,9 +4928,9 @@ var require_trees = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/adler32.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/adler32.js
 var require_adler32 = __commonJS({
-  "node_modules/pako/lib/zlib/adler32.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/adler32.js"(exports2, module) {
     "use strict";
     function adler32(adler, buf, len, pos) {
       var s1 = adler & 65535 | 0, s2 = adler >>> 16 & 65535 | 0, n = 0;
@@ -4951,9 +4951,9 @@ var require_adler32 = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/crc32.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/crc32.js
 var require_crc322 = __commonJS({
-  "node_modules/pako/lib/zlib/crc32.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/crc32.js"(exports2, module) {
     "use strict";
     function makeTable() {
       var c, table = [];
@@ -4981,9 +4981,9 @@ var require_crc322 = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/messages.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/messages.js
 var require_messages = __commonJS({
-  "node_modules/pako/lib/zlib/messages.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/messages.js"(exports2, module) {
     "use strict";
     module.exports = {
       2: "need dictionary",
@@ -5008,9 +5008,9 @@ var require_messages = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/deflate.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/deflate.js
 var require_deflate = __commonJS({
-  "node_modules/pako/lib/zlib/deflate.js"(exports2) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/deflate.js"(exports2) {
     "use strict";
     var utils = require_common();
     var trees = require_trees();
@@ -6083,9 +6083,9 @@ var require_deflate = __commonJS({
   }
 });
 
-// node_modules/pako/lib/utils/strings.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/utils/strings.js
 var require_strings = __commonJS({
-  "node_modules/pako/lib/utils/strings.js"(exports2) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/utils/strings.js"(exports2) {
     "use strict";
     var utils = require_common();
     var STR_APPLY_OK = true;
@@ -6226,9 +6226,9 @@ var require_strings = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/zstream.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/zstream.js
 var require_zstream = __commonJS({
-  "node_modules/pako/lib/zlib/zstream.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/zstream.js"(exports2, module) {
     "use strict";
     function ZStream() {
       this.input = null;
@@ -6249,9 +6249,9 @@ var require_zstream = __commonJS({
   }
 });
 
-// node_modules/pako/lib/deflate.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/deflate.js
 var require_deflate2 = __commonJS({
-  "node_modules/pako/lib/deflate.js"(exports2) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/deflate.js"(exports2) {
     "use strict";
     var zlib_deflate = require_deflate();
     var utils = require_common();
@@ -6414,9 +6414,9 @@ var require_deflate2 = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/inffast.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inffast.js
 var require_inffast = __commonJS({
-  "node_modules/pako/lib/zlib/inffast.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inffast.js"(exports2, module) {
     "use strict";
     var BAD = 30;
     var TYPE = 12;
@@ -6643,9 +6643,9 @@ var require_inffast = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/inftrees.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inftrees.js
 var require_inftrees = __commonJS({
-  "node_modules/pako/lib/zlib/inftrees.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inftrees.js"(exports2, module) {
     "use strict";
     var utils = require_common();
     var MAXBITS = 15;
@@ -6959,9 +6959,9 @@ var require_inftrees = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/inflate.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inflate.js
 var require_inflate = __commonJS({
-  "node_modules/pako/lib/zlib/inflate.js"(exports2) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inflate.js"(exports2) {
     "use strict";
     var utils = require_common();
     var adler32 = require_adler32();
@@ -6998,7 +6998,7 @@ var require_inflate = __commonJS({
     var STORED = 14;
     var COPY_ = 15;
     var COPY = 16;
-    var TABLE2 = 17;
+    var TABLE = 17;
     var LENLENS = 18;
     var CODELENS = 19;
     var LEN_ = 20;
@@ -7595,7 +7595,7 @@ var require_inflate = __commonJS({
                   }
                   break;
                 case 2:
-                  state.mode = TABLE2;
+                  state.mode = TABLE;
                   break;
                 case 3:
                   strm.msg = "invalid block type";
@@ -7653,7 +7653,7 @@ var require_inflate = __commonJS({
               }
               state.mode = TYPE;
               break;
-            case TABLE2:
+            case TABLE:
               while (bits < 14) {
                 if (have === 0) {
                   break inf_leave;
@@ -8211,9 +8211,9 @@ var require_inflate = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/constants.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/constants.js
 var require_constants = __commonJS({
-  "node_modules/pako/lib/zlib/constants.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/constants.js"(exports2, module) {
     "use strict";
     module.exports = {
       /* Allowed flush values; see deflate() and inflate() below for details */
@@ -8258,9 +8258,9 @@ var require_constants = __commonJS({
   }
 });
 
-// node_modules/pako/lib/zlib/gzheader.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/gzheader.js
 var require_gzheader = __commonJS({
-  "node_modules/pako/lib/zlib/gzheader.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/gzheader.js"(exports2, module) {
     "use strict";
     function GZheader() {
       this.text = 0;
@@ -8279,9 +8279,9 @@ var require_gzheader = __commonJS({
   }
 });
 
-// node_modules/pako/lib/inflate.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/inflate.js
 var require_inflate2 = __commonJS({
-  "node_modules/pako/lib/inflate.js"(exports2) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/inflate.js"(exports2) {
     "use strict";
     var zlib_inflate = require_inflate();
     var utils = require_common();
@@ -8456,9 +8456,9 @@ var require_inflate2 = __commonJS({
   }
 });
 
-// node_modules/pako/index.js
+// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/index.js
 var require_pako = __commonJS({
-  "node_modules/pako/index.js"(exports2, module) {
+  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/index.js"(exports2, module) {
     "use strict";
     var assign = require_common().assign;
     var deflate = require_deflate2();
@@ -8470,9 +8470,9 @@ var require_pako = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/flate.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/flate.js
 var require_flate = __commonJS({
-  "node_modules/jszip/lib/flate.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/flate.js"(exports2) {
     "use strict";
     var USE_TYPEDARRAY = typeof Uint8Array !== "undefined" && typeof Uint16Array !== "undefined" && typeof Uint32Array !== "undefined";
     var pako = require_pako();
@@ -8530,9 +8530,9 @@ var require_flate = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/compressions.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/compressions.js
 var require_compressions = __commonJS({
-  "node_modules/jszip/lib/compressions.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/compressions.js"(exports2) {
     "use strict";
     var GenericWorker = require_GenericWorker();
     exports2.STORE = {
@@ -8548,9 +8548,9 @@ var require_compressions = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/signature.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/signature.js
 var require_signature = __commonJS({
-  "node_modules/jszip/lib/signature.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/signature.js"(exports2) {
     "use strict";
     exports2.LOCAL_FILE_HEADER = "PK";
     exports2.CENTRAL_FILE_HEADER = "PK";
@@ -8561,9 +8561,9 @@ var require_signature = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/generate/ZipFileWorker.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/generate/ZipFileWorker.js
 var require_ZipFileWorker = __commonJS({
-  "node_modules/jszip/lib/generate/ZipFileWorker.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/generate/ZipFileWorker.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var GenericWorker = require_GenericWorker();
@@ -8846,9 +8846,9 @@ var require_ZipFileWorker = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/generate/index.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/generate/index.js
 var require_generate = __commonJS({
-  "node_modules/jszip/lib/generate/index.js"(exports2) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/generate/index.js"(exports2) {
     "use strict";
     var compressions = require_compressions();
     var ZipFileWorker = require_ZipFileWorker();
@@ -8887,9 +8887,9 @@ var require_generate = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/nodejs/NodejsStreamInputAdapter.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejs/NodejsStreamInputAdapter.js
 var require_NodejsStreamInputAdapter = __commonJS({
-  "node_modules/jszip/lib/nodejs/NodejsStreamInputAdapter.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejs/NodejsStreamInputAdapter.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var GenericWorker = require_GenericWorker();
@@ -8947,9 +8947,9 @@ var require_NodejsStreamInputAdapter = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/object.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/object.js
 var require_object = __commonJS({
-  "node_modules/jszip/lib/object.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/object.js"(exports2, module) {
     "use strict";
     var utf8 = require_utf8();
     var utils = require_utils();
@@ -9221,9 +9221,9 @@ var require_object = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/reader/DataReader.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/DataReader.js
 var require_DataReader = __commonJS({
-  "node_modules/jszip/lib/reader/DataReader.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/DataReader.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     function DataReader(data) {
@@ -9344,9 +9344,9 @@ var require_DataReader = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/reader/ArrayReader.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/ArrayReader.js
 var require_ArrayReader = __commonJS({
-  "node_modules/jszip/lib/reader/ArrayReader.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/ArrayReader.js"(exports2, module) {
     "use strict";
     var DataReader = require_DataReader();
     var utils = require_utils();
@@ -9387,9 +9387,9 @@ var require_ArrayReader = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/reader/StringReader.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/StringReader.js
 var require_StringReader = __commonJS({
-  "node_modules/jszip/lib/reader/StringReader.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/StringReader.js"(exports2, module) {
     "use strict";
     var DataReader = require_DataReader();
     var utils = require_utils();
@@ -9418,9 +9418,9 @@ var require_StringReader = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/reader/Uint8ArrayReader.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/Uint8ArrayReader.js
 var require_Uint8ArrayReader = __commonJS({
-  "node_modules/jszip/lib/reader/Uint8ArrayReader.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/Uint8ArrayReader.js"(exports2, module) {
     "use strict";
     var ArrayReader = require_ArrayReader();
     var utils = require_utils();
@@ -9442,9 +9442,9 @@ var require_Uint8ArrayReader = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/reader/NodeBufferReader.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/NodeBufferReader.js
 var require_NodeBufferReader = __commonJS({
-  "node_modules/jszip/lib/reader/NodeBufferReader.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/NodeBufferReader.js"(exports2, module) {
     "use strict";
     var Uint8ArrayReader = require_Uint8ArrayReader();
     var utils = require_utils();
@@ -9463,9 +9463,9 @@ var require_NodeBufferReader = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/reader/readerFor.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/readerFor.js
 var require_readerFor = __commonJS({
-  "node_modules/jszip/lib/reader/readerFor.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/readerFor.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var support = require_support();
@@ -9490,9 +9490,9 @@ var require_readerFor = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/zipEntry.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipEntry.js
 var require_zipEntry = __commonJS({
-  "node_modules/jszip/lib/zipEntry.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipEntry.js"(exports2, module) {
     "use strict";
     var readerFor = require_readerFor();
     var utils = require_utils();
@@ -9709,9 +9709,9 @@ var require_zipEntry = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/zipEntries.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipEntries.js
 var require_zipEntries = __commonJS({
-  "node_modules/jszip/lib/zipEntries.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipEntries.js"(exports2, module) {
     "use strict";
     var readerFor = require_readerFor();
     var utils = require_utils();
@@ -9908,9 +9908,9 @@ var require_zipEntries = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/load.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/load.js
 var require_load = __commonJS({
-  "node_modules/jszip/lib/load.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/load.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var external = require_external();
@@ -9988,13 +9988,13 @@ var require_load = __commonJS({
   }
 });
 
-// node_modules/jszip/lib/index.js
+// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/index.js
 var require_lib3 = __commonJS({
-  "node_modules/jszip/lib/index.js"(exports2, module) {
+  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/index.js"(exports2, module) {
     "use strict";
-    function JSZip4() {
-      if (!(this instanceof JSZip4)) {
-        return new JSZip4();
+    function JSZip6() {
+      if (!(this instanceof JSZip6)) {
+        return new JSZip6();
       }
       if (arguments.length) {
         throw new Error("The constructor with parameters has been removed in JSZip 3.0, please check the upgrade guide.");
@@ -10003,7 +10003,7 @@ var require_lib3 = __commonJS({
       this.comment = null;
       this.root = "";
       this.clone = function() {
-        var newObj = new JSZip4();
+        var newObj = new JSZip6();
         for (var i in this) {
           if (typeof this[i] !== "function") {
             newObj[i] = this[i];
@@ -10012,21 +10012,21 @@ var require_lib3 = __commonJS({
         return newObj;
       };
     }
-    __name(JSZip4, "JSZip");
-    JSZip4.prototype = require_object();
-    JSZip4.prototype.loadAsync = require_load();
-    JSZip4.support = require_support();
-    JSZip4.defaults = require_defaults();
-    JSZip4.version = "3.10.1";
-    JSZip4.loadAsync = function(content, options) {
-      return new JSZip4().loadAsync(content, options);
+    __name(JSZip6, "JSZip");
+    JSZip6.prototype = require_object();
+    JSZip6.prototype.loadAsync = require_load();
+    JSZip6.support = require_support();
+    JSZip6.defaults = require_defaults();
+    JSZip6.version = "3.10.1";
+    JSZip6.loadAsync = function(content, options) {
+      return new JSZip6().loadAsync(content, options);
     };
-    JSZip4.external = require_external();
-    module.exports = JSZip4;
+    JSZip6.external = require_external();
+    module.exports = JSZip6;
   }
 });
 
-// node_modules/tslib/tslib.es6.js
+// ../../node_modules/.pnpm/tslib@1.14.1/node_modules/tslib/tslib.es6.js
 var tslib_es6_exports = {};
 __export(tslib_es6_exports, {
   __assign: () => __assign,
@@ -10347,7 +10347,7 @@ function __classPrivateFieldSet(receiver, privateMap, value) {
 }
 var extendStatics, __assign;
 var init_tslib_es6 = __esm({
-  "node_modules/tslib/tslib.es6.js"() {
+  "../../node_modules/.pnpm/tslib@1.14.1/node_modules/tslib/tslib.es6.js"() {
     extendStatics = /* @__PURE__ */ __name(function(d, b) {
       extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
         d2.__proto__ = b2;
@@ -10391,9 +10391,9 @@ var init_tslib_es6 = __esm({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/base64.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/base64.js
 var require_base642 = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/base64.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/base64.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.decodeFromBase64DataUri = exports2.decodeFromBase64 = exports2.encodeToBase64 = void 0;
@@ -10460,9 +10460,9 @@ var require_base642 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/strings.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/strings.js
 var require_strings2 = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/strings.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/strings.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.findLastMatch = exports2.parseDate = exports2.breakTextIntoLines = exports2.charSplit = exports2.charAtIndex = exports2.mergeLines = exports2.lineSplit = exports2.isNewlineChar = exports2.newlineChars = exports2.escapedNewlineChars = exports2.cleanText = exports2.escapeRegExp = exports2.addRandomSuffix = exports2.copyStringIntoBuffer = exports2.padStart = exports2.charFromHexCode = exports2.charFromCode = exports2.toHexString = exports2.toHexStringOfMinLength = exports2.toCodePoint = exports2.toCharCode = void 0;
@@ -10612,9 +10612,9 @@ var require_strings2 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/arrays.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/arrays.js
 var require_arrays = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/arrays.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/arrays.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.toUint8Array = exports2.canBeConvertedToUint8Array = exports2.pluckIndices = exports2.range = exports2.sum = exports2.reverseArray = exports2.sortedUniq = exports2.byAscendingId = exports2.arrayAsString = exports2.mergeUint8Arrays = exports2.mergeIntoTypedArray = exports2.typedArrayFor = exports2.last = void 0;
@@ -10742,9 +10742,9 @@ var require_arrays = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/async.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/async.js
 var require_async = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/async.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/async.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.waitForTick = void 0;
@@ -10758,9 +10758,9 @@ var require_async = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/unicode.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/unicode.js
 var require_unicode = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/unicode.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/unicode.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.hasUtf16BOM = exports2.utf16Decode = exports2.lowSurrogate = exports2.highSurrogate = exports2.hasSurrogates = exports2.isWithinBMP = exports2.utf16Encode = exports2.utf8Encode = void 0;
@@ -10900,9 +10900,9 @@ var require_unicode = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/numbers.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/numbers.js
 var require_numbers = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/numbers.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/numbers.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.bytesFor = exports2.sizeInBytes = exports2.numberToString = void 0;
@@ -10942,9 +10942,9 @@ var require_numbers = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/errors.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/errors.js
 var require_errors = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/errors.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/errors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.error = void 0;
@@ -10954,9 +10954,9 @@ var require_errors = __commonJS({
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/utils.js
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/utils.js
 var require_utils2 = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/utils.js"(exports2) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/utils.js"(exports2) {
     "use strict";
     var __importDefault2 = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -11016,107 +11016,107 @@ var require_utils2 = __commonJS({
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Courier-Bold.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-Bold.compressed.json
 var require_Courier_Bold_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Courier-Bold.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-Bold.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Courier-BoldOblique.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-BoldOblique.compressed.json
 var require_Courier_BoldOblique_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Courier-BoldOblique.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-BoldOblique.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Courier-Oblique.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-Oblique.compressed.json
 var require_Courier_Oblique_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Courier-Oblique.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-Oblique.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Courier.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier.compressed.json
 var require_Courier_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Courier.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier.compressed.json"(exports2, module) {
     module.exports = "eJyFWdtSGzkQ/RXXPO1WmZSBEAJvjnESb8AmGENCKg+ypj3Wohk5ugAmlX9fzUCyW6s+ysuUfVqXvh61Zr4XI1PX1PjiuLg6C05U1Ns/Ojx42TsYHB4eFf3irWn8VNQUB4xMsIpsCwatU1DUSm8T+JpUtW7XP6NShToiEy+0ksOm0nHkIP53b9UDlefKy3Vx7G2gfjFaCyukJzundu74wVNTUnlhatE8a/XmjXkojr/s7O33d/YOBv3D3YP+68HB136xiEOtVg2dG6e8Mk1xvLM7GPxHcLlW8rYh54rjOLO4Iuu6YcVgsP9iMBjELabGK/lkymZrWxt6f8g/e7tHr4/68Xk06J673XOve+53z8PesDRL6s23zlPtepNGGrsxVngqX/R6Q617F+1qrndBjuxdRONu4ziqVE01l2vqHNgtMveiKYUtf0rjwJHYvH/26MGrvX7x6ee/l3uv+sXQydZPtjh+tXfUL07o1/+d3YPDfjH35fvrOHO3+3n1/LN19hl5q2T0x5fvxfWnOL/11zQq4jYiuuFH/38wPUgt6hT/Fkw0dKlTSRPqZevnqkllpdFa2BTfkJVtdiYCUUeRi94BGnQBY9YTlhpNKyQC04RrV3S3zCwdXIrKWFQihdfbzZoY66MpyjCWOC3cOoUfyZoUNQ0TJX/PjPRrS8zYVSxZBlV3zFinHhiQ7jjriPdpoziFpdGGWcNRrYBIt1WcbvotCCYHK0uxDhkzvwVyHVOksWd0H6bQmxQapdBJCo1T6G0KvUuh9yk0SaG/UuhDCp2m0FkKTVNolkLnKfQxhS5SaJ5Clym0SKGrFLpOoU8p9DmFblJoGU+iW/I8bSyjDNTp8zzIKVIpqawMDIuGlrRdPDiYEun4jVeG4ZwlU2MM/zIVxHABU1AMy6WQSqG/U4ihV6aEGW8xVcvQ3oZxZQox3MDQC+P7kEJ3KXSfQgyTbhnS5/MLJMKSO0y78bls9EqX8KgvzT3jZ/50bo9L3fYraQq1XR3Ls1vu7FhpYxV7HoBVZLDxGJeMA7uycarrOmHXwnuzCipKagMooBV3C/9GDFy/YqpjxSR+bORYmilFVXFH2hPOtmJPDUcbO7LE1H7shURlxYYjtdj6E2PFv+5dCpfxcF4KXPQrAEBOWquNU0yhRkv92gTUKT4d+nxqRwdwrY+QwXONS8fkK01MOYO6qoW0XA4vLXEbl8YLyddbGa9axNpv2SqU8SoWG26Gu0NTCRtqLQKzjalik8mwtBSsHVTzCTtkWh5jy1Xs8fim8BQcsDOE8xvUkeSCZncQvL/b3pKpTg32NQhnVo+lGa+yMeWZoE1wPAmknwBJE/IRJRC6z1iDUt0pLps/A82GucoQYNIiN2kLJrnu2oVqhHJLLvg6WWA3CFQMC6BdQBPGeJOTSBDc/SNrqPz5voLZClGOBHkgeL9MswpolKOAUS+zq43QaoBVxxmedMBMBwlRgd21eaSmYgQXYIt3WSNDtkhywiEKqQWKSGjrTcZzl2tjmcVmaPcL4Lc5wEug7QJtEPjM7N5tuNA1OExPNAMpOEQ4oNU6aK82mmkzAzDwEhgYWy2vhC7VirldbTE1TME+Kpcs42yaZU4dLJJAjwbRIAroFDhoAhZq37zFhoF7/ba05pYa9g5kqVIOdL3vQLAnOUYJsar5q8gY5JQFBhnkmRsw4QZ47PklF3gFNvZMhzKCpKCzvOVR6wdPRyQYovYhk5XAwY+oNNDeMxQRdPSgSDm0MzZilm1LgIUnpD0TK8+TtL83GUbEqtXMKw0FNDL5PnOMXF+CDqfj8ZjANiYyo9o8k698Rn7I5vEpCJy3oqRaWEZzyrDCBHhpghLnFGgdnbYWmjkZ2psJKHCTy6gGdE2L38QP+IeQQRXg0mjQc1S5oPJOmGdDN8trXkaW4L52GBCiEVAiQDYvleTCcAIWsllrpiA+BuAX+bTOSodgzSHkaL7nmoF1HjMVMkanPdr7NmsKaAQm2VIAKvj85cZUbbwbw70fwVwasCguhb5W5S+03EH+CIxqsktFl+MTQqEaH4f2O+TXfvGBbHMulG2/Hn/98Q/b2xEO";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Bold.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Bold.compressed.json
 var require_Helvetica_Bold_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Bold.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Bold.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Helvetica-BoldOblique.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-BoldOblique.compressed.json
 var require_Helvetica_BoldOblique_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Helvetica-BoldOblique.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-BoldOblique.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Oblique.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Oblique.compressed.json
 var require_Helvetica_Oblique_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Oblique.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Oblique.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Helvetica.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica.compressed.json
 var require_Helvetica_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Helvetica.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Times-Bold.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Bold.compressed.json
 var require_Times_Bold_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Times-Bold.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Bold.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Times-BoldItalic.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-BoldItalic.compressed.json
 var require_Times_BoldItalic_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Times-BoldItalic.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-BoldItalic.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Times-Italic.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Italic.compressed.json
 var require_Times_Italic_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Times-Italic.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Italic.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Times-Roman.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Roman.compressed.json
 var require_Times_Roman_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Times-Roman.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Roman.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Symbol.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Symbol.compressed.json
 var require_Symbol_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Symbol.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Symbol.compressed.json"(exports2, module) {
     module.exports = "eJx9WFlv2zgQ/iuGnnYBt5DkS85bmk13g27SoEkPbNEHWqIlIhSpklSuov99R7JIkSLtFyGZjxzN8c0h/4oueF1jpqKz6Mt1K1GJZ4s4S+PZYrvdbqJ59J4zdYNqDAfuXuodp52spdSToZrQl6n0KyZl1Sm/xgVpa5BcKURJfs5KCgdj+F++J8+4uCUqr6IzJVo8jy4qJFCusLjD3d27BucE0cGYd+/4c3T2/U2SxfM36XYxT+JtDI8k/jGPPrMCC0oYvuWSKMJZdPYmiWMLuK9I/sCwlNHZCuRfsJD9sSiOk7dxnMFbbrgieefGBW9eROfA7I/8z1myzVbz7rnpn9vuCW/unpvZecF3eHb3IhWu5eyK5Vw0XCCFi7ezc0pnvRo5E1hi8QhCeM0lHCoIK+/yCvdR67zrfd2THPA7VfzzNTrbpv2fX+BPeH8fm2usBMnBg++/oq/forO08+QGNMgGgeG/5wfxYrE4iPFzTlFt5JtkkLeMPIL/EFoNreJBE2vrXReako3YcqvVEXCTKWJdzPS7Gizyjk/mZZvsAKC66d7FCgMtF4NC2eaVqpDyLW+QwIzi/TGoD6tvPQL7BJEPNVKVb39DW2mkJnY5FALyD9eEhU6DL4SPrqTaS0mRrHyDXrHgvpQz7AvVU+CkqgQOnN3zVgSkkFVfKslzQIgfMfPFOBxWRiyDjcs5p5wFIoFr4kImprQrP59WP1ubiVpcCgxlNLq5XC4PwM8Wy77EvSs5ZyU0EpuFaXqAzmlTjVlerzcH8TuskH/4oiLj0WQQ/oWpdXadJAfxZSOJ7exmPfD01lYSD8K/kU0288JLS7Mh+hW337dINCPA5MRX8QE1jXU8Wx/E/6J6V4zyLBtCdd36Km4Cso+QTOG4N6T5dvRusxxsu6/scK5Wgw2fKovZ20HxHSnrQDjv0WjEejvw7/MkxmMD6ZQkvnEfa1xayperg/ibZfN2kN1K4lvxHw4lZAfD6QErpy1lOt2QF4H3XATa8HDP7VnrVWY6SoNZQfKWokBRt90Ak7mt2GACwTVE8bNPE+Tw3VTIzkmQqRuLqsvtUGaFw3cTcjzJxSod3tjYSnQgS4fvpgyc8KaDZuLwXR8FtYlv8YPD9rHBuGxfbQYG1q1vL2v9+3zC9nF0EF+BqoLBFBbbjRfSYbsJprLYboxtpx1Fj23esXoMhqlx7rB9uR2OPxP/aCMDmX61/Vhm8cha7HA91bzbWUR1z0/m8tLUKSyJ1qWNHqeXrTUf16lb76Or6XIzTmWFA4mHyeLOkUS3+H23UpJQPAnbE0bUS2CSUi6IdWM13Mhpu/OlBUE1t/YbA1QYCeWLYVsrRh+SeDm0RCQEf9pxa3Xpds4RcpJhqNVDbXPkzqTpOJcK/mT1VO17gUtn57C3J3cpMlUucW77Px3hRwZ83VJFGvriJ6YRHJboLmnWPUNXWAC7FbQg+/0IrjUL4RMFBxhYkEdSBLxiXB0xD8TkEZorywPXoP0I/jxhXGzWKEoJUFgeiTvs3srq2eO9Hq2Aeq92S9eDIgeYwIeawKoVY+KyVOumuBmpY0r+CgrgQVn7ohl9n6aIoc4TJjB0lEDWvmaGa05ETrGfPRd3lm1jI64b9SKtBJlbhAFTgEhuqWoUvlhCFdwRBW613cNWqnGYyDAdj+OQfdnugpBWHUa14jAKbbN2tlDrfR6mXUT9p7F3peyGvHNBb0UCl933GHgmyN6Hc/0R6+KZxiG7Ba6ReJjg6RiAos0DpTRsHWNz1s284Mr58DI+UF52N8B7vyIGzP4+nGJcWLXiNMtiR0/0S0BPtExAj3ZNwE42zh11e6duTZS/YlZaK6DebfrkOsb4aURMnsqiA+viHpPowDrwsoX1y6moRTZ20cMXtmpOgFYf8sGd8kFrRw4ptuCQagu2lJvwmpXEUu2DNSlOoEf12vY4aXOZkG6WY8OC4hzrwHRcjVhWepjd4KdYKK7jrx5H89WjRxPWoycydlS3jZ/I2VS/G9yp9gB6PG1T1aY4YAp3LfPHPPqABbtFRHS/jf34/T82FAfb";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/ZapfDingbats.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/ZapfDingbats.compressed.json
 var require_ZapfDingbats_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/ZapfDingbats.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/ZapfDingbats.compressed.json"(exports2, module) {
     module.exports = "eJxtmNtu20YQhl+F4FULyMGeD7pz3AY1ChtG7NpFA18w1NomIlECSRcxgrx7SVk7+wOdG8H5OJydf2Z2d5gf9cV+t0v9VK/r+6vXsXlOlbHe28paq229qj/t++m62aXZ4J/m8PRb1z9/baZxefK63Z6eXN5dVMvTCh83u277xr/6kLrnl2XNq7TpXnczuZyabdee98/b2VzM/x4/dd/T5qab2pd6PQ2vaVVfvDRD005puE3Lu7eH1HbN9hTjx4/77/X6y5lcnUmjVzHIVVDicVX/1W/SsO36dLMfu6nb9/X6TAoBD+5euvZbn8axXtuZ36dhPJrVQqgPQoh5hev91LWLkIv94W1Ygq9+aX+tZAx2tfz64284/sblN/rqfLP/mqrbt3FKu7G67Nv9cNgPzZQ2H6rz7bb6vLgZq89pTMO/M/xfEqturJpqSM/d7GJIm2oamk3aNcO3av80O5xh3yyKmm1193ZIT02bqovTKjP+MAf++7zsZvZ3276kYyWWXB0z99S18/PbafPHQ71W4fjn/fxnFO+ZvkrT0LVzTr78qB/+nk38bHM9exgP8zr1z9U7jt6840YW5uSJKcZOCaBBnKgm5mU8MVNYyMwWFvO7Ukagkmgg6sDWQ5yFFqjzUrLEaQ3BEmiwNsMSaZS0vgWfOkPHWQowNeTUc0kumnxZvsgPxlGai6VTGUqAVCTQ6QkWnc77DKEiLktSUBJKqHIQZ86d8gCpHYoiEzMsb1ubYy8vW50DChB5ZhGqrijD0EqUIeiaEHIfCg5Kpuu0ApiToaGPSY0uaQsyr65L2oKi1yFt1PLaQ3lzfXTgXodGoJYzglndSLDMPg1sTPJpQJHJigw0QrGERqD9YhyTOgONQDUyuF1zaxuokc/BW2ztXCMrGZ9WMW1oQZHIXWNBkSCfRZEL5BMUiZw6CzVSFCfUSGZFNjIldoKDkonTKQiJIGzWmFd3BizJJ9SINoLDriOfUCOZS+zg+KGD1qGiLNMLxtJD1/ns00ON6EzyUCM6vbxhoBKaqbG3DFQCNiL1iHccBPV0DHhQH/JW8EW90dkyFKGywCJU0WkVSvSGeiSUODWFFD0HYdPQVoiRgfPMA+/nnRgiAyNYSjpWNQcNSMrtFCUH4ZIRpSCWocFCSuhCEY6hoUClc0WC52BJlCYYLQdhN+hygRRRlo5BKRRLS6oihSqh+ZzzRGG1Mo4Iz1LoP0qsxDGFzk0JE42ji0jCPejomJKCuwil4m5CiRMEUMVSzVLDUstSx1Juc0oVWMpqY295qVltmtWmWW2a1aZZbZrVplltmtWmWW2G1WZYbYbVZlhthtVmWG2G1WZYbYbVZlhtltVmWW2W1WZZbZbVZlltltVmWW2W1QYjQCh7E2aAQHeGhCFgPoNoy8KNb2wxBhmGKBxoUZXlLGsLI6AsftEDHV0wIURVbANLcTKlGGBIKPOAxCmhePCKUwFzAmpDFRQvjA9R06Hq8TONvshgKDCuRAZTXigUxjxNFfKRo3CLhnIJBMFRvMZpqpNBMlQJzGT5WFQMVQI/AikPMIhEU1aDjqJvQwmjSHB05cC9jbYwc5UtAHNLhDw41ha+lEqF4JaH3gmB61SYcqInxTDmQK8v08vjqv4zDf1N0w3Lf4A8/vwPpfK11w==";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Font.js
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Font.js
 var require_Font = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Font.js"(exports2) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Font.js"(exports2) {
     "use strict";
     var __importDefault2 = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -11211,16 +11211,16 @@ var require_Font = __commonJS({
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/all-encodings.compressed.json
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/all-encodings.compressed.json
 var require_all_encodings_compressed = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/all-encodings.compressed.json"(exports2, module) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/all-encodings.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/Encoding.js
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Encoding.js
 var require_Encoding = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/Encoding.js"(exports2) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Encoding.js"(exports2) {
     "use strict";
     var __importDefault2 = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -11266,9 +11266,9 @@ var require_Encoding = __commonJS({
   }
 });
 
-// node_modules/@pdf-lib/standard-fonts/lib/index.js
+// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/index.js
 var require_lib4 = __commonJS({
-  "node_modules/@pdf-lib/standard-fonts/lib/index.js"(exports2) {
+  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/index.js"(exports2) {
     "use strict";
     function __export2(m) {
       for (var p in m) if (!exports2.hasOwnProperty(p)) exports2[p] = m[p];
@@ -11280,9 +11280,9 @@ var require_lib4 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/objects.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/objects.js
 var require_objects = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/objects.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/objects.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.rectanglesAreEqual = exports2.isStandardFont = exports2.StandardFontValues = exports2.values = void 0;
@@ -11302,9 +11302,9 @@ var require_objects = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/validators.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/validators.js
 var require_validators = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/validators.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/validators.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.assertPositive = exports2.assertInteger = exports2.assertMultiple = exports2.assertRangeOrUndefined = exports2.assertRange = exports2.assertEachIs = exports2.assertOrUndefined = exports2.assertIs = exports2.createTypeErrorMsg = exports2.isType = exports2.getType = exports2.assertIsSubset = exports2.assertIsOneOfOrUndefined = exports2.assertIsOneOf = exports2.createValueErrorMsg = exports2.singleQuote = exports2.backtick = void 0;
@@ -11487,9 +11487,9 @@ var require_validators = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/pdfDocEncoding.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/pdfDocEncoding.js
 var require_pdfDocEncoding = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/pdfDocEncoding.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/pdfDocEncoding.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.pdfDocEncodingDecode = void 0;
@@ -11553,9 +11553,9 @@ var require_pdfDocEncoding = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/Cache.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/Cache.js
 var require_Cache = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/Cache.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/Cache.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var Cache = (
@@ -11587,9 +11587,9 @@ var require_Cache = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/index.js
 var require_utils3 = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -11610,9 +11610,9 @@ var require_utils3 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/errors.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/errors.js
 var require_errors2 = __commonJS({
-  "node_modules/pdf-lib/cjs/core/errors.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/errors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.MissingKeywordError = exports2.MissingPDFHeaderError = exports2.StalledParserError = exports2.UnbalancedParenthesisError = exports2.PDFStreamParsingError = exports2.PDFInvalidObjectParsingError = exports2.PDFObjectParsingError = exports2.NextByteAssertionError = exports2.PDFParsingError = exports2.NumberParsingError = exports2.MissingTfOperatorError = exports2.MissingDAEntryError = exports2.MultiSelectValueError = exports2.InvalidAcroFieldValueError = exports2.IndexOutOfBoundsError = exports2.CorruptPageTreeError = exports2.InvalidTargetIndexError = exports2.InvalidPDFDateStringError = exports2.PDFArrayIsNotRectangleError = exports2.PageEmbeddingMismatchedContextError = exports2.UnrecognizedStreamTypeError = exports2.MissingPageContentsEmbeddingError = exports2.MissingCatalogError = exports2.ReparseError = exports2.UnsupportedEncodingError = exports2.UnexpectedObjectTypeError = exports2.PrivateConstructorError = exports2.MethodNotImplementedError = void 0;
@@ -12048,9 +12048,9 @@ var require_errors2 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/syntax/CharCodes.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/CharCodes.js
 var require_CharCodes = __commonJS({
-  "node_modules/pdf-lib/cjs/core/syntax/CharCodes.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/CharCodes.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var CharCodes;
@@ -12118,9 +12118,9 @@ var require_CharCodes = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/document/PDFHeader.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFHeader.js
 var require_PDFHeader = __commonJS({
-  "node_modules/pdf-lib/cjs/core/document/PDFHeader.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFHeader.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12169,9 +12169,9 @@ var require_PDFHeader = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFObject.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFObject.js
 var require_PDFObject = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFObject.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFObject.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var errors_1 = require_errors2();
@@ -12200,9 +12200,9 @@ var require_PDFObject = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFNumber.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFNumber.js
 var require_PDFNumber = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFNumber.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFNumber.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12248,9 +12248,9 @@ var require_PDFNumber = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFArray.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFArray.js
 var require_PDFArray = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFArray.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFArray.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12376,9 +12376,9 @@ var require_PDFArray = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFBool.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFBool.js
 var require_PDFBool = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFBool.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFBool.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12436,9 +12436,9 @@ var require_PDFBool = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/syntax/Delimiters.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Delimiters.js
 var require_Delimiters = __commonJS({
-  "node_modules/pdf-lib/cjs/core/syntax/Delimiters.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Delimiters.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.IsDelimiter = void 0;
@@ -12458,9 +12458,9 @@ var require_Delimiters = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/syntax/Whitespace.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Whitespace.js
 var require_Whitespace = __commonJS({
-  "node_modules/pdf-lib/cjs/core/syntax/Whitespace.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Whitespace.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.IsWhitespace = void 0;
@@ -12476,9 +12476,9 @@ var require_Whitespace = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/syntax/Irregular.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Irregular.js
 var require_Irregular = __commonJS({
-  "node_modules/pdf-lib/cjs/core/syntax/Irregular.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Irregular.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.IsIrregular = void 0;
@@ -12496,9 +12496,9 @@ var require_Irregular = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFName.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFName.js
 var require_PDFName = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFName.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFName.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12632,9 +12632,9 @@ var require_PDFName = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFNull.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFNull.js
 var require_PDFNull = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFNull.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFNull.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12674,9 +12674,9 @@ var require_PDFNull = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFDict.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFDict.js
 var require_PDFDict = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFDict.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFDict.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12819,9 +12819,9 @@ var require_PDFDict = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFStream.js
 var require_PDFStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12903,9 +12903,9 @@ var require_PDFStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFRawStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFRawStream.js
 var require_PDFRawStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFRawStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFRawStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12946,9 +12946,9 @@ var require_PDFRawStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFRef.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFRef.js
 var require_PDFRef = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFRef.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFRef.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13004,9 +13004,9 @@ var require_PDFRef = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/operators/PDFOperator.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/operators/PDFOperator.js
 var require_PDFOperator = __commonJS({
-  "node_modules/pdf-lib/cjs/core/operators/PDFOperator.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/operators/PDFOperator.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13070,9 +13070,9 @@ var require_PDFOperator = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/operators/PDFOperatorNames.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/operators/PDFOperatorNames.js
 var require_PDFOperatorNames = __commonJS({
-  "node_modules/pdf-lib/cjs/core/operators/PDFOperatorNames.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/operators/PDFOperatorNames.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var PDFOperatorNames;
@@ -13155,9 +13155,9 @@ var require_PDFOperatorNames = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/structures/PDFFlateStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFFlateStream.js
 var require_PDFFlateStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/structures/PDFFlateStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFFlateStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13199,9 +13199,9 @@ var require_PDFFlateStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/structures/PDFContentStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFContentStream.js
 var require_PDFContentStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/structures/PDFContentStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFContentStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13272,9 +13272,9 @@ var require_PDFContentStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/rng.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/rng.js
 var require_rng = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/rng.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/rng.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.SimpleRNG = void 0;
@@ -13299,9 +13299,9 @@ var require_rng = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/PDFContext.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/PDFContext.js
 var require_PDFContext = __commonJS({
-  "node_modules/pdf-lib/cjs/core/PDFContext.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/PDFContext.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13499,9 +13499,9 @@ var require_PDFContext = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/structures/PDFPageLeaf.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFPageLeaf.js
 var require_PDFPageLeaf = __commonJS({
-  "node_modules/pdf-lib/cjs/core/structures/PDFPageLeaf.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFPageLeaf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13714,9 +13714,9 @@ var require_PDFPageLeaf = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/PDFObjectCopier.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/PDFObjectCopier.js
 var require_PDFObjectCopier = __commonJS({
-  "node_modules/pdf-lib/cjs/core/PDFObjectCopier.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/PDFObjectCopier.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13812,9 +13812,9 @@ var require_PDFObjectCopier = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/document/PDFCrossRefSection.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFCrossRefSection.js
 var require_PDFCrossRefSection = __commonJS({
-  "node_modules/pdf-lib/cjs/core/document/PDFCrossRefSection.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFCrossRefSection.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13942,9 +13942,9 @@ var require_PDFCrossRefSection = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/document/PDFTrailer.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFTrailer.js
 var require_PDFTrailer = __commonJS({
-  "node_modules/pdf-lib/cjs/core/document/PDFTrailer.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFTrailer.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13994,9 +13994,9 @@ var require_PDFTrailer = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/document/PDFTrailerDict.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFTrailerDict.js
 var require_PDFTrailerDict = __commonJS({
-  "node_modules/pdf-lib/cjs/core/document/PDFTrailerDict.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFTrailerDict.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14037,9 +14037,9 @@ var require_PDFTrailerDict = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js
 var require_PDFObjectStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14124,9 +14124,9 @@ var require_PDFObjectStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/writers/PDFWriter.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/writers/PDFWriter.js
 var require_PDFWriter = __commonJS({
-  "node_modules/pdf-lib/cjs/core/writers/PDFWriter.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/writers/PDFWriter.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14278,9 +14278,9 @@ var require_PDFWriter = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFInvalidObject.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFInvalidObject.js
 var require_PDFInvalidObject = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFInvalidObject.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFInvalidObject.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14321,9 +14321,9 @@ var require_PDFInvalidObject = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/structures/PDFCrossRefStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFCrossRefStream.js
 var require_PDFCrossRefStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/structures/PDFCrossRefStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFCrossRefStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.EntryType = void 0;
@@ -14514,9 +14514,9 @@ var require_PDFCrossRefStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/writers/PDFStreamWriter.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/writers/PDFStreamWriter.js
 var require_PDFStreamWriter = __commonJS({
-  "node_modules/pdf-lib/cjs/core/writers/PDFStreamWriter.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/writers/PDFStreamWriter.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14638,9 +14638,9 @@ var require_PDFStreamWriter = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFHexString.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFHexString.js
 var require_PDFHexString = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFHexString.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFHexString.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14721,9 +14721,9 @@ var require_PDFHexString = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js
 var require_StandardFontEmbedder = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14815,9 +14815,9 @@ var require_StandardFontEmbedder = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/CMap.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CMap.js
 var require_CMap = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/CMap.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CMap.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createCmap = void 0;
@@ -14864,9 +14864,9 @@ var require_CMap = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/FontFlags.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/FontFlags.js
 var require_FontFlags = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/FontFlags.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/FontFlags.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.deriveFontFlags = void 0;
@@ -14909,9 +14909,9 @@ var require_FontFlags = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/objects/PDFString.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFString.js
 var require_PDFString = __commonJS({
-  "node_modules/pdf-lib/cjs/core/objects/PDFString.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFString.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -15031,9 +15031,9 @@ var require_PDFString = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/CustomFontEmbedder.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CustomFontEmbedder.js
 var require_CustomFontEmbedder = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/CustomFontEmbedder.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CustomFontEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -15275,9 +15275,9 @@ var require_CustomFontEmbedder = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/CustomFontSubsetEmbedder.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CustomFontSubsetEmbedder.js
 var require_CustomFontSubsetEmbedder = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/CustomFontSubsetEmbedder.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CustomFontSubsetEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -15352,9 +15352,9 @@ var require_CustomFontSubsetEmbedder = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/FileEmbedder.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/FileEmbedder.js
 var require_FileEmbedder = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/FileEmbedder.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/FileEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.AFRelationship = void 0;
@@ -15433,9 +15433,9 @@ var require_FileEmbedder = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/JpegEmbedder.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/JpegEmbedder.js
 var require_JpegEmbedder = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/JpegEmbedder.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/JpegEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -15553,9 +15553,9 @@ var require_JpegEmbedder = __commonJS({
   }
 });
 
-// node_modules/@pdf-lib/upng/cjs/UPNG.js
+// ../../node_modules/.pnpm/@pdf-lib+upng@1.0.1/node_modules/@pdf-lib/upng/cjs/UPNG.js
 var require_UPNG = __commonJS({
-  "node_modules/@pdf-lib/upng/cjs/UPNG.js"(exports2) {
+  "../../node_modules/.pnpm/@pdf-lib+upng@1.0.1/node_modules/@pdf-lib/upng/cjs/UPNG.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", {
       value: true
@@ -17025,9 +17025,9 @@ var require_UPNG = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/utils/png.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/png.js
 var require_png = __commonJS({
-  "node_modules/pdf-lib/cjs/utils/png.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/png.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.PNG = exports2.PngType = void 0;
@@ -17101,9 +17101,9 @@ var require_png = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/PngEmbedder.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/PngEmbedder.js
 var require_PngEmbedder = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/PngEmbedder.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/PngEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -17176,9 +17176,9 @@ var require_PngEmbedder = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/streams/Stream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/Stream.js
 var require_Stream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/streams/Stream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/Stream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var Stream = (
@@ -17284,9 +17284,9 @@ var require_Stream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/streams/DecodeStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/DecodeStream.js
 var require_DecodeStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/streams/DecodeStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/DecodeStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -17432,9 +17432,9 @@ var require_DecodeStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/streams/Ascii85Stream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/Ascii85Stream.js
 var require_Ascii85Stream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/streams/Ascii85Stream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/Ascii85Stream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -17516,9 +17516,9 @@ var require_Ascii85Stream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/streams/AsciiHexStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/AsciiHexStream.js
 var require_AsciiHexStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/streams/AsciiHexStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/AsciiHexStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -17582,9 +17582,9 @@ var require_AsciiHexStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/streams/FlateStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/FlateStream.js
 var require_FlateStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/streams/FlateStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/FlateStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -18470,9 +18470,9 @@ var require_FlateStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/streams/LZWStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/LZWStream.js
 var require_LZWStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/streams/LZWStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/LZWStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -18602,9 +18602,9 @@ var require_LZWStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/streams/RunLengthStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/RunLengthStream.js
 var require_RunLengthStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/streams/RunLengthStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/RunLengthStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -18653,9 +18653,9 @@ var require_RunLengthStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/streams/decode.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/decode.js
 var require_decode = __commonJS({
-  "node_modules/pdf-lib/cjs/core/streams/decode.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/decode.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.decodePDFRawStream = void 0;
@@ -18715,9 +18715,9 @@ var require_decode = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/PDFPageEmbedder.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/PDFPageEmbedder.js
 var require_PDFPageEmbedder = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/PDFPageEmbedder.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/PDFPageEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -18811,9 +18811,9 @@ var require_PDFPageEmbedder = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/interactive/ViewerPreferences.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/interactive/ViewerPreferences.js
 var require_ViewerPreferences = __commonJS({
-  "node_modules/pdf-lib/cjs/core/interactive/ViewerPreferences.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/interactive/ViewerPreferences.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Duplex = exports2.PrintScaling = exports2.ReadingDirection = exports2.NonFullScreenPageMode = void 0;
@@ -19059,9 +19059,9 @@ var require_ViewerPreferences = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroField.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroField.js
 var require_PDFAcroField = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroField.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroField.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19207,9 +19207,9 @@ var require_PDFAcroField = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/annotation/BorderStyle.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/BorderStyle.js
 var require_BorderStyle = __commonJS({
-  "node_modules/pdf-lib/cjs/core/annotation/BorderStyle.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/BorderStyle.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19246,9 +19246,9 @@ var require_BorderStyle = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/annotation/PDFAnnotation.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/PDFAnnotation.js
 var require_PDFAnnotation = __commonJS({
-  "node_modules/pdf-lib/cjs/core/annotation/PDFAnnotation.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/PDFAnnotation.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19376,9 +19376,9 @@ var require_PDFAnnotation = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/annotation/AppearanceCharacteristics.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/AppearanceCharacteristics.js
 var require_AppearanceCharacteristics = __commonJS({
-  "node_modules/pdf-lib/cjs/core/annotation/AppearanceCharacteristics.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/AppearanceCharacteristics.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19506,9 +19506,9 @@ var require_AppearanceCharacteristics = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/annotation/PDFWidgetAnnotation.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/PDFWidgetAnnotation.js
 var require_PDFWidgetAnnotation = __commonJS({
-  "node_modules/pdf-lib/cjs/core/annotation/PDFWidgetAnnotation.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/PDFWidgetAnnotation.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19625,9 +19625,9 @@ var require_PDFWidgetAnnotation = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroTerminal.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroTerminal.js
 var require_PDFAcroTerminal = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroTerminal.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroTerminal.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19694,9 +19694,9 @@ var require_PDFAcroTerminal = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroButton.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroButton.js
 var require_PDFAcroButton = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroButton.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroButton.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19793,9 +19793,9 @@ var require_PDFAcroButton = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroCheckBox.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroCheckBox.js
 var require_PDFAcroCheckBox = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroCheckBox.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroCheckBox.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19852,9 +19852,9 @@ var require_PDFAcroCheckBox = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/flags.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/flags.js
 var require_flags = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/flags.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/flags.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.AcroChoiceFlags = exports2.AcroTextFlags = exports2.AcroButtonFlags = exports2.AcroFieldFlags = void 0;
@@ -19896,9 +19896,9 @@ var require_flags = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroChoice.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroChoice.js
 var require_PDFAcroChoice = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroChoice.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroChoice.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20028,9 +20028,9 @@ var require_PDFAcroChoice = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroComboBox.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroComboBox.js
 var require_PDFAcroComboBox = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroComboBox.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroComboBox.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20063,9 +20063,9 @@ var require_PDFAcroComboBox = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroNonTerminal.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroNonTerminal.js
 var require_PDFAcroNonTerminal = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroNonTerminal.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroNonTerminal.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20106,9 +20106,9 @@ var require_PDFAcroNonTerminal = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroSignature.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroSignature.js
 var require_PDFAcroSignature = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroSignature.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroSignature.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20131,9 +20131,9 @@ var require_PDFAcroSignature = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroText.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroText.js
 var require_PDFAcroText = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroText.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroText.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20209,9 +20209,9 @@ var require_PDFAcroText = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroPushButton.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroPushButton.js
 var require_PDFAcroPushButton = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroPushButton.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroPushButton.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20244,9 +20244,9 @@ var require_PDFAcroPushButton = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroRadioButton.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroRadioButton.js
 var require_PDFAcroRadioButton = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroRadioButton.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroRadioButton.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20310,9 +20310,9 @@ var require_PDFAcroRadioButton = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroListBox.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroListBox.js
 var require_PDFAcroListBox = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroListBox.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroListBox.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20343,9 +20343,9 @@ var require_PDFAcroListBox = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/utils.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/utils.js
 var require_utils4 = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/utils.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/utils.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createPDFAcroField = exports2.createPDFAcroFields = void 0;
@@ -20453,9 +20453,9 @@ var require_utils4 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/PDFAcroForm.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroForm.js
 var require_PDFAcroForm = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroForm.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroForm.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20542,9 +20542,9 @@ var require_PDFAcroForm = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/acroform/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/index.js
 var require_acroform = __commonJS({
-  "node_modules/pdf-lib/cjs/core/acroform/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20605,9 +20605,9 @@ var require_acroform = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js
 var require_PDFCatalog = __commonJS({
-  "node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20686,9 +20686,9 @@ var require_PDFCatalog = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/structures/PDFPageTree.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFPageTree.js
 var require_PDFPageTree = __commonJS({
-  "node_modules/pdf-lib/cjs/core/structures/PDFPageTree.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFPageTree.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20842,9 +20842,9 @@ var require_PDFPageTree = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/syntax/Numeric.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Numeric.js
 var require_Numeric = __commonJS({
-  "node_modules/pdf-lib/cjs/core/syntax/Numeric.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Numeric.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.IsNumeric = exports2.IsNumericPrefix = exports2.IsDigit = void 0;
@@ -20874,9 +20874,9 @@ var require_Numeric = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/parser/BaseParser.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/BaseParser.js
 var require_BaseParser = __commonJS({
-  "node_modules/pdf-lib/cjs/core/parser/BaseParser.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/BaseParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20990,9 +20990,9 @@ var require_BaseParser = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/parser/ByteStream.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/ByteStream.js
 var require_ByteStream = __commonJS({
-  "node_modules/pdf-lib/cjs/core/parser/ByteStream.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/ByteStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21063,9 +21063,9 @@ var require_ByteStream = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/syntax/Keywords.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Keywords.js
 var require_Keywords = __commonJS({
-  "node_modules/pdf-lib/cjs/core/syntax/Keywords.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Keywords.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Keywords = void 0;
@@ -21154,9 +21154,9 @@ var require_Keywords = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js
 var require_PDFObjectParser = __commonJS({
-  "node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21375,9 +21375,9 @@ var require_PDFObjectParser = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/parser/PDFObjectStreamParser.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFObjectStreamParser.js
 var require_PDFObjectStreamParser = __commonJS({
-  "node_modules/pdf-lib/cjs/core/parser/PDFObjectStreamParser.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFObjectStreamParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21462,9 +21462,9 @@ var require_PDFObjectStreamParser = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/parser/PDFXRefStreamParser.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFXRefStreamParser.js
 var require_PDFXRefStreamParser = __commonJS({
-  "node_modules/pdf-lib/cjs/core/parser/PDFXRefStreamParser.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFXRefStreamParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21557,9 +21557,9 @@ var require_PDFXRefStreamParser = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/parser/PDFParser.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFParser.js
 var require_PDFParser = __commonJS({
-  "node_modules/pdf-lib/cjs/core/parser/PDFParser.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21899,9 +21899,9 @@ var require_PDFParser = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/annotation/flags.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/flags.js
 var require_flags2 = __commonJS({
-  "node_modules/pdf-lib/cjs/core/annotation/flags.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/flags.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.AnnotationFlags = void 0;
@@ -21924,9 +21924,9 @@ var require_flags2 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/annotation/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/index.js
 var require_annotation = __commonJS({
-  "node_modules/pdf-lib/cjs/core/annotation/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21946,9 +21946,9 @@ var require_annotation = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/index.js
 var require_core = __commonJS({
-  "node_modules/pdf-lib/cjs/core/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -22149,9 +22149,9 @@ var require_core = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/objects.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/objects.js
 var require_objects2 = __commonJS({
-  "node_modules/pdf-lib/cjs/api/objects.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/objects.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.asNumber = exports2.asPDFNumber = exports2.asPDFName = void 0;
@@ -22168,9 +22168,9 @@ var require_objects2 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/rotations.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/rotations.js
 var require_rotations = __commonJS({
-  "node_modules/pdf-lib/cjs/api/rotations.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/rotations.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.rotateRectangle = exports2.adjustDimsForRotation = exports2.reduceRotation = exports2.toDegrees = exports2.toRadians = exports2.radiansToDegrees = exports2.degreesToRadians = exports2.degrees = exports2.radians = exports2.RotationTypes = void 0;
@@ -22248,9 +22248,9 @@ var require_rotations = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/operators.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/operators.js
 var require_operators = __commonJS({
-  "node_modules/pdf-lib/cjs/api/operators.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/operators.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.endMarkedContent = exports2.beginMarkedContent = exports2.setStrokingCmykColor = exports2.setFillingCmykColor = exports2.setStrokingRgbColor = exports2.setFillingRgbColor = exports2.setStrokingGrayscaleColor = exports2.setFillingGrayscaleColor = exports2.drawObject = exports2.rotateAndSkewTextDegreesAndTranslate = exports2.rotateAndSkewTextRadiansAndTranslate = exports2.setTextMatrix = exports2.setTextRenderingMode = exports2.TextRenderingMode = exports2.setTextRise = exports2.setLineHeight = exports2.setCharacterSqueeze = exports2.setWordSpacing = exports2.setCharacterSpacing = exports2.setFontAndSize = exports2.endText = exports2.beginText = exports2.showText = exports2.moveText = exports2.nextLine = exports2.endPath = exports2.fillAndStroke = exports2.fill = exports2.stroke = exports2.square = exports2.rectangle = exports2.lineTo = exports2.moveTo = exports2.closePath = exports2.appendQuadraticCurve = exports2.appendBezierCurve = exports2.setLineWidth = exports2.popGraphicsState = exports2.pushGraphicsState = exports2.setGraphicsState = exports2.setLineJoin = exports2.LineJoinStyle = exports2.setLineCap = exports2.LineCapStyle = exports2.restoreDashPattern = exports2.setDashPattern = exports2.skewDegrees = exports2.skewRadians = exports2.rotateDegrees = exports2.rotateRadians = exports2.scale = exports2.translate = exports2.concatTransformationMatrix = exports2.clipEvenOdd = exports2.clip = void 0;
@@ -22494,9 +22494,9 @@ var require_operators = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/colors.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/colors.js
 var require_colors = __commonJS({
-  "node_modules/pdf-lib/cjs/api/colors.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/colors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.colorToComponents = exports2.componentsToColor = exports2.setStrokingColor = exports2.setFillingColor = exports2.cmyk = exports2.rgb = exports2.grayscale = exports2.ColorTypes = void 0;
@@ -22546,9 +22546,9 @@ var require_colors = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/svgPath.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/svgPath.js
 var require_svgPath = __commonJS({
-  "node_modules/pdf-lib/cjs/api/svgPath.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/svgPath.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.svgPathToOperators = void 0;
@@ -22908,9 +22908,9 @@ var require_svgPath = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/operations.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/operations.js
 var require_operations = __commonJS({
-  "node_modules/pdf-lib/cjs/api/operations.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/operations.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.drawOptionList = exports2.drawTextField = exports2.drawTextLines = exports2.drawButton = exports2.drawRadioButton = exports2.drawCheckBox = exports2.rotateInPlace = exports2.drawCheckMark = exports2.drawSvgPath = exports2.drawEllipse = exports2.drawEllipsePath = exports2.drawRectangle = exports2.drawLine = exports2.drawPage = exports2.drawImage = exports2.drawLinesOfText = exports2.drawText = void 0;
@@ -23360,9 +23360,9 @@ var require_operations = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/errors.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/errors.js
 var require_errors3 = __commonJS({
-  "node_modules/pdf-lib/cjs/api/errors.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/errors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.InvalidMaxLengthError = exports2.ExceededMaxLengthError = exports2.CombedTextLayoutError = exports2.RichTextFieldReadError = exports2.FieldExistsAsNonTerminalError = exports2.InvalidFieldNamePartError = exports2.FieldAlreadyExistsError = exports2.MissingOnValueCheckError = exports2.UnexpectedFieldTypeError = exports2.NoSuchFieldError = exports2.RemovePageFromEmptyDocumentError = exports2.ForeignPageError = exports2.FontkitNotRegisteredError = exports2.EncryptedPDFError = void 0;
@@ -23583,9 +23583,9 @@ var require_errors3 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/text/alignment.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/alignment.js
 var require_alignment = __commonJS({
-  "node_modules/pdf-lib/cjs/api/text/alignment.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/alignment.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.TextAlignment = void 0;
@@ -23598,9 +23598,9 @@ var require_alignment = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/text/layout.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/layout.js
 var require_layout = __commonJS({
-  "node_modules/pdf-lib/cjs/api/text/layout.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/layout.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.layoutSinglelineText = exports2.layoutCombedText = exports2.layoutMultilineText = void 0;
@@ -23801,9 +23801,9 @@ var require_layout = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/appearances.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/appearances.js
 var require_appearances = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/appearances.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/appearances.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.defaultOptionListAppearanceProvider = exports2.defaultDropdownAppearanceProvider = exports2.defaultTextFieldAppearanceProvider = exports2.defaultButtonAppearanceProvider = exports2.defaultRadioGroupAppearanceProvider = exports2.defaultCheckBoxAppearanceProvider = exports2.normalizeAppearance = void 0;
@@ -24201,9 +24201,9 @@ var require_appearances = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFEmbeddedPage.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFEmbeddedPage.js
 var require_PDFEmbeddedPage = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFEmbeddedPage.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFEmbeddedPage.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24262,9 +24262,9 @@ var require_PDFEmbeddedPage = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFFont.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFFont.js
 var require_PDFFont = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFFont.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFFont.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24347,9 +24347,9 @@ var require_PDFFont = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFImage.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFImage.js
 var require_PDFImage = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFImage.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFImage.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24425,9 +24425,9 @@ var require_PDFImage = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/image/alignment.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/image/alignment.js
 var require_alignment2 = __commonJS({
-  "node_modules/pdf-lib/cjs/api/image/alignment.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/image/alignment.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ImageAlignment = void 0;
@@ -24440,9 +24440,9 @@ var require_alignment2 = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/image/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/image/index.js
 var require_image = __commonJS({
-  "node_modules/pdf-lib/cjs/api/image/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/image/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24450,9 +24450,9 @@ var require_image = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFField.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFField.js
 var require_PDFField = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFField.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFField.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.assertFieldAppearanceOptions = void 0;
@@ -24679,9 +24679,9 @@ var require_PDFField = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFCheckBox.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFCheckBox.js
 var require_PDFCheckBox = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFCheckBox.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFCheckBox.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24797,9 +24797,9 @@ var require_PDFCheckBox = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFDropdown.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFDropdown.js
 var require_PDFDropdown = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFDropdown.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFDropdown.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25016,9 +25016,9 @@ var require_PDFDropdown = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFOptionList.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFOptionList.js
 var require_PDFOptionList = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFOptionList.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFOptionList.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25213,9 +25213,9 @@ var require_PDFOptionList = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFRadioGroup.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFRadioGroup.js
 var require_PDFRadioGroup = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFRadioGroup.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFRadioGroup.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25379,9 +25379,9 @@ var require_PDFRadioGroup = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFSignature.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFSignature.js
 var require_PDFSignature = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFSignature.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFSignature.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25414,9 +25414,9 @@ var require_PDFSignature = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFTextField.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFTextField.js
 var require_PDFTextField = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFTextField.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFTextField.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25657,9 +25657,9 @@ var require_PDFTextField = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/StandardFonts.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/StandardFonts.js
 var require_StandardFonts = __commonJS({
-  "node_modules/pdf-lib/cjs/api/StandardFonts.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/StandardFonts.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.StandardFonts = void 0;
@@ -25683,9 +25683,9 @@ var require_StandardFonts = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFForm.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFForm.js
 var require_PDFForm = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFForm.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFForm.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -26063,9 +26063,9 @@ var require_PDFForm = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/sizes.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/sizes.js
 var require_sizes = __commonJS({
-  "node_modules/pdf-lib/cjs/api/sizes.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/sizes.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.PageSizes = void 0;
@@ -26124,9 +26124,9 @@ var require_sizes = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFDocumentOptions.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFDocumentOptions.js
 var require_PDFDocumentOptions = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFDocumentOptions.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFDocumentOptions.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ParseSpeeds = void 0;
@@ -26140,9 +26140,9 @@ var require_PDFDocumentOptions = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFEmbeddedFile.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFEmbeddedFile.js
 var require_PDFEmbeddedFile = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFEmbeddedFile.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFEmbeddedFile.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -26207,9 +26207,9 @@ var require_PDFEmbeddedFile = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFJavaScript.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFJavaScript.js
 var require_PDFJavaScript = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFJavaScript.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFJavaScript.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -26270,9 +26270,9 @@ var require_PDFJavaScript = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/core/embedders/JavaScriptEmbedder.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/JavaScriptEmbedder.js
 var require_JavaScriptEmbedder = __commonJS({
-  "node_modules/pdf-lib/cjs/core/embedders/JavaScriptEmbedder.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/JavaScriptEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -26317,9 +26317,9 @@ var require_JavaScriptEmbedder = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFDocument.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFDocument.js
 var require_PDFDocument = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFDocument.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFDocument.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27026,9 +27026,9 @@ var require_PDFDocument = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFPageOptions.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFPageOptions.js
 var require_PDFPageOptions = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFPageOptions.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFPageOptions.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.BlendMode = void 0;
@@ -27050,9 +27050,9 @@ var require_PDFPageOptions = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/PDFPage.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFPage.js
 var require_PDFPage = __commonJS({
-  "node_modules/pdf-lib/cjs/api/PDFPage.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFPage.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27722,9 +27722,9 @@ var require_PDFPage = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/PDFButton.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFButton.js
 var require_PDFButton = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/PDFButton.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFButton.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27833,9 +27833,9 @@ var require_PDFButton = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/form/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/index.js
 var require_form = __commonJS({
-  "node_modules/pdf-lib/cjs/api/form/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27879,9 +27879,9 @@ var require_form = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/text/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/index.js
 var require_text = __commonJS({
-  "node_modules/pdf-lib/cjs/api/text/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27890,9 +27890,9 @@ var require_text = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/api/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/index.js
 var require_api = __commonJS({
-  "node_modules/pdf-lib/cjs/api/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27936,17 +27936,17 @@ var require_api = __commonJS({
   }
 });
 
-// node_modules/pdf-lib/cjs/types/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/types/index.js
 var require_types = __commonJS({
-  "node_modules/pdf-lib/cjs/types/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/types/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
   }
 });
 
-// node_modules/pdf-lib/cjs/index.js
+// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/index.js
 var require_cjs = __commonJS({
-  "node_modules/pdf-lib/cjs/index.js"(exports2) {
+  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -29299,7 +29299,7 @@ var init_x_layers = __esm({
   }
 });
 
-// node_modules/@embedpdf/pdfium/dist/index.js
+// ../../node_modules/.pnpm/@embedpdf+pdfium@2.15.1/node_modules/@embedpdf/pdfium/dist/index.js
 var dist_exports = {};
 __export(dist_exports, {
   DEFAULT_PDFIUM_WASM_URL: () => DEFAULT_PDFIUM_WASM_URL,
@@ -29323,7 +29323,7 @@ async function init(moduleOverrides) {
 }
 var createPdfium, functions, DEFAULT_PDFIUM_WASM_URL;
 var init_dist = __esm({
-  "node_modules/@embedpdf/pdfium/dist/index.js"() {
+  "../../node_modules/.pnpm/@embedpdf+pdfium@2.15.1/node_modules/@embedpdf/pdfium/dist/index.js"() {
     createPdfium = (() => {
       var _scriptName = import.meta.url;
       return async function(moduleArg = {}) {
@@ -32743,11 +32743,11 @@ var init_dist = __esm({
           HEAP32[tmPtr + 28 >> 2] = yday;
         }
         __name(__gmtime_js, "__gmtime_js");
-        var isLeapYear = /* @__PURE__ */ __name((year) => year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0), "isLeapYear");
+        var isLeapYear2 = /* @__PURE__ */ __name((year) => year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0), "isLeapYear");
         var MONTH_DAYS_LEAP_CUMULATIVE = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
         var MONTH_DAYS_REGULAR_CUMULATIVE = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
         var ydayFromDate = /* @__PURE__ */ __name((date) => {
-          var leap = isLeapYear(date.getFullYear());
+          var leap = isLeapYear2(date.getFullYear());
           var monthDaysCumulative = leap ? MONTH_DAYS_LEAP_CUMULATIVE : MONTH_DAYS_REGULAR_CUMULATIVE;
           var yday = monthDaysCumulative[date.getMonth()] + date.getDate() - 1;
           return yday;
@@ -38426,7 +38426,9 @@ var init_save_pdf = __esm({
 });
 
 // src/backend/index.ts
-import { readFile as readFile2, stat } from "node:fs/promises";
+import { mkdir, readFile as readFile2, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join as join4, resolve as resolvePath } from "node:path";
 
 // vendor/genoffice/packages/pptx-engine/src/index.ts
 var import_jszip3 = __toESM(require_lib3());
@@ -38435,7 +38437,7 @@ var import_jszip3 = __toESM(require_lib3());
 var import_jszip = __toESM(require_lib3(), 1);
 import { createHash } from "node:crypto";
 
-// node_modules/fast-xml-parser/src/util.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/util.js
 var nameStartChar = ":A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
 var nameChar = nameStartChar + "\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
 var nameRegexp = "[" + nameStartChar + "][" + nameChar + "]*";
@@ -38478,7 +38480,7 @@ var DANGEROUS_PROPERTY_NAMES = [
 ];
 var criticalProperties = ["__proto__", "constructor", "prototype"];
 
-// node_modules/fast-xml-parser/src/validator.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/validator.js
 var defaultOptions = {
   allowBooleanAttributes: false,
   //A tag can have attributes without any value
@@ -38705,56 +38707,9 @@ function readAttributeStr(xmlData, i) {
   };
 }
 __name(readAttributeStr, "readAttributeStr");
-function scanAttributeTokens(attrStr) {
-  const tokens = [];
-  const len = attrStr.length;
-  let i = 0;
-  while (i < len) {
-    const tokenStart = i;
-    while (i < len && isWhiteSpace(attrStr[i])) i++;
-    if (i >= len) break;
-    if (attrStr[i] === "=") {
-      i = tokenStart + 1;
-      continue;
-    }
-    const leadingWs = attrStr.slice(tokenStart, i);
-    const nameStart = i;
-    while (i < len && !isWhiteSpace(attrStr[i]) && attrStr[i] !== "=") i++;
-    const name = attrStr.slice(nameStart, i);
-    let equalsGroup;
-    let j = i;
-    while (j < len && isWhiteSpace(attrStr[j])) j++;
-    if (j < len && attrStr[j] === "=") {
-      equalsGroup = attrStr.slice(i, j + 1);
-      i = j + 1;
-    }
-    let quoteChar;
-    let value;
-    let k = i;
-    while (k < len && isWhiteSpace(attrStr[k])) k++;
-    if (k < len && (attrStr[k] === '"' || attrStr[k] === "'")) {
-      const valueStart = k + 1;
-      const closeIdx = attrStr.indexOf(attrStr[k], valueStart);
-      if (closeIdx !== -1) {
-        quoteChar = attrStr[k];
-        value = attrStr.slice(valueStart, closeIdx);
-        i = closeIdx + 1;
-      }
-    }
-    const token = { startIndex: tokenStart };
-    token[1] = leadingWs;
-    token[2] = name;
-    token[3] = equalsGroup;
-    token[4] = quoteChar !== void 0 ? true : void 0;
-    token[5] = quoteChar;
-    token[6] = value;
-    tokens.push(token);
-  }
-  return tokens;
-}
-__name(scanAttributeTokens, "scanAttributeTokens");
+var validAttrStrRegxp = new RegExp(`(\\s*)([^\\s=]+)(\\s*=)?(\\s*(['"])(([\\s\\S])*?)\\5)?`, "g");
 function validateAttributeString(attrStr, options) {
-  const matches = scanAttributeTokens(attrStr);
+  const matches = getAllMatches(attrStr, validAttrStrRegxp);
   const attrNames = {};
   for (let i = 0; i < matches.length; i++) {
     if (matches[i][1].length === 0) {
@@ -38844,7 +38799,941 @@ function getPositionFromMatch(match) {
 }
 __name(getPositionFromMatch, "getPositionFromMatch");
 
-// node_modules/@nodable/entities/src/entities.js
+// ../../node_modules/.pnpm/@nodable+entities@2.1.1/node_modules/@nodable/entities/src/entities.js
+var BASIC_LATIN = {
+  amp: "&",
+  AMP: "&",
+  lt: "<",
+  LT: "<",
+  gt: ">",
+  GT: ">",
+  quot: '"',
+  QUOT: '"',
+  apos: "'",
+  lsquo: "\u2018",
+  rsquo: "\u2019",
+  ldquo: "\u201C",
+  rdquo: "\u201D",
+  lsquor: "\u201A",
+  rsquor: "\u2019",
+  ldquor: "\u201E",
+  bdquo: "\u201E",
+  comma: ",",
+  period: ".",
+  colon: ":",
+  semi: ";",
+  excl: "!",
+  quest: "?",
+  num: "#",
+  dollar: "$",
+  percent: "%",
+  ast: "*",
+  commat: "@",
+  lowbar: "_",
+  verbar: "|",
+  vert: "|",
+  sol: "/",
+  bsol: "\\",
+  lbrace: "{",
+  rbrace: "}",
+  lbrack: "[",
+  rbrack: "]",
+  lpar: "(",
+  rpar: ")",
+  nbsp: "\xA0",
+  iexcl: "\xA1",
+  cent: "\xA2",
+  pound: "\xA3",
+  curren: "\xA4",
+  yen: "\xA5",
+  brvbar: "\xA6",
+  sect: "\xA7",
+  uml: "\xA8",
+  copy: "\xA9",
+  COPY: "\xA9",
+  ordf: "\xAA",
+  laquo: "\xAB",
+  not: "\xAC",
+  shy: "\xAD",
+  reg: "\xAE",
+  REG: "\xAE",
+  macr: "\xAF",
+  deg: "\xB0",
+  plusmn: "\xB1",
+  sup2: "\xB2",
+  sup3: "\xB3",
+  acute: "\xB4",
+  micro: "\xB5",
+  para: "\xB6",
+  middot: "\xB7",
+  cedil: "\xB8",
+  sup1: "\xB9",
+  ordm: "\xBA",
+  raquo: "\xBB",
+  frac14: "\xBC",
+  frac12: "\xBD",
+  half: "\xBD",
+  frac34: "\xBE",
+  iquest: "\xBF",
+  times: "\xD7",
+  div: "\xF7",
+  divide: "\xF7"
+};
+var LATIN_ACCENTS = {
+  Agrave: "\xC0",
+  agrave: "\xE0",
+  Aacute: "\xC1",
+  aacute: "\xE1",
+  Acirc: "\xC2",
+  acirc: "\xE2",
+  Atilde: "\xC3",
+  atilde: "\xE3",
+  Auml: "\xC4",
+  auml: "\xE4",
+  Aring: "\xC5",
+  aring: "\xE5",
+  AElig: "\xC6",
+  aelig: "\xE6",
+  Ccedil: "\xC7",
+  ccedil: "\xE7",
+  Egrave: "\xC8",
+  egrave: "\xE8",
+  Eacute: "\xC9",
+  eacute: "\xE9",
+  Ecirc: "\xCA",
+  ecirc: "\xEA",
+  Euml: "\xCB",
+  euml: "\xEB",
+  Igrave: "\xCC",
+  igrave: "\xEC",
+  Iacute: "\xCD",
+  iacute: "\xED",
+  Icirc: "\xCE",
+  icirc: "\xEE",
+  Iuml: "\xCF",
+  iuml: "\xEF",
+  ETH: "\xD0",
+  eth: "\xF0",
+  Ntilde: "\xD1",
+  ntilde: "\xF1",
+  Ograve: "\xD2",
+  ograve: "\xF2",
+  Oacute: "\xD3",
+  oacute: "\xF3",
+  Ocirc: "\xD4",
+  ocirc: "\xF4",
+  Otilde: "\xD5",
+  otilde: "\xF5",
+  Ouml: "\xD6",
+  ouml: "\xF6",
+  Oslash: "\xD8",
+  oslash: "\xF8",
+  Ugrave: "\xD9",
+  ugrave: "\xF9",
+  Uacute: "\xDA",
+  uacute: "\xFA",
+  Ucirc: "\xDB",
+  ucirc: "\xFB",
+  Uuml: "\xDC",
+  uuml: "\xFC",
+  Yacute: "\xDD",
+  yacute: "\xFD",
+  THORN: "\xDE",
+  thorn: "\xFE",
+  szlig: "\xDF",
+  yuml: "\xFF",
+  Yuml: "\u0178"
+};
+var LATIN_EXTENDED = {
+  Amacr: "\u0100",
+  amacr: "\u0101",
+  Abreve: "\u0102",
+  abreve: "\u0103",
+  Aogon: "\u0104",
+  aogon: "\u0105",
+  Cacute: "\u0106",
+  cacute: "\u0107",
+  Ccirc: "\u0108",
+  ccirc: "\u0109",
+  Cdot: "\u010A",
+  cdot: "\u010B",
+  Ccaron: "\u010C",
+  ccaron: "\u010D",
+  Dcaron: "\u010E",
+  dcaron: "\u010F",
+  Dstrok: "\u0110",
+  dstrok: "\u0111",
+  Emacr: "\u0112",
+  emacr: "\u0113",
+  Ecaron: "\u011A",
+  ecaron: "\u011B",
+  Edot: "\u0116",
+  edot: "\u0117",
+  Eogon: "\u0118",
+  eogon: "\u0119",
+  Gcirc: "\u011C",
+  gcirc: "\u011D",
+  Gbreve: "\u011E",
+  gbreve: "\u011F",
+  Gdot: "\u0120",
+  gdot: "\u0121",
+  Gcedil: "\u0122",
+  Hcirc: "\u0124",
+  hcirc: "\u0125",
+  Hstrok: "\u0126",
+  hstrok: "\u0127",
+  Itilde: "\u0128",
+  itilde: "\u0129",
+  Imacr: "\u012A",
+  imacr: "\u012B",
+  Iogon: "\u012E",
+  iogon: "\u012F",
+  Idot: "\u0130",
+  IJlig: "\u0132",
+  ijlig: "\u0133",
+  Jcirc: "\u0134",
+  jcirc: "\u0135",
+  Kcedil: "\u0136",
+  kcedil: "\u0137",
+  kgreen: "\u0138",
+  Lacute: "\u0139",
+  lacute: "\u013A",
+  Lcedil: "\u013B",
+  lcedil: "\u013C",
+  Lcaron: "\u013D",
+  lcaron: "\u013E",
+  Lmidot: "\u013F",
+  lmidot: "\u0140",
+  Lstrok: "\u0141",
+  lstrok: "\u0142",
+  Nacute: "\u0143",
+  nacute: "\u0144",
+  Ncaron: "\u0147",
+  ncaron: "\u0148",
+  Ncedil: "\u0145",
+  ncedil: "\u0146",
+  ENG: "\u014A",
+  eng: "\u014B",
+  Omacr: "\u014C",
+  omacr: "\u014D",
+  Odblac: "\u0150",
+  odblac: "\u0151",
+  OElig: "\u0152",
+  oelig: "\u0153",
+  Racute: "\u0154",
+  racute: "\u0155",
+  Rcaron: "\u0158",
+  rcaron: "\u0159",
+  Rcedil: "\u0156",
+  rcedil: "\u0157",
+  Sacute: "\u015A",
+  sacute: "\u015B",
+  Scirc: "\u015C",
+  scirc: "\u015D",
+  Scedil: "\u015E",
+  scedil: "\u015F",
+  Scaron: "\u0160",
+  scaron: "\u0161",
+  Tcedil: "\u0162",
+  tcedil: "\u0163",
+  Tcaron: "\u0164",
+  tcaron: "\u0165",
+  Tstrok: "\u0166",
+  tstrok: "\u0167",
+  Utilde: "\u0168",
+  utilde: "\u0169",
+  Umacr: "\u016A",
+  umacr: "\u016B",
+  Ubreve: "\u016C",
+  ubreve: "\u016D",
+  Uring: "\u016E",
+  uring: "\u016F",
+  Udblac: "\u0170",
+  udblac: "\u0171",
+  Uogon: "\u0172",
+  uogon: "\u0173",
+  Wcirc: "\u0174",
+  wcirc: "\u0175",
+  Ycirc: "\u0176",
+  ycirc: "\u0177",
+  Zacute: "\u0179",
+  zacute: "\u017A",
+  Zdot: "\u017B",
+  zdot: "\u017C",
+  Zcaron: "\u017D",
+  zcaron: "\u017E"
+};
+var GREEK = {
+  Alpha: "\u0391",
+  alpha: "\u03B1",
+  Beta: "\u0392",
+  beta: "\u03B2",
+  Gamma: "\u0393",
+  gamma: "\u03B3",
+  Delta: "\u0394",
+  delta: "\u03B4",
+  Epsilon: "\u0395",
+  epsilon: "\u03B5",
+  epsiv: "\u03F5",
+  varepsilon: "\u03F5",
+  Zeta: "\u0396",
+  zeta: "\u03B6",
+  Eta: "\u0397",
+  eta: "\u03B7",
+  Theta: "\u0398",
+  theta: "\u03B8",
+  thetasym: "\u03D1",
+  vartheta: "\u03D1",
+  Iota: "\u0399",
+  iota: "\u03B9",
+  Kappa: "\u039A",
+  kappa: "\u03BA",
+  kappav: "\u03F0",
+  varkappa: "\u03F0",
+  Lambda: "\u039B",
+  lambda: "\u03BB",
+  Mu: "\u039C",
+  mu: "\u03BC",
+  Nu: "\u039D",
+  nu: "\u03BD",
+  Xi: "\u039E",
+  xi: "\u03BE",
+  Omicron: "\u039F",
+  omicron: "\u03BF",
+  Pi: "\u03A0",
+  pi: "\u03C0",
+  piv: "\u03D6",
+  varpi: "\u03D6",
+  Rho: "\u03A1",
+  rho: "\u03C1",
+  rhov: "\u03F1",
+  varrho: "\u03F1",
+  Sigma: "\u03A3",
+  sigma: "\u03C3",
+  sigmaf: "\u03C2",
+  sigmav: "\u03C2",
+  varsigma: "\u03C2",
+  Tau: "\u03A4",
+  tau: "\u03C4",
+  Upsilon: "\u03A5",
+  upsilon: "\u03C5",
+  upsi: "\u03C5",
+  Upsi: "\u03D2",
+  upsih: "\u03D2",
+  Phi: "\u03A6",
+  phi: "\u03C6",
+  phiv: "\u03D5",
+  varphi: "\u03D5",
+  Chi: "\u03A7",
+  chi: "\u03C7",
+  Psi: "\u03A8",
+  psi: "\u03C8",
+  Omega: "\u03A9",
+  omega: "\u03C9",
+  ohm: "\u03A9",
+  Gammad: "\u03DC",
+  gammad: "\u03DD",
+  digamma: "\u03DD"
+};
+var CYRILLIC = {
+  Afr: "\u{1D504}",
+  afr: "\u{1D51E}",
+  Acy: "\u0410",
+  acy: "\u0430",
+  Bcy: "\u0411",
+  bcy: "\u0431",
+  Vcy: "\u0412",
+  vcy: "\u0432",
+  Gcy: "\u0413",
+  gcy: "\u0433",
+  Dcy: "\u0414",
+  dcy: "\u0434",
+  IEcy: "\u0415",
+  iecy: "\u0435",
+  IOcy: "\u0401",
+  iocy: "\u0451",
+  ZHcy: "\u0416",
+  zhcy: "\u0436",
+  Zcy: "\u0417",
+  zcy: "\u0437",
+  Icy: "\u0418",
+  icy: "\u0438",
+  Jcy: "\u0419",
+  jcy: "\u0439",
+  Kcy: "\u041A",
+  kcy: "\u043A",
+  Lcy: "\u041B",
+  lcy: "\u043B",
+  Mcy: "\u041C",
+  mcy: "\u043C",
+  Ncy: "\u041D",
+  ncy: "\u043D",
+  Ocy: "\u041E",
+  ocy: "\u043E",
+  Pcy: "\u041F",
+  pcy: "\u043F",
+  Rcy: "\u0420",
+  rcy: "\u0440",
+  Scy: "\u0421",
+  scy: "\u0441",
+  Tcy: "\u0422",
+  tcy: "\u0442",
+  Ucy: "\u0423",
+  ucy: "\u0443",
+  Fcy: "\u0424",
+  fcy: "\u0444",
+  KHcy: "\u0425",
+  khcy: "\u0445",
+  TScy: "\u0426",
+  tscy: "\u0446",
+  CHcy: "\u0427",
+  chcy: "\u0447",
+  SHcy: "\u0428",
+  shcy: "\u0448",
+  SHCHcy: "\u0429",
+  shchcy: "\u0449",
+  HARDcy: "\u042A",
+  hardcy: "\u044A",
+  Ycy: "\u042B",
+  ycy: "\u044B",
+  SOFTcy: "\u042C",
+  softcy: "\u044C",
+  Ecy: "\u042D",
+  ecy: "\u044D",
+  YUcy: "\u042E",
+  yucy: "\u044E",
+  YAcy: "\u042F",
+  yacy: "\u044F",
+  DJcy: "\u0402",
+  djcy: "\u0452",
+  GJcy: "\u0403",
+  gjcy: "\u0453",
+  Jukcy: "\u0404",
+  jukcy: "\u0454",
+  DScy: "\u0405",
+  dscy: "\u0455",
+  Iukcy: "\u0406",
+  iukcy: "\u0456",
+  YIcy: "\u0407",
+  yicy: "\u0457",
+  Jsercy: "\u0408",
+  jsercy: "\u0458",
+  LJcy: "\u0409",
+  ljcy: "\u0459",
+  NJcy: "\u040A",
+  njcy: "\u045A",
+  TSHcy: "\u040B",
+  tshcy: "\u045B",
+  KJcy: "\u040C",
+  kjcy: "\u045C",
+  Ubrcy: "\u040E",
+  ubrcy: "\u045E",
+  DZcy: "\u040F",
+  dzcy: "\u045F"
+};
+var MATH = {
+  plus: "+",
+  pm: "\xB1",
+  times: "\xD7",
+  div: "\xF7",
+  divide: "\xF7",
+  sdot: "\u22C5",
+  star: "\u2606",
+  starf: "\u2605",
+  bigstar: "\u2605",
+  lowast: "\u2217",
+  ast: "*",
+  midast: "*",
+  compfn: "\u2218",
+  smallcircle: "\u2218",
+  bullet: "\u2022",
+  bull: "\u2022",
+  nbsp: "\xA0",
+  hellip: "\u2026",
+  mldr: "\u2026",
+  prime: "\u2032",
+  Prime: "\u2033",
+  tprime: "\u2034",
+  bprime: "\u2035",
+  backprime: "\u2035",
+  minus: "\u2212",
+  minusd: "\u2238",
+  dotminus: "\u2238",
+  plusdo: "\u2214",
+  dotplus: "\u2214",
+  plusmn: "\xB1",
+  minusplus: "\u2213",
+  mnplus: "\u2213",
+  mp: "\u2213",
+  setminus: "\u2216",
+  smallsetminus: "\u2216",
+  Backslash: "\u2216",
+  setmn: "\u2216",
+  ssetmn: "\u2216",
+  lowbar: "_",
+  verbar: "|",
+  vert: "|",
+  VerticalLine: "|",
+  colon: ":",
+  Colon: "\u2237",
+  Proportion: "\u2237",
+  ratio: "\u2236",
+  equals: "=",
+  ne: "\u2260",
+  nequiv: "\u2262",
+  equiv: "\u2261",
+  Congruent: "\u2261",
+  sim: "\u223C",
+  thicksim: "\u223C",
+  thksim: "\u223C",
+  sime: "\u2243",
+  simeq: "\u2243",
+  TildeEqual: "\u2243",
+  asymp: "\u2248",
+  approx: "\u2248",
+  thickapprox: "\u2248",
+  thkap: "\u2248",
+  TildeTilde: "\u2248",
+  ncong: "\u2247",
+  cong: "\u2245",
+  TildeFullEqual: "\u2245",
+  asympeq: "\u224D",
+  CupCap: "\u224D",
+  bump: "\u224E",
+  Bumpeq: "\u224E",
+  HumpDownHump: "\u224E",
+  bumpe: "\u224F",
+  bumpeq: "\u224F",
+  HumpEqual: "\u224F",
+  le: "\u2264",
+  LessEqual: "\u2264",
+  ge: "\u2265",
+  GreaterEqual: "\u2265",
+  lesseqgtr: "\u22DA",
+  lesseqqgtr: "\u2A8B",
+  greater: ">",
+  less: "<"
+};
+var MATH_ADVANCED = {
+  alefsym: "\u2135",
+  aleph: "\u2135",
+  beth: "\u2136",
+  gimel: "\u2137",
+  daleth: "\u2138",
+  forall: "\u2200",
+  ForAll: "\u2200",
+  part: "\u2202",
+  PartialD: "\u2202",
+  exist: "\u2203",
+  Exists: "\u2203",
+  nexist: "\u2204",
+  nexists: "\u2204",
+  empty: "\u2205",
+  emptyset: "\u2205",
+  emptyv: "\u2205",
+  varnothing: "\u2205",
+  nabla: "\u2207",
+  Del: "\u2207",
+  isin: "\u2208",
+  isinv: "\u2208",
+  in: "\u2208",
+  Element: "\u2208",
+  notin: "\u2209",
+  notinva: "\u2209",
+  ni: "\u220B",
+  niv: "\u220B",
+  SuchThat: "\u220B",
+  ReverseElement: "\u220B",
+  notni: "\u220C",
+  notniva: "\u220C",
+  prod: "\u220F",
+  Product: "\u220F",
+  coprod: "\u2210",
+  Coproduct: "\u2210",
+  sum: "\u2211",
+  Sum: "\u2211",
+  minus: "\u2212",
+  mp: "\u2213",
+  plusdo: "\u2214",
+  dotplus: "\u2214",
+  setminus: "\u2216",
+  lowast: "\u2217",
+  radic: "\u221A",
+  Sqrt: "\u221A",
+  prop: "\u221D",
+  propto: "\u221D",
+  Proportional: "\u221D",
+  varpropto: "\u221D",
+  infin: "\u221E",
+  infintie: "\u29DD",
+  ang: "\u2220",
+  angle: "\u2220",
+  angmsd: "\u2221",
+  measuredangle: "\u2221",
+  angsph: "\u2222",
+  mid: "\u2223",
+  VerticalBar: "\u2223",
+  nmid: "\u2224",
+  nsmid: "\u2224",
+  npar: "\u2226",
+  parallel: "\u2225",
+  spar: "\u2225",
+  nparallel: "\u2226",
+  nspar: "\u2226",
+  and: "\u2227",
+  wedge: "\u2227",
+  or: "\u2228",
+  vee: "\u2228",
+  cap: "\u2229",
+  cup: "\u222A",
+  int: "\u222B",
+  Integral: "\u222B",
+  conint: "\u222E",
+  ContourIntegral: "\u222E",
+  Conint: "\u222F",
+  DoubleContourIntegral: "\u222F",
+  Cconint: "\u2230",
+  there4: "\u2234",
+  therefore: "\u2234",
+  Therefore: "\u2234",
+  becaus: "\u2235",
+  because: "\u2235",
+  Because: "\u2235",
+  ratio: "\u2236",
+  Proportion: "\u2237",
+  minusd: "\u2238",
+  dotminus: "\u2238",
+  mDDot: "\u223A",
+  homtht: "\u223B",
+  sim: "\u223C",
+  bsimg: "\u223D",
+  backsim: "\u223D",
+  ac: "\u223E",
+  mstpos: "\u223E",
+  acd: "\u223F",
+  VerticalTilde: "\u2240",
+  wr: "\u2240",
+  wreath: "\u2240",
+  nsime: "\u2244",
+  nsimeq: "\u2244",
+  ncong: "\u2247",
+  simne: "\u2246",
+  ncongdot: "\u2A6D\u0338",
+  ngsim: "\u2275",
+  nsim: "\u2241",
+  napprox: "\u2249",
+  nap: "\u2249",
+  ngeq: "\u2271",
+  nge: "\u2271",
+  nleq: "\u2270",
+  nle: "\u2270",
+  ngtr: "\u226F",
+  ngt: "\u226F",
+  nless: "\u226E",
+  nlt: "\u226E",
+  nprec: "\u2280",
+  npr: "\u2280",
+  nsucc: "\u2281",
+  nsc: "\u2281"
+};
+var ARROWS = {
+  larr: "\u2190",
+  leftarrow: "\u2190",
+  LeftArrow: "\u2190",
+  uarr: "\u2191",
+  uparrow: "\u2191",
+  UpArrow: "\u2191",
+  rarr: "\u2192",
+  rightarrow: "\u2192",
+  RightArrow: "\u2192",
+  darr: "\u2193",
+  downarrow: "\u2193",
+  DownArrow: "\u2193",
+  harr: "\u2194",
+  leftrightarrow: "\u2194",
+  LeftRightArrow: "\u2194",
+  varr: "\u2195",
+  updownarrow: "\u2195",
+  UpDownArrow: "\u2195",
+  nwarr: "\u2196",
+  nwarrow: "\u2196",
+  UpperLeftArrow: "\u2196",
+  nearr: "\u2197",
+  nearrow: "\u2197",
+  UpperRightArrow: "\u2197",
+  searr: "\u2198",
+  searrow: "\u2198",
+  LowerRightArrow: "\u2198",
+  swarr: "\u2199",
+  swarrow: "\u2199",
+  LowerLeftArrow: "\u2199",
+  lArr: "\u21D0",
+  Leftarrow: "\u21D0",
+  uArr: "\u21D1",
+  Uparrow: "\u21D1",
+  rArr: "\u21D2",
+  Rightarrow: "\u21D2",
+  dArr: "\u21D3",
+  Downarrow: "\u21D3",
+  hArr: "\u21D4",
+  Leftrightarrow: "\u21D4",
+  iff: "\u21D4",
+  vArr: "\u21D5",
+  Updownarrow: "\u21D5",
+  lAarr: "\u21DA",
+  Lleftarrow: "\u21DA",
+  rAarr: "\u21DB",
+  Rrightarrow: "\u21DB",
+  lrarr: "\u21C6",
+  leftrightarrows: "\u21C6",
+  rlarr: "\u21C4",
+  rightleftarrows: "\u21C4",
+  lrhar: "\u21CB",
+  leftrightharpoons: "\u21CB",
+  ReverseEquilibrium: "\u21CB",
+  rlhar: "\u21CC",
+  rightleftharpoons: "\u21CC",
+  Equilibrium: "\u21CC",
+  udarr: "\u21C5",
+  UpArrowDownArrow: "\u21C5",
+  duarr: "\u21F5",
+  DownArrowUpArrow: "\u21F5",
+  llarr: "\u21C7",
+  leftleftarrows: "\u21C7",
+  rrarr: "\u21C9",
+  rightrightarrows: "\u21C9",
+  ddarr: "\u21CA",
+  downdownarrows: "\u21CA",
+  har: "\u21BD",
+  lhard: "\u21BD",
+  leftharpoondown: "\u21BD",
+  lharu: "\u21BC",
+  leftharpoonup: "\u21BC",
+  rhard: "\u21C1",
+  rightharpoondown: "\u21C1",
+  rharu: "\u21C0",
+  rightharpoonup: "\u21C0",
+  lsh: "\u21B0",
+  Lsh: "\u21B0",
+  rsh: "\u21B1",
+  Rsh: "\u21B1",
+  ldsh: "\u21B2",
+  rdsh: "\u21B3",
+  hookleftarrow: "\u21A9",
+  hookrightarrow: "\u21AA",
+  mapstoleft: "\u21A4",
+  mapstoup: "\u21A5",
+  map: "\u21A6",
+  mapsto: "\u21A6",
+  mapstodown: "\u21A7",
+  crarr: "\u21B5",
+  nleftarrow: "\u219A",
+  nleftrightarrow: "\u21AE",
+  nrightarrow: "\u219B",
+  nrarr: "\u219B",
+  larrtl: "\u21A2",
+  rarrtl: "\u21A3",
+  leftarrowtail: "\u21A2",
+  rightarrowtail: "\u21A3",
+  twoheadleftarrow: "\u219E",
+  twoheadrightarrow: "\u21A0",
+  Larr: "\u219E",
+  Rarr: "\u21A0",
+  larrhk: "\u21A9",
+  rarrhk: "\u21AA",
+  larrlp: "\u21AB",
+  looparrowleft: "\u21AB",
+  rarrlp: "\u21AC",
+  looparrowright: "\u21AC",
+  harrw: "\u21AD",
+  leftrightsquigarrow: "\u21AD",
+  nrarrw: "\u219D\u0338",
+  rarrw: "\u219D",
+  rightsquigarrow: "\u219D",
+  larrbfs: "\u291F",
+  rarrbfs: "\u2920",
+  nvHarr: "\u2904",
+  nvlArr: "\u2902",
+  nvrArr: "\u2903",
+  larrfs: "\u291D",
+  rarrfs: "\u291E",
+  Map: "\u2905",
+  larrsim: "\u2973",
+  rarrsim: "\u2974",
+  harrcir: "\u2948",
+  Uarrocir: "\u2949",
+  lurdshar: "\u294A",
+  ldrdhar: "\u2967",
+  ldrushar: "\u294B",
+  rdldhar: "\u2969",
+  lrhard: "\u296D",
+  uharr: "\u21BE",
+  uharl: "\u21BF",
+  dharr: "\u21C2",
+  dharl: "\u21C3",
+  Uarr: "\u219F",
+  Darr: "\u21A1",
+  zigrarr: "\u21DD",
+  nwArr: "\u21D6",
+  neArr: "\u21D7",
+  seArr: "\u21D8",
+  swArr: "\u21D9",
+  nharr: "\u21AE",
+  nhArr: "\u21CE",
+  nlarr: "\u219A",
+  nlArr: "\u21CD",
+  nrArr: "\u21CF",
+  larrb: "\u21E4",
+  LeftArrowBar: "\u21E4",
+  rarrb: "\u21E5",
+  RightArrowBar: "\u21E5"
+};
+var SHAPES = {
+  square: "\u25A1",
+  Square: "\u25A1",
+  squ: "\u25A1",
+  squf: "\u25AA",
+  squarf: "\u25AA",
+  blacksquar: "\u25AA",
+  blacksquare: "\u25AA",
+  FilledVerySmallSquare: "\u25AA",
+  blk34: "\u2593",
+  blk12: "\u2592",
+  blk14: "\u2591",
+  block: "\u2588",
+  srect: "\u25AD",
+  rect: "\u25AD",
+  sdot: "\u22C5",
+  sdotb: "\u22A1",
+  dotsquare: "\u22A1",
+  triangle: "\u25B5",
+  tri: "\u25B5",
+  trine: "\u25B5",
+  utri: "\u25B5",
+  triangledown: "\u25BF",
+  dtri: "\u25BF",
+  tridown: "\u25BF",
+  triangleleft: "\u25C3",
+  ltri: "\u25C3",
+  triangleright: "\u25B9",
+  rtri: "\u25B9",
+  blacktriangle: "\u25B4",
+  utrif: "\u25B4",
+  blacktriangledown: "\u25BE",
+  dtrif: "\u25BE",
+  blacktriangleleft: "\u25C2",
+  ltrif: "\u25C2",
+  blacktriangleright: "\u25B8",
+  rtrif: "\u25B8",
+  loz: "\u25CA",
+  lozenge: "\u25CA",
+  blacklozenge: "\u29EB",
+  lozf: "\u29EB",
+  bigcirc: "\u25EF",
+  xcirc: "\u25EF",
+  circ: "\u02C6",
+  Circle: "\u25CB",
+  cir: "\u25CB",
+  o: "\u25CB",
+  bullet: "\u2022",
+  bull: "\u2022",
+  hellip: "\u2026",
+  mldr: "\u2026",
+  nldr: "\u2025",
+  boxh: "\u2500",
+  HorizontalLine: "\u2500",
+  boxv: "\u2502",
+  boxdr: "\u250C",
+  boxdl: "\u2510",
+  boxur: "\u2514",
+  boxul: "\u2518",
+  boxvr: "\u251C",
+  boxvl: "\u2524",
+  boxhd: "\u252C",
+  boxhu: "\u2534",
+  boxvh: "\u253C",
+  boxH: "\u2550",
+  boxV: "\u2551",
+  boxdR: "\u2552",
+  boxDr: "\u2553",
+  boxDR: "\u2554",
+  boxDl: "\u2555",
+  boxdL: "\u2556",
+  boxDL: "\u2557",
+  boxuR: "\u2558",
+  boxUr: "\u2559",
+  boxUR: "\u255A",
+  boxUl: "\u255C",
+  boxuL: "\u255B",
+  boxUL: "\u255D",
+  boxvR: "\u255E",
+  boxVr: "\u255F",
+  boxVR: "\u2560",
+  boxVl: "\u2562",
+  boxvL: "\u2561",
+  boxVL: "\u2563",
+  boxHd: "\u2564",
+  boxhD: "\u2565",
+  boxHD: "\u2566",
+  boxHu: "\u2567",
+  boxhU: "\u2568",
+  boxHU: "\u2569",
+  boxvH: "\u256A",
+  boxVh: "\u256B",
+  boxVH: "\u256C"
+};
+var PUNCTUATION = {
+  excl: "!",
+  iexcl: "\xA1",
+  brvbar: "\xA6",
+  sect: "\xA7",
+  uml: "\xA8",
+  copy: "\xA9",
+  ordf: "\xAA",
+  laquo: "\xAB",
+  not: "\xAC",
+  shy: "\xAD",
+  reg: "\xAE",
+  macr: "\xAF",
+  deg: "\xB0",
+  plusmn: "\xB1",
+  sup2: "\xB2",
+  sup3: "\xB3",
+  acute: "\xB4",
+  micro: "\xB5",
+  para: "\xB6",
+  middot: "\xB7",
+  cedil: "\xB8",
+  sup1: "\xB9",
+  ordm: "\xBA",
+  raquo: "\xBB",
+  frac14: "\xBC",
+  frac12: "\xBD",
+  frac34: "\xBE",
+  iquest: "\xBF",
+  nbsp: "\xA0",
+  comma: ",",
+  period: ".",
+  colon: ":",
+  semi: ";",
+  vert: "|",
+  Verbar: "\u2016",
+  verbar: "|",
+  dblac: "\u02DD",
+  circ: "\u02C6",
+  caron: "\u02C7",
+  breve: "\u02D8",
+  dot: "\u02D9",
+  ring: "\u02DA",
+  ogon: "\u02DB",
+  tilde: "\u02DC",
+  DiacriticalGrave: "`",
+  DiacriticalAcute: "\xB4",
+  DiacriticalTilde: "\u02DC",
+  DiacriticalDot: "\u02D9",
+  DiacriticalDoubleAcute: "\u02DD",
+  grave: "`"
+};
 var CURRENCY = {
   cent: "\xA2",
   pound: "\xA3",
@@ -38861,6 +39750,106 @@ var CURRENCY = {
   won: "\u20A9",
   yuan: "\xA5",
   cedil: "\xB8"
+};
+var FRACTIONS = {
+  frac12: "\xBD",
+  half: "\xBD",
+  frac13: "\u2153",
+  frac14: "\xBC",
+  frac15: "\u2155",
+  frac16: "\u2159",
+  frac18: "\u215B",
+  frac23: "\u2154",
+  frac25: "\u2156",
+  frac34: "\xBE",
+  frac35: "\u2157",
+  frac38: "\u215C",
+  frac45: "\u2158",
+  frac56: "\u215A",
+  frac58: "\u215D",
+  frac78: "\u215E",
+  frasl: "\u2044"
+};
+var MISC_SYMBOLS = {
+  trade: "\u2122",
+  TRADE: "\u2122",
+  telrec: "\u2315",
+  target: "\u2316",
+  ulcorn: "\u231C",
+  ulcorner: "\u231C",
+  urcorn: "\u231D",
+  urcorner: "\u231D",
+  dlcorn: "\u231E",
+  llcorner: "\u231E",
+  drcorn: "\u231F",
+  lrcorner: "\u231F",
+  intercal: "\u22BA",
+  intcal: "\u22BA",
+  oplus: "\u2295",
+  CirclePlus: "\u2295",
+  ominus: "\u2296",
+  CircleMinus: "\u2296",
+  otimes: "\u2297",
+  CircleTimes: "\u2297",
+  osol: "\u2298",
+  odot: "\u2299",
+  CircleDot: "\u2299",
+  oast: "\u229B",
+  circledast: "\u229B",
+  odash: "\u229D",
+  circleddash: "\u229D",
+  ocirc: "\u229A",
+  circledcirc: "\u229A",
+  boxplus: "\u229E",
+  plusb: "\u229E",
+  boxminus: "\u229F",
+  minusb: "\u229F",
+  boxtimes: "\u22A0",
+  timesb: "\u22A0",
+  boxdot: "\u22A1",
+  sdotb: "\u22A1",
+  veebar: "\u22BB",
+  vee: "\u2228",
+  barvee: "\u22BD",
+  and: "\u2227",
+  wedge: "\u2227",
+  Cap: "\u22D2",
+  Cup: "\u22D3",
+  Fork: "\u22D4",
+  pitchfork: "\u22D4",
+  epar: "\u22D5",
+  ltlarr: "\u2976",
+  nvap: "\u224D\u20D2",
+  nvsim: "\u223C\u20D2",
+  nvge: "\u2265\u20D2",
+  nvle: "\u2264\u20D2",
+  nvlt: "<\u20D2",
+  nvgt: ">\u20D2",
+  nvltrie: "\u22B4\u20D2",
+  nvrtrie: "\u22B5\u20D2",
+  Vdash: "\u22A9",
+  dashv: "\u22A3",
+  vDash: "\u22A8",
+  Vvdash: "\u22AA",
+  nvdash: "\u22AC",
+  nvDash: "\u22AD",
+  nVdash: "\u22AE",
+  nVDash: "\u22AF"
+};
+var ALL_ENTITIES = {
+  ...BASIC_LATIN,
+  ...LATIN_ACCENTS,
+  ...LATIN_EXTENDED,
+  ...GREEK,
+  ...CYRILLIC,
+  ...MATH,
+  ...MATH_ADVANCED,
+  ...ARROWS,
+  ...SHAPES,
+  ...PUNCTUATION,
+  ...CURRENCY,
+  ...FRACTIONS,
+  ...MISC_SYMBOLS
 };
 var XML = {
   amp: "&",
@@ -38892,15 +39881,7 @@ var COMMON_HTML = {
   frac34: "\xBE"
 };
 
-// node_modules/@nodable/entities/src/EntityDecoder.js
-var ENTITY_ACTION = Object.freeze({
-  /** Resolve and expand the entity normally. */
-  ALLOW: "allow",
-  /** Silently skip this entity — it will not be registered. */
-  BLOCK: "block",
-  /** Throw an error, aborting entity registration entirely. */
-  THROW: "throw"
-});
+// ../../node_modules/.pnpm/@nodable+entities@2.1.1/node_modules/@nodable/entities/src/EntityDecoder.js
 var SPECIAL_CHARS = new Set("!?\\\\/[]$%{}^&*()<>|+");
 function validateEntityName(name) {
   if (name[0] === "#") {
@@ -38987,14 +39968,6 @@ var EntityDecoder = class {
    *   the effective action is max(onNCR, rangeMinimum).
    * @param {'remove'|'throw'} [options.ncr.nullNCR='remove']
    *   Action for U+0000 (null). 'allow' and 'leave' are clamped to 'remove' since null is never safe.
-   * @param {((name: string, value: string) => 'allow'|'block'|'throw')|null} [options.onExternalEntity=null]
-   *   Hook called when an external entity is registered via `setExternalEntities()` or
-   *   `addExternalEntity()`. Return `ENTITY_ACTION.ALLOW` to accept the entity,
-   *   `ENTITY_ACTION.BLOCK` to silently skip it, or `ENTITY_ACTION.THROW` to abort with an error.
-   * @param {((name: string, value: string) => 'allow'|'block'|'throw')|null} [options.onInputEntity=null]
-   *   Hook called when an input entity is registered via `addInputEntities()`. Return
-   *   `ENTITY_ACTION.ALLOW` to accept, `ENTITY_ACTION.BLOCK` to silently skip, or
-   *   `ENTITY_ACTION.THROW` to abort with an error.
    */
   constructor(options = {}) {
     this._limit = options.limit || {};
@@ -39014,33 +39987,6 @@ var EntityDecoder = class {
     this._ncrXmlVersion = ncrCfg.xmlVersion;
     this._ncrOnLevel = ncrCfg.onLevel;
     this._ncrNullLevel = ncrCfg.nullLevel;
-    this._onExternalEntity = typeof options.onExternalEntity === "function" ? options.onExternalEntity : null;
-    this._onInputEntity = typeof options.onInputEntity === "function" ? options.onInputEntity : null;
-  }
-  // -------------------------------------------------------------------------
-  // Private: registration hook dispatch
-  // -------------------------------------------------------------------------
-  /**
-   * Invoke a registration hook for a single entity name/value pair.
-   * Returns true when the entity should be accepted, false when it should be
-   * silently skipped (BLOCK), and throws when the hook returns THROW.
-   *
-   * @param {((name: string, value: string) => 'allow'|'block'|'throw')|null} hook
-   * @param {string} name
-   * @param {string} value
-   * @param {string} context  — used in error messages ('external' | 'input')
-   * @returns {boolean}  true = accept, false = skip
-   */
-  _applyRegistrationHook(hook, name, value, context) {
-    if (!hook) return true;
-    const action = hook(name, value);
-    if (action === ENTITY_ACTION.BLOCK) return false;
-    if (action === ENTITY_ACTION.THROW) {
-      throw new Error(
-        `[EntityDecoder] Registration of ${context} entity "&${name};" was rejected by hook`
-      );
-    }
-    return true;
   }
   // -------------------------------------------------------------------------
   // Persistent external entity registration
@@ -39048,9 +39994,6 @@ var EntityDecoder = class {
   /**
    * Replace the full set of persistent external entities.
    * All keys are validated — throws on invalid characters.
-   * If `onExternalEntity` is set, it is called once per entry; entries that
-   * return `ENTITY_ACTION.BLOCK` are silently omitted, `ENTITY_ACTION.THROW`
-   * aborts the whole call.
    * @param {Record<string, string | { regex?: RegExp, val: string }>} map
    */
   setExternalEntities(map) {
@@ -39059,32 +40002,17 @@ var EntityDecoder = class {
         validateEntityName(key);
       }
     }
-    if (!this._onExternalEntity) {
-      this._externalMap = mergeEntityMaps(map);
-      return;
-    }
-    const flat = mergeEntityMaps(map);
-    const filtered = /* @__PURE__ */ Object.create(null);
-    for (const [name, value] of Object.entries(flat)) {
-      if (this._applyRegistrationHook(this._onExternalEntity, name, value, "external")) {
-        filtered[name] = value;
-      }
-    }
-    this._externalMap = filtered;
+    this._externalMap = mergeEntityMaps(map);
   }
   /**
    * Add a single persistent external entity.
-   * If `onExternalEntity` is set it is called before the entity is stored;
-   * `ENTITY_ACTION.BLOCK` silently skips storage, `ENTITY_ACTION.THROW` raises.
    * @param {string} key
    * @param {string} value
    */
   addExternalEntity(key, value) {
     validateEntityName(key);
     if (typeof value === "string" && value.indexOf("&") === -1) {
-      if (this._applyRegistrationHook(this._onExternalEntity, key, value, "external")) {
-        this._externalMap[key] = value;
-      }
+      this._externalMap[key] = value;
     }
   }
   // -------------------------------------------------------------------------
@@ -39093,25 +40021,12 @@ var EntityDecoder = class {
   /**
    * Inject DOCTYPE entities for the current document.
    * Also resets per-document expansion counters.
-   * If `onInputEntity` is set it is called once per entry; entries returning
-   * `ENTITY_ACTION.BLOCK` are silently omitted, `ENTITY_ACTION.THROW` aborts.
    * @param {Record<string, string | { regx?: RegExp, regex?: RegExp, val: string }>} map
    */
   addInputEntities(map) {
     this._totalExpansions = 0;
     this._expandedLength = 0;
-    if (!this._onInputEntity) {
-      this._inputMap = mergeEntityMaps(map);
-      return;
-    }
-    const flat = mergeEntityMaps(map);
-    const filtered = /* @__PURE__ */ Object.create(null);
-    for (const [name, value] of Object.entries(flat)) {
-      if (this._applyRegistrationHook(this._onInputEntity, name, value, "input")) {
-        filtered[name] = value;
-      }
-    }
-    this._inputMap = filtered;
+    this._inputMap = mergeEntityMaps(map);
   }
   // -------------------------------------------------------------------------
   // Per-document reset
@@ -39343,7 +40258,7 @@ var EntityDecoder = class {
   }
 };
 
-// node_modules/fast-xml-parser/src/xmlparser/OptionsBuilder.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/OptionsBuilder.js
 var defaultOnDangerousProperty = /* @__PURE__ */ __name((name) => {
   if (DANGEROUS_PROPERTY_NAMES.includes(name)) {
     return "__" + name;
@@ -39369,8 +40284,7 @@ var defaultOptions2 = {
   numberParseOptions: {
     hex: true,
     leadingZeros: true,
-    eNotation: true,
-    unicode: false
+    eNotation: true
   },
   tagValueProcessor: /* @__PURE__ */ __name(function(tagName, val) {
     return val;
@@ -39480,7 +40394,7 @@ var buildOptions = /* @__PURE__ */ __name(function(options) {
   return built;
 }, "buildOptions");
 
-// node_modules/fast-xml-parser/src/xmlparser/xmlNode.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/xmlNode.js
 var METADATA_SYMBOL;
 if (typeof Symbol !== "function") {
   METADATA_SYMBOL = "@@xmlMetadata";
@@ -39507,17 +40421,8 @@ var XmlNode = class {
     } else {
       this.child.push({ [node.tagname]: node.child });
     }
-    this.addStartIndex(startIndex);
-  }
-  addStartIndex(startIndex) {
     if (startIndex !== void 0) {
       this.child[this.child.length - 1][METADATA_SYMBOL] = { startIndex };
-    }
-  }
-  addEndIndex(endIndex) {
-    const lastChild = this.child[this.child.length - 1];
-    if (lastChild !== void 0 && lastChild[METADATA_SYMBOL] !== void 0 && lastChild[METADATA_SYMBOL].endIndex === void 0) {
-      lastChild[METADATA_SYMBOL].endIndex = endIndex;
     }
   }
   /** symbol used for metadata */
@@ -39526,46 +40431,14 @@ var XmlNode = class {
   }
 };
 
-// node_modules/xml-naming/src/index.js
-var nameStartChar10 = ":A-Za-z_\xC0-\xD6\xD8-\xF6\xF8-\u02FF\u0370-\u037D\u037F-\u0486\u0488-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD";
-var nameChar10 = nameStartChar10 + "\\-\\.\\d\xB7\u0300-\u036F\u203F-\u2040";
-var nameStartChar11 = ":A-Za-z_\xC0-\u02FF\u0370-\u037D\u037F-\u0486\u0488-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u{10000}-\u{EFFFF}";
-var nameChar11 = nameStartChar11 + "\\-\\.\\d\xB7\u0300-\u036F\u0487\u203F-\u2040";
-var buildRegexes = /* @__PURE__ */ __name((startChar, char, flags = "") => {
-  const ncStart = startChar.replace(":", "");
-  const ncChar = char.replace(":", "");
-  const ncNamePat = `[${ncStart}][${ncChar}]*`;
-  return {
-    name: new RegExp(`^[${startChar}][${char}]*$`, flags),
-    ncName: new RegExp(`^${ncNamePat}$`, flags),
-    qName: new RegExp(`^${ncNamePat}(?::${ncNamePat})?$`, flags),
-    nmToken: new RegExp(`^[${char}]+$`, flags),
-    nmTokens: new RegExp(`^[${char}]+(?:\\s+[${char}]+)*$`, flags)
-  };
-}, "buildRegexes");
-var regexes10 = buildRegexes(nameStartChar10, nameChar10);
-var regexes11 = buildRegexes(nameStartChar11, nameChar11, "u");
-var nameStartCharAscii = ":A-Za-z_";
-var nameCharAscii = nameStartCharAscii + "\\-\\.\\d";
-var regexesAscii = buildRegexes(nameStartCharAscii, nameCharAscii);
-var getRegexes = /* @__PURE__ */ __name((xmlVersion = "1.0", asciiOnly = false) => {
-  if (asciiOnly) return regexesAscii;
-  return xmlVersion === "1.1" ? regexes11 : regexes10;
-}, "getRegexes");
-var qName = /* @__PURE__ */ __name((str, { xmlVersion = "1.0", asciiOnly = false } = {}) => getRegexes(xmlVersion, asciiOnly).qName.test(str), "qName");
-
-// node_modules/fast-xml-parser/src/xmlparser/DocTypeReader.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/DocTypeReader.js
 var DocTypeReader = class {
   static {
     __name(this, "DocTypeReader");
   }
-  constructor(options, xmlVersion) {
+  constructor(options) {
     this.suppressValidationErr = !options;
     this.options = options;
-    this.xmlVersion = xmlVersion || 1;
-  }
-  setXmlVersion(xmlVersion = 1) {
-    this.xmlVersion = xmlVersion;
   }
   readDocType(xmlData, i) {
     const entities = /* @__PURE__ */ Object.create(null);
@@ -39574,19 +40447,8 @@ var DocTypeReader = class {
       i = i + 9;
       let angleBracketsCount = 1;
       let hasBody = false, comment = false;
-      let quoteChar = null;
       let exp = "";
       for (; i < xmlData.length; i++) {
-        if (quoteChar !== null) {
-          if (xmlData[i] === quoteChar) quoteChar = null;
-          exp += xmlData[i];
-          continue;
-        }
-        if (!hasBody && !comment && (xmlData[i] === '"' || xmlData[i] === "'")) {
-          quoteChar = xmlData[i];
-          exp += xmlData[i];
-          continue;
-        }
         if (xmlData[i] === "<" && !comment) {
           if (hasBody && hasSeq(xmlData, "!ENTITY", i)) {
             i += 7;
@@ -39633,7 +40495,7 @@ var DocTypeReader = class {
           exp += xmlData[i];
         }
       }
-      if (quoteChar !== null || angleBracketsCount !== 0) {
+      if (angleBracketsCount !== 0) {
         throw new Error(`Unclosed DOCTYPE`);
       }
     } else {
@@ -39648,7 +40510,7 @@ var DocTypeReader = class {
       i++;
     }
     let entityName = xmlData.substring(startIndex, i);
-    validateEntityName2(entityName, { xmlVersion: this.xmlVersion });
+    validateEntityName2(entityName);
     i = skipWhitespace(xmlData, i);
     if (!this.suppressValidationErr) {
       if (xmlData.substring(i, i + 6).toUpperCase() === "SYSTEM") {
@@ -39674,7 +40536,7 @@ var DocTypeReader = class {
       i++;
     }
     let notationName = xmlData.substring(startIndex, i);
-    !this.suppressValidationErr && validateEntityName2(notationName, { xmlVersion: this.xmlVersion });
+    !this.suppressValidationErr && validateEntityName2(notationName);
     i = skipWhitespace(xmlData, i);
     const identifierType = xmlData.substring(i, i + 6).toUpperCase();
     if (!this.suppressValidationErr && identifierType !== "SYSTEM" && identifierType !== "PUBLIC") {
@@ -39723,7 +40585,7 @@ var DocTypeReader = class {
       i++;
     }
     let elementName = xmlData.substring(startIndex, i);
-    if (!this.suppressValidationErr && !qName(elementName, { xmlVersion: this.xmlVersion })) {
+    if (!this.suppressValidationErr && !isName(elementName)) {
       throw new Error(`Invalid element name: "${elementName}"`);
     }
     i = skipWhitespace(xmlData, i);
@@ -39756,14 +40618,14 @@ var DocTypeReader = class {
       i++;
     }
     let elementName = xmlData.substring(startIndex, i);
-    validateEntityName2(elementName, { xmlVersion: this.xmlVersion });
+    validateEntityName2(elementName);
     i = skipWhitespace(xmlData, i);
     startIndex = i;
     while (i < xmlData.length && !/\s/.test(xmlData[i])) {
       i++;
     }
     let attributeName = xmlData.substring(startIndex, i);
-    if (!validateEntityName2(attributeName, { xmlVersion: this.xmlVersion })) {
+    if (!validateEntityName2(attributeName)) {
       throw new Error(`Invalid attribute name: "${attributeName}"`);
     }
     i = skipWhitespace(xmlData, i);
@@ -39784,7 +40646,7 @@ var DocTypeReader = class {
         }
         let notation = xmlData.substring(startIndex2, i);
         notation = notation.trim();
-        if (!validateEntityName2(notation, { xmlVersion: this.xmlVersion })) {
+        if (!validateEntityName2(notation)) {
           throw new Error(`Invalid notation name: "${notation}"`);
         }
         allowedNotations.push(notation);
@@ -39842,244 +40704,15 @@ function hasSeq(data, seq, i) {
   return true;
 }
 __name(hasSeq, "hasSeq");
-function validateEntityName2(name, xmlVersion) {
-  if (qName(name, { xmlVersion }))
+function validateEntityName2(name) {
+  if (isName(name))
     return name;
   else
     throw new Error(`Invalid entity name ${name}`);
 }
 __name(validateEntityName2, "validateEntityName");
 
-// node_modules/anynum/digitTable.js
-var SCRIPT_ZEROS = [
-  // Basic Latin (ASCII) — included for completeness / pass-through
-  48,
-  // 0-9
-  // Arabic scripts
-  1632,
-  // Arabic-Indic ٠١٢٣٤٥٦٧٨٩
-  1776,
-  // Extended Arabic-Indic (Urdu/Persian/Sindhi) ۰۱۲۳
-  // Indic scripts
-  2406,
-  // Devanagari ०१२३४५६७८९
-  2534,
-  // Bengali ০১২৩৪৫৬৭৮৯
-  2662,
-  // Gurmukhi ੦੧੨੩੪੫੬੭੮੯
-  2790,
-  // Gujarati ૦૧૨૩૪૫૬૭૮૯
-  2918,
-  // Odia ୦୧୨୩୪୫୬୭୮୯
-  3046,
-  // Tamil ௦௧௨௩௪௫௬௭௮௯
-  3174,
-  // Telugu ౦౧౨౩౪౫౬౭౮౯
-  3302,
-  // Kannada ೦೧೨೩೪೫೬೭೮೯
-  3430,
-  // Malayalam ൦൧൨൩൪൫൬൭൮൯
-  3558,
-  // Sinhala Archaic ෦෧෨෩෪෫෬෭෮෯
-  // Southeast Asian scripts
-  3664,
-  // Thai ๐๑๒๓๔๕๖๗๘๙
-  3792,
-  // Lao ໐໑໒໓໔໕໖໗໘໙
-  3872,
-  // Tibetan ༠༡༢༣༤༥༦༧༨༩
-  4160,
-  // Myanmar ၀၁၂၃၄၅၆၇၈၉
-  4240,
-  // Myanmar Shan ႐႑႒႓႔႕႖႗႘႙
-  6112,
-  // Khmer ០១២៣៤៥៦៧៨៩
-  6160,
-  // Mongolian ᠐᠑᠒᠓᠔᠕᠖᠗᠘᠙
-  6470,
-  // Limbu ᥆᥇᥈᥉᥊᥋᥌᥍᥎᥏
-  6608,
-  // New Tai Lue ᧐᧑᧒᧓᧔᧕᧖᧗᧘᧙
-  6784,
-  // Tai Tham Hora ᪀᪁᪂᪃᪄᪅᪆᪇᪈᪉
-  6800,
-  // Tai Tham Tham ᪐᪑᪒᪓᪔᪕᪖᪗᪘᪙
-  6992,
-  // Balinese ᭐᭑᭒᭓᭔᭕᭖᭗᭘᭙
-  7088,
-  // Sundanese ᮰᮱᮲᮳᮴᮵᮶᮷᮸᮹
-  7232,
-  // Lepcha ᱀᱁᱂᱃᱄᱅᱆᱇᱈᱉
-  7248,
-  // Ol Chiki ᱐᱑᱒᱓᱔᱕᱖᱗᱘᱙
-  // Fullwidth (CJK context)
-  65296,
-  // Fullwidth ０１２３４５６７８９
-  // Mathematical digit variants (Unicode math block)
-  120782,
-  // Mathematical Bold
-  120792,
-  // Mathematical Double-Struck
-  120802,
-  // Mathematical Sans-Serif
-  120812,
-  // Mathematical Sans-Serif Bold
-  120822,
-  // Mathematical Monospace
-  // Other scripts
-  66720,
-  // Osmanya 𐒠𐒡𐒢𐒣𐒤𐒥𐒦𐒧𐒨𐒩
-  68912,
-  // Hanifi Rohingya 𐴰𐴱𐴲𐴳𐴴𐴵𐴶𐴷𐴸𐴹
-  69734,
-  // Brahmi 𑁦𑁧𑁨𑁩𑁪𑁫𑁬𑁭𑁮𑁯
-  69872,
-  // Sora Sompeng 𑃰𑃱𑃲𑃳𑃴𑃵𑃶𑃷𑃸𑃹
-  69942,
-  // Chakma 𑄶𑄷𑄸𑄹𑄺𑄻𑄼𑄽𑄾𑄿
-  70096,
-  // Sharada 𑇐𑇑𑇒𑇓𑇔𑇕𑇖𑇗𑇘𑇙
-  70384,
-  // Khudawadi 𑋰𑋱𑋲𑋳𑋴𑋵𑋶𑋷𑋸𑋹
-  70736,
-  // Newa 𑑐𑑑𑑒𑑓𑑔𑑕𑑖𑑗𑑘𑑙
-  70864,
-  // Tirhuta 𑓐𑓑𑓒𑓓𑓔𑓕𑓖𑓗𑓘𑓙
-  71248,
-  // Modi 𑙐𑙑𑙒𑙓𑙔𑙕𑙖𑙗𑙘𑙙
-  71360,
-  // Takri 𑛀𑛁𑛂𑛃𑛄𑛅𑛆𑛇𑛈𑛉
-  71472,
-  // Ahom 𑜰𑜱𑜲𑜳𑜴𑜵𑜶𑜷𑜸𑜹
-  71904,
-  // Warang Citi 𑣠𑣡𑣢𑣣𑣤𑣥𑣦𑣧𑣨𑣩
-  72016,
-  // Dives Akuru 𑥐𑥑𑥒𑥓𑥔𑥕𑥖𑥗𑥘𑥙
-  72688,
-  // Khitan Small Script 𑯰𑯱𑯲𑯳𑯴𑯵𑯶𑯷𑯸𑯹
-  72784,
-  // Bhaiksuki 𑱐𑱑𑱒𑱓𑱔𑱕𑱖𑱗𑱘𑱙
-  73040,
-  // Masaram Gondi 𑵐𑵑𑵒𑵓𑵔𑵕𑵖𑵗𑵘𑵙
-  73120,
-  // Gunjala Gondi 𑶠𑶡𑶢𑶣𑶤𑶥𑶦𑶧𑶨𑶩
-  73552,
-  // Kawi 𑽐𑽑𑽒𑽓𑽔𑽕𑽖𑽗𑽘𑽙
-  92768,
-  // Mro 𖩠𖩡𖩢𖩣𖩤𖩥𖩦𖩧𖩨𖩩
-  92864,
-  // Tangsa 𖫀𖫁𖫂𖫃𖫄𖫅𖫆𖫇𖫈𖫉
-  93008,
-  // Pahawh Hmong 𖭐𖭑𖭒𖭓𖭔𖭕𖭖𖭗𖭘𖭙
-  123200,
-  // Nyiakeng Puachue Hmong 𞅀𞅁𞅂𞅃𞅄𞅅𞅆𞅇𞅈𞅉
-  123632,
-  // Wancho 𞋰𞋱𞋲𞋳𞋴𞋵𞋶𞋷𞋸𞋹
-  124144,
-  // Nag Mundari 𞓰𞓱𞓲𞓳𞓴𞓵𞓶𞓷𞓸𞓹
-  125264,
-  // Adlam 𞥐𞥑𞥒𞥓𞥔𞥕𞥖𞥗𞥘𞥙
-  130032
-  // Segmented digit symbols 🯰🯱🯲🯳🯴🯵🯶🯷🯸🯹
-];
-var NOT_DIGIT = 255;
-var HIGH_MAP = /* @__PURE__ */ new Map();
-var LOW_MAX = 65535;
-var LOW_MIN = 1632;
-var TABLE_OFFSET = LOW_MIN;
-var TABLE_SIZE = LOW_MAX - LOW_MIN + 1;
-var TABLE = new Uint8Array(TABLE_SIZE).fill(NOT_DIGIT);
-for (const zero of SCRIPT_ZEROS) {
-  for (let d = 0; d < 10; d++) {
-    const cp = zero + d;
-    if (cp <= LOW_MAX) {
-      TABLE[cp - TABLE_OFFSET] = d;
-    } else {
-      HIGH_MAP.set(cp, d);
-    }
-  }
-}
-
-// node_modules/anynum/anynum.js
-var CHAR_0 = 48;
-var CHAR_9 = 57;
-var CHAR_MINUS = 45;
-var MINUS_SET = /* @__PURE__ */ new Set([8722, 65293, 65123]);
-function anynum(str) {
-  if (typeof str !== "string") return str;
-  const len = str.length;
-  if (len === 0) return str;
-  let firstHit = -1;
-  for (let i = 0; i < len; i++) {
-    const cc = str.charCodeAt(i);
-    if (cc >= CHAR_0 && cc <= CHAR_9 || cc === CHAR_MINUS) continue;
-    if (cc < TABLE_OFFSET) {
-      if (MINUS_SET.has(cc)) {
-        firstHit = i;
-        break;
-      }
-      continue;
-    }
-    if (cc >= 55296 && cc <= 56319) {
-      if (i + 1 < len) {
-        const low = str.charCodeAt(i + 1);
-        if (low >= 56320 && low <= 57343) {
-          const cp = 65536 + (cc - 55296 << 10) + (low - 56320);
-          if (HIGH_MAP.has(cp)) {
-            firstHit = i;
-            break;
-          }
-        }
-      }
-      continue;
-    }
-    if (TABLE[cc - TABLE_OFFSET] !== NOT_DIGIT || MINUS_SET.has(cc)) {
-      firstHit = i;
-      break;
-    }
-  }
-  if (firstHit === -1) return str;
-  const chars = [];
-  if (firstHit > 0) chars.push(str.slice(0, firstHit));
-  for (let i = firstHit; i < len; i++) {
-    const cc = str.charCodeAt(i);
-    if (cc >= CHAR_0 && cc <= CHAR_9 || cc === CHAR_MINUS) {
-      chars.push(str[i]);
-      continue;
-    }
-    if (cc < TABLE_OFFSET) {
-      chars.push(MINUS_SET.has(cc) ? "-" : str[i]);
-      continue;
-    }
-    if (cc >= 55296 && cc <= 56319) {
-      if (i + 1 < len) {
-        const low = str.charCodeAt(i + 1);
-        if (low >= 56320 && low <= 57343) {
-          const cp = 65536 + (cc - 55296 << 10) + (low - 56320);
-          const d2 = HIGH_MAP.get(cp);
-          if (d2 !== void 0) {
-            chars.push(String.fromCharCode(d2 + 48));
-            i++;
-            continue;
-          }
-        }
-      }
-      chars.push(str[i]);
-      continue;
-    }
-    if (MINUS_SET.has(cc)) {
-      chars.push("-");
-      continue;
-    }
-    const d = TABLE[cc - TABLE_OFFSET];
-    chars.push(d !== NOT_DIGIT ? String.fromCharCode(d + 48) : str[i]);
-  }
-  return chars.join("");
-}
-__name(anynum, "anynum");
-var anynum_default = anynum;
-
-// node_modules/strnum/strnum.js
+// ../../node_modules/.pnpm/strnum@2.3.0/node_modules/strnum/strnum.js
 var hexRegex = /^[-+]?0x[a-fA-F0-9]+$/;
 var binRegex = /^0b[01]+$/;
 var octRegex = /^0o[0-7]+$/;
@@ -40092,9 +40725,8 @@ var consider = {
   decimalPoint: ".",
   eNotation: true,
   //skipLike: /regex/,
-  infinity: "original",
+  infinity: "original"
   // "null", "infinity" (Infinity type), "string" ("Infinity" (the string literal))
-  unicode: false
 };
 function toNumber(str, options = {}) {
   options = Object.assign({}, consider, options);
@@ -40103,11 +40735,7 @@ function toNumber(str, options = {}) {
   if (trimmedStr.length === 0) return str;
   else if (options.skipLike !== void 0 && options.skipLike.test(trimmedStr)) return str;
   else if (trimmedStr === "0") return 0;
-  if (options.unicode) {
-    trimmedStr = anynum_default(trimmedStr);
-    if (trimmedStr === "0") return 0;
-  }
-  if (options.hex && hexRegex.test(trimmedStr)) {
+  else if (options.hex && hexRegex.test(trimmedStr)) {
     return parse_int(trimmedStr, 16);
   } else if (options.binary && binRegex.test(trimmedStr)) {
     return parse_int(trimmedStr, 2);
@@ -40185,9 +40813,7 @@ function resolveEnotation(str, trimmedStr, options) {
 __name(resolveEnotation, "resolveEnotation");
 function trimZeros(numStr) {
   if (numStr && numStr.indexOf(".") !== -1) {
-    let end = numStr.length;
-    while (end > 0 && numStr.charCodeAt(end - 1) === 48) end--;
-    numStr = numStr.slice(0, end);
+    numStr = numStr.replace(/0+$/, "");
     if (numStr === ".") numStr = "0";
     else if (numStr[0] === ".") numStr = "0" + numStr;
     else if (numStr[numStr.length - 1] === ".") numStr = numStr.substring(0, numStr.length - 1);
@@ -40222,7 +40848,7 @@ function handleInfinity(str, num2, options) {
 }
 __name(handleInfinity, "handleInfinity");
 
-// node_modules/fast-xml-parser/src/ignoreAttributes.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/ignoreAttributes.js
 function getIgnoreAttributesFn(ignoreAttributes) {
   if (typeof ignoreAttributes === "function") {
     return ignoreAttributes;
@@ -40243,7 +40869,7 @@ function getIgnoreAttributesFn(ignoreAttributes) {
 }
 __name(getIgnoreAttributesFn, "getIgnoreAttributesFn");
 
-// node_modules/path-expression-matcher/src/Expression.js
+// ../../node_modules/.pnpm/path-expression-matcher@1.5.0/node_modules/path-expression-matcher/src/Expression.js
 var Expression = class {
   static {
     __name(this, "Expression");
@@ -40409,7 +41035,7 @@ var Expression = class {
   }
 };
 
-// node_modules/path-expression-matcher/src/ExpressionSet.js
+// ../../node_modules/.pnpm/path-expression-matcher@1.5.0/node_modules/path-expression-matcher/src/ExpressionSet.js
 var ExpressionSet = class {
   static {
     __name(this, "ExpressionSet");
@@ -40418,7 +41044,6 @@ var ExpressionSet = class {
     this._byDepthAndTag = /* @__PURE__ */ new Map();
     this._wildcardByDepth = /* @__PURE__ */ new Map();
     this._deepWildcards = [];
-    this._deepByTerminalTag = /* @__PURE__ */ new Map();
     this._patterns = /* @__PURE__ */ new Set();
     this._sealed = false;
   }
@@ -40443,14 +41068,7 @@ var ExpressionSet = class {
     if (this._patterns.has(expression.pattern)) return this;
     this._patterns.add(expression.pattern);
     if (expression.hasDeepWildcard()) {
-      const lastSeg2 = expression.segments[expression.segments.length - 1];
-      if (lastSeg2 && lastSeg2.type !== "deep-wildcard" && lastSeg2.tag !== "*") {
-        const tag2 = lastSeg2.tag;
-        if (!this._deepByTerminalTag.has(tag2)) this._deepByTerminalTag.set(tag2, []);
-        this._deepByTerminalTag.get(tag2).push(expression);
-      } else {
-        this._deepWildcards.push(expression);
-      }
+      this._deepWildcards.push(expression);
       return this;
     }
     const depth = expression.length;
@@ -40568,12 +41186,6 @@ var ExpressionSet = class {
         if (matcher.matches(wildcardBucket[i])) return wildcardBucket[i];
       }
     }
-    const deepBucket = this._deepByTerminalTag.get(tag);
-    if (deepBucket) {
-      for (let i = 0; i < deepBucket.length; i++) {
-        if (matcher.matches(deepBucket[i])) return deepBucket[i];
-      }
-    }
     for (let i = 0; i < this._deepWildcards.length; i++) {
       if (matcher.matches(this._deepWildcards[i])) return this._deepWildcards[i];
     }
@@ -40581,7 +41193,7 @@ var ExpressionSet = class {
   }
 };
 
-// node_modules/path-expression-matcher/src/Matcher.js
+// ../../node_modules/.pnpm/path-expression-matcher@1.5.0/node_modules/path-expression-matcher/src/Matcher.js
 var MatcherView = class {
   static {
     __name(this, "MatcherView");
@@ -40635,24 +41247,6 @@ var MatcherView = class {
     if (path.length === 0) return false;
     const current = path[path.length - 1];
     return current.values !== void 0 && attrName in current.values;
-  }
-  /**
-   * Get the value of a "kept" attribute from the nearest ancestor (or
-   * current node) that declared it via `push(tag, attrs, ns, { keep: [...] })`.
-   * @param {string} attrName
-   * @returns {*}
-   */
-  getAnyParentAttr(attrName) {
-    return this._matcher.getAnyParentAttr(attrName);
-  }
-  /**
-   * Check whether any ancestor (or the current node) kept the given
-   * attribute via `push(tag, attrs, ns, { keep: [...] })`.
-   * @param {string} attrName
-   * @returns {boolean}
-   */
-  hasAnyParentAttr(attrName) {
-    return this._matcher.hasAnyParentAttr(attrName);
   }
   /**
    * Get current node's sibling position (child index in parent).
@@ -40735,32 +41329,30 @@ var Matcher = class {
     this.siblingStacks = [];
     this._pathStringCache = null;
     this._view = new MatcherView(this);
-    this._keptAttrs = [];
   }
   /**
    * Push a new tag onto the path.
    * @param {string} tagName
    * @param {Object|null} [attrValues=null]
    * @param {string|null} [namespace=null]
-   * @param {Object|null} [options=null]
-   * @param {string[]} [options.keep] - Names of attributes (from attrValues)
    */
-  push(tagName, attrValues = null, namespace = null, options = null) {
+  push(tagName, attrValues = null, namespace = null) {
     this._pathStringCache = null;
     if (this.path.length > 0) {
       this.path[this.path.length - 1].values = void 0;
     }
     const currentLevel = this.path.length;
-    let level = this.siblingStacks[currentLevel];
-    if (!level) {
-      level = { counts: /* @__PURE__ */ new Map(), total: 0 };
-      this.siblingStacks[currentLevel] = level;
+    if (!this.siblingStacks[currentLevel]) {
+      this.siblingStacks[currentLevel] = /* @__PURE__ */ new Map();
     }
+    const siblings = this.siblingStacks[currentLevel];
     const siblingKey = namespace ? `${namespace}:${tagName}` : tagName;
-    const counter = level.counts.get(siblingKey) || 0;
-    const position = level.total;
-    level.counts.set(siblingKey, counter + 1);
-    level.total++;
+    const counter = siblings.get(siblingKey) || 0;
+    let position = 0;
+    for (const count of siblings.values()) {
+      position += count;
+    }
+    siblings.set(siblingKey, counter + 1);
     const node = {
       tag: tagName,
       position,
@@ -40773,16 +41365,6 @@ var Matcher = class {
       node.values = attrValues;
     }
     this.path.push(node);
-    const depth = this.path.length;
-    const keep = options !== null ? options.keep : null;
-    if (keep !== null && keep !== void 0 && keep.length > 0 && attrValues) {
-      for (let i = 0; i < keep.length; i++) {
-        const name = keep[i];
-        if (attrValues[name] !== void 0) {
-          this._keptAttrs.push({ depth, name, value: attrValues[name] });
-        }
-      }
-    }
   }
   /**
    * Pop the last tag from the path.
@@ -40794,10 +41376,6 @@ var Matcher = class {
     const node = this.path.pop();
     if (this.siblingStacks.length > this.path.length + 1) {
       this.siblingStacks.length = this.path.length + 1;
-    }
-    const poppedDepth = this.path.length + 1;
-    while (this._keptAttrs.length > 0 && this._keptAttrs[this._keptAttrs.length - 1].depth >= poppedDepth) {
-      this._keptAttrs.pop();
     }
     return node;
   }
@@ -40848,36 +41426,6 @@ var Matcher = class {
     return current.values !== void 0 && attrName in current.values;
   }
   /**
-   * Get the value of a "kept" attribute from the nearest ancestor (or
-   * current node) that declared it via `push(tag, attrs, ns, { keep: [...] })`.
-   * Unlike getAttrValue(), this works regardless of how deep the path has
-   * gone since the attribute was pushed — but only for attribute names that
-   * were explicitly marked with `keep` at push time. Cost is proportional to
-   * the number of currently-kept attributes (typically 0-3), not path depth.
-   * @param {string} attrName
-   * @returns {*} the value, or undefined if no ancestor kept this attribute
-   */
-  getAnyParentAttr(attrName) {
-    const kept = this._keptAttrs;
-    for (let i = kept.length - 1; i >= 0; i--) {
-      if (kept[i].name === attrName) return kept[i].value;
-    }
-    return void 0;
-  }
-  /**
-   * Check whether any ancestor (or the current node) kept the given
-   * attribute via `push(tag, attrs, ns, { keep: [...] })`.
-   * @param {string} attrName
-   * @returns {boolean}
-   */
-  hasAnyParentAttr(attrName) {
-    const kept = this._keptAttrs;
-    for (let i = kept.length - 1; i >= 0; i--) {
-      if (kept[i].name === attrName) return true;
-    }
-    return false;
-  }
-  /**
    * Get current node's sibling position (child index in parent).
    * @returns {number}
    */
@@ -40915,21 +41463,21 @@ var Matcher = class {
    * @returns {string}
    */
   toString(separator, includeNamespace = true) {
-    const sep2 = separator || this.separator;
-    const isDefault = sep2 === this.separator && includeNamespace === true;
+    const sep = separator || this.separator;
+    const isDefault = sep === this.separator && includeNamespace === true;
     if (isDefault) {
       if (this._pathStringCache !== null) {
         return this._pathStringCache;
       }
       const result = this.path.map(
         (n) => n.namespace ? `${n.namespace}:${n.tag}` : n.tag
-      ).join(sep2);
+      ).join(sep);
       this._pathStringCache = result;
       return result;
     }
     return this.path.map(
       (n) => includeNamespace && n.namespace ? `${n.namespace}:${n.tag}` : n.tag
-    ).join(sep2);
+    ).join(sep);
   }
   /**
    * Get path as array of tag names.
@@ -40945,7 +41493,6 @@ var Matcher = class {
     this._pathStringCache = null;
     this.path = [];
     this.siblingStacks = [];
-    this._keptAttrs = [];
   }
   /**
    * Match current path against an Expression.
@@ -41069,8 +41616,7 @@ var Matcher = class {
   snapshot() {
     return {
       path: this.path.map((node) => ({ ...node })),
-      siblingStacks: this.siblingStacks.map((level) => level ? { counts: new Map(level.counts), total: level.total } : level),
-      keptAttrs: this._keptAttrs.map((entry) => ({ ...entry }))
+      siblingStacks: this.siblingStacks.map((map) => new Map(map))
     };
   }
   /**
@@ -41080,8 +41626,7 @@ var Matcher = class {
   restore(snapshot) {
     this._pathStringCache = null;
     this.path = snapshot.path.map((node) => ({ ...node }));
-    this.siblingStacks = snapshot.siblingStacks.map((level) => level ? { counts: new Map(level.counts), total: level.total } : level);
-    this._keptAttrs = (snapshot.keptAttrs || []).map((entry) => ({ ...entry }));
+    this.siblingStacks = snapshot.siblingStacks.map((map) => new Map(map));
   }
   /**
    * Return the read-only {@link MatcherView} for this matcher.
@@ -41104,733 +41649,7 @@ var Matcher = class {
   }
 };
 
-// node_modules/is-unsafe/src/contexts/html.js
-var HTML_PATTERNS = [
-  {
-    id: "html-script-open",
-    description: "<script opening tag",
-    pattern: /<script[\s>/]/i
-  },
-  {
-    id: "html-script-close",
-    description: "</script closing tag",
-    pattern: /<\/script[\s>]/i
-  },
-  {
-    id: "html-javascript-protocol",
-    description: "javascript: URI scheme (with optional whitespace/encoding)",
-    // Handles j&#x61;vascript:, j\u0061vascript:, and whitespace variants
-    pattern: /j[\t\n\r ]*a[\t\n\r ]*v[\t\n\r ]*a[\t\n\r ]*s[\t\n\r ]*c[\t\n\r ]*r[\t\n\r ]*i[\t\n\r ]*p[\t\n\r ]*t[\t\n\r ]*:/i
-  },
-  {
-    id: "html-vbscript-protocol",
-    description: "vbscript: URI scheme",
-    pattern: /vbscript[\t\n\r ]*:/i
-  },
-  {
-    id: "html-data-html",
-    description: "data:text/html URI \u2014 can execute scripts in browsers",
-    pattern: /data[\t\n\r ]*:[\t\n\r ]*text\/html/i
-  },
-  {
-    id: "html-data-xhtml",
-    description: "data:application/xhtml+xml URI",
-    pattern: /data[\t\n\r ]*:[\t\n\r ]*application\/xhtml/i
-  },
-  {
-    id: "html-data-svg",
-    description: "data:image/svg+xml URI \u2014 can execute scripts",
-    pattern: /data[\t\n\r ]*:[\t\n\r ]*image\/svg\+xml/i
-  },
-  {
-    id: "html-inline-event-handler",
-    description: "Inline event handler attributes: onclick=, onerror=, onload=, etc.",
-    // \bon ensures we match a word boundary so "phonetic=" is not caught
-    pattern: /\bon\w{1,30}\s*=/i
-  },
-  {
-    id: "html-entity-obfuscated-script",
-    description: "HTML-entity-encoded <script (e.g. &#x3C;script or &lt;script)",
-    // Entities include optional trailing semicolon: &#x3C; or &#x3C (both valid in HTML5)
-    pattern: /(?:&#x0*3[Cc];?|&#0*60;?|&lt;)\s*script/i
-  },
-  {
-    id: "html-entity-obfuscated-javascript",
-    description: 'HTML-entity-encoded javascript: (partial \u2014 catches common &#106; or &#x6a; for "j")',
-    pattern: /(?:&#x0*6[Aa];?|&#0*106;?)\s*(?:&#x0*61;?|a)[\s\S]{0,80}script\s*:/i
-  },
-  {
-    id: "html-style-expression",
-    description: "CSS expression() \u2014 IE-era code execution in style attributes",
-    pattern: /style[\s\S]{0,20}expression\s*\(/i
-  },
-  {
-    id: "html-object-embed",
-    description: "<object or <embed tags that can load active content",
-    pattern: /<(?:object|embed)[\s>/]/i
-  },
-  {
-    id: "html-base-tag",
-    description: "<base href= \u2014 can hijack all relative URLs on a page",
-    pattern: /<base[\s>]/i
-  },
-  {
-    id: "html-meta-refresh",
-    description: '<meta http-equiv="refresh" \u2014 can redirect users',
-    pattern: /<meta[\s\S]{0,40}http-equiv[\s\S]{0,20}refresh/i
-  },
-  {
-    id: "html-srcdoc",
-    description: "srcdoc= attribute on iframes \u2014 embeds HTML that can run scripts",
-    pattern: /srcdoc\s*=/i
-  },
-  {
-    id: "html-iframe",
-    description: "<iframe tag",
-    pattern: /<iframe[\s>/]/i
-  },
-  {
-    id: "html-form",
-    description: "<form tag \u2014 can be used for phishing / credential harvesting injection",
-    pattern: /<form[\s>/]/i
-  }
-];
-var html_default = HTML_PATTERNS;
-
-// node_modules/is-unsafe/src/contexts/xml.js
-var XML_PATTERNS = [
-  {
-    id: "xml-cdata-injection",
-    description: "CDATA section injection: <![CDATA[ breaks out of text node context",
-    pattern: /<!\[CDATA\[/i
-  },
-  {
-    id: "xml-cdata-close",
-    description: "CDATA close sequence: ]]> can terminate an enclosing CDATA section",
-    pattern: /\]\]>/
-  },
-  {
-    id: "xml-processing-instruction",
-    description: "XML processing instruction: <?xml-stylesheet or <?php etc.",
-    pattern: /<\?(?:xml[\- ]|php|asp)/i
-  },
-  {
-    id: "xml-doctype-injection",
-    description: "DOCTYPE declaration embedded in content \u2014 can define entities",
-    // Match <!DOCTYPE followed by end-of-string, whitespace, or [ (internal subset)
-    pattern: /<!DOCTYPE(?:[\s[]|$)/i
-  },
-  {
-    id: "xml-entity-system",
-    description: "SYSTEM keyword \u2014 used in external entity declarations (XXE)",
-    pattern: /\bSYSTEM\s+["']/i
-  },
-  {
-    id: "xml-entity-public",
-    description: "PUBLIC keyword \u2014 used in external entity declarations (XXE)",
-    pattern: /\bPUBLIC\s+["']/i
-  },
-  {
-    id: "xml-entity-declaration",
-    description: "<!ENTITY declaration \u2014 defines entities, potential XXE or entity expansion",
-    pattern: /<!ENTITY[\s%]/i
-  },
-  {
-    id: "xml-billion-laughs",
-    description: "Entity reference chaining / billion laughs: repeated &eX; style references",
-    // Heuristic: 3+ consecutive entity refs suggests expansion attack
-    pattern: /(?:&\w{1,20};){3,}/
-  },
-  {
-    id: "xml-namespace-confusion",
-    description: "xmlns: attribute injection \u2014 can redefine namespaces to confuse parsers",
-    // pattern: /\bxmlns\s*(?::\w{1,40})?\s*=/i,
-    pattern: /\bxmlns(?::\w{1,40})?\s*=/i
-  },
-  {
-    id: "xml-comment-injection",
-    description: "<!-- comment injection \u2014 can hide content from some parsers",
-    pattern: /<!--/
-  },
-  {
-    id: "xml-comment-close",
-    description: "--> closes an enclosing XML comment",
-    pattern: /-->/
-  },
-  {
-    id: "xml-pi-close",
-    description: "?> closes an enclosing processing instruction",
-    pattern: /\?>/
-  }
-];
-var xml_default = XML_PATTERNS;
-
-// node_modules/is-unsafe/src/contexts/svg.js
-var SVG_PATTERNS = [
-  {
-    id: "svg-script-element",
-    description: "<script element inside SVG executes JavaScript",
-    pattern: /<script[\s>/]/i
-  },
-  {
-    id: "svg-xlink-href-javascript",
-    description: "xlink:href with javascript: \u2014 classic SVG XSS via <a> or <use>",
-    pattern: /xlink\s*:\s*href\s*=\s*["']?\s*javascript\s*:/i
-  },
-  {
-    id: "svg-href-javascript",
-    description: "href= with javascript: in SVG context (<a>, <animate>, etc.)",
-    pattern: /href\s*=\s*["']?\s*javascript\s*:/i
-  },
-  {
-    id: "svg-foreignobject",
-    description: "<foreignObject embeds HTML inside SVG \u2014 can execute scripts",
-    pattern: /<foreignObject[\s>/]/i
-  },
-  {
-    id: "svg-use-external",
-    description: "<use xlink:href or href pointing to external resource (non-fragment URL)",
-    // Match <use with href= where the value starts with a non-# character (external URL)
-    // [\"'][^#] catches quoted values not starting with #; [^\"'#\s>] catches unquoted
-    pattern: /<use[\s\S]{0,60}(?:xlink\s*:\s*)?href\s*=\s*(?:["'][^#]|[^"'#\s>])/i
-  },
-  {
-    id: "svg-animate-href",
-    description: '<animate attributeName="href" \u2014 can dynamically change href to javascript:',
-    pattern: /<animate[\s\S]{0,80}attributeName\s*=\s*["'][\s]*href["']/i
-  },
-  {
-    id: "svg-animate-xlinkhref",
-    description: '<animate attributeName="xlink:href"',
-    pattern: /<animate[\s\S]{0,80}attributeName\s*=\s*["'][\s]*xlink\s*:\s*href["']/i
-  },
-  {
-    id: "svg-set-javascript",
-    description: '<set to="javascript:..." \u2014 sets an attribute to a javascript: URI',
-    pattern: /<set[\s\S]{0,80}to\s*=\s*["']?\s*javascript\s*:/i
-  },
-  {
-    id: "svg-event-handler",
-    description: "SVG-specific event handler attributes: onload=, onerror=, onactivate=, etc.",
-    pattern: /\bon(?:load|error|activate|begin|end|repeat|focus|blur|click|mouse\w{1,20}|key\w{1,20})\s*=/i
-  },
-  {
-    id: "svg-handler-generic",
-    description: "Generic on* handler catch-all for SVG attributes",
-    pattern: /\bon\w{1,30}\s*=/i
-  },
-  {
-    id: "svg-filter-feimage",
-    description: "<feImage href= \u2014 filter primitive that can load external resources",
-    pattern: /<feImage[\s\S]{0,80}(?:xlink\s*:\s*)?href\s*=/i
-  },
-  {
-    id: "svg-image-external",
-    description: "<image xlink:href with http/https or javascript protocol",
-    pattern: /<image[\s\S]{0,80}(?:xlink\s*:\s*)?href\s*=\s*["']?\s*(?:https?|javascript)\s*:/i
-  },
-  {
-    id: "svg-style-javascript",
-    description: "style= attribute containing javascript: (e.g. background:url(javascript:...))",
-    pattern: /style\s*=[\s\S]{0,60}javascript\s*:/i
-  }
-];
-var svg_default = SVG_PATTERNS;
-
-// node_modules/is-unsafe/src/contexts/sql.js
-var SQL_PATTERNS = [
-  {
-    id: "sql-block-comment-open",
-    description: "SQL block comment open: /* ... */ \u2014 unusual in legitimate user text",
-    pattern: /\/\*/
-  },
-  {
-    id: "sql-union-select",
-    description: "UNION SELECT \u2014 most common SQL injection aggregation attack",
-    pattern: /\bUNION\s{1,20}(?:ALL\s{1,20})?SELECT\b/i
-  },
-  {
-    id: "sql-drop-table",
-    description: "DROP TABLE \u2014 destructive DDL injection",
-    pattern: /\bDROP\s{1,20}TABLE\b/i
-  },
-  {
-    id: "sql-drop-database",
-    description: "DROP DATABASE \u2014 destructive DDL injection",
-    pattern: /\bDROP\s{1,20}DATABASE\b/i
-  },
-  {
-    id: "sql-insert-into",
-    description: "INSERT INTO \u2014 data injection",
-    pattern: /\bINSERT\s{1,20}INTO\b/i
-  },
-  {
-    id: "sql-delete-from",
-    description: "DELETE FROM \u2014 data deletion injection",
-    pattern: /\bDELETE\s{1,20}FROM\b/i
-  },
-  {
-    id: "sql-update-set",
-    description: "UPDATE ... SET \u2014 data modification injection",
-    // Allows arbitrary content between UPDATE and SET (table name, alias, etc.)
-    pattern: /\bUPDATE\b[\s\S]{1,60}\bSET\b/i
-  },
-  {
-    id: "sql-exec-xp",
-    description: "EXEC xp_ \u2014 MSSQL extended stored procedure execution",
-    pattern: /\bEXEC(?:UTE)?\s{1,20}xp_/i
-  },
-  {
-    id: "sql-tautology-string",
-    description: `Classic string tautology: ' OR '1'='1 or " OR "1"="1"`,
-    // Last quote is optional — injection may truncate it: ' OR '1'='1--
-    pattern: /'\s{0,10}OR\s{0,10}'[^']{0,20}'\s*=\s*'[^']{0,20}/i
-  },
-  {
-    id: "sql-tautology-numeric",
-    description: "Numeric tautology: OR 1=1",
-    pattern: /\bOR\s{1,10}1\s*=\s*1\b/i
-  },
-  {
-    id: "sql-always-true-zero",
-    description: "Numeric tautology: OR 0=0",
-    pattern: /\bOR\s{1,10}0\s*=\s*0\b/i
-  },
-  {
-    id: "sql-sleep-benchmark",
-    description: "Time-based blind injection: SLEEP() or BENCHMARK()",
-    pattern: /\b(?:SLEEP|BENCHMARK)\s*\(/i
-  },
-  {
-    id: "sql-waitfor-delay",
-    description: "MSSQL time-based blind injection: WAITFOR DELAY",
-    pattern: /\bWAITFOR\s{1,20}DELAY\b/i
-  },
-  {
-    id: "sql-char-function",
-    description: "CHAR() function \u2014 used to obfuscate injected strings",
-    pattern: /\bCHAR\s*\(\s*\d{1,3}/i
-  },
-  {
-    id: "sql-information-schema",
-    description: "INFORMATION_SCHEMA \u2014 reconnaissance query for table/column enumeration",
-    pattern: /\bINFORMATION_SCHEMA\b/i
-  }
-];
-var sql_default = SQL_PATTERNS;
-
-// node_modules/is-unsafe/src/contexts/shell.js
-var SHELL_PATTERNS = [
-  {
-    id: "shell-path-traversal-unix",
-    description: "Unix path traversal: ../  \u2014 climbing the directory tree",
-    pattern: /\.\.\//
-  },
-  {
-    id: "shell-path-traversal-windows",
-    description: "Windows path traversal: ..\\ \u2014 climbing the directory tree",
-    pattern: /\.\.\\/
-  },
-  {
-    id: "shell-path-traversal-encoded",
-    description: "URL-encoded path traversal: %2e%2e or %2f variants",
-    pattern: /%2e%2e|%2f\.\.|\.\.%2f/i
-  },
-  {
-    id: "shell-null-byte",
-    description: "Null byte injection: \\x00 or %00 \u2014 truncates strings in C-backed functions",
-    pattern: /\x00|%00/
-  },
-  {
-    id: "shell-semicolon",
-    description: "Semicolon command separator: cmd1; cmd2",
-    pattern: /;/
-  },
-  {
-    id: "shell-pipe",
-    description: "Pipe operator: cmd1 | cmd2",
-    pattern: /\|/
-  },
-  {
-    id: "shell-and-operator",
-    description: "AND operator: cmd1 && cmd2",
-    pattern: /&&/
-  },
-  {
-    id: "shell-or-operator",
-    description: "OR operator: cmd1 || cmd2",
-    pattern: /\|\|/
-  },
-  {
-    id: "shell-backtick",
-    description: "Backtick command substitution: `cmd`",
-    pattern: /`/
-  },
-  {
-    id: "shell-dollar-paren",
-    description: "Dollar-paren command substitution: $(cmd)",
-    pattern: /\$\(/
-  },
-  {
-    id: "shell-dollar-brace",
-    description: "Dollar-brace variable expansion: ${var} \u2014 can be abused for injection",
-    pattern: /\$\{/
-  },
-  {
-    id: "shell-redirect-out",
-    description: "Output redirection: cmd > file or cmd >> file",
-    pattern: />{1,2}/
-  },
-  {
-    id: "shell-redirect-in",
-    description: "Input redirection: cmd < file",
-    pattern: /</
-  },
-  {
-    id: "shell-newline-injection",
-    description: "Newline injection: \\n or \\r \u2014 can inject new shell commands",
-    pattern: /[\n\r]/
-  },
-  {
-    id: "shell-glob-star",
-    description: "Glob expansion: * or ? \u2014 can expand to unintended files",
-    // Only flag when combined with path separators to reduce false positives
-    pattern: /[/\\][*?]/
-  },
-  {
-    id: "shell-absolute-root",
-    description: "Absolute root path injection: string starting with / or \\ (Windows UNC)",
-    pattern: /^(?:\/|\\\\)/
-  },
-  {
-    id: "shell-windows-drive",
-    description: "Windows drive letter path injection: C:\\ or D:/",
-    pattern: /^[a-zA-Z]:[/\\]/
-  },
-  {
-    id: "shell-curl-wget",
-    description: "curl/wget with URL or flags \u2014 can exfiltrate data or download payloads",
-    // Require a URL scheme (http/https/ftp) or a flag (-) to reduce false positives
-    // "curl is a tool" won't match; "curl http://..." or "curl -s ..." will
-    pattern: /\b(?:curl|wget)\s+(?:https?:\/\/|ftp:\/\/|-)/i
-  }
-];
-var shell_default = SHELL_PATTERNS;
-
-// node_modules/is-unsafe/src/contexts/redos.js
-var REDOS_PATTERNS = [
-  {
-    id: "redos-nested-quantifier-plus",
-    description: "Nested + quantifier inside a group with outer quantifier: (a+)+, (.+b)*, etc.",
-    // Matches any group containing a + quantifier, with an outer * or + — catches (a+)+, (.+b)*, etc.
-    pattern: /\([^)]*\+[^)]*\)[+*]/
-  },
-  {
-    id: "redos-nested-quantifier-star",
-    description: "Nested * quantifier: (a*)* or (a*)+ \u2014 catastrophic backtracking",
-    pattern: /\([^)]*\*[^)]*\)[*+]/
-  },
-  {
-    id: "redos-nested-groups",
-    description: "Doubly nested quantified groups: ((a+)+) \u2014 guaranteed catastrophic",
-    pattern: /\(\([^)]{0,40}\)[+*]\)[+*]/
-  },
-  {
-    id: "redos-alternation-overlap",
-    description: "Overlapping alternation under quantifier: (a|a)+ \u2014 ambiguous NFA paths",
-    // Detect repeated identical alternatives under a quantifier
-    pattern: /\(([^|()]{1,20})\|(?:\1)(?:\|[^|()]{1,20}){0,5}\)[+*?]{1,2}/
-  },
-  {
-    id: "redos-star-plus-concat",
-    description: "(x*x)+ pattern \u2014 triggers super-linear backtracking",
-    pattern: /\([^)]{0,10}\*[^)]{0,10}\)[+*]/
-  },
-  {
-    id: "redos-dot-star-greedy",
-    description: "(.*){n,} or (.+){n,} \u2014 repeated greedy dot quantifiers",
-    pattern: /\(\.[*+]\)\{?\d/
-  },
-  {
-    id: "redos-large-repetition",
-    description: "Very large fixed or range repetition count {1000,} or {1000,n} \u2014 denial of service via backtracking",
-    // Matches { followed by 4+ digits (≥1000), then optional ,digits }
-    pattern: /\{\d{4,}(?:,\d*)?\}/
-  },
-  {
-    id: "redos-catastrophic-alternation",
-    description: "Long alternation with many similar branches \u2014 polynomial backtracking risk",
-    // Heuristic: 10+ pipe-separated alternatives in a single group
-    pattern: /\([^)]{0,200}(?:\|[^|)]{0,50}){9,}\)/
-  }
-];
-var redos_default = REDOS_PATTERNS;
-
-// node_modules/is-unsafe/src/contexts/nosql.js
-var sep = `["'\\s]*:`;
-var NOSQL_PATTERNS = [
-  // ─── MongoDB $ operator injection ────────────────────────────────────────
-  {
-    id: "nosql-where-operator",
-    description: "$where \u2014 executes arbitrary JavaScript server-side in MongoDB",
-    pattern: new RegExp(`\\$where${sep}`, "i")
-  },
-  {
-    id: "nosql-ne-operator",
-    description: '$ne \u2014 "not equal" operator used to bypass equality checks',
-    pattern: new RegExp(`\\$ne${sep}`, "i")
-  },
-  {
-    id: "nosql-gt-operator",
-    description: '$gt \u2014 "greater than" used to bypass password/value checks',
-    pattern: new RegExp(`\\$gte?${sep}`, "i")
-  },
-  {
-    id: "nosql-lt-operator",
-    description: '$lt / $lte \u2014 "less than" bypass variants',
-    pattern: new RegExp(`\\$lte?${sep}`, "i")
-  },
-  {
-    id: "nosql-regex-operator",
-    description: "$regex \u2014 can be used to extract data character by character (blind injection)",
-    pattern: new RegExp(`\\$regex${sep}`, "i")
-  },
-  {
-    id: "nosql-or-operator",
-    description: "$or \u2014 logical OR; used to create always-true conditions",
-    pattern: new RegExp(`\\$or${sep}\\s*\\[`, "i")
-  },
-  {
-    id: "nosql-and-operator",
-    description: "$and \u2014 logical AND operator injection",
-    pattern: new RegExp(`\\$and${sep}\\s*\\[`, "i")
-  },
-  {
-    id: "nosql-nor-operator",
-    description: "$nor \u2014 logical NOR operator injection",
-    pattern: new RegExp(`\\$nor${sep}\\s*\\[`, "i")
-  },
-  {
-    id: "nosql-exists-operator",
-    description: "$exists \u2014 can enumerate fields to determine schema",
-    pattern: new RegExp(`\\$exists${sep}`, "i")
-  },
-  {
-    id: "nosql-in-operator",
-    description: "$in \u2014 matches any value in a list; can enumerate values",
-    pattern: new RegExp(`\\$in${sep}\\s*\\[`, "i")
-  },
-  {
-    id: "nosql-expr-operator",
-    description: "$expr \u2014 allows aggregation expressions in queries (MongoDB 3.6+)",
-    pattern: new RegExp(`\\$expr${sep}`, "i")
-  },
-  {
-    id: "nosql-function-operator",
-    description: "$function \u2014 executes arbitrary JavaScript in MongoDB 4.4+",
-    pattern: new RegExp(`\\$function${sep}`, "i")
-  },
-  {
-    id: "nosql-accumulator-operator",
-    description: "$accumulator \u2014 custom aggregation with arbitrary JS execution",
-    pattern: new RegExp(`\\$accumulator${sep}`, "i")
-  },
-  // ─── Prototype pollution ─────────────────────────────────────────────────
-  {
-    id: "nosql-proto-pollution",
-    description: "__proto__ \u2014 prototype pollution via object key injection",
-    pattern: /__proto__/
-  },
-  {
-    id: "nosql-constructor-prototype",
-    description: "constructor.prototype \u2014 alternative prototype pollution vector (dot notation or JSON key)",
-    // Matches dot-notation (obj.constructor.prototype) and JSON key adjacency
-    // ("constructor": {"prototype": ...})
-    pattern: /constructor[\s"':.,{\[]*prototype/i
-  },
-  {
-    id: "nosql-proto-bracket",
-    description: '["__proto__"] \u2014 bracket-notation prototype pollution',
-    pattern: /\[["']__proto__["']\]/
-  }
-];
-var nosql_default = NOSQL_PATTERNS;
-
-// node_modules/is-unsafe/src/contexts/log.js
-var LOG_PATTERNS = [
-  // ─── CRLF / newline injection ─────────────────────────────────────────────
-  {
-    id: "log-crlf-injection",
-    description: "CRLF injection: literal \\r or \\n embeds fake log lines",
-    pattern: /[\r\n]/
-  },
-  {
-    id: "log-url-encoded-crlf",
-    description: "URL-encoded CRLF: %0d, %0a, %0D, %0A \u2014 decoded by some log parsers",
-    pattern: /%0[dDaA]/
-  },
-  {
-    id: "log-unicode-newline",
-    description: "Unicode newline variants: U+2028 (line separator), U+2029 (paragraph separator)",
-    pattern: /[\u2028\u2029]/
-  },
-  // ─── Log4Shell / JNDI injection (CVE-2021-44228) ─────────────────────────
-  {
-    id: "log-log4shell-jndi",
-    description: "Log4Shell: ${jndi:...} triggers remote code execution in Apache Log4j",
-    pattern: /\$\{jndi\s*:/i
-  },
-  {
-    id: "log-log4shell-obfuscated",
-    description: "Obfuscated Log4Shell: ${::-j}... lookup-bypass prefix used to evade WAF detection",
-    // ${::- is the Log4j lookup-bypass escape sequence; presence alone is suspicious
-    pattern: /\$\{::-/
-  },
-  {
-    id: "log-log4j-lookup",
-    description: "Log4j lookup syntax: ${env:...}, ${sys:...}, ${ctx:...} \u2014 data exfiltration",
-    pattern: /\$\{(?:env|sys|ctx|main|map|sd|web|docker|k8s|spring)\s*:/i
-  },
-  // ─── Server-Side Template Injection (SSTI) in log messages ───────────────
-  {
-    id: "log-ssti-double-brace",
-    description: "SSTI double-brace: {{expression}} \u2014 Jinja2, Twig, Handlebars, etc.",
-    pattern: /\{\{[\s\S]{0,80}\}\}/
-  },
-  {
-    id: "log-ssti-hash-brace",
-    description: "SSTI hash-brace: #{expression} \u2014 Thymeleaf, Velocity, Ruby ERB",
-    pattern: /#\{[\s\S]{0,80}\}/
-  },
-  {
-    id: "log-ssti-dollar-brace",
-    description: "SSTI/EL injection: ${expression with operators or method calls} \u2014 JSP EL, Freemarker, SpEL",
-    // Require that the ${...} content looks like an expression, not a plain variable name.
-    // Flags if the content contains: . ( * + operators, or known SSTI keywords.
-    // This avoids flagging ${PATH}, ${HOME} etc. (plain shell variables).
-    pattern: /\$\{[^}]*(?:\.|\(|\*|\+|\bclass\b|\bruntime\b|\bprocess\b|\bexec\b)[^}]{0,80}\}/i
-  },
-  {
-    id: "log-ssti-percent-tag",
-    description: "SSTI ERB/ASP tag: <%= expression %> \u2014 Ruby ERB, ASP",
-    pattern: /<%=[\s\S]{0,80}%>/
-  },
-  // ─── Null byte ────────────────────────────────────────────────────────────
-  {
-    id: "log-null-byte",
-    description: "Null byte: \\x00 or %00 \u2014 can truncate log entries in C-backed loggers",
-    pattern: /\x00|%00/
-  },
-  // ─── ANSI escape injection ────────────────────────────────────────────────
-  {
-    id: "log-ansi-escape",
-    description: "ANSI escape sequence: ESC[ \u2014 can manipulate terminal output when logs are tailed",
-    pattern: /\x1b\[/
-  }
-];
-var log_default = LOG_PATTERNS;
-
-// node_modules/is-unsafe/src/contexts/sql-strict.js
-var SQL_STRICT_EXTRA = [
-  {
-    id: "sql-line-comment",
-    description: "SQL line comment: -- followed by whitespace or end of string",
-    pattern: /--(?:\s|$)/
-  },
-  {
-    id: "sql-stacked-query",
-    description: "Stacked queries: semicolon immediately followed by a SQL keyword",
-    pattern: /;\s{0,10}(?:SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC)\b/i
-  },
-  {
-    id: "sql-hex-encoding",
-    description: "Hex-encoded string injection: 0x41414141 style (MySQL)",
-    pattern: /\b0x[0-9a-f]{4,}/i
-  }
-];
-var SQL_STRICT_PATTERNS = [...sql_default, ...SQL_STRICT_EXTRA];
-var sql_strict_default = SQL_STRICT_PATTERNS;
-
-// node_modules/is-unsafe/src/index.js
-html_default.label = "HTML";
-xml_default.label = "XML";
-svg_default.label = "SVG";
-sql_default.label = "SQL";
-sql_strict_default.label = "SQL-STRICT";
-shell_default.label = "SHELL";
-redos_default.label = "REDOS";
-nosql_default.label = "NOSQL";
-log_default.label = "LOG";
-var VALID_CONTEXTS = Object.freeze({
-  HTML: html_default,
-  XML: xml_default,
-  SVG: svg_default,
-  SQL: sql_default,
-  "SQL-STRICT": sql_strict_default,
-  SHELL: shell_default,
-  REDOS: redos_default,
-  NOSQL: nosql_default,
-  LOG: log_default
-});
-function assertString(value) {
-  if (typeof value !== "string") {
-    throw new TypeError(
-      `is-unsafe: first argument must be a string, got ${typeof value}`
-    );
-  }
-}
-__name(assertString, "assertString");
-function assertContext(context) {
-  if (context instanceof RegExp) return;
-  if (Array.isArray(context)) {
-    if (context.length === 0) {
-      throw new TypeError("is-unsafe: context must not be an empty array");
-    }
-    if (Array.isArray(context[0])) {
-      for (const list of context) {
-        if (!Array.isArray(list) || list.length === 0) {
-          throw new TypeError(
-            "is-unsafe: each context in the array must be a non-empty pattern array (PatternList)"
-          );
-        }
-      }
-    }
-    return;
-  }
-  throw new TypeError(
-    `is-unsafe: second argument must be a PatternList (e.g. HTML), an array of PatternLists (e.g. [HTML, XML]), or a RegExp. Got: ${typeof context}`
-  );
-}
-__name(assertContext, "assertContext");
-function normalise(context) {
-  if (context instanceof RegExp) return { lists: null, regex: context };
-  if (Array.isArray(context[0])) return { lists: context, regex: null };
-  return { lists: [context], regex: null };
-}
-__name(normalise, "normalise");
-function matchList(value, list) {
-  const label = list.label ?? "CUSTOM";
-  for (const rule of list) {
-    if (rule.pattern.test(value)) {
-      return { context: label, id: rule.id, description: rule.description, pattern: rule.pattern };
-    }
-  }
-  return null;
-}
-__name(matchList, "matchList");
-function isUnsafe(value, context) {
-  assertString(value);
-  assertContext(context);
-  const { lists, regex } = normalise(context);
-  if (regex) return regex.test(value);
-  for (const list of lists) {
-    if (matchList(value, list) !== null) return true;
-  }
-  return false;
-}
-__name(isUnsafe, "isUnsafe");
-
-// node_modules/fast-xml-parser/src/xmlparser/OrderedObjParser.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/OrderedObjParser.js
 function extractRawAttributes(prefixedAttrs, options) {
   if (!prefixedAttrs) return {};
   const attrs = options.attributesGroupName ? prefixedAttrs[options.attributesGroupName] : prefixedAttrs;
@@ -41879,7 +41698,6 @@ var OrderedObjParser = class {
     this.ignoreAttributesFn = getIgnoreAttributesFn(this.options.ignoreAttributes);
     this.entityExpansionCount = 0;
     this.currentExpandedLength = 0;
-    this.doctypefound = false;
     let namedEntities = { ...XML };
     if (this.options.entityDecoder) {
       this.entityDecoder = this.options.entityDecoder;
@@ -41893,12 +41711,7 @@ var OrderedObjParser = class {
           maxTotalExpansions: this.options.processEntities.maxTotalExpansions,
           maxExpandedLength: this.options.processEntities.maxExpandedLength,
           applyLimitsTo: this.options.processEntities.appliesTo
-        },
-        // onExternalEntity: (name, value) => isUnsafe(value) ? 'block' : 'allow',
-        onInputEntity: /* @__PURE__ */ __name((name, value) => (
-          //TODO: VALID_CONTEXTS.HTML should be set only if this.options.htmlEntities
-          isUnsafe(value, [html_default, xml_default]) ? ENTITY_ACTION.BLOCK : ENTITY_ACTION.ALLOW
-        ), "onInputEntity")
+        }
         //postCheck: resolved => resolved
       });
     }
@@ -42034,7 +41847,6 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
   this.entityDecoder.reset();
   this.entityExpansionCount = 0;
   this.currentExpandedLength = 0;
-  this.doctypefound = false;
   const options = this.options;
   const docTypeReader = new DocTypeReader(options.processEntities);
   const xmlLen = xmlData.length;
@@ -42065,10 +41877,7 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
         }
         this.matcher.pop();
         this.isCurrentNodeStopNode = false;
-        currentNode = this.tagsNodeStack.pop() || xmlObj;
-        if (options.captureMetaData && currentNode) {
-          currentNode.addEndIndex(closeIndex + 1);
-        }
+        currentNode = this.tagsNodeStack.pop();
         textData = "";
         i = closeIndex;
       } else if (c1 === 63) {
@@ -42079,7 +41888,6 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
         if (attsMap) {
           const ver = attsMap[this.options.attributeNamePrefix + "version"];
           this.entityDecoder.setXmlVersion(Number(ver) || 1);
-          docTypeReader.setXmlVersion(Number(ver) || 1);
         }
         if (options.ignoreDeclaration && tagData.tagName === "?xml" || options.ignorePiTags) {
         } else {
@@ -42089,9 +41897,6 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
             childNode[":@"] = attsMap;
           }
           this.addChild(currentNode, childNode, this.readonlyMatcher, i);
-          if (options.captureMetaData) {
-            currentNode.addEndIndex(tagData.closeIndex + 2);
-          }
         }
         i = tagData.closeIndex + 1;
       } else if (c1 === 33 && xmlData.charCodeAt(i + 2) === 45 && xmlData.charCodeAt(i + 3) === 45) {
@@ -42103,8 +41908,6 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
         }
         i = endIndex;
       } else if (c1 === 33 && xmlData.charCodeAt(i + 2) === 68) {
-        if (this.doctypefound) throw new Error("Multiple DOCTYPE declarations found.");
-        this.doctypefound = true;
         const result = docTypeReader.readDocType(xmlData, i);
         this.entityDecoder.addInputEntities(result.entities);
         i = result.i;
@@ -42193,9 +41996,6 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
           this.matcher.pop();
           this.isCurrentNodeStopNode = false;
           this.addChild(currentNode, childNode, this.readonlyMatcher, startIndex);
-          if (options.captureMetaData) {
-            currentNode.addEndIndex(i + 1);
-          }
         } else {
           if (isSelfClosing) {
             ({ tagName, tagExp } = transformTagName(options.transformTagName, tagName, tagExp, options));
@@ -42204,9 +42004,6 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
               childNode[":@"] = prefixedAttrs;
             }
             this.addChild(currentNode, childNode, this.readonlyMatcher, startIndex);
-            if (options.captureMetaData) {
-              currentNode.addEndIndex(closeIndex + 1);
-            }
             this.matcher.pop();
             this.isCurrentNodeStopNode = false;
           } else if (options.unpairedTagsSet.has(tagName)) {
@@ -42215,9 +42012,6 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
               childNode[":@"] = prefixedAttrs;
             }
             this.addChild(currentNode, childNode, this.readonlyMatcher, startIndex);
-            if (options.captureMetaData) {
-              currentNode.addEndIndex(result.closeIndex + 1);
-            }
             this.matcher.pop();
             this.isCurrentNodeStopNode = false;
             i = result.closeIndex;
@@ -42455,7 +42249,7 @@ function sanitizeName(name, options) {
 }
 __name(sanitizeName, "sanitizeName");
 
-// node_modules/fast-xml-parser/src/xmlparser/node2json.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/node2json.js
 var METADATA_SYMBOL2 = XmlNode.getMetaDataSymbol();
 function stripAttributePrefix(attrs, prefix) {
   if (!attrs || typeof attrs !== "object") return {};
@@ -42573,7 +42367,7 @@ function isLeafTag(obj, options) {
 }
 __name(isLeafTag, "isLeafTag");
 
-// node_modules/fast-xml-parser/src/xmlparser/XMLParser.js
+// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/XMLParser.js
 var XMLParser = class {
   static {
     __name(this, "XMLParser");
@@ -45053,12 +44847,12 @@ var CMD_LETTER = {
   "a:quadBezTo": "Q",
   "a:cubicBezTo": "C"
 };
-function parseCustGeom(shapeXml, shapeW, shapeH) {
-  const start = shapeXml.indexOf("<a:custGeom");
+function parseCustGeom(shapeXml2, shapeW, shapeH) {
+  const start = shapeXml2.indexOf("<a:custGeom");
   if (start < 0) return void 0;
-  const end = shapeXml.indexOf("</a:custGeom>", start);
+  const end = shapeXml2.indexOf("</a:custGeom>", start);
   if (end < 0) return void 0;
-  const xml = shapeXml.slice(start, end);
+  const xml = shapeXml2.slice(start, end);
   const gds = [];
   const paths = [];
   let inGuides = false;
@@ -46101,7 +45895,7 @@ function parseStroke(spPr, ctx, fallbackColor) {
     tri: "tri"
   };
   const compound = ln["@_cmpd"] ? cmpdMap[ln["@_cmpd"]] : void 0;
-  const join4 = "a:round" in ln ? "round" : "a:bevel" in ln ? "bevel" : "a:miter" in ln ? "miter" : void 0;
+  const join5 = "a:round" in ln ? "round" : "a:bevel" in ln ? "bevel" : "a:miter" in ln ? "miter" : void 0;
   const headEnd = parseArrowEnd(ln["a:headEnd"]);
   const tailEnd = parseArrowEnd(ln["a:tailEnd"]);
   return {
@@ -46109,7 +45903,7 @@ function parseStroke(spPr, ctx, fallbackColor) {
     width: intOr(ln["@_w"], 12700),
     ...dash ? { dash: String(dash) } : {},
     ...cap ? { cap } : {},
-    ...join4 ? { join: join4 } : {},
+    ...join5 ? { join: join5 } : {},
     ...compound && compound !== "sng" ? { compound } : {},
     ...headEnd ? { headEnd } : {},
     ...tailEnd ? { tailEnd } : {}
@@ -51314,13 +51108,13 @@ var MtxError = class extends Error {
 var BitReader = class {
   constructor(bytes) {
     this.bytes = bytes;
-    this.idx = 0;
-    this.bitCount = 0;
-    this.bitBuffer = 0;
   }
   static {
     __name(this, "BitReader");
   }
+  idx = 0;
+  bitCount = 0;
+  bitBuffer = 0;
   inputBit() {
     if (this.bitCount === 0) {
       if (this.idx >= this.bytes.length) throw new MtxError("unexpected end of LZ stream");
@@ -51391,9 +51185,13 @@ var AHuff = class _AHuff {
   static {
     __name(this, "AHuff");
   }
-  static {
-    this.ROOT = 1;
-  }
+  up;
+  left;
+  right;
+  code;
+  weight;
+  symbolIndex;
+  static ROOT = 1;
   initWeight(a) {
     if (this.code[a] < 0) {
       this.weight[a] = this.initWeight(this.left[a]) + this.initWeight(this.right[a]);
@@ -51471,13 +51269,13 @@ var AHuff = class _AHuff {
 var RunLengthSink = class {
   constructor(out) {
     this.out = out;
-    this.state = "initial";
-    this.escape = 0;
-    this.count = 0;
   }
   static {
     __name(this, "RunLengthSink");
   }
+  state = "initial";
+  escape = 0;
+  count = 0;
   save(value) {
     switch (this.state) {
       case "normal":
@@ -51504,12 +51302,13 @@ var RunLengthSink = class {
   }
 };
 var ByteSink = class {
-  constructor(capacity) {
-    this.length = 0;
-    this.buf = new Uint8Array(Math.max(capacity, 16));
-  }
   static {
     __name(this, "ByteSink");
+  }
+  buf;
+  length = 0;
+  constructor(capacity) {
+    this.buf = new Uint8Array(Math.max(capacity, 16));
   }
   push(v) {
     if (this.length >= this.buf.length) {
@@ -51639,12 +51438,12 @@ __name(unpackMtx, "unpackMtx");
 var Reader = class {
   constructor(buf) {
     this.buf = buf;
-    this.pos = 0;
-    this.bitPos = 0;
   }
   static {
     __name(this, "Reader");
   }
+  pos = 0;
+  bitPos = 0;
   get size() {
     return this.buf.length;
   }
@@ -51705,13 +51504,14 @@ var Reader = class {
   }
 };
 var Writer = class {
-  constructor(capacity = 1024) {
-    this.pos = 0;
-    this.size = 0;
-    this.buf = new Uint8Array(Math.max(16, capacity));
-  }
   static {
     __name(this, "Writer");
+  }
+  buf;
+  pos = 0;
+  size = 0;
+  constructor(capacity = 1024) {
+    this.buf = new Uint8Array(Math.max(16, capacity));
   }
   ensure(n) {
     const need = this.pos + n;
@@ -53160,9 +52960,9 @@ function prepareInsertSlideWithLayout(archive, deck, sourceIndex, layoutPath) {
   const newSlideXml = buildSlideXmlWithPlaceholders(layoutInfo.placeholders);
   const newPath = nextSlidePath(archive);
   archive.entries.set(newPath, Buffer.from(newSlideXml, "utf8"));
-  const relTarget = `../${layoutPath.slice(4)}`;
+  const relTarget2 = `../${layoutPath.slice(4)}`;
   const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${LAYOUT_REL_TYPE}" Target="${escapeXmlAttr(relTarget)}"/></Relationships>`;
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${LAYOUT_REL_TYPE}" Target="${escapeXmlAttr(relTarget2)}"/></Relationships>`;
   archive.entries.set(relsPathFor(newPath), Buffer.from(relsXml, "utf8"));
   const ctPath = "[Content_Types].xml";
   const ct = archive.readText(ctPath);
@@ -55988,9 +55788,9 @@ function mergeSlideFromSource(target, source, opts = {}) {
         new RegExp(`(r:(?:embed|link)=")${oldRid}(")`, "g"),
         `$1${newRid}$2`
       );
-      const relTarget = "../media/" + destPath.slice("ppt/media/".length);
+      const relTarget2 = "../media/" + destPath.slice("ppt/media/".length);
       newRelsLines.push(
-        `<Relationship Id="${newRid}" Type="${IMAGE_REL_TYPE3}" Target="${escapeXmlAttr(relTarget)}"/>`
+        `<Relationship Id="${newRid}" Type="${IMAGE_REL_TYPE3}" Target="${escapeXmlAttr(relTarget2)}"/>`
       );
     } else if (rel.type.endsWith("/slideLayout")) {
       const t = layoutTarget ?? rel.target;
@@ -56179,7 +55979,7 @@ function setSlideLayout(opened, slideIndex, layoutPath) {
   const relsPath = relsPathFor(slide.path);
   const rels = opened.archive.readText(relsPath);
   if (!rels) return null;
-  const relTarget = `../${layoutPath.slice("ppt/".length)}`;
+  const relTarget2 = `../${layoutPath.slice("ppt/".length)}`;
   const existing = new RegExp(
     `<Relationship\\b[^>]*Type="${LAYOUT_REL_TYPE2}"[^>]*/>|<Relationship\\b[^>]*/>`,
     "g"
@@ -56187,7 +55987,7 @@ function setSlideLayout(opened, slideIndex, layoutPath) {
   let next = null;
   for (const m of rels.matchAll(existing)) {
     if (!m[0].includes("slideLayout")) continue;
-    next = rels.slice(0, m.index) + m[0].replace(/\bTarget="[^"]*"/, `Target="${escapeXmlAttr(relTarget)}"`) + rels.slice(m.index + m[0].length);
+    next = rels.slice(0, m.index) + m[0].replace(/\bTarget="[^"]*"/, `Target="${escapeXmlAttr(relTarget2)}"`) + rels.slice(m.index + m[0].length);
     break;
   }
   if (!next) {
@@ -56195,7 +55995,7 @@ function setSlideLayout(opened, slideIndex, layoutPath) {
     for (const m of rels.matchAll(/Id="rId(\d+)"/g)) maxRid = Math.max(maxRid, Number(m[1]));
     next = rels.replace(
       "</Relationships>",
-      `<Relationship Id="rId${maxRid + 1}" Type="${LAYOUT_REL_TYPE2}" Target="${escapeXmlAttr(relTarget)}"/></Relationships>`
+      `<Relationship Id="rId${maxRid + 1}" Type="${LAYOUT_REL_TYPE2}" Target="${escapeXmlAttr(relTarget2)}"/></Relationships>`
     );
   }
   opened.archive.entries.set(relsPath, Buffer.from(next, "utf8"));
@@ -57528,6 +57328,8721 @@ function setGroupChildShapePresetGeometry(slide, groupId, childId, prst) {
 }
 __name(setGroupChildShapePresetGeometry, "setGroupChildShapePresetGeometry");
 
+// src/backend/xlsx.ts
+var import_jszip5 = __toESM(require_lib3(), 1);
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-gateway.ts
+var import_jszip4 = __toESM(require_lib3());
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/future-functions.ts
+var XLWS_FUNCTIONS = /* @__PURE__ */ new Set(["FILTER", "SORT"]);
+var XLFN_FUNCTIONS = /* @__PURE__ */ new Set([
+  // Excel 2010
+  "AGGREGATE",
+  "BETA.DIST",
+  "BETA.INV",
+  "BINOM.DIST",
+  "BINOM.INV",
+  "CEILING.PRECISE",
+  "CHISQ.DIST",
+  "CHISQ.DIST.RT",
+  "CHISQ.INV",
+  "CHISQ.INV.RT",
+  "CHISQ.TEST",
+  "CONFIDENCE.NORM",
+  "CONFIDENCE.T",
+  "COVARIANCE.P",
+  "COVARIANCE.S",
+  "ERF.PRECISE",
+  "ERFC.PRECISE",
+  "EXPON.DIST",
+  "F.DIST",
+  "F.DIST.RT",
+  "F.INV",
+  "F.INV.RT",
+  "F.TEST",
+  "FLOOR.PRECISE",
+  "GAMMA.DIST",
+  "GAMMA.INV",
+  "GAMMALN.PRECISE",
+  "HYPGEOM.DIST",
+  "LOGNORM.DIST",
+  "LOGNORM.INV",
+  "MODE.MULT",
+  "MODE.SNGL",
+  "NEGBINOM.DIST",
+  "NETWORKDAYS.INTL",
+  "NORM.DIST",
+  "NORM.INV",
+  "NORM.S.DIST",
+  "NORM.S.INV",
+  "PERCENTILE.EXC",
+  "PERCENTILE.INC",
+  "PERCENTRANK.EXC",
+  "PERCENTRANK.INC",
+  "POISSON.DIST",
+  "QUARTILE.EXC",
+  "QUARTILE.INC",
+  "RANK.AVG",
+  "RANK.EQ",
+  "STDEV.P",
+  "STDEV.S",
+  "T.DIST",
+  "T.DIST.2T",
+  "T.DIST.RT",
+  "T.INV",
+  "T.INV.2T",
+  "T.TEST",
+  "VAR.P",
+  "VAR.S",
+  "WEIBULL.DIST",
+  "WORKDAY.INTL",
+  "Z.TEST",
+  // Excel 2013
+  "ACOT",
+  "ACOTH",
+  "ARABIC",
+  "BASE",
+  "BINOM.DIST.RANGE",
+  "BITAND",
+  "BITLSHIFT",
+  "BITOR",
+  "BITRSHIFT",
+  "BITXOR",
+  "CEILING.MATH",
+  "COMBINA",
+  "COT",
+  "COTH",
+  "CSC",
+  "CSCH",
+  "DAYS",
+  "DECIMAL",
+  "ENCODEURL",
+  "FILTERXML",
+  "FLOOR.MATH",
+  "FORMULATEXT",
+  "GAMMA",
+  "GAUSS",
+  "IFNA",
+  "IMCOSH",
+  "IMCOT",
+  "IMCSC",
+  "IMCSCH",
+  "IMSEC",
+  "IMSECH",
+  "IMSINH",
+  "IMTAN",
+  "ISFORMULA",
+  "ISOWEEKNUM",
+  "MUNIT",
+  "NUMBERVALUE",
+  "PDURATION",
+  "PERMUTATIONA",
+  "PHI",
+  "RRI",
+  "SEC",
+  "SECH",
+  "SHEET",
+  "SHEETS",
+  "SKEW.P",
+  "UNICHAR",
+  "UNICODE",
+  "WEBSERVICE",
+  "XOR",
+  // Excel 2016
+  "CONCAT",
+  "FORECAST.ETS",
+  "FORECAST.ETS.CONFINT",
+  "FORECAST.ETS.SEASONALITY",
+  "FORECAST.ETS.STAT",
+  "FORECAST.LINEAR",
+  "IFS",
+  "MAXIFS",
+  "MINIFS",
+  "SWITCH",
+  "TEXTJOIN",
+  // Microsoft 365
+  "BYCOL",
+  "BYROW",
+  "CHOOSECOLS",
+  "CHOOSEROWS",
+  "DROP",
+  "EXPAND",
+  "HSTACK",
+  "IMAGE",
+  "ISOMITTED",
+  "LAMBDA",
+  "LET",
+  "MAKEARRAY",
+  "MAP",
+  "RANDARRAY",
+  "REDUCE",
+  "SCAN",
+  "SEQUENCE",
+  "SORTBY",
+  "STOCKHISTORY",
+  "TAKE",
+  "TEXTAFTER",
+  "TEXTBEFORE",
+  "TEXTSPLIT",
+  "TOCOL",
+  "TOROW",
+  "UNIQUE",
+  "VSTACK",
+  "WRAPCOLS",
+  "WRAPROWS",
+  "XLOOKUP",
+  "XMATCH",
+  // Storage forms of the @ implicit-intersection and # spill operators.
+  "SINGLE",
+  "ANCHORARRAY"
+]);
+var FUNCTION_CALL_PATTERN = /(^|[^A-Za-z0-9_."'!])([A-Za-z][A-Za-z0-9.]*)(?=\s*\()/g;
+var SPILL_FUNCTIONS = /* @__PURE__ */ new Set([
+  "BYCOL",
+  "BYROW",
+  "CHOOSECOLS",
+  "CHOOSEROWS",
+  "DROP",
+  "EXPAND",
+  "FILTER",
+  "HSTACK",
+  "MAKEARRAY",
+  "MAP",
+  "RANDARRAY",
+  "SCAN",
+  "SEQUENCE",
+  "SORT",
+  "SORTBY",
+  "TAKE",
+  "TEXTSPLIT",
+  "TOCOL",
+  "TOROW",
+  "UNIQUE",
+  "VSTACK",
+  "WRAPCOLS",
+  "WRAPROWS"
+]);
+function spillsDynamicArray(formula) {
+  const segments = formula.replace(/_xlfn\.(?:_xlws\.)?/gi, "").split('"');
+  for (let index2 = 0; index2 < segments.length; index2 += 2) {
+    const segment = segments[index2];
+    if (segment === void 0) continue;
+    for (const match of segment.matchAll(FUNCTION_CALL_PATTERN)) {
+      if (SPILL_FUNCTIONS.has(match[2].toUpperCase())) return true;
+    }
+  }
+  return false;
+}
+__name(spillsDynamicArray, "spillsDynamicArray");
+function withFutureFunctionMarkers(formula) {
+  const segments = formula.split('"');
+  for (let index2 = 0; index2 < segments.length; index2 += 2) {
+    const segment = segments[index2];
+    if (segment === void 0) continue;
+    segments[index2] = segment.replace(FUNCTION_CALL_PATTERN, (full, lead, name) => {
+      const canonical = name.toUpperCase();
+      if (XLWS_FUNCTIONS.has(canonical)) return `${lead}_xlfn._xlws.${canonical}`;
+      if (XLFN_FUNCTIONS.has(canonical)) return `${lead}_xlfn.${canonical}`;
+      return full;
+    });
+  }
+  return segments.join('"');
+}
+__name(withFutureFunctionMarkers, "withFutureFunctionMarkers");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-escapes.ts
+function decodeXlsxEscapes(text) {
+  if (!text.includes("_x")) return text;
+  return text.replace(/_x([0-9A-Fa-f]{4})_/g, (match, hex) => {
+    const code = Number.parseInt(hex, 16);
+    return code >= 55296 && code <= 57343 ? match : String.fromCharCode(code);
+  });
+}
+__name(decodeXlsxEscapes, "decodeXlsxEscapes");
+function encodeXlsxEscapes(text) {
+  return text.replace(/_(?=x[0-9A-Fa-f]{4}_)/g, "_x005F_").replace(
+    // eslint-disable-next-line no-control-regex -- the control range is the thing being escaped
+    /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF\r]/g,
+    (character) => `_x${character.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0")}_`
+  );
+}
+__name(encodeXlsxEscapes, "encodeXlsxEscapes");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-default-styles.ts
+var MINIMAL_STYLESHEET_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-chart.ts
+var ChartEditError = class extends Error {
+  static {
+    __name(this, "ChartEditError");
+  }
+};
+var CONVERTIBLE_PLOTS = [
+  "barChart",
+  "lineChart",
+  "areaChart",
+  "pieChart",
+  "doughnutChart"
+];
+var TARGET_PLOTS = {
+  column: "barChart",
+  bar: "barChart",
+  line: "lineChart",
+  area: "areaChart",
+  pie: "pieChart",
+  doughnut: "doughnutChart"
+};
+var SYNTH_CAT_AXIS_ID = "900000001";
+var SYNTH_VAL_AXIS_ID = "900000002";
+function applyChartEdit(chartXml, edit) {
+  let xml = chartXml;
+  if (edit.chartType !== void 0) xml = convertChartType(xml, edit.chartType);
+  if (edit.title !== void 0) xml = setChartTitle(xml, edit.title);
+  if (edit.seriesSet !== void 0) xml = replaceSeries(xml, edit.seriesSet);
+  if (edit.seriesColors !== void 0) {
+    for (const [index2, color] of Object.entries(edit.seriesColors)) {
+      xml = setSeriesColor(xml, Number(index2), color);
+    }
+  }
+  if (edit.pointColors !== void 0) {
+    for (const [index2, points] of Object.entries(edit.pointColors)) {
+      xml = setPointColors(xml, Number(index2), points);
+    }
+  }
+  if (edit.legend !== void 0) xml = setLegend(xml, edit.legend);
+  if (edit.dataLabels !== void 0) xml = setDataLabels(xml, edit.dataLabels);
+  if (edit.dataLabels !== "none" && (edit.dataLabelPosition !== void 0 || edit.dataLabelFormat !== void 0)) {
+    xml = setDataLabelDetail(xml, edit.dataLabelPosition, edit.dataLabelFormat);
+  }
+  if (edit.axisTitles !== void 0) {
+    if (edit.axisTitles.category !== void 0) {
+      xml = setAxisTitle(xml, "catAx", edit.axisTitles.category);
+    }
+    if (edit.axisTitles.value !== void 0) {
+      xml = setAxisTitle(xml, "valAx", edit.axisTitles.value);
+    }
+  }
+  if (edit.grouping !== void 0) xml = setGrouping(xml, edit.grouping);
+  if (edit.gridlines !== void 0) xml = setGridlines(xml, edit.gridlines);
+  if (edit.valueAxis !== void 0) xml = setValueAxisBounds(xml, edit.valueAxis);
+  if (edit.gapWidthPct !== void 0) xml = setGapWidth(xml, edit.gapWidthPct);
+  if (edit.holeSizePct !== void 0) xml = setHoleSize(xml, edit.holeSizePct);
+  if (edit.explosionPct !== void 0) xml = setSeriesExplosion(xml, edit.explosionPct);
+  if (edit.pointExplosions !== void 0) xml = setPointExplosions(xml, edit.pointExplosions);
+  if (edit.series !== void 0) {
+    for (const entry of edit.series) {
+      xml = setSeriesData(xml, entry);
+    }
+  }
+  return xml;
+}
+__name(applyChartEdit, "applyChartEdit");
+function spliceMatch(xml, match, replacement) {
+  return xml.slice(0, match.index) + replacement + xml.slice(match.index + match[0].length);
+}
+__name(spliceMatch, "spliceMatch");
+var GRIDLINES_PATTERN = /<c:majorGridlines\/>|<c:majorGridlines>[\s\S]*?<\/c:majorGridlines>/;
+var VAL_AXIS_PATTERN = /<c:valAx>([\s\S]*?)<\/c:valAx>/;
+function setGridlines(chartXml, on) {
+  const axisMatch = VAL_AXIS_PATTERN.exec(chartXml);
+  if (!axisMatch || axisMatch[1] === void 0) {
+    throw new ChartEditError("Chart has no value axis.");
+  }
+  const inner = axisMatch[1];
+  if (!on) {
+    return spliceMatch(
+      chartXml,
+      axisMatch,
+      `<c:valAx>${inner.replace(GRIDLINES_PATTERN, "")}</c:valAx>`
+    );
+  }
+  if (GRIDLINES_PATTERN.test(inner)) return chartXml;
+  const anchor = /<c:axPos val="[^"]*"\/>/.exec(inner) ?? /<c:delete val="[^"]*"\/>/.exec(inner);
+  if (!anchor) throw new ChartEditError("Chart axis is missing its position element.");
+  const at = anchor.index + anchor[0].length;
+  return spliceMatch(
+    chartXml,
+    axisMatch,
+    `<c:valAx>${inner.slice(0, at)}<c:majorGridlines/>${inner.slice(at)}</c:valAx>`
+  );
+}
+__name(setGridlines, "setGridlines");
+function setGrouping(chartXml, grouping) {
+  const plotMatch = /<c:(barChart|lineChart|areaChart)>([\s\S]*?)<\/c:\1>/.exec(chartXml);
+  if (!plotMatch?.[1] || plotMatch[2] === void 0) {
+    throw new ChartEditError("Only bar, line, and area charts support stacking.");
+  }
+  const plot = plotMatch[1];
+  const value = grouping === "clustered" && plot !== "barChart" ? "standard" : grouping;
+  let inner = plotMatch[2];
+  if (/<c:grouping val="[^"]*"\/>/.test(inner)) {
+    inner = inner.replace(/<c:grouping val="[^"]*"\/>/, () => `<c:grouping val="${value}"/>`);
+  } else {
+    const barDir = /<c:barDir val="[^"]*"\/>/.exec(inner);
+    const at = barDir ? barDir.index + barDir[0].length : 0;
+    inner = inner.slice(0, at) + `<c:grouping val="${value}"/>` + inner.slice(at);
+  }
+  if (plot === "barChart") {
+    const overlap = grouping === "clustered" ? "-27" : "100";
+    if (/<c:overlap val="[^"]*"\/>/.test(inner)) {
+      inner = inner.replace(/<c:overlap val="[^"]*"\/>/, () => `<c:overlap val="${overlap}"/>`);
+    } else {
+      const axId = /<c:axId val="[0-9]+"\/>/.exec(inner);
+      if (!axId) throw new ChartEditError("Chart has no axes for a stacking edit.");
+      inner = inner.slice(0, axId.index) + `<c:overlap val="${overlap}"/>` + inner.slice(axId.index);
+    }
+  }
+  return chartXml.replace(plotMatch[0], () => `<c:${plot}>${inner}</c:${plot}>`);
+}
+__name(setGrouping, "setGrouping");
+function setValueAxisBounds(chartXml, bounds) {
+  const axisMatch = VAL_AXIS_PATTERN.exec(chartXml);
+  if (!axisMatch || axisMatch[1] === void 0) {
+    throw new ChartEditError("Chart has no value axis.");
+  }
+  const scalingMatch = /<c:scaling>([\s\S]*?)<\/c:scaling>/.exec(axisMatch[1]);
+  if (!scalingMatch || scalingMatch[1] === void 0) {
+    throw new ChartEditError("Chart value axis has no scaling element.");
+  }
+  let scaling = scalingMatch[1];
+  if (bounds.max !== void 0) scaling = patchScalingBound(scaling, "max", bounds.max);
+  if (bounds.min !== void 0) scaling = patchScalingBound(scaling, "min", bounds.min);
+  const inner = spliceMatch(axisMatch[1], scalingMatch, `<c:scaling>${scaling}</c:scaling>`);
+  return spliceMatch(chartXml, axisMatch, `<c:valAx>${inner}</c:valAx>`);
+}
+__name(setValueAxisBounds, "setValueAxisBounds");
+function patchScalingBound(scalingInner, bound, value) {
+  const pattern = new RegExp(`<c:${bound} val="[^"]*"/>`);
+  if (value === null) return scalingInner.replace(pattern, "");
+  const element = `<c:${bound} val="${value}"/>`;
+  if (pattern.test(scalingInner)) return scalingInner.replace(pattern, () => element);
+  const anchors = bound === "max" ? /<c:logBase val="[^"]*"\/>|<c:orientation val="[^"]*"\/>/g : /<c:logBase val="[^"]*"\/>|<c:orientation val="[^"]*"\/>|<c:max val="[^"]*"\/>/g;
+  let insertAt = 0;
+  for (const found of scalingInner.matchAll(anchors)) {
+    insertAt = found.index + found[0].length;
+  }
+  return scalingInner.slice(0, insertAt) + element + scalingInner.slice(insertAt);
+}
+__name(patchScalingBound, "patchScalingBound");
+function setGapWidth(chartXml, pct) {
+  const plotPattern = /<c:barChart>([\s\S]*?)<\/c:barChart>/;
+  const plotMatch = plotPattern.exec(chartXml);
+  if (!plotMatch || plotMatch[1] === void 0) {
+    throw new ChartEditError("Only bar charts have a gap width.");
+  }
+  const inner = plotMatch[1];
+  const element = `<c:gapWidth val="${pct}"/>`;
+  const existing = /<c:gapWidth val="[^"]*"\/>/;
+  if (existing.test(inner)) {
+    return spliceMatch(
+      chartXml,
+      plotMatch,
+      `<c:barChart>${inner.replace(existing, () => element)}</c:barChart>`
+    );
+  }
+  let insertAt = -1;
+  for (const found of inner.matchAll(/<\/c:ser>|<\/c:dLbls>/g)) {
+    insertAt = found.index + found[0].length;
+  }
+  if (insertAt === -1) throw new ChartEditError("This chart has no series.");
+  return spliceMatch(
+    chartXml,
+    plotMatch,
+    `<c:barChart>${inner.slice(0, insertAt)}${element}${inner.slice(insertAt)}</c:barChart>`
+  );
+}
+__name(setGapWidth, "setGapWidth");
+function setHoleSize(chartXml, pct) {
+  const plotPattern = /<c:doughnutChart>([\s\S]*?)<\/c:doughnutChart>/;
+  const plotMatch = plotPattern.exec(chartXml);
+  if (!plotMatch || plotMatch[1] === void 0) {
+    throw new ChartEditError("Only doughnut charts have a hole size.");
+  }
+  const inner = plotMatch[1];
+  const element = `<c:holeSize val="${pct}"/>`;
+  const existing = /<c:holeSize val="[^"]*"\/>/;
+  let next;
+  if (existing.test(inner)) {
+    next = inner.replace(existing, () => element);
+  } else {
+    const extLst = /<c:extLst[\s/>]/.exec(inner);
+    const at = extLst ? extLst.index : inner.length;
+    next = inner.slice(0, at) + element + inner.slice(at);
+  }
+  return spliceMatch(chartXml, plotMatch, `<c:doughnutChart>${next}</c:doughnutChart>`);
+}
+__name(setHoleSize, "setHoleSize");
+function withFirstPieSeries(chartXml, what, patch) {
+  const plotPattern = /<c:(pieChart|doughnutChart)>([\s\S]*?)<\/c:\1>/;
+  const plotMatch = plotPattern.exec(chartXml);
+  if (!plotMatch?.[1] || plotMatch[2] === void 0) {
+    throw new ChartEditError(`Only pie and doughnut charts support ${what}.`);
+  }
+  const serMatch = /<c:ser>[\s\S]*?<\/c:ser>/.exec(plotMatch[2]);
+  if (!serMatch) throw new ChartEditError("This chart has no series.");
+  const inner = spliceMatch(plotMatch[2], serMatch, patch(serMatch[0]));
+  return spliceMatch(chartXml, plotMatch, `<c:${plotMatch[1]}>${inner}</c:${plotMatch[1]}>`);
+}
+__name(withFirstPieSeries, "withFirstPieSeries");
+function setSeriesExplosion(chartXml, pct) {
+  return withFirstPieSeries(chartXml, "explosion", (serXml) => {
+    const element = `<c:explosion val="${pct}"/>`;
+    const dPtAt = serXml.search(/<c:dPt[>/]/);
+    const scope = dPtAt === -1 ? serXml : serXml.slice(0, dPtAt);
+    const tail = dPtAt === -1 ? "" : serXml.slice(dPtAt);
+    const pattern = /<c:explosion val="[^"]*"\/>/;
+    if (pattern.test(scope)) return scope.replace(pattern, () => element) + tail;
+    if (dPtAt !== -1) return scope + element + tail;
+    const anchor = /<c:dLbls[>/]|<c:cat[>/]|<c:val[>/]/.exec(serXml);
+    const at = anchor ? anchor.index : serXml.lastIndexOf("</c:ser>");
+    return serXml.slice(0, at) + element + serXml.slice(at);
+  });
+}
+__name(setSeriesExplosion, "setSeriesExplosion");
+function setPointExplosions(chartXml, points) {
+  return withFirstPieSeries(chartXml, "per-slice explosion", (serXml) => {
+    let next = serXml;
+    const entries = Object.entries(points).map(([point, pct]) => [Number(point), pct]).sort((a, b) => a[0] - b[0]);
+    for (const [point, pct] of entries) {
+      next = upsertPointExplosion(next, point, pct);
+    }
+    return next;
+  });
+}
+__name(setPointExplosions, "setPointExplosions");
+function upsertPointExplosion(serXml, pointIndex, pct) {
+  const element = `<c:explosion val="${pct}"/>`;
+  const dPts = [...serXml.matchAll(/<c:dPt>[\s\S]*?<\/c:dPt>/g)];
+  for (const dPt of dPts) {
+    const idx = Number(/<c:idx val="([0-9]+)"\/>/.exec(dPt[0])?.[1]);
+    if (idx !== pointIndex) continue;
+    const pattern = /<c:explosion val="[^"]*"\/>/;
+    let patched;
+    if (pattern.test(dPt[0])) {
+      patched = dPt[0].replace(pattern, () => element);
+    } else {
+      const anchor = /<c:spPr[\s/>]|<c:pictureOptions[\s/>]|<c:extLst[\s/>]/.exec(dPt[0]);
+      const at = anchor ? anchor.index : dPt[0].lastIndexOf("</c:dPt>");
+      patched = dPt[0].slice(0, at) + element + dPt[0].slice(at);
+    }
+    return serXml.slice(0, dPt.index) + patched + serXml.slice(dPt.index + dPt[0].length);
+  }
+  const created = `<c:dPt><c:idx val="${pointIndex}"/><c:bubble3D val="0"/>${element}</c:dPt>`;
+  const insertAt = dPtInsertionIndex(serXml, dPts, pointIndex);
+  return serXml.slice(0, insertAt) + created + serXml.slice(insertAt);
+}
+__name(upsertPointExplosion, "upsertPointExplosion");
+var REPLACEABLE_PLOTS = [
+  "barChart",
+  "lineChart",
+  "areaChart",
+  "pieChart",
+  "doughnutChart",
+  "radarChart",
+  "scatterChart"
+];
+function replaceSeries(chartXml, entries) {
+  const plotPattern = /<c:(barChart|lineChart|areaChart|bar3DChart|line3DChart|area3DChart|pieChart|pie3DChart|doughnutChart|scatterChart|radarChart)>([\s\S]*?)<\/c:\1>/g;
+  const plots = [...chartXml.matchAll(plotPattern)];
+  const plotMatch = plots[0];
+  if (!plotMatch?.[1] || plotMatch[2] === void 0) {
+    throw new ChartEditError("This chart type does not support series replacement.");
+  }
+  if (plots.length > 1) {
+    throw new ChartEditError("Combo charts cannot have their series replaced.");
+  }
+  const plot = plotMatch[1];
+  if (!REPLACEABLE_PLOTS.includes(plot)) {
+    throw new ChartEditError(`Replacing series on a ${plot} is not supported.`);
+  }
+  const inner = plotMatch[2];
+  const firstSer = inner.search(/<c:ser>/);
+  if (firstSer === -1) throw new ChartEditError("This chart has no series.");
+  const built = entries.map(
+    (entry, index2) => plot === "scatterChart" ? buildScatterSeriesReplacement(entry, index2) : buildSeriesReplacement(entry, index2)
+  ).join("");
+  const nextInner = inner.slice(0, firstSer) + built + inner.slice(firstSer).replace(/<c:ser>[\s\S]*?<\/c:ser>/g, "");
+  return chartXml.slice(0, plotMatch.index) + `<c:${plot}>${nextInner}</c:${plot}>` + chartXml.slice(plotMatch.index + plotMatch[0].length);
+}
+__name(replaceSeries, "replaceSeries");
+function buildSeriesReplacement(entry, index2) {
+  const spPr = entry.color === void 0 ? "" : `<c:spPr><a:solidFill><a:srgbClr val="${entry.color.slice(1).toUpperCase()}"/></a:solidFill></c:spPr>`;
+  const categories = entry.categories?.slice(0, entry.values.length);
+  const catPoints = (categories ?? []).map((value, idx) => `<c:pt idx="${idx}"><c:v>${escapeXmlText2(value)}</c:v></c:pt>`).join("");
+  const cat = categories === void 0 || categories.length === 0 ? "" : "<c:cat>" + (entry.categoriesRef !== void 0 ? `<c:strRef><c:f>${escapeXmlText2(entry.categoriesRef)}</c:f><c:strCache><c:ptCount val="${categories.length}"/>${catPoints}</c:strCache></c:strRef>` : `<c:strLit><c:ptCount val="${categories.length}"/>${catPoints}</c:strLit>`) + "</c:cat>";
+  const val = `<c:val>${numDataXml(entry.valuesRef, entry.values)}</c:val>`;
+  return `<c:ser><c:idx val="${index2}"/><c:order val="${index2}"/><c:tx><c:v>${escapeXmlText2(entry.name)}</c:v></c:tx>${spPr}${cat}${val}</c:ser>`;
+}
+__name(buildSeriesReplacement, "buildSeriesReplacement");
+function numDataXml(ref, values) {
+  const points = `<c:ptCount val="${values.length}"/>` + values.map((value, idx) => `<c:pt idx="${idx}"><c:v>${value}</c:v></c:pt>`).join("");
+  return ref !== void 0 ? `<c:numRef><c:f>${escapeXmlText2(ref)}</c:f><c:numCache><c:formatCode>General</c:formatCode>${points}</c:numCache></c:numRef>` : `<c:numLit>${points}</c:numLit>`;
+}
+__name(numDataXml, "numDataXml");
+function buildScatterSeriesReplacement(entry, index2) {
+  const spPr = entry.color === void 0 ? "" : `<c:spPr><a:ln><a:solidFill><a:srgbClr val="${entry.color.slice(1).toUpperCase()}"/></a:solidFill></a:ln></c:spPr>`;
+  const categories = entry.categories?.slice(0, entry.values.length) ?? [];
+  const numericCategories = categories.map((value) => Number(value));
+  const categoriesAreNumeric = categories.length === entry.values.length && categories.length > 0 && numericCategories.every((value) => Number.isFinite(value));
+  const xValues = categoriesAreNumeric ? numericCategories : entry.values.map((_, idx) => idx);
+  const xVal = `<c:xVal>${numDataXml(categoriesAreNumeric ? entry.categoriesRef : void 0, xValues)}</c:xVal>`;
+  const yVal = `<c:yVal>${numDataXml(entry.valuesRef, entry.values)}</c:yVal>`;
+  return `<c:ser><c:idx val="${index2}"/><c:order val="${index2}"/><c:tx><c:v>${escapeXmlText2(entry.name)}</c:v></c:tx>${spPr}${xVal}${yVal}<c:smooth val="0"/></c:ser>`;
+}
+__name(buildScatterSeriesReplacement, "buildScatterSeriesReplacement");
+var LEGEND_POSITIONS = {
+  right: "r",
+  bottom: "b",
+  top: "t",
+  left: "l"
+};
+function setLegend(chartXml, legend) {
+  const withoutLegend = chartXml.replace(/<c:legend>[\s\S]*?<\/c:legend>/, "");
+  if (legend === "none") return withoutLegend;
+  const position = LEGEND_POSITIONS[legend];
+  const element = `<c:legend><c:legendPos val="${position}"/><c:overlay val="0"/></c:legend>`;
+  const plotAreaEnd = /<\/c:plotArea>/.exec(withoutLegend);
+  if (!plotAreaEnd) throw new ChartEditError("Chart part has no plot area.");
+  const insertAt = plotAreaEnd.index + plotAreaEnd[0].length;
+  return withoutLegend.slice(0, insertAt) + element + withoutLegend.slice(insertAt);
+}
+__name(setLegend, "setLegend");
+function setDataLabels(chartXml, mode) {
+  const plotPattern = /<c:(barChart|lineChart|areaChart|pieChart|doughnutChart)>([\s\S]*?)(<\/c:\1>)/;
+  const plotMatch = plotPattern.exec(chartXml);
+  if (!plotMatch?.[1] || plotMatch[2] === void 0) {
+    throw new ChartEditError("This chart type does not support data labels.");
+  }
+  const inner = plotMatch[2];
+  const withoutLabels = inner.replace(/(<\/c:ser>)<c:dLbls>[\s\S]*?<\/c:dLbls>/, "$1");
+  let next = withoutLabels;
+  if (mode !== "none") {
+    const showValue = mode === "value";
+    const showCategory = mode === "category-percent";
+    const showPercent = mode === "percent" || mode === "category-percent";
+    const labels = `<c:dLbls><c:showLegendKey val="0"/><c:showVal val="${showValue ? "1" : "0"}"/><c:showCatName val="${showCategory ? "1" : "0"}"/><c:showSerName val="0"/><c:showPercent val="${showPercent ? "1" : "0"}"/><c:showBubbleSize val="0"/></c:dLbls>`;
+    const lastSeriesEnd = withoutLabels.lastIndexOf("</c:ser>");
+    if (lastSeriesEnd === -1) throw new ChartEditError("This chart has no series to label.");
+    const insertAt = lastSeriesEnd + "</c:ser>".length;
+    next = withoutLabels.slice(0, insertAt) + labels + withoutLabels.slice(insertAt);
+  }
+  return chartXml.replace(
+    plotPattern,
+    (_full, plot, _inner, close) => `<c:${plot}>${next}${close}`
+  );
+}
+__name(setDataLabels, "setDataLabels");
+var DLBL_POSITIONS = {
+  center: "ctr",
+  "inside-end": "inEnd",
+  "outside-end": "outEnd"
+};
+function setDataLabelDetail(chartXml, position, format) {
+  const plotPattern = /<c:(barChart|lineChart|areaChart|pieChart|doughnutChart)>([\s\S]*?)(<\/c:\1>)/;
+  const plotMatch = plotPattern.exec(chartXml);
+  if (!plotMatch?.[1] || plotMatch[2] === void 0) {
+    throw new ChartEditError("This chart type does not support data labels.");
+  }
+  const inner = plotMatch[2];
+  const numFmt = format === void 0 ? "" : `<c:numFmt formatCode="${escapeXmlAttribute(format)}" sourceLinked="0"/>`;
+  const dLblPos = position === void 0 ? "" : `<c:dLblPos val="${DLBL_POSITIONS[position]}"/>`;
+  const existing = /<\/c:ser><c:dLbls>([\s\S]*?)<\/c:dLbls>/.exec(inner);
+  let next;
+  if (existing && existing[1] !== void 0) {
+    let labels = existing[1];
+    if (numFmt !== "") {
+      const pattern = /<c:numFmt [^>]*\/>/;
+      labels = pattern.test(labels) ? labels.replace(pattern, () => numFmt) : numFmt + labels;
+    }
+    if (dLblPos !== "") {
+      const pattern = /<c:dLblPos val="[^"]*"\/>/;
+      if (pattern.test(labels)) {
+        labels = labels.replace(pattern, () => dLblPos);
+      } else {
+        const anchor = /<c:show|<c:separator[>/]/.exec(labels);
+        const at = anchor ? anchor.index : labels.length;
+        labels = labels.slice(0, at) + dLblPos + labels.slice(at);
+      }
+    }
+    next = spliceMatch(inner, existing, `</c:ser><c:dLbls>${labels}</c:dLbls>`);
+  } else {
+    const lastSeriesEnd = inner.lastIndexOf("</c:ser>");
+    if (lastSeriesEnd === -1) throw new ChartEditError("This chart has no series to label.");
+    const at = lastSeriesEnd + "</c:ser>".length;
+    const created = `<c:dLbls>${numFmt}${dLblPos}<c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbls>`;
+    next = inner.slice(0, at) + created + inner.slice(at);
+  }
+  return spliceMatch(chartXml, plotMatch, `<c:${plotMatch[1]}>${next}${plotMatch[3]}`);
+}
+__name(setDataLabelDetail, "setDataLabelDetail");
+function setAxisTitle(chartXml, axis, title) {
+  const axisPattern = new RegExp(`<c:${axis}>([\\s\\S]*?)</c:${axis}>`);
+  const axisMatch = axisPattern.exec(chartXml);
+  if (!axisMatch || axisMatch[1] === void 0) {
+    if (axis === "catAx" && /<c:dateAx>/.test(chartXml)) {
+      return setDateAxisTitle(chartXml, title);
+    }
+    throw new ChartEditError(`Chart has no ${axis === "catAx" ? "category" : "value"} axis.`);
+  }
+  return chartXml.replace(
+    axisPattern,
+    (_full, inner) => `<c:${axis}>${patchAxisInnerTitle(inner, title)}</c:${axis}>`
+  );
+}
+__name(setAxisTitle, "setAxisTitle");
+function setDateAxisTitle(chartXml, title) {
+  return chartXml.replace(
+    /<c:dateAx>([\s\S]*?)<\/c:dateAx>/,
+    (_full, inner) => `<c:dateAx>${patchAxisInnerTitle(inner, title)}</c:dateAx>`
+  );
+}
+__name(setDateAxisTitle, "setDateAxisTitle");
+function patchAxisInnerTitle(axisInner, title) {
+  const stripped = axisInner.replace(/<c:title>[\s\S]*?<\/c:title>/, "");
+  if (title === null) return stripped;
+  const anchor = /<c:minorGridlines\/>|<c:minorGridlines>[\s\S]*?<\/c:minorGridlines>|<c:majorGridlines\/>|<c:majorGridlines>[\s\S]*?<\/c:majorGridlines>|<c:axPos val="[^"]*"\/>/g;
+  let insertAt = -1;
+  for (const found of stripped.matchAll(anchor)) {
+    insertAt = found.index + found[0].length;
+  }
+  if (insertAt === -1) throw new ChartEditError("Chart axis is missing its position element.");
+  return stripped.slice(0, insertAt) + builtTitle(escapeXmlText2(title)) + stripped.slice(insertAt);
+}
+__name(patchAxisInnerTitle, "patchAxisInnerTitle");
+function setSeriesData(chartXml, entry) {
+  const isScatter = /<c:scatterChart[\s>]/.test(chartXml);
+  const seriesPattern = /<c:ser>[\s\S]*?<\/c:ser>/g;
+  let found = false;
+  let position = -1;
+  const result = chartXml.replace(seriesPattern, (serXml) => {
+    position += 1;
+    if (position !== entry.index) return serXml;
+    found = true;
+    let next = serXml;
+    if (entry.name !== void 0) {
+      const tx = `<c:tx><c:v>${escapeXmlText2(entry.name)}</c:v></c:tx>`;
+      if (/<c:tx>[\s\S]*?<\/c:tx>/.test(next)) {
+        next = next.replace(/<c:tx>[\s\S]*?<\/c:tx>/, () => tx);
+      } else {
+        const anchor = /<c:order val="[0-9]+"\/>/.exec(next);
+        if (!anchor) throw new ChartEditError("Chart series is missing idx/order structure.");
+        next = next.slice(0, anchor.index + anchor[0].length) + tx + next.slice(anchor.index + anchor[0].length);
+      }
+    }
+    if (entry.categories !== void 0) {
+      if (isScatter) {
+        next = setScatterXValues(next, entry.categories, entry.categoriesRef);
+      } else {
+        const catPattern = /<c:cat\/>|<c:cat>[\s\S]*?<\/c:cat>/;
+        const previousCat = catPattern.exec(next)?.[0] ?? "";
+        const numeric = entry.categories.map((value) => Number(value));
+        const keepNumeric = /<c:num(?:Ref|Lit)[\s>]/.test(previousCat) && entry.categories.length > 0 && entry.categories.every(
+          (value, idx) => value.trim() !== "" && Number.isFinite(numeric[idx])
+        );
+        const catRefXml = entry.categoriesRef !== void 0 ? escapeXmlText2(entry.categoriesRef) : /<c:f>([\s\S]*?)<\/c:f>/.exec(previousCat)?.[1];
+        let cat;
+        if (keepNumeric) {
+          const formatCode = /<c:formatCode>([^<]*)<\/c:formatCode>/.exec(previousCat)?.[1] ?? "General";
+          const data = `<c:formatCode>${formatCode}</c:formatCode><c:ptCount val="${entry.categories.length}"/>` + numeric.map((value, idx) => `<c:pt idx="${idx}"><c:v>${value}</c:v></c:pt>`).join("");
+          cat = catRefXml === void 0 ? `<c:cat><c:numLit>${data}</c:numLit></c:cat>` : `<c:cat><c:numRef><c:f>${catRefXml}</c:f><c:numCache>${data}</c:numCache></c:numRef></c:cat>`;
+        } else {
+          const points = `<c:ptCount val="${entry.categories.length}"/>` + entry.categories.map((value, idx) => `<c:pt idx="${idx}"><c:v>${escapeXmlText2(value)}</c:v></c:pt>`).join("");
+          cat = catRefXml === void 0 ? `<c:cat><c:strLit>${points}</c:strLit></c:cat>` : `<c:cat><c:strRef><c:f>${catRefXml}</c:f><c:strCache>${points}</c:strCache></c:strRef></c:cat>`;
+        }
+        if (previousCat !== "") {
+          next = next.replace(catPattern, () => cat);
+        } else {
+          const valElement = /<c:val\/>|<c:val>/.exec(next);
+          if (!valElement) throw new ChartEditError("Chart series has no value element.");
+          next = next.slice(0, valElement.index) + cat + next.slice(valElement.index);
+        }
+      }
+    }
+    if (entry.values !== void 0) {
+      const tag = isScatter ? "yVal" : "val";
+      const points = entry.values.map((value, idx) => `<c:pt idx="${idx}"><c:v>${value}</c:v></c:pt>`).join("");
+      const valPattern = new RegExp(`<c:${tag}/>|<c:${tag}>[\\s\\S]*?</c:${tag}>`);
+      const previousVal = valPattern.exec(next)?.[0] ?? "";
+      const formatCode = /<c:formatCode>([^<]*)<\/c:formatCode>/.exec(previousVal)?.[1] ?? "General";
+      const data = `<c:formatCode>${formatCode}</c:formatCode><c:ptCount val="${entry.values.length}"/>${points}`;
+      const valRefXml = entry.valuesRef !== void 0 ? escapeXmlText2(entry.valuesRef) : /<c:f>([\s\S]*?)<\/c:f>/.exec(previousVal)?.[1];
+      const val = valRefXml === void 0 ? `<c:${tag}><c:numLit>${data}</c:numLit></c:${tag}>` : `<c:${tag}><c:numRef><c:f>${valRefXml}</c:f><c:numCache>${data}</c:numCache></c:numRef></c:${tag}>`;
+      if (!valPattern.test(next)) throw new ChartEditError("Chart series has no value element.");
+      next = next.replace(valPattern, () => val);
+    }
+    return next;
+  });
+  if (!found) throw new ChartEditError(`Chart has no series with index ${entry.index}.`);
+  return result;
+}
+__name(setSeriesData, "setSeriesData");
+function setScatterXValues(serXml, categories, categoriesRef) {
+  const points = `<c:formatCode>General</c:formatCode><c:ptCount val="${categories.length}"/>` + categories.map((value, idx) => {
+    const numeric = Number(value);
+    const x = value.trim() !== "" && Number.isFinite(numeric) ? numeric : idx;
+    return `<c:pt idx="${idx}"><c:v>${x}</c:v></c:pt>`;
+  }).join("");
+  const xValPattern = /<c:xVal\/>|<c:xVal>[\s\S]*?<\/c:xVal>/;
+  const refXml = categoriesRef !== void 0 ? escapeXmlText2(categoriesRef) : /<c:f>([\s\S]*?)<\/c:f>/.exec(xValPattern.exec(serXml)?.[0] ?? "")?.[1];
+  const xVal = refXml === void 0 ? `<c:xVal><c:numLit>${points}</c:numLit></c:xVal>` : `<c:xVal><c:numRef><c:f>${refXml}</c:f><c:numCache>${points}</c:numCache></c:numRef></c:xVal>`;
+  if (xValPattern.test(serXml)) return serXml.replace(xValPattern, () => xVal);
+  const anchor = /<c:yVal[>/]|<c:smooth[\s/>]/.exec(serXml);
+  const at = anchor ? anchor.index : serXml.lastIndexOf("</c:ser>");
+  return serXml.slice(0, at) + xVal + serXml.slice(at);
+}
+__name(setScatterXValues, "setScatterXValues");
+function setChartTitle(chartXml, title) {
+  const escaped = escapeXmlText2(title);
+  const xml = chartXml.replace(/<c:autoTitleDeleted val="1"\/>/, '<c:autoTitleDeleted val="0"/>');
+  const plotAreaAt = xml.search(/<c:plotArea[\s>]/);
+  const scope = plotAreaAt === -1 ? xml : xml.slice(0, plotAreaAt);
+  const titleElement = /<c:title>[\s\S]*?<\/c:title>/.exec(scope);
+  if (titleElement) {
+    let isFirstRun = true;
+    const rewritten = titleElement[0].replace(
+      /(<a:t>)[\s\S]*?(<\/a:t>)|<a:t\/>/g,
+      (_full, open, close) => {
+        const text = isFirstRun ? escaped : "";
+        isFirstRun = false;
+        return `${open ?? "<a:t>"}${text}${close ?? "</a:t>"}`;
+      }
+    );
+    if (isFirstRun) {
+      return xml.replace(/<c:title>[\s\S]*?<\/c:title>/, () => builtTitle(escaped));
+    }
+    return xml.replace(/<c:title>[\s\S]*?<\/c:title>/, () => rewritten);
+  }
+  const chartOpen = /<c:chart>/.exec(xml);
+  if (!chartOpen) throw new ChartEditError("Chart part has no c:chart element.");
+  const insertAt = chartOpen.index + chartOpen[0].length;
+  const autoTitle = /<c:autoTitleDeleted /.test(xml) ? "" : '<c:autoTitleDeleted val="0"/>';
+  return xml.slice(0, insertAt) + `${builtTitle(escaped)}${autoTitle}` + xml.slice(insertAt);
+}
+__name(setChartTitle, "setChartTitle");
+function builtTitle(escapedText) {
+  return `<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapedText}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
+}
+__name(builtTitle, "builtTitle");
+function convertChartType(chartXml, target) {
+  const plotPattern = /<c:(barChart|lineChart|areaChart|bar3DChart|line3DChart|area3DChart|pieChart|pie3DChart|doughnutChart|scatterChart|radarChart)>([\s\S]*?)<\/c:\1>/g;
+  const plots = [...chartXml.matchAll(plotPattern)];
+  const plotMatch = plots[0];
+  if (!plotMatch?.[1] || plotMatch[2] === void 0) {
+    throw new ChartEditError("This chart type cannot be converted.");
+  }
+  if (plots.length > 1) {
+    throw new ChartEditError("Combo charts cannot be converted.");
+  }
+  const current = plotMatch[1];
+  if (!CONVERTIBLE_PLOTS.includes(current)) {
+    throw new ChartEditError(`Converting a ${current} is not supported.`);
+  }
+  const inner = plotMatch[2];
+  const targetElement = TARGET_PLOTS[target];
+  const currentIsPie = current === "pieChart" || current === "doughnutChart";
+  const targetIsPie = targetElement === "pieChart" || targetElement === "doughnutChart";
+  if (current === "barChart" && targetElement === "barChart") {
+    const direction = target === "column" ? "col" : "bar";
+    return chartXml.replace(/<c:barDir val="[^"]*"\/>/, () => `<c:barDir val="${direction}"/>`);
+  }
+  if (targetElement === current) return chartXml;
+  const series = [...inner.matchAll(/<c:ser>[\s\S]*?<\/c:ser>/g)].map(
+    (match) => sanitizeSeries(match[0], targetIsPie)
+  );
+  if (series.length === 0) {
+    throw new ChartEditError("This chart has no series to convert.");
+  }
+  const parts = [];
+  if (targetElement === "barChart") {
+    parts.push(`<c:barDir val="${target === "bar" ? "bar" : "col"}"/>`);
+  }
+  if (!targetIsPie) {
+    const grouping = /<c:grouping val="(stacked|percentStacked)"\/>/.exec(inner)?.[1];
+    parts.push(
+      `<c:grouping val="${grouping ?? (targetElement === "barChart" ? "clustered" : "standard")}"/>`
+    );
+  }
+  parts.push(`<c:varyColors val="${targetIsPie ? "1" : "0"}"/>`, ...series);
+  const plotLabels = /<\/c:ser>(<c:dLbls>[\s\S]*?<\/c:dLbls>)/.exec(inner)?.[1];
+  if (plotLabels) parts.push(plotLabels.replace(/<c:dLblPos val="[^"]*"\/>/, ""));
+  if (targetElement === "barChart") parts.push('<c:gapWidth val="150"/>');
+  if (targetElement === "lineChart") parts.push('<c:marker val="1"/>');
+  if (targetIsPie) {
+    parts.push('<c:firstSliceAng val="0"/>');
+    if (targetElement === "doughnutChart") parts.push('<c:holeSize val="50"/>');
+    const plotReplaced = chartXml.replace(
+      plotMatch[0],
+      () => `<c:${targetElement}>${parts.join("")}</c:${targetElement}>`
+    );
+    return plotReplaced.replace(
+      /<c:(catAx|valAx|dateAx|serAx)>[\s\S]*?<\/c:\1>|<c:(?:catAx|valAx|dateAx|serAx)\/>/g,
+      ""
+    );
+  }
+  if (!currentIsPie) {
+    const axisIds = [...inner.matchAll(/<c:axId val="[0-9]+"\/>/g)].map((match) => match[0]);
+    if (axisIds.length === 0) {
+      throw new ChartEditError("This chart has no axes to convert.");
+    }
+    parts.push(...axisIds);
+    return chartXml.replace(
+      plotMatch[0],
+      () => `<c:${targetElement}>${parts.join("")}</c:${targetElement}>`
+    );
+  }
+  parts.push(`<c:axId val="${SYNTH_CAT_AXIS_ID}"/>`, `<c:axId val="${SYNTH_VAL_AXIS_ID}"/>`);
+  const catPos = target === "bar" ? "l" : "b";
+  const valPos = target === "bar" ? "b" : "l";
+  const axes = `<c:catAx><c:axId val="${SYNTH_CAT_AXIS_ID}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${catPos}"/><c:crossAx val="${SYNTH_VAL_AXIS_ID}"/></c:catAx><c:valAx><c:axId val="${SYNTH_VAL_AXIS_ID}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${valPos}"/><c:majorGridlines/><c:crossAx val="${SYNTH_CAT_AXIS_ID}"/></c:valAx>`;
+  return chartXml.replace(
+    plotMatch[0],
+    () => `<c:${targetElement}>${parts.join("")}</c:${targetElement}>${axes}`
+  );
+}
+__name(convertChartType, "convertChartType");
+function sanitizeSeries(serXml, forPie) {
+  const cleaned = serXml.replace(/<c:invertIfNegative val="[^"]*"\/>/g, "").replace(/<c:marker>[\s\S]*?<\/c:marker>/g, "").replace(/<c:smooth val="[^"]*"\/>/g, "").replace(/<c:shape val="[^"]*"\/>/g, "").replace(/<c:explosion val="[^"]*"\/>/g, "");
+  return forPie ? cleaned.replace(/<c:trendline>[\s\S]*?<\/c:trendline>/g, "") : cleaned;
+}
+__name(sanitizeSeries, "sanitizeSeries");
+function setSeriesColor(chartXml, seriesIndex, color) {
+  const argb = color.slice(1).toUpperCase();
+  const spPr = `<c:spPr><a:solidFill><a:srgbClr val="${argb}"/></a:solidFill><a:ln><a:solidFill><a:srgbClr val="${argb}"/></a:solidFill></a:ln></c:spPr>`;
+  const seriesPattern = /<c:ser>[\s\S]*?<\/c:ser>/g;
+  let found = false;
+  let position = -1;
+  const result = chartXml.replace(seriesPattern, (serXml) => {
+    position += 1;
+    if (position !== seriesIndex) return serXml;
+    found = true;
+    const dPtAt = serXml.indexOf("<c:dPt>");
+    const scope = dPtAt === -1 ? serXml : serXml.slice(0, dPtAt);
+    const replaced = scope.replace(/<c:spPr>[\s\S]*?<\/c:spPr>/, () => spPr);
+    if (replaced !== scope) return replaced + (dPtAt === -1 ? "" : serXml.slice(dPtAt));
+    const anchor = /<c:tx>[\s\S]*?<\/c:tx>/.exec(serXml) ?? /<c:order val="[0-9]+"\/>/.exec(serXml);
+    if (!anchor) throw new ChartEditError("Chart series is missing idx/order structure.");
+    const insertAt = anchor.index + anchor[0].length;
+    return serXml.slice(0, insertAt) + spPr + serXml.slice(insertAt);
+  });
+  if (!found) throw new ChartEditError(`Chart has no series with index ${seriesIndex}.`);
+  return result;
+}
+__name(setSeriesColor, "setSeriesColor");
+function setPointColors(chartXml, seriesIndex, points) {
+  const seriesPattern = /<c:ser>[\s\S]*?<\/c:ser>/g;
+  let found = false;
+  let position = -1;
+  const result = chartXml.replace(seriesPattern, (serXml) => {
+    position += 1;
+    if (position !== seriesIndex) return serXml;
+    found = true;
+    let next = serXml;
+    const entries = Object.entries(points).map(([point, color]) => [Number(point), color]).sort((a, b) => a[0] - b[0]);
+    for (const [point, color] of entries) {
+      next = upsertPointColor(next, point, color);
+    }
+    return next;
+  });
+  if (!found) throw new ChartEditError(`Chart has no series with index ${seriesIndex}.`);
+  return result;
+}
+__name(setPointColors, "setPointColors");
+function upsertPointColor(serXml, pointIndex, color) {
+  const fill = `<a:solidFill><a:srgbClr val="${color.slice(1).toUpperCase()}"/></a:solidFill>`;
+  const dPts = [...serXml.matchAll(/<c:dPt>[\s\S]*?<\/c:dPt>/g)];
+  for (const dPt of dPts) {
+    const idx = Number(/<c:idx val="([0-9]+)"\/>/.exec(dPt[0])?.[1]);
+    if (idx !== pointIndex) continue;
+    return serXml.slice(0, dPt.index) + patchPointFill(dPt[0], fill) + serXml.slice(dPt.index + dPt[0].length);
+  }
+  const element = `<c:dPt><c:idx val="${pointIndex}"/><c:bubble3D val="0"/><c:spPr>${fill}</c:spPr></c:dPt>`;
+  const insertAt = dPtInsertionIndex(serXml, dPts, pointIndex);
+  return serXml.slice(0, insertAt) + element + serXml.slice(insertAt);
+}
+__name(upsertPointColor, "upsertPointColor");
+function dPtInsertionIndex(serXml, dPts, pointIndex) {
+  let insertAt = -1;
+  for (const dPt of dPts) {
+    const idx = Number(/<c:idx val="([0-9]+)"\/>/.exec(dPt[0])?.[1]);
+    if (idx > pointIndex) return dPt.index;
+    insertAt = dPt.index + dPt[0].length;
+  }
+  if (insertAt !== -1) return insertAt;
+  const anchor = /<c:dLbls[>/]|<c:cat[>/]|<c:val[>/]|<c:xVal[>/]/.exec(serXml);
+  if (!anchor) throw new ChartEditError("Chart series has no data element to anchor a point.");
+  return anchor.index;
+}
+__name(dPtInsertionIndex, "dPtInsertionIndex");
+function patchPointFill(dPtXml, fill) {
+  const spPrMatch = /<c:spPr>([\s\S]*?)<\/c:spPr>/.exec(dPtXml);
+  if (!spPrMatch || spPrMatch[1] === void 0) {
+    const anchor = /<c:pictureOptions[\s/>]|<c:extLst[\s/>]/.exec(dPtXml);
+    const insertAt = anchor ? anchor.index : dPtXml.lastIndexOf("</c:dPt>");
+    return dPtXml.slice(0, insertAt) + `<c:spPr>${fill}</c:spPr>` + dPtXml.slice(insertAt);
+  }
+  const inner = spPrMatch[1];
+  const lnAt = inner.search(/<a:ln[\s>]/);
+  const head = lnAt === -1 ? inner : inner.slice(0, lnAt);
+  const tail = lnAt === -1 ? "" : inner.slice(lnAt);
+  const fillPattern = /<a:noFill\/>|<a:solidFill>[\s\S]*?<\/a:solidFill>|<a:gradFill[\s\S]*?<\/a:gradFill>|<a:pattFill[\s\S]*?<\/a:pattFill>|<a:blipFill[\s\S]*?<\/a:blipFill>|<a:grpFill\/>/;
+  const nextHead = fillPattern.test(head) ? head.replace(fillPattern, () => fill) : head + fill;
+  return dPtXml.replace(spPrMatch[0], () => `<c:spPr>${nextHead}${tail}</c:spPr>`);
+}
+__name(patchPointFill, "patchPointFill");
+function escapeXmlText2(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+__name(escapeXmlText2, "escapeXmlText");
+function escapeXmlAttribute(input) {
+  return escapeXmlText2(input).replaceAll('"', "&quot;");
+}
+__name(escapeXmlAttribute, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-namespace.ts
+var NORMALIZABLE_NAMESPACES = /* @__PURE__ */ new Set([
+  "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+  "http://schemas.openxmlformats.org/package/2006/relationships",
+  "http://schemas.openxmlformats.org/package/2006/content-types"
+]);
+var SPREADSHEETML_NAMESPACE = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+var OFFICE_RELATIONSHIPS_NAMESPACE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+var ROOT_START_TAG = /<(?![?!])(?:[^>"']|"[^"]*"|'[^']*')*?\/?>/;
+function ensureRelationshipNamespace(partXml2) {
+  const root = ROOT_START_TAG.exec(partXml2)?.[0];
+  if (!root || /\bxmlns:r\s*=/.test(root)) return partXml2;
+  const bound = root.replace(/^<([^\s/>]+)/, `<$1 xmlns:r="${OFFICE_RELATIONSHIPS_NAMESPACE}"`);
+  return partXml2.replace(root, () => bound);
+}
+__name(ensureRelationshipNamespace, "ensureRelationshipNamespace");
+function normalizeOoxmlPartPrefix(xml) {
+  const root = /<(?![?!])([^\s/>]+)((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/.exec(xml);
+  if (!root?.[1]) return xml;
+  const colon = root[1].indexOf(":");
+  if (colon <= 0) return xml;
+  const prefix = root[1].slice(0, colon);
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(prefix)) return xml;
+  const rootTag = root[0];
+  const declarationPattern = new RegExp(`xmlns:${prefix}\\s*=\\s*"([^"]*)"`);
+  const declaration = declarationPattern.exec(rootTag);
+  const uri = declaration?.[1];
+  if (declaration === null || uri === void 0 || !NORMALIZABLE_NAMESPACES.has(uri)) return xml;
+  if (xml.includes("<![CDATA[") || xml.includes("<!--")) return xml;
+  if (/\sxmlns\s*=\s*["']/.test(xml)) return xml;
+  for (const other of xml.matchAll(new RegExp(`\\sxmlns:${prefix}\\s*=\\s*"([^"]*)"`, "g"))) {
+    if (other[1] !== uri) return xml;
+  }
+  const stripped = xml.replaceAll(`<${prefix}:`, "<").replaceAll(`</${prefix}:`, "</");
+  const bindings = new RegExp(`\\s${prefix}:`).test(stripped) ? `xmlns="${uri}" ${declaration[0]}` : `xmlns="${uri}"`;
+  let result = stripped.replace(declaration[0], bindings);
+  if (uri === SPREADSHEETML_NAMESPACE && !new RegExp(`xmlns:r\\s*=\\s*"`).test(ROOT_START_TAG.exec(result)?.[0] ?? "") && [...result.matchAll(/\sxmlns:r\s*=\s*"([^"]*)"/g)].every(
+    (other) => other[1] === OFFICE_RELATIONSHIPS_NAMESPACE
+  )) {
+    result = result.replace(
+      `xmlns="${uri}"`,
+      `xmlns="${uri}" xmlns:r="${OFFICE_RELATIONSHIPS_NAMESPACE}"`
+    );
+  }
+  return result;
+}
+__name(normalizeOoxmlPartPrefix, "normalizeOoxmlPartPrefix");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-drawing-add.ts
+var VisualAddError = class extends Error {
+  static {
+    __name(this, "VisualAddError");
+  }
+};
+var DRAWING_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing";
+var CHART_REL_TYPE2 = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart";
+var IMAGE_REL_TYPE4 = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image";
+var IMAGE_EXTENSIONS = {
+  "image/png": "png",
+  "image/jpeg": "jpeg",
+  "image/gif": "gif"
+};
+var DRAWING_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.drawing+xml";
+var CHART_CONTENT_TYPE2 = "application/vnd.openxmlformats-officedocument.drawingml.chart+xml";
+async function applyVisualAdditions(pkg, additions, touchedEntries) {
+  for (const addition of additions) {
+    const drawing = await ensureSheetDrawing(pkg, addition.worksheetPath, touchedEntries);
+    if (addition.chart) {
+      const chartPath = await allocatePartPath(pkg, "xl/charts/chart", ".xml");
+      pkg.add(chartPath, buildChartXml(addition.chart));
+      touchedEntries.add(chartPath);
+      await registerContentTypeOverride(pkg, chartPath, CHART_CONTENT_TYPE2, touchedEntries);
+      const chartRelId = await appendRelationship2(
+        pkg,
+        relsPathFor2(drawing.path),
+        CHART_REL_TYPE2,
+        relativeTarget(drawing.path, chartPath)
+      );
+      touchedEntries.add(relsPathFor2(drawing.path));
+      await appendAnchor(
+        pkg,
+        drawing.path,
+        addition.anchor,
+        (shapeId) => chartFrameXml(shapeId, chartRelId)
+      );
+    } else if (addition.shape) {
+      const shape = addition.shape;
+      await appendAnchor(pkg, drawing.path, addition.anchor, (shapeId) => shapeXml(shapeId, shape));
+    } else if (addition.image) {
+      const image = addition.image;
+      const extension = IMAGE_EXTENSIONS[image.mediaType];
+      const mediaPath = await allocatePartPath(pkg, "xl/media/image", `.${extension}`);
+      pkg.addBinary(mediaPath, Uint8Array.from(Buffer.from(image.base64, "base64")));
+      touchedEntries.add(mediaPath);
+      await registerContentTypeDefault(pkg, extension, image.mediaType, touchedEntries);
+      const imageRelId = await appendRelationship2(
+        pkg,
+        relsPathFor2(drawing.path),
+        IMAGE_REL_TYPE4,
+        relativeTarget(drawing.path, mediaPath)
+      );
+      touchedEntries.add(relsPathFor2(drawing.path));
+      await appendAnchor(
+        pkg,
+        drawing.path,
+        addition.anchor,
+        (shapeId) => pictureXml(shapeId, imageRelId)
+      );
+    } else {
+      throw new VisualAddError("A visual addition carries exactly one of chart, shape, or image.");
+    }
+    touchedEntries.add(drawing.path);
+  }
+}
+__name(applyVisualAdditions, "applyVisualAdditions");
+async function ensureSheetDrawing(pkg, worksheetPath, touchedEntries) {
+  const sheetRelsPath = relsPathFor2(worksheetPath);
+  if (await pkg.has(sheetRelsPath)) {
+    const rels = await pkg.readText(sheetRelsPath);
+    const existing = matchRelationship(rels, DRAWING_REL_TYPE);
+    if (existing) {
+      return { path: resolveRelTarget(worksheetPath, existing.target) };
+    }
+  }
+  const drawingPath = await allocatePartPath(pkg, "xl/drawings/drawing", ".xml");
+  pkg.add(
+    drawingPath,
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"></xdr:wsDr>'
+  );
+  touchedEntries.add(drawingPath);
+  await registerContentTypeOverride(pkg, drawingPath, DRAWING_CONTENT_TYPE, touchedEntries);
+  const relId = await appendRelationship2(
+    pkg,
+    sheetRelsPath,
+    DRAWING_REL_TYPE,
+    relativeTarget(worksheetPath, drawingPath)
+  );
+  touchedEntries.add(sheetRelsPath);
+  await insertWorksheetDrawingElement(pkg, worksheetPath, relId, touchedEntries);
+  return { path: drawingPath };
+}
+__name(ensureSheetDrawing, "ensureSheetDrawing");
+var AFTER_DRAWING_ELEMENTS = [
+  "legacyDrawing",
+  "legacyDrawingHF",
+  "picture",
+  "oleObjects",
+  "controls",
+  "webPublishItems",
+  "tableParts",
+  "extLst"
+];
+async function insertWorksheetDrawingElement(pkg, worksheetPath, relId, touchedEntries) {
+  let xml = await pkg.readText(worksheetPath);
+  if (/<drawing[\s/>]/.test(xml)) {
+    throw new VisualAddError(`${worksheetPath} already has a drawing element but no drawing rel.`);
+  }
+  xml = ensureRelationshipNamespace(xml);
+  const element = `<drawing r:id="${escapeXmlAttribute2(relId)}"/>`;
+  let insertAt = xml.lastIndexOf("</worksheet>");
+  if (insertAt < 0) throw new VisualAddError(`${worksheetPath} has no closing worksheet tag.`);
+  for (const name of AFTER_DRAWING_ELEMENTS) {
+    const match = xml.search(new RegExp(`<${name}[\\s/>]`));
+    if (match >= 0 && match < insertAt) insertAt = match;
+  }
+  pkg.write(worksheetPath, xml.slice(0, insertAt) + element + xml.slice(insertAt));
+  touchedEntries.add(worksheetPath);
+}
+__name(insertWorksheetDrawingElement, "insertWorksheetDrawingElement");
+async function appendAnchor(pkg, drawingPath, anchor, buildInner) {
+  let xml = await pkg.readText(drawingPath);
+  const root = /<(?:([A-Za-z_][\w.-]*):)?wsDr(?=[\s/>])([^>]*)>/.exec(xml);
+  if (!root) throw new VisualAddError(`${drawingPath} is not a spreadsheet drawing part.`);
+  const closeTag = `</${root[1] === void 0 ? "" : `${root[1]}:`}wsDr>`;
+  if ((root[2] ?? "").trimEnd().endsWith("/")) {
+    const openTag = root[0].replace(/\/\s*>$/, ">");
+    xml = xml.slice(0, root.index) + openTag + closeTag + xml.slice(root.index + root[0].length);
+  }
+  const closeAt = xml.lastIndexOf(closeTag);
+  if (closeAt < 0) throw new VisualAddError(`${drawingPath} is not a spreadsheet drawing part.`);
+  const namespaceFix = (root[0].includes("xmlns:xdr=") ? "" : ' xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"') + (root[0].includes("xmlns:a=") ? "" : ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"');
+  const marker = /* @__PURE__ */ __name((row, column, rowOffset, columnOffset) => `<xdr:col>${column}</xdr:col><xdr:colOff>${columnOffset}</xdr:colOff><xdr:row>${row}</xdr:row><xdr:rowOff>${rowOffset}</xdr:rowOff>`, "marker");
+  const element = `<xdr:twoCellAnchor${namespaceFix}><xdr:from>${marker(anchor.fromRow, anchor.fromColumn, anchor.fromRowOffset, anchor.fromColumnOffset)}</xdr:from><xdr:to>${marker(anchor.toRow, anchor.toColumn, anchor.toRowOffset, anchor.toColumnOffset)}</xdr:to>` + buildInner(nextShapeId(xml)) + "<xdr:clientData/></xdr:twoCellAnchor>";
+  pkg.write(drawingPath, xml.slice(0, closeAt) + element + xml.slice(closeAt));
+}
+__name(appendAnchor, "appendAnchor");
+function chartFrameXml(shapeId, chartRelId) {
+  return `<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${shapeId}" name="Chart ${shapeId}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr><xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="${escapeXmlAttribute2(chartRelId)}"/></a:graphicData></a:graphic></xdr:graphicFrame>`;
+}
+__name(chartFrameXml, "chartFrameXml");
+function pictureXml(shapeId, imageRelId) {
+  return `<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${shapeId}" name="Picture ${shapeId}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${escapeXmlAttribute2(imageRelId)}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic>`;
+}
+__name(pictureXml, "pictureXml");
+function shapeXml(shapeId, shape) {
+  const name = shape.isTextBox ? `TextBox ${shapeId}` : `Shape ${shapeId}`;
+  const fill = shape.fillColor ? `<a:solidFill><a:srgbClr val="${shape.fillColor.slice(1).toUpperCase()}"/></a:solidFill>` : "<a:noFill/>";
+  const outline = shape.isTextBox ? '<a:ln w="9525"><a:solidFill><a:srgbClr val="808080"/></a:solidFill></a:ln>' : "";
+  const body = shape.text !== void 0 || shape.isTextBox ? `<xdr:txBody><a:bodyPr wrap="square" rtlCol="0"/><a:lstStyle/><a:p><a:r><a:t>${escapeXmlText3(shape.text ?? "")}</a:t></a:r></a:p></xdr:txBody>` : "";
+  return `<xdr:sp macro="" textlink=""><xdr:nvSpPr><xdr:cNvPr id="${shapeId}" name="${escapeXmlAttribute2(name)}"/><xdr:cNvSpPr${shape.isTextBox ? ' txBox="1"' : ""}/></xdr:nvSpPr><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="${escapeXmlAttribute2(shape.shapeType)}"><a:avLst/></a:prstGeom>` + fill + outline + "</xdr:spPr>" + body + "</xdr:sp>";
+}
+__name(shapeXml, "shapeXml");
+function nextShapeId(drawingXml) {
+  let max = 1;
+  for (const match of drawingXml.matchAll(/<(?:[\w.-]+:)?cNvPr [^>]*id="(\d+)"/g)) {
+    max = Math.max(max, Number(match[1]));
+  }
+  return max + 1;
+}
+__name(nextShapeId, "nextShapeId");
+var LEGEND_POSITIONS2 = {
+  right: "r",
+  bottom: "b",
+  top: "t",
+  left: "l"
+};
+var DLBL_POSITIONS2 = {
+  center: "ctr",
+  "inside-end": "inEnd",
+  "outside-end": "outEnd"
+};
+var OFFICE_PALETTE = [
+  "4472C4",
+  "ED7D31",
+  "A5A5A5",
+  "FFC000",
+  "5B9BD5",
+  "70AD47",
+  "264478",
+  "9E480E",
+  "636363",
+  "997300"
+];
+function paletteArgb(index2) {
+  return OFFICE_PALETTE[index2 % OFFICE_PALETTE.length] ?? "4472C4";
+}
+__name(paletteArgb, "paletteArgb");
+function buildChartXml(chart) {
+  const isPieLike = chart.chartType === "pie" || chart.chartType === "doughnut";
+  const isScatter = chart.chartType === "scatter";
+  const isCombo = chart.chartType === "combo";
+  const axCat = 100000001;
+  const axVal = 100000002;
+  const axCat2 = 100000003;
+  const axVal2 = 100000004;
+  const seriesXml = chart.series.map(
+    (series, index2) => isScatter ? buildScatterSeriesXml(series, index2) : buildSeriesXml(series, index2, chart.chartType)
+  ).join("");
+  const wantsLabelDetail = chart.dataLabelPosition !== void 0 || chart.dataLabelFormat !== void 0;
+  const dLbls = chart.dataLabels === "none" || chart.dataLabels === void 0 && !wantsLabelDetail ? "" : dataLabelsXml(chart.dataLabels ?? "value", chart.dataLabelPosition, chart.dataLabelFormat);
+  const catTitle = chart.axisTitles?.category === void 0 ? "" : axisTitleXml(chart.axisTitles.category);
+  const valTitle = chart.axisTitles?.value === void 0 ? "" : axisTitleXml(chart.axisTitles.value);
+  const valScaling = '<c:scaling><c:orientation val="minMax"/>' + (chart.valueAxis?.max === void 0 ? "" : `<c:max val="${chart.valueAxis.max}"/>`) + (chart.valueAxis?.min === void 0 ? "" : `<c:min val="${chart.valueAxis.min}"/>`) + "</c:scaling>";
+  const gridlines = chart.gridlines === true ? "<c:majorGridlines/>" : "";
+  const gapWidth = chart.gapWidthPct !== void 0 && (chart.chartType === "column" || chart.chartType === "bar" || chart.chartType === "combo") ? `<c:gapWidth val="${chart.gapWidthPct}"/>` : "";
+  const overlap = (chart.chartType === "column" || chart.chartType === "bar") && (chart.grouping === "stacked" || chart.grouping === "percentStacked") ? '<c:overlap val="100"/>' : "";
+  const comboPlot = /* @__PURE__ */ __name(() => {
+    const lineCount = chart.series.length >= 2 ? 1 : 0;
+    const barEnd = chart.series.length - lineCount;
+    const barSers = chart.series.slice(0, barEnd).map((series, index2) => buildSeriesXml(series, index2, "column")).join("");
+    const lineSers = chart.series.slice(barEnd).map((series, index2) => buildSeriesXml(series, barEnd + index2, "line")).join("");
+    return `<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>${barSers}${dLbls}${gapWidth}<c:axId val="${axCat}"/><c:axId val="${axVal}"/></c:barChart>` + (lineSers ? `<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>${lineSers}<c:marker val="1"/><c:axId val="${axCat2}"/><c:axId val="${axVal2}"/></c:lineChart>` : "") + `<c:catAx><c:axId val="${axCat}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/>${catTitle}<c:crossAx val="${axVal}"/></c:catAx><c:valAx><c:axId val="${axVal}"/>${valScaling}<c:delete val="0"/><c:axPos val="l"/>${gridlines}${valTitle}<c:crossAx val="${axCat}"/></c:valAx>` + (lineSers ? `<c:valAx><c:axId val="${axVal2}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="r"/><c:crossAx val="${axCat2}"/><c:crosses val="max"/></c:valAx><c:catAx><c:axId val="${axCat2}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="1"/><c:axPos val="b"/><c:crossAx val="${axVal2}"/></c:catAx>` : "");
+  }, "comboPlot");
+  const plot = isCombo ? comboPlot() : isPieLike ? chart.chartType === "doughnut" ? `<c:doughnutChart><c:varyColors val="1"/>${seriesXml}${dLbls}<c:holeSize val="${chart.holeSizePct ?? 50}"/></c:doughnutChart>` : `<c:pieChart><c:varyColors val="1"/>${seriesXml}${dLbls}</c:pieChart>` : isScatter ? (
+    /// XY scatter plots against two value axes (X on bottom, Y on left)
+    /// instead of the category + value pair the other plots use.
+    `<c:scatterChart><c:scatterStyle val="lineMarker"/>${seriesXml}${dLbls}<c:axId val="${axCat}"/><c:axId val="${axVal}"/></c:scatterChart><c:valAx><c:axId val="${axCat}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/>${catTitle}<c:crossAx val="${axVal}"/></c:valAx><c:valAx><c:axId val="${axVal}"/>${valScaling}<c:delete val="0"/><c:axPos val="l"/>${gridlines}${valTitle}<c:crossAx val="${axCat}"/></c:valAx>`
+  ) : `${plotOpenTag(chart.chartType, chart.grouping)}${seriesXml}${dLbls}${gapWidth}${overlap}<c:axId val="${axCat}"/><c:axId val="${axVal}"/>${plotCloseTag(chart.chartType)}<c:catAx><c:axId val="${axCat}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/>${catTitle}<c:crossAx val="${axVal}"/></c:catAx><c:valAx><c:axId val="${axVal}"/>${valScaling}<c:delete val="0"/><c:axPos val="l"/>${gridlines}${valTitle}<c:crossAx val="${axCat}"/></c:valAx>`;
+  const legend = chart.legend !== void 0 ? chart.legend === "none" ? "" : `<c:legend><c:legendPos val="${LEGEND_POSITIONS2[chart.legend]}"/><c:overlay val="0"/></c:legend>` : chart.series.length > 1 || isPieLike ? '<c:legend><c:legendPos val="b"/><c:overlay val="0"/></c:legend>' : "";
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeXmlText3(chart.title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/><c:plotArea><c:layout/>${plot}</c:plotArea>` + legend + '<c:plotVisOnly val="1"/></c:chart></c:chartSpace>';
+}
+__name(buildChartXml, "buildChartXml");
+function dataLabelsXml(mode, position, format) {
+  const showValue = mode === "value";
+  const showCategory = mode === "category-percent";
+  const showPercent = mode === "percent" || mode === "category-percent";
+  return "<c:dLbls>" + (format === void 0 ? "" : `<c:numFmt formatCode="${escapeXmlAttribute2(format)}" sourceLinked="0"/>`) + (position === void 0 ? "" : `<c:dLblPos val="${DLBL_POSITIONS2[position]}"/>`) + `<c:showLegendKey val="0"/><c:showVal val="${showValue ? "1" : "0"}"/><c:showCatName val="${showCategory ? "1" : "0"}"/><c:showSerName val="0"/><c:showPercent val="${showPercent ? "1" : "0"}"/><c:showBubbleSize val="0"/></c:dLbls>`;
+}
+__name(dataLabelsXml, "dataLabelsXml");
+function axisTitleXml(text) {
+  return `<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeXmlText3(text)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
+}
+__name(axisTitleXml, "axisTitleXml");
+function plotOpenTag(chartType, grouping) {
+  const stacked = grouping === "stacked" || grouping === "percentStacked" ? grouping : void 0;
+  if (chartType === "line")
+    return `<c:lineChart><c:grouping val="${stacked ?? "standard"}"/><c:varyColors val="0"/>`;
+  if (chartType === "area")
+    return `<c:areaChart><c:grouping val="${stacked ?? "standard"}"/><c:varyColors val="0"/>`;
+  if (chartType === "radar")
+    return '<c:radarChart><c:radarStyle val="marker"/><c:varyColors val="0"/>';
+  return `<c:barChart><c:barDir val="${chartType === "bar" ? "bar" : "col"}"/><c:grouping val="${stacked ?? "clustered"}"/><c:varyColors val="0"/>`;
+}
+__name(plotOpenTag, "plotOpenTag");
+function plotCloseTag(chartType) {
+  if (chartType === "line") return "</c:lineChart>";
+  if (chartType === "area") return "</c:areaChart>";
+  if (chartType === "radar") return "</c:radarChart>";
+  return "</c:barChart>";
+}
+__name(plotCloseTag, "plotCloseTag");
+function buildSeriesXml(series, index2, chartType) {
+  const categories = series.categories.slice(0, series.values.length);
+  const cat = categories.length === 0 ? "" : "<c:cat>" + (series.categoriesRef ? `<c:strRef><c:f>${escapeXmlText3(series.categoriesRef)}</c:f><c:strCache>${pointCount(categories.length)}${strPoints(categories)}</c:strCache></c:strRef>` : `<c:strLit>${pointCount(categories.length)}${strPoints(categories)}</c:strLit>`) + "</c:cat>";
+  const val = "<c:val>" + (series.valuesRef ? `<c:numRef><c:f>${escapeXmlText3(series.valuesRef)}</c:f><c:numCache><c:formatCode>General</c:formatCode>${pointCount(series.values.length)}${numPoints(series.values)}</c:numCache></c:numRef>` : `<c:numLit>${pointCount(series.values.length)}${numPoints(series.values)}</c:numLit>`) + "</c:val>";
+  const isPieLike = chartType === "pie" || chartType === "doughnut";
+  const isLineLike = chartType === "line" || chartType === "radar";
+  const spPr = isPieLike ? seriesColorXml(series.color, false) : seriesColorXml(series.color ?? `#${paletteArgb(index2)}`, isLineLike);
+  return `<c:ser><c:idx val="${index2}"/><c:order val="${index2}"/><c:tx><c:v>${escapeXmlText3(series.name)}</c:v></c:tx>` + spPr + // CT_PieSer only: explosion sits after spPr, before dPt.
+  (isPieLike && series.explosionPct !== void 0 ? `<c:explosion val="${series.explosionPct}"/>` : "") + (chartType === "line" ? '<c:marker><c:symbol val="none"/></c:marker>' : "") + (chartType === "radar" ? '<c:marker><c:symbol val="circle"/></c:marker>' : "") + dataPointsXml(isPieLike ? sliceColors(series) : series.pointColors, series.pointExplosions) + cat + val + "</c:ser>";
+}
+__name(buildSeriesXml, "buildSeriesXml");
+function seriesColorXml(color, stroke) {
+  if (color === void 0) return "";
+  const fill = `<a:solidFill><a:srgbClr val="${color.slice(1).toUpperCase()}"/></a:solidFill>`;
+  return stroke ? `<c:spPr><a:ln>${fill}</a:ln></c:spPr>` : `<c:spPr>${fill}</c:spPr>`;
+}
+__name(seriesColorXml, "seriesColorXml");
+function sliceColors(series) {
+  return Object.fromEntries(
+    series.values.map((_, idx) => [
+      String(idx),
+      series.pointColors?.[idx] ?? `#${paletteArgb(idx)}`
+    ])
+  );
+}
+__name(sliceColors, "sliceColors");
+function dataPointsXml(pointColors, pointExplosions) {
+  const indices = [
+    ...new Set(
+      [...Object.keys(pointColors ?? {}), ...Object.keys(pointExplosions ?? {})].map(Number)
+    )
+  ].sort((a, b) => a - b);
+  return indices.map((idx) => {
+    const color = pointColors?.[idx];
+    const explosion = pointExplosions?.[idx];
+    return `<c:dPt><c:idx val="${idx}"/><c:bubble3D val="0"/>` + (explosion === void 0 ? "" : `<c:explosion val="${explosion}"/>`) + (color === void 0 ? "" : `<c:spPr><a:solidFill><a:srgbClr val="${color.slice(1).toUpperCase()}"/></a:solidFill></c:spPr>`) + "</c:dPt>";
+  }).join("");
+}
+__name(dataPointsXml, "dataPointsXml");
+function buildScatterSeriesXml(series, index2) {
+  const categories = series.categories.slice(0, series.values.length);
+  const numericCategories = categories.map((value) => Number(value));
+  const categoriesAreNumeric = categories.length === series.values.length && categories.length > 0 && numericCategories.every((value) => Number.isFinite(value));
+  const xValues = categoriesAreNumeric ? numericCategories : series.values.map((_, i) => i);
+  const xVal = "<c:xVal>" + (categoriesAreNumeric && series.categoriesRef ? `<c:numRef><c:f>${escapeXmlText3(series.categoriesRef)}</c:f><c:numCache><c:formatCode>General</c:formatCode>${pointCount(xValues.length)}${numPoints(xValues)}</c:numCache></c:numRef>` : `<c:numLit>${pointCount(xValues.length)}${numPoints(xValues)}</c:numLit>`) + "</c:xVal>";
+  const yVal = "<c:yVal>" + (series.valuesRef ? `<c:numRef><c:f>${escapeXmlText3(series.valuesRef)}</c:f><c:numCache><c:formatCode>General</c:formatCode>${pointCount(series.values.length)}${numPoints(series.values)}</c:numCache></c:numRef>` : `<c:numLit>${pointCount(series.values.length)}${numPoints(series.values)}</c:numLit>`) + "</c:yVal>";
+  return `<c:ser><c:idx val="${index2}"/><c:order val="${index2}"/><c:tx><c:v>${escapeXmlText3(series.name)}</c:v></c:tx>` + seriesColorXml(series.color ?? `#${paletteArgb(index2)}`, true) + dataPointsXml(series.pointColors, series.pointExplosions) + xVal + yVal + "</c:ser>";
+}
+__name(buildScatterSeriesXml, "buildScatterSeriesXml");
+function pointCount(count) {
+  return `<c:ptCount val="${count}"/>`;
+}
+__name(pointCount, "pointCount");
+function strPoints(values) {
+  return values.map((value, i) => `<c:pt idx="${i}"><c:v>${escapeXmlText3(value)}</c:v></c:pt>`).join("");
+}
+__name(strPoints, "strPoints");
+function numPoints(values) {
+  return values.map((value, i) => `<c:pt idx="${i}"><c:v>${String(value)}</c:v></c:pt>`).join("");
+}
+__name(numPoints, "numPoints");
+async function allocatePartPath(pkg, prefix, suffix) {
+  const pattern = new RegExp(`^${prefix}(\\d+)${suffix.replace(".", "\\.")}$`);
+  let max = 0;
+  for (const path of await pkg.paths()) {
+    const match = pattern.exec(path);
+    if (match) max = Math.max(max, Number(match[1]));
+  }
+  return `${prefix}${max + 1}${suffix}`;
+}
+__name(allocatePartPath, "allocatePartPath");
+function relsPathFor2(partPath) {
+  const slash = partPath.lastIndexOf("/");
+  return `${partPath.slice(0, slash)}/_rels/${partPath.slice(slash + 1)}.rels`;
+}
+__name(relsPathFor2, "relsPathFor");
+function relativeTarget(fromPart, toPart) {
+  const fromDir = fromPart.split("/").slice(0, -1);
+  const toSegments = toPart.split("/");
+  let common = 0;
+  while (common < fromDir.length && common < toSegments.length - 1 && fromDir[common] === toSegments[common]) {
+    common += 1;
+  }
+  const ups = fromDir.length - common;
+  return `${"../".repeat(ups)}${toSegments.slice(common).join("/")}`;
+}
+__name(relativeTarget, "relativeTarget");
+function matchRelationship(relsXml, type) {
+  for (const match of relsXml.matchAll(/<Relationship\b[^>]*\/?>(?:<\/Relationship>)?/g)) {
+    const tag = match[0];
+    if (!tag.includes(`Type="${type}"`)) continue;
+    const id = /\bId="([^"]+)"/.exec(tag)?.[1];
+    const target = /\bTarget="([^"]+)"/.exec(tag)?.[1];
+    if (id && target) return { id, target };
+  }
+  return null;
+}
+__name(matchRelationship, "matchRelationship");
+function resolveRelTarget(fromPart, target) {
+  const base = fromPart.split("/").slice(0, -1);
+  for (const segment of target.split("/")) {
+    if (segment === "..") base.pop();
+    else if (segment !== "." && segment !== "") base.push(segment);
+  }
+  return base.join("/");
+}
+__name(resolveRelTarget, "resolveRelTarget");
+async function appendRelationship2(pkg, relsPath, type, target) {
+  const exists = await pkg.has(relsPath);
+  const xml = exists ? await pkg.readText(relsPath) : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
+  let max = 0;
+  for (const match of xml.matchAll(/\bId="rId(\d+)"/g)) {
+    max = Math.max(max, Number(match[1]));
+  }
+  const id = `rId${max + 1}`;
+  const element = `<Relationship Id="${id}" Type="${escapeXmlAttribute2(type)}" Target="${escapeXmlAttribute2(target)}"/>`;
+  const closeAt = xml.lastIndexOf("</Relationships>");
+  if (closeAt < 0) throw new VisualAddError(`${relsPath} is not a relationships part.`);
+  const patched = xml.slice(0, closeAt) + element + xml.slice(closeAt);
+  if (exists) pkg.write(relsPath, patched);
+  else pkg.add(relsPath, patched);
+  return id;
+}
+__name(appendRelationship2, "appendRelationship");
+async function registerContentTypeDefault(pkg, extension, contentType, touchedEntries) {
+  const path = "[Content_Types].xml";
+  const xml = await pkg.readText(path);
+  if (new RegExp(`<Default[^>]*Extension="${extension}"`, "i").test(xml)) return;
+  const closeAt = xml.lastIndexOf("</Types>");
+  if (closeAt < 0) throw new VisualAddError("[Content_Types].xml is malformed.");
+  const element = `<Default Extension="${escapeXmlAttribute2(extension)}" ContentType="${escapeXmlAttribute2(contentType)}"/>`;
+  pkg.write(path, xml.slice(0, closeAt) + element + xml.slice(closeAt));
+  touchedEntries.add(path);
+}
+__name(registerContentTypeDefault, "registerContentTypeDefault");
+async function registerContentTypeOverride(pkg, partPath, contentType, touchedEntries) {
+  const path = "[Content_Types].xml";
+  const xml = await pkg.readText(path);
+  const partName = `/${partPath}`;
+  if (xml.includes(`PartName="${partName}"`)) return;
+  const closeAt = xml.lastIndexOf("</Types>");
+  if (closeAt < 0) throw new VisualAddError("[Content_Types].xml is malformed.");
+  const element = `<Override PartName="${escapeXmlAttribute2(partName)}" ContentType="${escapeXmlAttribute2(contentType)}"/>`;
+  pkg.write(path, xml.slice(0, closeAt) + element + xml.slice(closeAt));
+  touchedEntries.add(path);
+}
+__name(registerContentTypeOverride, "registerContentTypeOverride");
+function escapeXmlText3(input) {
+  return input.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+__name(escapeXmlText3, "escapeXmlText");
+function escapeXmlAttribute2(input) {
+  return escapeXmlText3(input).replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+__name(escapeXmlAttribute2, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-structure.ts
+function isShiftingOp(op) {
+  return "index" in op || "range" in op;
+}
+__name(isShiftingOp, "isShiftingOp");
+var StructuralShiftError = class extends Error {
+  static {
+    __name(this, "StructuralShiftError");
+  }
+};
+function applyStructuralOps(worksheetXml, ops, sheetName, resolveColStyle) {
+  let xml = worksheetXml;
+  let outlineTouched = false;
+  for (const op of ops) {
+    if ("start" in op) {
+      outlineTouched ||= "level" in op;
+      xml = op.kind === "set-row-size" || op.kind === "set-rows-hidden" || op.kind === "set-rows-outline" ? applyRowAttributeOp(xml, op) : applyColAttributeOp(xml, op, resolveColStyle);
+      continue;
+    }
+    if (!("index" in op)) {
+      xml = applyMergeOp(xml, op);
+      continue;
+    }
+    const axis = axisOf(op);
+    const shift = toShift(op);
+    if (axis === "column") {
+      xml = transformColumnOperation(xml, sheetName, shift);
+    } else {
+      xml = transformSheetRows(xml, shift);
+      xml = transformFormulas(xml, sheetName, shift, axis);
+      xml = transformRangedFeatures(xml, shift, axis);
+    }
+  }
+  if (outlineTouched) xml = syncOutlineSummaryLevels(xml);
+  return shiftOleObjectAnchors(xml, ops);
+}
+__name(applyStructuralOps, "applyStructuralOps");
+function shiftOleObjectAnchors(worksheetXml, ops) {
+  if (!worksheetXml.includes("<oleObjects")) return worksheetXml;
+  return worksheetXml.replace(
+    /<oleObjects\b[\s\S]*?<\/oleObjects>/g,
+    (block) => shiftDrawingAnchors(block, ops)
+  );
+}
+__name(shiftOleObjectAnchors, "shiftOleObjectAnchors");
+function shiftVmlObjectAnchors(vmlXml, ops) {
+  const shifting = rowColumnOps(ops);
+  if (shifting.length === 0 || !vmlXml.includes('ObjectType="Pict"')) return vmlXml;
+  return vmlXml.replace(/<v:shape\b[\s\S]*?<\/v:shape>/g, (shape) => {
+    if (!/<x:ClientData\b[^>]*\bObjectType="Pict"/.test(shape)) return shape;
+    return shape.replace(
+      /(<x:Anchor>)([^<]*)(<\/x:Anchor>)/,
+      (_m, open, inner, close) => {
+        const values = inner.split(",").map((part) => Number(part.trim()));
+        if (values.length !== 8 || values.some((value) => !Number.isFinite(value))) return _m;
+        return `${open}${shiftVmlAnchorValues(values, shifting).join(", ")}${close}`;
+      }
+    );
+  });
+}
+__name(shiftVmlObjectAnchors, "shiftVmlObjectAnchors");
+function shiftVmlAnchorValues(values, ops) {
+  const next = [...values];
+  for (const op of ops) {
+    const shift = toShift(op);
+    const from = axisOf(op) === "row" ? 2 : 0;
+    const to = from + 4;
+    if (shift.swap) {
+      const moved = moveRange(next[from], next[to], shift);
+      if (moved) {
+        next[from] = moved.start;
+        next[to] = moved.end;
+      }
+      continue;
+    }
+    for (const at of [from, to]) {
+      const moved = moveAnchorMark(next[at], shift);
+      next[at] = moved.position;
+      if (moved.clamped) next[at + 1] = 0;
+    }
+  }
+  return next;
+}
+__name(shiftVmlAnchorValues, "shiftVmlAnchorValues");
+function syncOutlineSummaryLevels(xml) {
+  let maxRow = 0;
+  for (const match of xml.matchAll(/<row\b[^>]*?\boutlineLevel="([0-9]+)"/g)) {
+    maxRow = Math.max(maxRow, Number(match[1]));
+  }
+  let maxCol = 0;
+  for (const match of xml.matchAll(/<col\b[^>]*?\boutlineLevel="([0-9]+)"/g)) {
+    maxCol = Math.max(maxCol, Number(match[1]));
+  }
+  const attributes2 = (maxRow > 0 ? ` outlineLevelRow="${maxRow}"` : "") + (maxCol > 0 ? ` outlineLevelCol="${maxCol}"` : "");
+  const existing = /<sheetFormatPr\b([^>]*?)(\/?)>/.exec(xml);
+  if (existing) {
+    const kept = existing[1].replace(/\s+outlineLevelRow="[^"]*"/g, "").replace(/\s+outlineLevelCol="[^"]*"/g, "");
+    return xml.slice(0, existing.index) + `<sheetFormatPr${kept}${attributes2}${existing[2]}>` + xml.slice(existing.index + existing[0].length);
+  }
+  if (!attributes2) return xml;
+  const anchor = /<cols\b|<sheetData\b/.exec(xml);
+  if (!anchor) return xml;
+  return xml.slice(0, anchor.index) + `<sheetFormatPr defaultRowHeight="15"${attributes2}/>` + xml.slice(anchor.index);
+}
+__name(syncOutlineSummaryLevels, "syncOutlineSummaryLevels");
+function toRef(range2) {
+  return `${columnToLetters(range2.startColumn)}${range2.startRow + 1}:${columnToLetters(range2.endColumn)}${range2.endRow + 1}`;
+}
+__name(toRef, "toRef");
+function applyMergeOp(xml, op) {
+  const ref = toRef(op.range);
+  if (op.kind === "unmerge-cells") {
+    const without = xml.replace(new RegExp(`<mergeCell\\b[^>]*\\bref="${ref}"[^>]*/>`), "");
+    return refreshMergeCount(without);
+  }
+  const element = `<mergeCell ref="${ref}"/>`;
+  if (xml.includes("</mergeCells>")) {
+    return refreshMergeCount(xml.replace("</mergeCells>", () => `${element}</mergeCells>`));
+  }
+  const section = `<mergeCells count="1">${element}</mergeCells>`;
+  const autoFilter = /<autoFilter\b[^>]*\/>|<autoFilter\b[^>]*>[\s\S]*?<\/autoFilter>/.exec(xml);
+  if (autoFilter) {
+    const insertAt = autoFilter.index + autoFilter[0].length;
+    return xml.slice(0, insertAt) + section + xml.slice(insertAt);
+  }
+  if (xml.includes("</sheetData>")) {
+    return xml.replace("</sheetData>", () => `</sheetData>${section}`);
+  }
+  const emptySheetData = /<sheetData\s*\/>/;
+  if (emptySheetData.test(xml)) {
+    return xml.replace(emptySheetData, (match) => `${match}${section}`);
+  }
+  throw new StructuralShiftError("Worksheet has no sheetData element.");
+}
+__name(applyMergeOp, "applyMergeOp");
+function formatSize(size) {
+  return String(Math.round(size * 100) / 100);
+}
+__name(formatSize, "formatSize");
+function applyRowAttributeOp(xml, op) {
+  if ("style" in op) return xml;
+  const seen = /* @__PURE__ */ new Set();
+  let result = xml.replace(/<row\b([^>]*?)(\/>|>)/g, (full, attributes2, close) => {
+    const rowNumber = /(?:^|\s)r="([0-9]+)"/.exec(attributes2)?.[1];
+    if (rowNumber === void 0) return full;
+    const rowIndex = Number(rowNumber) - 1;
+    if (rowIndex < op.start || rowIndex > op.end) return full;
+    seen.add(rowIndex);
+    let patched = attributes2;
+    if ("size" in op) {
+      patched = patched.replace(/\s*ht="[^"]*"/, "").replace(/\s*customHeight="[^"]*"/, "");
+      if (op.size !== null) patched += ` ht="${formatSize(op.size)}" customHeight="1"`;
+    } else if ("level" in op) {
+      patched = patched.replace(/\s*outlineLevel="[^"]*"/, "");
+      if (op.level > 0) patched += ` outlineLevel="${op.level}"`;
+      if (op.collapsed !== void 0) {
+        patched = patched.replace(/\s*collapsed="[^"]*"/, "");
+        if (op.collapsed) patched += ' collapsed="1"';
+      }
+    } else {
+      patched = patched.replace(/\s*hidden="[^"]*"/, "");
+      if (op.hidden) patched += ' hidden="1"';
+    }
+    return `<row${patched}${close}`;
+  });
+  const setsSomething = "size" in op ? op.size !== null : "level" in op ? op.level > 0 || op.collapsed === true : op.hidden;
+  if (!setsSomething) return result;
+  const newAttributes = "size" in op ? ` ht="${formatSize(op.size ?? 0)}" customHeight="1"` : "level" in op ? (op.level > 0 ? ` outlineLevel="${op.level}"` : "") + (op.collapsed ? ' collapsed="1"' : "") : ' hidden="1"';
+  for (let rowIndex = op.start; rowIndex <= op.end; rowIndex += 1) {
+    if (seen.has(rowIndex)) continue;
+    result = insertEmptyRow(result, rowIndex + 1, newAttributes);
+  }
+  return result;
+}
+__name(applyRowAttributeOp, "applyRowAttributeOp");
+function insertEmptyRow(worksheetXml, rowNumber, attributes2) {
+  const newRow = `<row r="${rowNumber}"${attributes2}/>`;
+  const rowStartPattern = /<row\b[^>]*?\br="([1-9][0-9]*)"/g;
+  let match;
+  while ((match = rowStartPattern.exec(worksheetXml)) !== null) {
+    if (Number(match[1]) > rowNumber) {
+      return worksheetXml.slice(0, match.index) + newRow + worksheetXml.slice(match.index);
+    }
+  }
+  if (worksheetXml.includes("</sheetData>")) {
+    return worksheetXml.replace("</sheetData>", () => `${newRow}</sheetData>`);
+  }
+  const emptySheetData = /<sheetData\s*\/>/;
+  if (emptySheetData.test(worksheetXml)) {
+    return worksheetXml.replace(emptySheetData, () => `<sheetData>${newRow}</sheetData>`);
+  }
+  throw new StructuralShiftError("Worksheet has no sheetData element.");
+}
+__name(insertEmptyRow, "insertEmptyRow");
+function applyColAttributeOp(xml, op, resolveColStyle) {
+  if ("style" in op && resolveColStyle === void 0) return xml;
+  const existing = [];
+  const section = /<cols\b[^>]*>([\s\S]*?)<\/cols>/.exec(xml);
+  if (section?.[1]) {
+    for (const element of section[1].matchAll(/<col\b([^>]*?)\/>/g)) {
+      const attrs = /* @__PURE__ */ new Map();
+      for (const attribute of (element[1] ?? "").matchAll(/([\w:]+)="([^"]*)"/g)) {
+        if (attribute[1] && attribute[2] !== void 0) attrs.set(attribute[1], attribute[2]);
+      }
+      const min = Number(attrs.get("min"));
+      const max = Number(attrs.get("max"));
+      if (!Number.isInteger(min) || !Number.isInteger(max)) continue;
+      attrs.delete("min");
+      attrs.delete("max");
+      existing.push({ min: min - 1, max: max - 1, attrs });
+    }
+  }
+  const patch = /* @__PURE__ */ __name((attrs) => {
+    const next = new Map(attrs);
+    if ("style" in op) {
+      const base = Number(next.get("style") ?? 0);
+      next.set("style", String(resolveColStyle(Number.isInteger(base) ? base : 0, op.style)));
+    } else if ("size" in op) {
+      next.delete("width");
+      next.delete("customWidth");
+      next.delete("bestFit");
+      if (op.size !== null) {
+        next.set("width", String(op.size));
+        next.set("customWidth", "1");
+      }
+    } else if ("level" in op) {
+      next.delete("outlineLevel");
+      if (op.level > 0) next.set("outlineLevel", String(op.level));
+      if (op.collapsed !== void 0) {
+        next.delete("collapsed");
+        if (op.collapsed) next.set("collapsed", "1");
+      }
+    } else {
+      next.delete("hidden");
+      if (op.hidden) next.set("hidden", "1");
+    }
+    return next;
+  }, "patch");
+  const result = [];
+  for (const col of existing) {
+    if (col.max < op.start || col.min > op.end) {
+      result.push(col);
+      continue;
+    }
+    if (col.min < op.start)
+      result.push({ min: col.min, max: op.start - 1, attrs: new Map(col.attrs) });
+    result.push({
+      min: Math.max(col.min, op.start),
+      max: Math.min(col.max, op.end),
+      attrs: patch(col.attrs)
+    });
+    if (col.max > op.end) result.push({ min: op.end + 1, max: col.max, attrs: new Map(col.attrs) });
+  }
+  const setsSomething = "style" in op ? true : "size" in op ? op.size !== null : "level" in op ? op.level > 0 || op.collapsed === true : op.hidden;
+  if (setsSomething) {
+    const covered = result.filter((col) => col.max >= op.start && col.min <= op.end).sort((left, right) => left.min - right.min);
+    let cursor = op.start;
+    const gaps = [];
+    for (const col of covered) {
+      if (col.min > cursor) gaps.push({ min: cursor, max: col.min - 1 });
+      cursor = Math.max(cursor, col.max + 1);
+    }
+    if (cursor <= op.end) gaps.push({ min: cursor, max: op.end });
+    for (const gap of gaps) {
+      result.push({ min: gap.min, max: gap.max, attrs: patch(/* @__PURE__ */ new Map()) });
+    }
+  }
+  const kept = result.filter((col) => col.attrs.size > 0).sort((left, right) => left.min - right.min);
+  const serialized = kept.map((col) => {
+    const attributes2 = [...col.attrs].map(([name, value]) => ` ${name}="${value}"`).join("");
+    return `<col min="${col.min + 1}" max="${col.max + 1}"${attributes2}/>`;
+  }).join("");
+  const newSection = kept.length === 0 ? "" : `<cols>${serialized}</cols>`;
+  if (section) {
+    return xml.replace(/<cols\b[^>]*>[\s\S]*?<\/cols>/, () => newSection);
+  }
+  if (newSection === "") return xml;
+  const sheetData = /<sheetData\s*\/>|<sheetData\b[^>]*>/.exec(xml);
+  if (!sheetData) throw new StructuralShiftError("Worksheet has no sheetData element.");
+  return xml.slice(0, sheetData.index) + newSection + xml.slice(sheetData.index);
+}
+__name(applyColAttributeOp, "applyColAttributeOp");
+function refreshMergeCount(xml) {
+  return xml.replace(/<mergeCells\b[^>]*>([\s\S]*?)<\/mergeCells>/, (full, inner) => {
+    const count = (inner.match(/<mergeCell\b/g) ?? []).length;
+    if (count === 0) return "";
+    return full.replace(
+      /(<mergeCells\b[^>]*\bcount=")[0-9]+(")/,
+      (_m, prefix, suffix) => `${prefix}${count}${suffix}`
+    );
+  });
+}
+__name(refreshMergeCount, "refreshMergeCount");
+function shiftCrossSheetFormulas(otherWorksheetXml, editedSheetName, ops) {
+  let xml = otherWorksheetXml;
+  for (const op of rowColumnOps(ops)) {
+    const axis = axisOf(op);
+    const shift = toShift(op);
+    xml = xml.replace(
+      /<f\b([^>]*[^/>])?>([\s\S]*?)<\/f>/g,
+      (_full, attributes2, body) => `<f${attributes2 ?? ""}>${escapeXmlText4(
+        shiftFormulaText(decodeEntities(body), editedSheetName, shift, axis, true)
+      )}</f>`
+    );
+  }
+  return xml;
+}
+__name(shiftCrossSheetFormulas, "shiftCrossSheetFormulas");
+function shiftDefinedNames(workbookXml, editedSheetName, ops) {
+  let xml = workbookXml;
+  for (const op of rowColumnOps(ops)) {
+    const axis = axisOf(op);
+    const shift = toShift(op);
+    xml = xml.replace(
+      /(<definedName\b[^>]*>)([\s\S]*?)(<\/definedName>)/g,
+      (_full, open, body, close) => `${open}${escapeXmlText4(
+        shiftFormulaText(decodeEntities(body), editedSheetName, shift, axis, true)
+      )}${close}`
+    );
+  }
+  return xml;
+}
+__name(shiftDefinedNames, "shiftDefinedNames");
+function shiftChartReferences(chartXml, editedSheetName, ops) {
+  let xml = chartXml;
+  for (const op of rowColumnOps(ops)) {
+    const axis = axisOf(op);
+    const shift = toShift(op);
+    xml = xml.replace(
+      /(<c:f>)([\s\S]*?)(<\/c:f>)/g,
+      (_full, open, body, close) => `${open}${escapeXmlText4(
+        shiftFormulaText(decodeEntities(body), editedSheetName, shift, axis, true)
+      )}${close}`
+    );
+  }
+  return xml;
+}
+__name(shiftChartReferences, "shiftChartReferences");
+function rowColumnOps(ops) {
+  return ops.filter((op) => "index" in op);
+}
+__name(rowColumnOps, "rowColumnOps");
+function shiftDrawingAnchors(drawingXml, ops) {
+  let xml = drawingXml;
+  for (const op of rowColumnOps(ops)) {
+    const axis = axisOf(op);
+    const shift = toShift(op);
+    const tag = axis === "row" ? "row" : "col";
+    if (shift.swap) {
+      xml = swapDrawingAnchors(xml, shift, tag);
+      continue;
+    }
+    xml = xml.replace(
+      /<((?:\w+:)?)(from|to)>([\s\S]*?)<\/\1\2>/g,
+      (_full, ns, kind, inner) => {
+        let clamped = false;
+        let patched = inner.replace(
+          new RegExp(`(<(?:\\w+:)?${tag}>)([0-9]+)(</(?:\\w+:)?${tag}>)`),
+          (_m, open, value, close) => {
+            const moved = moveAnchorMark(Number(value), shift);
+            clamped = moved.clamped;
+            return `${open}${moved.position}${close}`;
+          }
+        );
+        if (clamped) {
+          patched = patched.replace(
+            new RegExp(`(<(?:\\w+:)?${tag}Off>)-?[0-9]+(</(?:\\w+:)?${tag}Off>)`),
+            (_m, open, close) => `${open}0${close}`
+          );
+        }
+        return `<${ns}${kind}>${patched}</${ns}${kind}>`;
+      }
+    );
+  }
+  return xml;
+}
+__name(shiftDrawingAnchors, "shiftDrawingAnchors");
+function swapDrawingAnchors(xml, shift, tag) {
+  const markPattern = /* @__PURE__ */ __name((kind) => new RegExp(`(<(?:\\w+:)?${kind}>[\\s\\S]*?<(?:\\w+:)?${tag}>)([0-9]+)(</(?:\\w+:)?${tag}>)`), "markPattern");
+  const result = xml.replace(/<((?:\w+:)?)(twoCellAnchor|anchor)\b[\s\S]*?<\/\1\2>/g, (block) => {
+    const from = markPattern("from").exec(block);
+    const to = markPattern("to").exec(block);
+    if (!from?.[2] || !to?.[2]) return block;
+    const moved = moveRange(Number(from[2]), Number(to[2]), shift);
+    if (!moved || moved.start === Number(from[2]) && moved.end === Number(to[2])) return block;
+    return block.replace(
+      markPattern("from"),
+      (_m, open, _v, close) => `${open}${moved.start}${close}`
+    ).replace(
+      markPattern("to"),
+      (_m, open, _v, close) => `${open}${moved.end}${close}`
+    );
+  });
+  return result.replace(/<((?:\w+:)?)oneCellAnchor\b[\s\S]*?<\/\1oneCellAnchor>/g, (block) => {
+    const from = markPattern("from").exec(block);
+    if (!from?.[2]) return block;
+    const moved = movePosition(Number(from[2]), shift);
+    if (moved === null || moved === Number(from[2])) return block;
+    return block.replace(
+      markPattern("from"),
+      (_m, open, _v, close) => `${open}${moved}${close}`
+    );
+  });
+}
+__name(swapDrawingAnchors, "swapDrawingAnchors");
+function moveAnchorMark(position, shift) {
+  if (shift.deleted) {
+    if (position > shift.deleted.end) return { position: position + shift.delta, clamped: false };
+    if (position >= shift.deleted.start) return { position: shift.deleted.start, clamped: true };
+    return { position, clamped: false };
+  }
+  return {
+    position: position >= shift.boundary ? position + shift.delta : position,
+    clamped: false
+  };
+}
+__name(moveAnchorMark, "moveAnchorMark");
+function shiftTablePart(tableXml, ops, insertions) {
+  let xml = tableXml;
+  const records = [];
+  for (const op of ops) {
+    if ("start" in op) continue;
+    const table = parseTablePart(xml);
+    if ("range" in op) {
+      if (op.kind === "merge-cells" && areasOverlap(op.range, table)) {
+        throw new StructuralShiftError(`Merging cells over table "${table.name}" is not supported.`);
+      }
+      continue;
+    }
+    const axis = axisOf(op);
+    const shift = toShift(op);
+    remapInsertionRecords(records, shift, axis);
+    if (axis === "row") assertTableRowShiftSupported(table, shift);
+    else xml = reshapeTableColumns(xml, table, shift, records);
+    xml = xml.replace(
+      /(<(?:table|autoFilter|sortState|sortCondition)\b[^>]*?\bref=")([^"]+)(")/g,
+      (full, prefix, ref, suffix) => {
+        const moved = moveRefRange(ref, shift, axis);
+        return moved === null ? full : `${prefix}${moved}${suffix}`;
+      }
+    );
+  }
+  insertions?.push(...records);
+  return xml;
+}
+__name(shiftTablePart, "shiftTablePart");
+function remapInsertionRecords(records, shift, axis) {
+  for (const record of records) {
+    if (axis === "row") {
+      if (record.headerRow === null) continue;
+      record.headerRow = movePosition(record.headerRow, shift) ?? record.headerRow;
+      continue;
+    }
+    record.columns = record.columns.flatMap((column) => {
+      const moved = movePosition(column.column, shift);
+      return moved === null ? [] : [{ ...column, column: moved }];
+    });
+  }
+}
+__name(remapInsertionRecords, "remapInsertionRecords");
+function listTableColumns(tableXml) {
+  const elements = [];
+  const pattern = /<tableColumn\b[^>]*?(?:\/>|>[\s\S]*?<\/tableColumn>)/g;
+  let match;
+  while ((match = pattern.exec(tableXml)) !== null) {
+    const open = /^<tableColumn\b[^>]*/.exec(match[0])?.[0] ?? "";
+    elements.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      id: Number(/\bid="([0-9]+)"/.exec(open)?.[1] ?? "0"),
+      name: decodeEntities(/\bname="([^"]*)"/.exec(open)?.[1] ?? "")
+    });
+  }
+  return elements;
+}
+__name(listTableColumns, "listTableColumns");
+function reshapeTableColumns(tableXml, table, shift, records) {
+  if (shift.swap) return tableXml;
+  const width = table.endColumn - table.startColumn + 1;
+  if (shift.deleted) {
+    const { start, end } = shift.deleted;
+    if (!spansOverlap(start, end, table.startColumn, table.endColumn)) return tableXml;
+    if (start <= table.startColumn && end >= table.endColumn) {
+      throw new StructuralShiftError(
+        `Deleting all columns of table "${table.name}" is not supported \u2014 delete the table first.`
+      );
+    }
+    const first = Math.max(start, table.startColumn) - table.startColumn;
+    const last = Math.min(end, table.endColumn) - table.startColumn;
+    return removeTableColumns(tableXml, table, width, first, last);
+  }
+  if (shift.boundary <= table.startColumn || shift.boundary > table.endColumn) return tableXml;
+  return insertTableColumns(tableXml, table, width, shift.boundary, shift.delta, records);
+}
+__name(reshapeTableColumns, "reshapeTableColumns");
+function tableColumnsOrAbort(tableXml, table, width) {
+  const columns = listTableColumns(tableXml);
+  if (columns.length !== width) {
+    throw new StructuralShiftError(
+      `Table "${table.name}" has ${columns.length} column entries for ${width} columns \u2014 aborted.`
+    );
+  }
+  return columns;
+}
+__name(tableColumnsOrAbort, "tableColumnsOrAbort");
+function insertTableColumns(tableXml, table, width, boundary, count, records) {
+  const columns = tableColumnsOrAbort(tableXml, table, width);
+  const position = boundary - table.startColumn;
+  const taken = new Set(columns.map((column) => column.name.toLowerCase()));
+  let nextId = Math.max(0, ...columns.map((column) => column.id)) + 1;
+  let seed = 1;
+  const record = {
+    headerRow: table.headerRows > 0 ? table.startRow : null,
+    columns: []
+  };
+  let inserted = "";
+  for (let offset = 0; offset < count; offset += 1) {
+    let name = `Column${seed}`;
+    while (taken.has(name.toLowerCase())) {
+      seed += 1;
+      name = `Column${seed}`;
+    }
+    taken.add(name.toLowerCase());
+    inserted += `<tableColumn id="${nextId}" name="${name}"/>`;
+    record.columns.push({ column: boundary + offset, id: nextId, name });
+    nextId += 1;
+  }
+  records.push(record);
+  const at = columns[position].start;
+  let xml = tableXml.slice(0, at) + inserted + tableXml.slice(at);
+  xml = setTableColumnsCount(xml, width + count);
+  return xml.replace(
+    /(<filterColumn\b[^>]*?\bcolId=")([0-9]+)(")/g,
+    (full, prefix, colId, suffix) => Number(colId) >= position ? `${prefix}${Number(colId) + count}${suffix}` : full
+  );
+}
+__name(insertTableColumns, "insertTableColumns");
+function removeTableColumns(tableXml, table, width, first, last) {
+  const columns = tableColumnsOrAbort(tableXml, table, width);
+  const removed = last - first + 1;
+  let xml = tableXml.slice(0, columns[first].start) + tableXml.slice(columns[last].end);
+  xml = setTableColumnsCount(xml, width - removed);
+  xml = xml.replace(
+    /<filterColumn\b[^>]*?\bcolId="([0-9]+)"[^>]*?(?:\/>|>[\s\S]*?<\/filterColumn>)/g,
+    (full, colId) => {
+      const id = Number(colId);
+      if (id >= first && id <= last) return "";
+      if (id > last) {
+        return full.replace(
+          /(\bcolId=")[0-9]+(")/,
+          (_m, prefix, suffix) => `${prefix}${id - removed}${suffix}`
+        );
+      }
+      return full;
+    }
+  );
+  const deletedStart = table.startColumn + first;
+  const deletedEnd = table.startColumn + last;
+  xml = xml.replace(/<sortCondition\b[^>]*?\bref="([^"]+)"[^>]*?\/>/g, (full, ref) => {
+    const parts = ref.split(":");
+    const startRef = parseA1(parts[0] ?? "");
+    const endRef = parseA1(parts[1] ?? parts[0] ?? "");
+    if (!startRef || !endRef) return full;
+    return startRef.column >= deletedStart && endRef.column <= deletedEnd ? "" : full;
+  });
+  return xml.replace(/<sortState\b[^>]*>\s*<\/sortState>/g, "");
+}
+__name(removeTableColumns, "removeTableColumns");
+function setTableColumnsCount(tableXml, count) {
+  return tableXml.replace(
+    /(<tableColumns\b[^>]*?\bcount=")[0-9]+(")/,
+    (_m, prefix, suffix) => `${prefix}${count}${suffix}`
+  );
+}
+__name(setTableColumnsCount, "setTableColumnsCount");
+function parseTablePart(tableXml) {
+  const open = /<table\b[^>]*>/.exec(tableXml)?.[0];
+  const ref = open === void 0 ? void 0 : /\bref="([^"]+)"/.exec(open)?.[1];
+  const [startRef, endRef] = (ref ?? "").split(":");
+  const start = parseA1(startRef ?? "");
+  const end = parseA1(endRef ?? startRef ?? "");
+  if (!open || !start || !end) {
+    throw new StructuralShiftError("An Excel table part has no readable ref \u2014 aborted.");
+  }
+  return {
+    name: /\bname="([^"]*)"/.exec(open)?.[1] ?? "Table",
+    startRow: start.row,
+    endRow: end.row,
+    startColumn: start.column,
+    endColumn: end.column,
+    headerRows: Number(/\bheaderRowCount="([0-9]+)"/.exec(open)?.[1] ?? "1"),
+    totalsRows: Number(/\btotalsRowCount="([0-9]+)"/.exec(open)?.[1] ?? "0")
+  };
+}
+__name(parseTablePart, "parseTablePart");
+function spansOverlap(aStart, aEnd, bStart, bEnd) {
+  return aStart <= bEnd && bStart <= aEnd;
+}
+__name(spansOverlap, "spansOverlap");
+function areasOverlap(a, b) {
+  return spansOverlap(a.startRow, a.endRow, b.startRow, b.endRow) && spansOverlap(a.startColumn, a.endColumn, b.startColumn, b.endColumn);
+}
+__name(areasOverlap, "areasOverlap");
+function assertTableRowShiftSupported(table, shift) {
+  if (shift.swap) {
+    assertTableRowMoveSupported(table, shift.swap);
+    return;
+  }
+  if (!shift.deleted) return;
+  const { start, end } = shift.deleted;
+  if (table.headerRows > 0 && spansOverlap(start, end, table.startRow, table.startRow + table.headerRows - 1)) {
+    throw new StructuralShiftError(
+      `Deleting the header row of table "${table.name}" is not supported.`
+    );
+  }
+  if (table.totalsRows > 0 && spansOverlap(start, end, table.endRow - table.totalsRows + 1, table.endRow)) {
+    throw new StructuralShiftError(
+      `Deleting the totals row of table "${table.name}" is not supported.`
+    );
+  }
+  const moved = moveRange(table.startRow, table.endRow, shift);
+  const dataRows = moved === null ? 0 : moved.end - moved.start + 1 - table.headerRows - table.totalsRows;
+  if (dataRows < 1) {
+    throw new StructuralShiftError(
+      `Deleting these rows would leave table "${table.name}" without data rows \u2014 not supported.`
+    );
+  }
+}
+__name(assertTableRowShiftSupported, "assertTableRowShiftSupported");
+function assertTableRowMoveSupported(table, swap) {
+  const within = /* @__PURE__ */ __name((span) => table.startRow >= span.start && table.endRow <= span.end, "within");
+  if (within(swap.first) || within(swap.second)) return;
+  const overlapsEnvelope = /* @__PURE__ */ __name((start, end) => spansOverlap(start, end, swap.first.start, swap.second.end), "overlapsEnvelope");
+  if (!overlapsEnvelope(table.startRow, table.endRow)) return;
+  if (table.headerRows > 0 && overlapsEnvelope(table.startRow, table.startRow + table.headerRows - 1)) {
+    throw new StructuralShiftError(
+      `Moving the header row of table "${table.name}" is not supported.`
+    );
+  }
+  if (table.totalsRows > 0 && overlapsEnvelope(table.endRow - table.totalsRows + 1, table.endRow)) {
+    throw new StructuralShiftError(
+      `Moving the totals row of table "${table.name}" is not supported.`
+    );
+  }
+}
+__name(assertTableRowMoveSupported, "assertTableRowMoveSupported");
+function axisOf(op) {
+  return op.kind === "insert-cols" || op.kind === "remove-cols" ? "column" : "row";
+}
+__name(axisOf, "axisOf");
+function toShift(op) {
+  if (op.kind === "move-rows") {
+    if (op.before >= op.index && op.before <= op.index + op.count) {
+      throw new StructuralShiftError("A row move has a target inside the moved block \u2014 aborted.");
+    }
+    return op.before > op.index ? {
+      swap: {
+        first: { start: op.index, end: op.index + op.count - 1 },
+        second: { start: op.index + op.count, end: op.before - 1 }
+      }
+    } : {
+      swap: {
+        first: { start: op.before, end: op.index - 1 },
+        second: { start: op.index, end: op.index + op.count - 1 }
+      }
+    };
+  }
+  if (op.kind === "insert-rows" || op.kind === "insert-cols") {
+    return { boundary: op.index, delta: op.count, deleted: null };
+  }
+  return {
+    boundary: op.index,
+    delta: -op.count,
+    deleted: { start: op.index, end: op.index + op.count - 1 }
+  };
+}
+__name(toShift, "toShift");
+function movePosition(position, shift) {
+  if (shift.swap) {
+    const { first, second } = shift.swap;
+    if (position >= first.start && position <= first.end) {
+      return position + (second.end - second.start + 1);
+    }
+    if (position >= second.start && position <= second.end) {
+      return position - (first.end - first.start + 1);
+    }
+    return position;
+  }
+  if (shift.deleted) {
+    if (position >= shift.deleted.start && position <= shift.deleted.end) return null;
+    return position > shift.deleted.end ? position + shift.delta : position;
+  }
+  return position >= shift.boundary ? position + shift.delta : position;
+}
+__name(movePosition, "movePosition");
+function moveRange(start, end, shift) {
+  if (shift.swap) {
+    const { first, second } = shift.swap;
+    if (end < first.start || start > second.end) return { start, end };
+    if (start <= first.start && end >= second.end) return { start, end };
+    if (start >= first.start && end <= first.end) {
+      const delta = second.end - second.start + 1;
+      return { start: start + delta, end: end + delta };
+    }
+    if (start >= second.start && end <= second.end) {
+      const delta = first.end - first.start + 1;
+      return { start: start - delta, end: end - delta };
+    }
+    throw new StructuralShiftError(
+      "A range partially overlaps the moved rows \u2014 the move cannot be saved."
+    );
+  }
+  if (shift.deleted) {
+    const { start: ds, end: de } = shift.deleted;
+    if (start >= ds && end <= de) return null;
+    const newStart = start > de ? start + shift.delta : start >= ds ? ds : start;
+    const newEnd = end > de ? end + shift.delta : end >= ds ? ds - 1 : end;
+    return newEnd < newStart ? null : { start: newStart, end: newEnd };
+  }
+  return {
+    start: start >= shift.boundary ? start + shift.delta : start,
+    end: end >= shift.boundary ? end + shift.delta : end
+  };
+}
+__name(moveRange, "moveRange");
+function transformSheetRows(xml, shift) {
+  const renumbered = xml.replace(
+    /<row\b[^>]*?\br="([0-9]+)"[^>]*?(?:\/>|>[\s\S]*?<\/row>)/g,
+    (full, rowNumber) => {
+      const moved = movePosition(Number(rowNumber) - 1, shift);
+      if (moved === null) return "";
+      if (moved === Number(rowNumber) - 1) return full;
+      const patched = full.replace(
+        /(<row\b[^>]*?\br=")[0-9]+(")/,
+        (_m, prefix, suffix) => `${prefix}${moved + 1}${suffix}`
+      );
+      return patched.replace(
+        /(<c\b[^>]*?\br="[A-Z]{1,3})[0-9]+(")/g,
+        (_m, prefix, suffix) => `${prefix}${moved + 1}${suffix}`
+      );
+    }
+  );
+  return shift.swap ? sortSheetDataRows(renumbered) : renumbered;
+}
+__name(transformSheetRows, "transformSheetRows");
+function sortSheetDataRows(xml) {
+  const section = /<sheetData\b[^>]*>([\s\S]*?)<\/sheetData>/.exec(xml);
+  if (!section?.[1]) return xml;
+  const rows = [];
+  const leftover = section[1].replace(
+    /<row\b[^>]*?\br="([0-9]+)"[^>]*?(?:\/>|>[\s\S]*?<\/row>)/g,
+    (full, rowNumber) => {
+      rows.push({ index: Number(rowNumber), text: full });
+      return "";
+    }
+  );
+  if (leftover.trim() !== "") {
+    throw new StructuralShiftError("sheetData holds content other than rows \u2014 move aborted.");
+  }
+  rows.sort((a, b) => a.index - b.index);
+  const body = rows.map((row) => row.text).join("");
+  return xml.slice(0, section.index) + `${section[0].slice(0, section[0].indexOf(">") + 1)}${body}</sheetData>` + xml.slice(section.index + section[0].length);
+}
+__name(sortSheetDataRows, "sortSheetDataRows");
+function transformColumnOperation(xml, sheetName, shift) {
+  const sheetDataOpen = /<sheetData\b[^>]*>/.exec(xml);
+  const closeIndex = xml.lastIndexOf("</sheetData>");
+  if (!sheetDataOpen || closeIndex < sheetDataOpen.index) {
+    let fallback = transformSheetColumns(xml, shift);
+    fallback = transformFormulas(fallback, sheetName, shift, "column");
+    fallback = transformRangedFeatures(fallback, shift, "column");
+    return transformColDefinitions(fallback, shift);
+  }
+  const bodyStart = sheetDataOpen.index + sheetDataOpen[0].length;
+  const originalPrefix = xml.slice(0, bodyStart);
+  const body = xml.slice(bodyStart, closeIndex);
+  const originalSuffix = xml.slice(closeIndex);
+  let prefix = transformFormulas(originalPrefix, sheetName, shift, "column");
+  prefix = transformRangedFeatures(prefix, shift, "column");
+  prefix = transformColDefinitions(prefix, shift);
+  let suffix = transformFormulas(originalSuffix, sheetName, shift, "column");
+  suffix = transformRangedFeatures(suffix, shift, "column");
+  const affectsFrom = shift.swap ? Math.min(shift.swap.first.start, shift.swap.second.start) : shift.deleted ? shift.deleted.start : shift.boundary;
+  const rowOpenPattern = /<row\b[^>]*>/g;
+  const parts = [];
+  let cursor = 0;
+  let formulaAt = body.indexOf("<f");
+  let referenceAt = body.indexOf(' r="');
+  let openMatch;
+  while ((openMatch = rowOpenPattern.exec(body)) !== null) {
+    const openTag = openMatch[0];
+    const rowStart = openMatch.index;
+    let rowEnd;
+    if (openTag.endsWith("/>")) {
+      rowEnd = rowStart + openTag.length;
+    } else {
+      const closePosition = body.indexOf("</row>", rowStart + openTag.length);
+      if (closePosition === -1) break;
+      rowEnd = closePosition + "</row>".length;
+      rowOpenPattern.lastIndex = rowEnd;
+    }
+    while (formulaAt !== -1 && formulaAt < rowStart) formulaAt = body.indexOf("<f", formulaAt + 2);
+    let lastReference = -1;
+    while (referenceAt !== -1 && referenceAt < rowEnd) {
+      if (referenceAt >= rowStart) lastReference = referenceAt;
+      referenceAt = body.indexOf(' r="', referenceAt + 4);
+    }
+    const hasFormula = formulaAt !== -1 && formulaAt < rowEnd;
+    if (!hasFormula && columnShiftSkipsRow(body, lastReference, rowEnd, affectsFrom)) continue;
+    const full = body.slice(rowStart, rowEnd);
+    let row = full.replace(/(<row\b[^>]*?)\s+spans="[^"]*"/, (_match, start) => start);
+    row = row.replace(
+      /<c\b[^>]*?\br="([A-Z]{1,3})[0-9]+"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/g,
+      (cell, letters) => {
+        const column = lettersToColumn(letters);
+        const moved = movePosition(column, shift);
+        if (moved === null) return "";
+        if (moved === column) return cell;
+        return cell.replace(
+          /(<c\b[^>]*?\br=")[A-Z]{1,3}([0-9]+")/,
+          (_match, start, end) => `${start}${columnToLetters(moved)}${end}`
+        );
+      }
+    );
+    row = transformFormulas(row, sheetName, shift, "column");
+    if (row === full) continue;
+    parts.push(body.slice(cursor, openMatch.index), row);
+    cursor = rowEnd;
+  }
+  if (parts.length === 0 && prefix === originalPrefix && suffix === originalSuffix) return xml;
+  const transformedBody = parts.length === 0 ? body : parts.join("") + body.slice(cursor);
+  return `${prefix}${transformedBody}${suffix}`;
+}
+__name(transformColumnOperation, "transformColumnOperation");
+function columnShiftSkipsRow(body, lastReference, end, affectsFrom) {
+  if (lastReference === -1) return true;
+  let index2 = lastReference + 4;
+  let column = 0;
+  let sawLetter = false;
+  while (index2 < end) {
+    const code = body.charCodeAt(index2);
+    if (code < 65 || code > 90) break;
+    column = column * 26 + (code - 64);
+    sawLetter = true;
+    index2 += 1;
+  }
+  if (!sawLetter) return true;
+  return column - 1 < affectsFrom;
+}
+__name(columnShiftSkipsRow, "columnShiftSkipsRow");
+function transformSheetColumns(xml, shift) {
+  let result = xml.replace(/(<row\b[^>]*?)\s+spans="[^"]*"/g, (_m, prefix) => prefix);
+  result = result.replace(
+    /<c\b[^>]*?\br="([A-Z]{1,3})[0-9]+"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/g,
+    (full, letters) => {
+      const moved = movePosition(lettersToColumn(letters), shift);
+      if (moved === null) return "";
+      if (moved === lettersToColumn(letters)) return full;
+      return full.replace(
+        /(<c\b[^>]*?\br=")[A-Z]{1,3}([0-9]+")/,
+        (_m, prefix, suffix) => `${prefix}${columnToLetters(moved)}${suffix}`
+      );
+    }
+  );
+  return result;
+}
+__name(transformSheetColumns, "transformSheetColumns");
+function transformColDefinitions(xml, shift) {
+  return xml.replace(
+    /<col\b([^>]*?)\bmin="([0-9]+)"([^>]*?)\bmax="([0-9]+)"([^>]*?)\/>/g,
+    (_full, b1, min, b2, max, b3) => {
+      const moved = moveRange(Number(min) - 1, Number(max) - 1, shift);
+      if (moved === null) return "";
+      return `<col${b1}min="${moved.start + 1}"${b2}max="${moved.end + 1}"${b3}/>`;
+    }
+  );
+}
+__name(transformColDefinitions, "transformColDefinitions");
+function transformFormulas(xml, sheetName, shift, axis) {
+  let result = xml.replace(
+    /<f\b([^>]*[^/>])?>([\s\S]*?)<\/f>/g,
+    (_full, rawAttributes, body) => {
+      const attributes2 = rawAttributes ?? "";
+      const rewritten = escapeXmlText4(
+        shiftFormulaText(decodeEntities(body), sheetName, shift, axis)
+      );
+      const newAttributes = attributes2.replace(
+        /(\bref=")([^"]*)(")/,
+        (_m, prefix, ref, suffix) => {
+          if (shift.swap && axis === "row") assertSwapKeepsAnchorIntact(ref, shift.swap);
+          const moved = moveRefRange(ref, shift, axis);
+          if (moved === null) {
+            throw new StructuralShiftError(
+              "Deletion would remove a shared formula anchor \u2014 aborted."
+            );
+          }
+          return `${prefix}${moved}${suffix}`;
+        }
+      );
+      return `<f${newAttributes}>${rewritten}</f>`;
+    }
+  );
+  result = result.replace(
+    /<(formula[12]?)>([\s\S]*?)<\/\1>/g,
+    (_full, tag, body) => `<${tag}>${escapeXmlText4(shiftFormulaText(decodeEntities(body), sheetName, shift, axis))}</${tag}>`
+  );
+  return result;
+}
+__name(transformFormulas, "transformFormulas");
+function transformRangedFeatures(xml, shift, axis) {
+  let result = xml.replace(/<mergeCell\b[^>]*\bref="([^"]+)"[^>]*\/>/g, (full, ref) => {
+    const moved = moveRefRange(ref, shift, axis);
+    return moved === null ? "" : full.replace(/ref="[^"]+"/, () => `ref="${moved}"`);
+  });
+  result = result.replace(
+    /<mergeCells\b[^>]*>([\s\S]*?)<\/mergeCells>|<mergeCells\b[^>]*\/>/g,
+    (full, inner) => {
+      const count = ((inner ?? "").match(/<mergeCell\b/g) ?? []).length;
+      if (count === 0) return "";
+      return full.replace(
+        /(<mergeCells\b[^>]*\bcount=")[0-9]+(")/,
+        (_m, prefix, suffix) => `${prefix}${count}${suffix}`
+      );
+    }
+  );
+  result = result.replace(
+    /(<(?:dimension|autoFilter)\b[^>]*?\bref=")([^"]+)(")/g,
+    (full, prefix, ref, suffix) => {
+      const moved = moveRefRange(ref, shift, axis);
+      return moved === null ? full : `${prefix}${moved}${suffix}`;
+    }
+  );
+  for (const tag of ["hyperlink", "dataValidation", "conditionalFormatting"]) {
+    const attribute = tag === "hyperlink" ? "ref" : "sqref";
+    result = result.replace(
+      new RegExp(`<${tag}\\b[^>]*>[\\s\\S]*?</${tag}>|<${tag}\\b[^>]*/>`, "g"),
+      (element) => {
+        const refMatch = new RegExp(`\\b${attribute}="([^"]+)"`).exec(element);
+        if (!refMatch?.[1]) return element;
+        const moved = refMatch[1].split(" ").map((ref) => moveRefRange(ref, shift, axis)).filter((ref) => ref !== null);
+        if (moved.length === 0) return "";
+        return element.replace(
+          new RegExp(`\\b${attribute}="[^"]+"`),
+          () => `${attribute}="${moved.join(" ")}"`
+        );
+      }
+    );
+  }
+  result = result.replace(
+    /(<dataValidations\b[^>]*\bcount=")[0-9]+("[^>]*>)([\s\S]*?)(<\/dataValidations>)/g,
+    (_full, prefix, mid, inner, close) => {
+      const count = (inner.match(/<dataValidation\b/g) ?? []).length;
+      return count === 0 ? "" : `${prefix}${count}${mid}${inner}${close}`;
+    }
+  );
+  return result;
+}
+__name(transformRangedFeatures, "transformRangedFeatures");
+function assertSwapKeepsAnchorIntact(ref, swap) {
+  const parts = ref.split(":");
+  const start = parseA1(parts[0] ?? "");
+  const end = parseA1(parts[1] ?? parts[0] ?? "");
+  if (!start || !end) return;
+  const outside = end.row < swap.first.start || start.row > swap.second.end;
+  const insideFirst = start.row >= swap.first.start && end.row <= swap.first.end;
+  const insideSecond = start.row >= swap.second.start && end.row <= swap.second.end;
+  if (outside || insideFirst || insideSecond) return;
+  throw new StructuralShiftError(
+    "A shared formula anchor overlaps the moved rows \u2014 the move cannot be saved."
+  );
+}
+__name(assertSwapKeepsAnchorIntact, "assertSwapKeepsAnchorIntact");
+function moveRefRange(ref, shift, axis) {
+  const parts = ref.split(":");
+  const start = parseA1(parts[0] ?? "");
+  if (!start) return ref;
+  if (parts.length === 1) {
+    const moved2 = movePosition(axis === "row" ? start.row : start.column, shift);
+    if (moved2 === null) return null;
+    return axis === "row" ? `${columnToLetters(start.column)}${moved2 + 1}` : `${columnToLetters(moved2)}${start.row + 1}`;
+  }
+  const end = parseA1(parts[1] ?? "");
+  if (!end) return ref;
+  const moved = moveArea(
+    { startRow: start.row, endRow: end.row, startColumn: start.column, endColumn: end.column },
+    shift,
+    axis
+  );
+  if (moved === null) return null;
+  return `${columnToLetters(moved.startColumn)}${moved.startRow + 1}:${columnToLetters(moved.endColumn)}${moved.endRow + 1}`;
+}
+__name(moveRefRange, "moveRefRange");
+function moveArea(area, shift, axis) {
+  const moved = axis === "row" ? moveRange(area.startRow, area.endRow, shift) : moveRange(area.startColumn, area.endColumn, shift);
+  if (moved === null) return null;
+  return axis === "row" ? { ...area, startRow: moved.start, endRow: moved.end } : { ...area, startColumn: moved.start, endColumn: moved.end };
+}
+__name(moveArea, "moveArea");
+var FORMULA_REFERENCE_PATTERN = new RegExp(
+  "(^|[^\\p{L}\\p{N}_.$'!:])(?:('(?:[^']|'')+'|[\\p{L}_][\\p{L}\\p{N}_.]*)!)?(\\$?[A-Z]{1,3}\\$?[0-9]+(?::\\$?[A-Z]{1,3}\\$?[0-9]+)?|\\$?[A-Z]{1,3}:\\$?[A-Z]{1,3}|\\$?[0-9]+:\\$?[0-9]+)(?![0-9\\p{L}_(])",
+  "gu"
+);
+function shiftFormulaText(formula, sheetName, shift, axis, qualifiedOnly = false) {
+  return formula.split('"').map(
+    (segment, index2) => index2 % 2 === 1 ? segment : shiftFormulaSegment(segment, sheetName, shift, axis, qualifiedOnly)
+  ).join('"');
+}
+__name(shiftFormulaText, "shiftFormulaText");
+function shiftFormulaSegment(segment, sheetName, shift, axis, qualifiedOnly) {
+  return segment.replace(
+    FORMULA_REFERENCE_PATTERN,
+    (full, lead, qualifier, token) => {
+      if (qualifier === void 0 && qualifiedOnly) return full;
+      if (qualifier !== void 0 && !qualifierMatches(qualifier, sheetName)) return full;
+      const shifted = shiftReferenceToken(token, shift, axis);
+      if (shifted === null) {
+        throw new StructuralShiftError(
+          `A formula references the deleted range (${token}) \u2014 deletion aborted.`
+        );
+      }
+      return `${lead}${qualifier === void 0 ? "" : `${qualifier}!`}${shifted}`;
+    }
+  );
+}
+__name(shiftFormulaSegment, "shiftFormulaSegment");
+function shiftReferenceToken(token, shift, axis) {
+  const wholeColumn = /^(\$?)([A-Z]{1,3}):(\$?)([A-Z]{1,3})$/.exec(token);
+  if (wholeColumn) {
+    if (axis === "row") return token;
+    const moved2 = moveRange(
+      lettersToColumn(wholeColumn[2] ?? "A"),
+      lettersToColumn(wholeColumn[4] ?? "A"),
+      shift
+    );
+    if (moved2 === null) return null;
+    return `${wholeColumn[1]}${columnToLetters(moved2.start)}:${wholeColumn[3]}${columnToLetters(moved2.end)}`;
+  }
+  const wholeRow = /^(\$?)([0-9]+):(\$?)([0-9]+)$/.exec(token);
+  if (wholeRow) {
+    if (axis === "column") return token;
+    const moved2 = moveRange(Number(wholeRow[2]) - 1, Number(wholeRow[4]) - 1, shift);
+    if (moved2 === null) return null;
+    return `${wholeRow[1]}${moved2.start + 1}:${wholeRow[3]}${moved2.end + 1}`;
+  }
+  const parts = token.split(":");
+  const cells = parts.map((part) => /^(\$?)([A-Z]{1,3})(\$?)([0-9]+)$/.exec(part));
+  if (cells.some((cell) => cell === null)) return token;
+  const parsed2 = cells.map((cell) => ({
+    colDollar: cell?.[1] ?? "",
+    column: lettersToColumn(cell?.[2] ?? "A"),
+    rowDollar: cell?.[3] ?? "",
+    row: Number(cell?.[4]) - 1
+  }));
+  const first = parsed2[0];
+  if (!first) return token;
+  if (parsed2.length === 1) {
+    const moved2 = movePosition(axis === "row" ? first.row : first.column, shift);
+    if (moved2 === null) return null;
+    const row = axis === "row" ? moved2 : first.row;
+    const column = axis === "column" ? moved2 : first.column;
+    return `${first.colDollar}${columnToLetters(column)}${first.rowDollar}${row + 1}`;
+  }
+  const second = parsed2[1];
+  if (!second) return token;
+  const moved = axis === "row" ? moveRange(first.row, second.row, shift) : moveRange(first.column, second.column, shift);
+  if (moved === null) return null;
+  const startRow = axis === "row" ? moved.start : first.row;
+  const endRow = axis === "row" ? moved.end : second.row;
+  const startColumn = axis === "column" ? moved.start : first.column;
+  const endColumn = axis === "column" ? moved.end : second.column;
+  return `${first.colDollar}${columnToLetters(startColumn)}${first.rowDollar}${startRow + 1}:${second.colDollar}${columnToLetters(endColumn)}${second.rowDollar}${endRow + 1}`;
+}
+__name(shiftReferenceToken, "shiftReferenceToken");
+var SHARED_MAX_ROW = 1048576;
+var SHARED_MAX_COLUMN = 16384;
+function translateSharedFormula(formula, rowDelta, columnDelta) {
+  if (rowDelta === 0 && columnDelta === 0) return formula;
+  let failed = false;
+  const translated = formula.split('"').map(
+    (segment, index2) => index2 % 2 === 1 ? segment : segment.replace(
+      FORMULA_REFERENCE_PATTERN,
+      (full, lead, qualifier, token) => {
+        const moved = translateSharedToken(token, rowDelta, columnDelta);
+        if (moved === null) {
+          failed = true;
+          return full;
+        }
+        return `${lead}${qualifier === void 0 ? "" : `${qualifier}!`}${moved}`;
+      }
+    )
+  ).join('"');
+  return failed ? null : translated;
+}
+__name(translateSharedFormula, "translateSharedFormula");
+function translateSharedToken(token, rowDelta, columnDelta) {
+  const parts = token.split(":").map((part) => {
+    const cell = /^(\$?)([A-Z]{1,3})(\$?)([0-9]+)$/.exec(part);
+    if (cell) {
+      const column = translateOrdinal(
+        lettersToColumn(cell[2] ?? "A"),
+        cell[1] === "$" ? 0 : columnDelta,
+        SHARED_MAX_COLUMN - 1
+      );
+      const row = translateOrdinal(
+        Number(cell[4]) - 1,
+        cell[3] === "$" ? 0 : rowDelta,
+        SHARED_MAX_ROW - 1
+      );
+      if (column === null || row === null) return null;
+      return `${cell[1]}${columnToLetters(column)}${cell[3]}${row + 1}`;
+    }
+    const wholeColumn = /^(\$?)([A-Z]{1,3})$/.exec(part);
+    if (wholeColumn) {
+      const column = translateOrdinal(
+        lettersToColumn(wholeColumn[2] ?? "A"),
+        wholeColumn[1] === "$" ? 0 : columnDelta,
+        SHARED_MAX_COLUMN - 1
+      );
+      if (column === null) return null;
+      return `${wholeColumn[1]}${columnToLetters(column)}`;
+    }
+    const wholeRow = /^(\$?)([0-9]+)$/.exec(part);
+    if (wholeRow) {
+      const row = translateOrdinal(
+        Number(wholeRow[2]) - 1,
+        wholeRow[1] === "$" ? 0 : rowDelta,
+        SHARED_MAX_ROW - 1
+      );
+      if (row === null) return null;
+      return `${wholeRow[1]}${row + 1}`;
+    }
+    return part;
+  });
+  if (parts.some((part) => part === null)) return null;
+  return parts.join(":");
+}
+__name(translateSharedToken, "translateSharedToken");
+function translateOrdinal(value, delta, maximum) {
+  const moved = value + delta;
+  return moved < 0 || moved > maximum ? null : moved;
+}
+__name(translateOrdinal, "translateOrdinal");
+function qualifierMatches(qualifier, sheetName) {
+  const unquoted = qualifier.startsWith("'") ? qualifier.slice(1, -1).replaceAll("''", "'") : qualifier;
+  return unquoted === sheetName;
+}
+__name(qualifierMatches, "qualifierMatches");
+function parseA1(ref) {
+  const match = /^\$?([A-Z]{1,3})\$?([0-9]+)$/.exec(ref);
+  if (!match?.[1] || !match[2]) return null;
+  return { row: Number(match[2]) - 1, column: lettersToColumn(match[1]) };
+}
+__name(parseA1, "parseA1");
+function lettersToColumn(letters) {
+  let column = 0;
+  for (const character of letters) {
+    column = column * 26 + character.charCodeAt(0) - 64;
+  }
+  return column - 1;
+}
+__name(lettersToColumn, "lettersToColumn");
+function columnToLetters(column) {
+  let letters = "";
+  let remaining = column + 1;
+  while (remaining > 0) {
+    remaining -= 1;
+    letters = String.fromCharCode(65 + remaining % 26) + letters;
+    remaining = Math.floor(remaining / 26);
+  }
+  return letters;
+}
+__name(columnToLetters, "columnToLetters");
+function decodeEntities(input) {
+  return input.replaceAll("&quot;", '"').replaceAll("&apos;", "'").replaceAll("&gt;", ">").replaceAll("&lt;", "<").replaceAll("&amp;", "&");
+}
+__name(decodeEntities, "decodeEntities");
+function escapeXmlText4(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+__name(escapeXmlText4, "escapeXmlText");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-sheets.ts
+var TAG_ATTRIBUTES = `(?:"[^"]*"|'[^']*'|[^>"'])*?`;
+var SheetEditError = class extends Error {
+  static {
+    __name(this, "SheetEditError");
+  }
+};
+var INVALID_NAME_CHARACTERS = /[\\/?*[\]:]/;
+function validateSheetName(name) {
+  if (name.length === 0 || name.length > 31) {
+    throw new SheetEditError(`Sheet name "${name}" must be 1-31 characters long.`);
+  }
+  if (INVALID_NAME_CHARACTERS.test(name)) {
+    throw new SheetEditError(
+      `Sheet name "${name}" contains a forbidden character (\\ / ? * [ ] :).`
+    );
+  }
+  if (name.startsWith("'") || name.endsWith("'")) {
+    throw new SheetEditError(`Sheet name "${name}" cannot start or end with an apostrophe.`);
+  }
+}
+__name(validateSheetName, "validateSheetName");
+function formatSheetQualifier(name) {
+  const needsQuoting = !/^[A-Za-z_][A-Za-z0-9_.]*$/.test(name) || /^[A-Za-z]{1,3}[0-9]+$/.test(name) || /^(?:TRUE|FALSE)$/i.test(name) || /^R[0-9]*C[0-9]*$/i.test(name);
+  return needsQuoting ? `'${name.replaceAll("'", "''")}'` : name;
+}
+__name(formatSheetQualifier, "formatSheetQualifier");
+function renameSheetInFormula(formula, oldName, newName) {
+  return formula.split('"').map(
+    (segment, index2) => index2 % 2 === 1 ? segment : segment.replace(
+      FORMULA_REFERENCE_PATTERN,
+      (full, lead, qualifier, token) => {
+        if (qualifier === void 0 || !qualifierMatches(qualifier, oldName)) return full;
+        return `${lead}${formatSheetQualifier(newName)}!${token}`;
+      }
+    )
+  ).join('"');
+}
+__name(renameSheetInFormula, "renameSheetInFormula");
+function formulaReferencesSheet(formula, sheetName) {
+  let found = false;
+  formula.split('"').forEach((segment, index2) => {
+    if (index2 % 2 === 1 || found) return;
+    segment.replace(
+      FORMULA_REFERENCE_PATTERN,
+      (full, _lead, qualifier) => {
+        if (qualifier !== void 0 && qualifierMatches(qualifier, sheetName)) found = true;
+        return full;
+      }
+    );
+  });
+  return found;
+}
+__name(formulaReferencesSheet, "formulaReferencesSheet");
+function renameSheetReferencesInWorksheet(worksheetXml, oldName, newName) {
+  let xml = worksheetXml.replace(
+    /<f\b([^>]*[^/>])?>([\s\S]*?)<\/f>/g,
+    (_full, attributes2, body) => `<f${attributes2 ?? ""}>${escapeXmlText5(renameSheetInFormula(decodeEntities2(body), oldName, newName))}</f>`
+  );
+  xml = xml.replace(
+    /<(formula[12]?)>([\s\S]*?)<\/\1>/g,
+    (_full, tag, body) => `<${tag}>${escapeXmlText5(renameSheetInFormula(decodeEntities2(body), oldName, newName))}</${tag}>`
+  );
+  return xml.replace(
+    new RegExp(`(<hyperlink\\b${TAG_ATTRIBUTES}\\blocation=")([^"]+)(")`, "g"),
+    (full, prefix, location, suffix) => {
+      const renamed = renameHyperlinkLocation(decodeAttribute(location), oldName, newName);
+      if (renamed === null) return full;
+      return `${prefix}${escapeXmlAttribute3(renamed)}${suffix}`;
+    }
+  );
+}
+__name(renameSheetReferencesInWorksheet, "renameSheetReferencesInWorksheet");
+function renameHyperlinkLocation(location, oldName, newName) {
+  const match = /^('(?:[^']|'')+'|[^'!]+)!([\s\S]*)$/.exec(location);
+  if (!match?.[1] || match[2] === void 0) return null;
+  if (!qualifierMatches(match[1], oldName)) return null;
+  return `${formatSheetQualifier(newName)}!${match[2]}`;
+}
+__name(renameHyperlinkLocation, "renameHyperlinkLocation");
+function renameSheetReferencesInChart(chartXml, oldName, newName) {
+  return chartXml.replace(
+    /(<c:f>)([\s\S]*?)(<\/c:f>)/g,
+    (_full, open, body, close) => `${open}${escapeXmlText5(renameSheetInFormula(decodeEntities2(body), oldName, newName))}${close}`
+  );
+}
+__name(renameSheetReferencesInChart, "renameSheetReferencesInChart");
+function renameSheetReferencesInDefinedNames(workbookXml, oldName, newName) {
+  return workbookXml.replace(
+    /(<definedName\b[^>]*>)([\s\S]*?)(<\/definedName>)/g,
+    (_full, open, body, close) => `${open}${escapeXmlText5(renameSheetInFormula(decodeEntities2(body), oldName, newName))}${close}`
+  );
+}
+__name(renameSheetReferencesInDefinedNames, "renameSheetReferencesInDefinedNames");
+function worksheetReferencesSheet(worksheetXml, sheetName) {
+  for (const pattern of [
+    /<f\b(?:[^>]*[^/>])?>([\s\S]*?)<\/f>/g,
+    /<(?:formula[12]?)>([\s\S]*?)<\/(?:formula[12]?)>/g
+  ]) {
+    for (const match of worksheetXml.matchAll(pattern)) {
+      if (formulaReferencesSheet(decodeEntities2(match[1] ?? ""), sheetName)) return true;
+    }
+  }
+  return false;
+}
+__name(worksheetReferencesSheet, "worksheetReferencesSheet");
+function chartReferencesSheet(chartXml, sheetName) {
+  for (const match of chartXml.matchAll(/<c:f>([\s\S]*?)<\/c:f>/g)) {
+    if (formulaReferencesSheet(decodeEntities2(match[1] ?? ""), sheetName)) return true;
+  }
+  return false;
+}
+__name(chartReferencesSheet, "chartReferencesSheet");
+function prepareClonedSheetRels(relsXml, sourceName) {
+  let droppedPrinterSettings = false;
+  let result = relsXml;
+  for (const match of relsXml.matchAll(/<Relationship\b[^>]*?\bType="([^"]+)"[^>]*?\/>\s*/g)) {
+    if (/\/hyperlink$/.test(match[1] ?? "")) continue;
+    if (/\/printerSettings$/.test(match[1] ?? "")) {
+      droppedPrinterSettings = true;
+      result = result.replace(match[0], "");
+      continue;
+    }
+    throw new SheetEditError(
+      `Sheet "${sourceName}" carries charts, images, tables, or comments \u2014 duplicating it is not supported yet.`
+    );
+  }
+  return {
+    relsXml: /<Relationship\b/.test(result) ? result : null,
+    droppedPrinterSettings
+  };
+}
+__name(prepareClonedSheetRels, "prepareClonedSheetRels");
+function stripPageSetupRelIds(worksheetXml) {
+  return worksheetXml.replace(
+    /(<pageSetup\b[^>]*?)\s+r:id="[^"]*"/g,
+    (_full, prefix) => prefix
+  );
+}
+__name(stripPageSetupRelIds, "stripPageSetupRelIds");
+function sanitizeClonedWorksheetXml(worksheetXml) {
+  return worksheetXml.replace(
+    /(<sheetView\b[^>]*?)\s+tabSelected="[^"]*"/g,
+    (_full, prefix) => prefix
+  );
+}
+__name(sanitizeClonedWorksheetXml, "sanitizeClonedWorksheetXml");
+function assertNoSheetScopedDefinedNames(workbookXml, sourceName) {
+  const index2 = parseSheetElements(workbookXml).findIndex((sheet) => sheet.name === sourceName);
+  if (index2 < 0) throw new SheetEditError(`Sheet "${sourceName}" was not found in the workbook.`);
+  if (new RegExp(`<definedName\\b[^>]*?\\blocalSheetId="${index2}"`).test(workbookXml)) {
+    throw new SheetEditError(
+      `Sheet "${sourceName}" has sheet-scoped defined names \u2014 duplicating it is not supported yet.`
+    );
+  }
+}
+__name(assertNoSheetScopedDefinedNames, "assertNoSheetScopedDefinedNames");
+function buildWorksheetPartXml() {
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><dimension ref="A1"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetData/></worksheet>';
+}
+__name(buildWorksheetPartXml, "buildWorksheetPartXml");
+function parseSheetElements(workbookXml) {
+  const elements = [];
+  for (const match of workbookXml.matchAll(
+    new RegExp(`<sheet\\b${TAG_ATTRIBUTES}(?:/>|>[\\s\\S]*?</sheet>)`, "g")
+  )) {
+    const xml = match[0];
+    const name = readAttribute(xml, "name");
+    if (name === void 0) continue;
+    const state = readAttribute(xml, "state");
+    elements.push({
+      xml,
+      name: decodeAttribute(name),
+      hidden: state === "hidden" || state === "veryHidden",
+      // The relationships namespace is conventionally bound to "r", but any
+      // prefix is legal — fall back to whatever prefix the producer chose.
+      relationshipId: readAttribute(xml, "r:id") ?? /(?:^|\s)[A-Za-z_][\w.-]*:id="([^"]*)"/.exec(xml)?.[1]
+    });
+  }
+  return elements;
+}
+__name(parseSheetElements, "parseSheetElements");
+function maxSheetIdInWorkbook(workbookXml) {
+  let max = 0;
+  for (const match of workbookXml.matchAll(
+    new RegExp(`<sheet\\b${TAG_ATTRIBUTES}\\bsheetId="([0-9]+)"`, "g")
+  )) {
+    max = Math.max(max, Number(match[1]));
+  }
+  return max;
+}
+__name(maxSheetIdInWorkbook, "maxSheetIdInWorkbook");
+function maxRelationshipId(relationshipsXml) {
+  let max = 0;
+  for (const match of relationshipsXml.matchAll(/\bId="rId([0-9]+)"/g)) {
+    max = Math.max(max, Number(match[1]));
+  }
+  return max;
+}
+__name(maxRelationshipId, "maxRelationshipId");
+function applySheetPlanToWorkbookXml(workbookXml, plan, additions) {
+  const elements = parseSheetElements(workbookXml);
+  const originalNames = elements.map((element) => element.name);
+  const renameByOriginal = new Map(plan.renames.map((rename2) => [rename2.sheetName, rename2.newName]));
+  const removedSet = new Set(plan.removals);
+  const finalElements = /* @__PURE__ */ new Map();
+  for (const element of elements) {
+    if (removedSet.has(element.name)) continue;
+    const newName = renameByOriginal.get(element.name);
+    const xml = newName === void 0 ? element.xml : element.xml.replace(/\bname="[^"]*"/, () => `name="${escapeXmlAttribute3(newName)}"`);
+    finalElements.set(newName ?? element.name, { xml, hidden: element.hidden });
+  }
+  for (const addition of additions) {
+    finalElements.set(addition.name, {
+      xml: `<sheet name="${escapeXmlAttribute3(addition.name)}" sheetId="${addition.sheetId}" r:id="${addition.relationshipId}"/>`,
+      hidden: false
+    });
+  }
+  for (const change of plan.hiddenChanges ?? []) {
+    const finalName = renameByOriginal.get(change.sheetName) ?? change.sheetName;
+    const element = finalElements.get(finalName);
+    if (!element) {
+      throw new SheetEditError(`Sheet "${change.sheetName}" was not found for a visibility change.`);
+    }
+    element.hidden = change.hidden;
+    element.xml = setSheetStateAttribute(element.xml, change.hidden);
+  }
+  if (plan.order.length !== finalElements.size || plan.order.some((name) => !finalElements.has(name))) {
+    throw new SheetEditError("The sheet order does not match the final sheet set.");
+  }
+  if (plan.order.every((name) => finalElements.get(name)?.hidden)) {
+    throw new SheetEditError("A workbook needs at least one visible sheet.");
+  }
+  const sheetsInner = plan.order.map((name) => finalElements.get(name)?.xml ?? "").join("");
+  let result = workbookXml.replace(
+    /<sheets>[\s\S]*?<\/sheets>/,
+    () => `<sheets>${sheetsInner}</sheets>`
+  );
+  const oldIndexToNew = /* @__PURE__ */ __name((oldIndex) => {
+    const originalName = originalNames[oldIndex];
+    if (originalName === void 0 || removedSet.has(originalName)) return null;
+    return plan.order.indexOf(renameByOriginal.get(originalName) ?? originalName);
+  }, "oldIndexToNew");
+  result = result.replace(
+    /<definedName\b[^>]*?\blocalSheetId="([0-9]+)"[^>]*>[\s\S]*?<\/definedName>/g,
+    (full, localId) => {
+      const mapped = oldIndexToNew(Number(localId));
+      if (mapped === null) return "";
+      return full.replace(/\blocalSheetId="[0-9]+"/, () => `localSheetId="${mapped}"`);
+    }
+  );
+  result = result.replace(/<definedNames>\s*<\/definedNames>/, "");
+  result = result.replace(
+    /(<workbookView\b[^>]*?\bactiveTab=")([0-9]+)(")/,
+    (_full, prefix, activeTab, suffix) => {
+      const mapped = oldIndexToNew(Number(activeTab));
+      const fallback = plan.order.findIndex((name) => !finalElements.get(name)?.hidden);
+      return `${prefix}${mapped ?? Math.max(fallback, 0)}${suffix}`;
+    }
+  );
+  return additions.length > 0 ? ensureRelationshipNamespace(result) : result;
+}
+__name(applySheetPlanToWorkbookXml, "applySheetPlanToWorkbookXml");
+function setSheetStateAttribute(sheetXml, hidden) {
+  const withoutState = sheetXml.replace(/\s+state="[^"]*"/, "");
+  if (!hidden) return withoutState;
+  return withoutState.replace(/^<sheet\b/, '<sheet state="hidden"');
+}
+__name(setSheetStateAttribute, "setSheetStateAttribute");
+function addWorksheetOverride(contentTypesXml, partPath) {
+  const override = `<Override PartName="/${partPath}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
+  if (!contentTypesXml.includes("</Types>")) {
+    throw new SheetEditError("The workbook has no [Content_Types].xml Types element.");
+  }
+  return contentTypesXml.replace("</Types>", () => `${override}</Types>`);
+}
+__name(addWorksheetOverride, "addWorksheetOverride");
+function removePartOverride(contentTypesXml, partPath) {
+  return contentTypesXml.replace(
+    new RegExp(`<Override\\b[^>]*PartName="/${escapeRegExp2(partPath)}"[^>]*/>\\s*`),
+    ""
+  );
+}
+__name(removePartOverride, "removePartOverride");
+function addWorksheetRelationship(relationshipsXml, relationshipId, target) {
+  const relationship = `<Relationship Id="${relationshipId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="${target}"/>`;
+  if (!relationshipsXml.includes("</Relationships>")) {
+    throw new SheetEditError("The workbook has no relationships part.");
+  }
+  return relationshipsXml.replace("</Relationships>", () => `${relationship}</Relationships>`);
+}
+__name(addWorksheetRelationship, "addWorksheetRelationship");
+function removeRelationshipById(relationshipsXml, relationshipId) {
+  return relationshipsXml.replace(
+    new RegExp(`<Relationship\\b[^>]*\\bId="${escapeRegExp2(relationshipId)}"[^>]*/>\\s*`),
+    ""
+  );
+}
+__name(removeRelationshipById, "removeRelationshipById");
+var IGNORABLE_SHEET_RELATIONSHIP_TYPES = /\/(?:hyperlink|printerSettings)$/;
+var OWNED_SHEET_RELATIONSHIP_TYPES = /\/(?:drawing|vmlDrawing|comments|threadedComment|ctrlProp|table|image)$/;
+function parseRelationships(relsXml) {
+  const entries = [];
+  for (const match of relsXml.matchAll(/<Relationship\b[^>]*?\/>/g)) {
+    const element = match[0];
+    const type = readAttribute(element, "Type");
+    const target = readAttribute(element, "Target");
+    if (type === void 0 || target === void 0) continue;
+    entries.push({
+      id: readAttribute(element, "Id"),
+      type: decodeAttribute(type),
+      target: decodeAttribute(target),
+      external: readAttribute(element, "TargetMode") === "External"
+    });
+  }
+  return entries;
+}
+__name(parseRelationships, "parseRelationships");
+function partPathForRels(relsPath) {
+  return relsPath.replace(/(^|\/)_rels\/([^/]*)\.rels$/, "$1$2");
+}
+__name(partPathForRels, "partPathForRels");
+function classifyRemovedSheetRels(relsXml, sheetName) {
+  const owned = [];
+  for (const entry of parseRelationships(relsXml)) {
+    if (entry.external || IGNORABLE_SHEET_RELATIONSHIP_TYPES.test(entry.type)) continue;
+    if (OWNED_SHEET_RELATIONSHIP_TYPES.test(entry.type)) {
+      owned.push(entry.target);
+      continue;
+    }
+    const kind = /\/pivotTable$/.test(entry.type) ? "a pivot table" : `a part this build cannot delete safely (${entry.type})`;
+    throw new SheetEditError(
+      `Sheet "${sheetName}" carries ${kind} \u2014 deleting it is not supported yet.`
+    );
+  }
+  return owned;
+}
+__name(classifyRemovedSheetRels, "classifyRemovedSheetRels");
+function tableDisplayName(tableXml) {
+  const openTag = /<table\b[^>]*>/.exec(tableXml)?.[0];
+  if (!openTag) return void 0;
+  const name = readAttribute(openTag, "displayName") ?? readAttribute(openTag, "name");
+  return name === void 0 ? void 0 : decodeAttribute(name);
+}
+__name(tableDisplayName, "tableDisplayName");
+function definedNamesUseToken(workbookXml, token, removedLocalIds) {
+  const needle = token.toLowerCase();
+  for (const match of workbookXml.matchAll(/<definedName\b([^>]*)>([\s\S]*?)<\/definedName>/g)) {
+    const localId = readAttribute(`<definedName${match[1] ?? ""}/>`, "localSheetId");
+    if (localId !== void 0 && removedLocalIds.has(Number(localId))) continue;
+    if (decodeEntities2(match[2] ?? "").toLowerCase().includes(needle))
+      return true;
+  }
+  return false;
+}
+__name(definedNamesUseToken, "definedNamesUseToken");
+function pivotCacheReadsFromSheet(cacheXml, sheetName) {
+  const target = sheetName.toLowerCase();
+  for (const match of cacheXml.matchAll(
+    new RegExp(`<worksheetSource\\b${TAG_ATTRIBUTES}/?>`, "g")
+  )) {
+    const sheet = readAttribute(match[0], "sheet");
+    if (sheet !== void 0 && decodeAttribute(sheet).toLowerCase() === target) return true;
+  }
+  return false;
+}
+__name(pivotCacheReadsFromSheet, "pivotCacheReadsFromSheet");
+function renameSheetInPivotCacheSource(cacheXml, oldName, newName) {
+  const target = oldName.toLowerCase();
+  return cacheXml.replace(new RegExp(`<worksheetSource\\b${TAG_ATTRIBUTES}/?>`, "g"), (element) => {
+    const sheet = readAttribute(element, "sheet");
+    if (sheet === void 0 || decodeAttribute(sheet).toLowerCase() !== target) return element;
+    return element.replace(/\ssheet="[^"]*"/, () => ` sheet="${escapeXmlAttribute3(newName)}"`);
+  });
+}
+__name(renameSheetInPivotCacheSource, "renameSheetInPivotCacheSource");
+function definedNamesReferenceSheet(workbookXml, sheetName, removedLocalIds) {
+  for (const match of workbookXml.matchAll(/<definedName\b([^>]*)>([\s\S]*?)<\/definedName>/g)) {
+    const localId = readAttribute(`<definedName${match[1] ?? ""}/>`, "localSheetId");
+    if (localId !== void 0 && removedLocalIds.has(Number(localId))) continue;
+    if (formulaReferencesSheet(decodeEntities2(match[2] ?? ""), sheetName)) return true;
+  }
+  return false;
+}
+__name(definedNamesReferenceSheet, "definedNamesReferenceSheet");
+function readAttribute(elementXml, name) {
+  return new RegExp(`(?:^|\\s)${escapeRegExp2(name)}="([^"]*)"`).exec(elementXml)?.[1];
+}
+__name(readAttribute, "readAttribute");
+function escapeRegExp2(input) {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+__name(escapeRegExp2, "escapeRegExp");
+var NAMED_ENTITIES = {
+  quot: '"',
+  apos: "'",
+  lt: "<",
+  gt: ">",
+  amp: "&"
+};
+function decodeEntities2(input) {
+  return input.replace(
+    /&(?:#x([0-9A-Fa-f]+)|#([0-9]+)|(quot|apos|lt|gt|amp));/g,
+    (match, hex, dec, named) => {
+      if (named !== void 0) return NAMED_ENTITIES[named] ?? match;
+      const code = hex !== void 0 ? Number.parseInt(hex, 16) : Number(dec);
+      return code <= 1114111 ? String.fromCodePoint(code) : match;
+    }
+  );
+}
+__name(decodeEntities2, "decodeEntities");
+function decodeAttribute(input) {
+  return decodeEntities2(input);
+}
+__name(decodeAttribute, "decodeAttribute");
+function escapeXmlText5(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+__name(escapeXmlText5, "escapeXmlText");
+function escapeXmlAttribute3(input) {
+  return escapeXmlText5(input).replaceAll('"', "&quot;").replaceAll("'", "&apos;");
+}
+__name(escapeXmlAttribute3, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-drawing-edit.ts
+var VisualEditError = class extends Error {
+  static {
+    __name(this, "VisualEditError");
+  }
+};
+var ANCHOR_PATTERN = /<([A-Za-z_][\w.-]*:)?(twoCellAnchor|oneCellAnchor|absoluteAnchor)\b[\s\S]*?<\/\1\2>/g;
+var ATTRIBUTE_PATTERN = /\s[\w:.-]+="([^"]*)"/g;
+var CHART_OWNED_RELATIONSHIP_TYPES = /\/(?:chartStyle|chartColorStyle|package|oleObject|theme|themeOverride|chartUserShapes|image|externalLink)$/;
+var CHART_OWNED_PATHS = /^xl\/(?:charts|media|embeddings|theme|drawings|externalLinks|oleObjects)\//;
+async function applyVisualEdits(pkg, edits, touchedEntries) {
+  const byPath = /* @__PURE__ */ new Map();
+  for (const edit of edits) {
+    const group2 = byPath.get(edit.drawingPath) ?? [];
+    group2.push(edit);
+    byPath.set(edit.drawingPath, group2);
+  }
+  for (const [drawingPath, group2] of byPath) {
+    if (!await pkg.has(drawingPath)) {
+      throw new VisualEditError(`Workbook is missing ${drawingPath}.`);
+    }
+    let xml = await pkg.readText(drawingPath);
+    const ordered = [...group2].sort((left, right) => right.drawingIndex - left.drawingIndex);
+    const seen = /* @__PURE__ */ new Set();
+    const removedRelationships = [];
+    for (const edit of ordered) {
+      if (seen.has(edit.drawingIndex)) {
+        throw new VisualEditError("Duplicate edits target the same drawing anchor.");
+      }
+      seen.add(edit.drawingIndex);
+      xml = applyOneEdit(xml, edit, removedRelationships);
+    }
+    if (removedRelationships.length > 0) {
+      await cleanupRemovedAnchorRelationships(
+        pkg,
+        drawingPath,
+        xml,
+        removedRelationships,
+        touchedEntries
+      );
+    }
+    pkg.write(drawingPath, xml);
+    touchedEntries.add(drawingPath);
+    await cleanupEmptyDrawingHookup(pkg, drawingPath, xml, touchedEntries);
+  }
+}
+__name(applyVisualEdits, "applyVisualEdits");
+async function cleanupRemovedAnchorRelationships(pkg, drawingPath, remainingDrawingXml, removedRelationships, touchedEntries) {
+  const relsPath = relsPathFor2(drawingPath);
+  if (!await pkg.has(relsPath)) {
+    throw new VisualEditError("The drawing is missing its relationships part.");
+  }
+  let relsXml = await pkg.readText(relsPath);
+  const roots = [];
+  const kindsById = /* @__PURE__ */ new Map();
+  for (const removed of removedRelationships) {
+    const previous = kindsById.get(removed.id);
+    if (previous !== void 0 && previous !== removed.kind) {
+      throw new VisualEditError("One drawing relationship is used by incompatible visuals.");
+    }
+    kindsById.set(removed.id, removed.kind);
+  }
+  for (const [relId, kind] of kindsById) {
+    if (xmlHasAttributeValue(remainingDrawingXml, relId)) continue;
+    const relationship = parseRelationships(relsXml).find((entry) => entry.id === relId);
+    if (!relationship) {
+      throw new VisualEditError(`The deleted ${kind} has no drawing relationship.`);
+    }
+    const expectedType = kind === "chart" ? /\/chart$/ : /\/image$/;
+    if (!expectedType.test(relationship.type)) {
+      throw new VisualEditError(
+        `The deleted ${kind} uses an unsupported drawing relationship (${relationship.type}).`
+      );
+    }
+    const withoutRelationship = removeRelationshipById(relsXml, relId);
+    if (withoutRelationship === relsXml) {
+      throw new VisualEditError(`The deleted ${kind} relationship could not be removed safely.`);
+    }
+    relsXml = withoutRelationship;
+    if (relationship.external) continue;
+    const targetPath = resolvePackageTarget(drawingPath, relationship.target);
+    if (kind === "chart") {
+      if (!/^xl\/charts\/[^/]+\.xml$/.test(targetPath) || !await pkg.has(targetPath)) {
+        throw new VisualEditError("The deleted chart relationship has an invalid package target.");
+      }
+      roots.push({ path: targetPath, recursive: true });
+    } else if (/^xl\/media\//.test(targetPath) && await pkg.has(targetPath)) {
+      roots.push({ path: targetPath, recursive: false });
+    }
+  }
+  const removedParts = await collectUnreferencedOwnedParts(
+    pkg,
+    roots,
+    /* @__PURE__ */ new Map([[relsPath, relsXml]])
+  );
+  const contentTypesPath = "[Content_Types].xml";
+  let contentTypes = removedParts.size === 0 ? "" : await pkg.readText(contentTypesPath);
+  const originalContentTypes = contentTypes;
+  for (const path of removedParts) contentTypes = removePartOverride(contentTypes, path);
+  pkg.write(relsPath, relsXml);
+  touchedEntries.add(relsPath);
+  for (const path of removedParts) pkg.remove(path);
+  if (contentTypes !== originalContentTypes) {
+    pkg.write(contentTypesPath, contentTypes);
+    touchedEntries.add(contentTypesPath);
+  }
+}
+__name(cleanupRemovedAnchorRelationships, "cleanupRemovedAnchorRelationships");
+async function collectUnreferencedOwnedParts(pkg, roots, relationshipOverrides = /* @__PURE__ */ new Map()) {
+  const closure = /* @__PURE__ */ new Set();
+  const queue = [...roots];
+  while (queue.length > 0) {
+    const current = queue.pop();
+    if (closure.has(current.path) || !await pkg.has(current.path)) continue;
+    closure.add(current.path);
+    const childRelsPath = relsPathFor2(current.path);
+    if (!await pkg.has(childRelsPath)) continue;
+    closure.add(childRelsPath);
+    if (!current.recursive) continue;
+    const childRelationships = relationshipOverrides.get(childRelsPath) ?? await pkg.readText(childRelsPath);
+    for (const relationship of parseRelationships(childRelationships)) {
+      if (relationship.external) continue;
+      const targetPath = resolvePackageTarget(current.path, relationship.target);
+      if (!CHART_OWNED_RELATIONSHIP_TYPES.test(relationship.type) || !CHART_OWNED_PATHS.test(targetPath)) {
+        throw new VisualEditError(
+          `The chart carries an unsupported relationship (${relationship.type}) \u2014 deletion aborted.`
+        );
+      }
+      queue.push({ path: targetPath, recursive: true });
+    }
+  }
+  const retained = /* @__PURE__ */ new Set();
+  const packagePaths = await pkg.paths();
+  for (const relsPath of packagePaths) {
+    if (!relsPath.endsWith(".rels") || closure.has(relsPath)) continue;
+    const owner = partPathForRels(relsPath);
+    const relationships = relationshipOverrides.get(relsPath) ?? await pkg.readText(relsPath);
+    for (const relationship of parseRelationships(relationships)) {
+      if (relationship.external) continue;
+      const target = resolvePackageTarget(owner, relationship.target);
+      if (closure.has(target)) retained.add(target);
+    }
+  }
+  const propagate = [...retained];
+  while (propagate.length > 0) {
+    const source = propagate.pop();
+    const childRelsPath = relsPathFor2(source);
+    if (!closure.has(childRelsPath) || retained.has(childRelsPath)) continue;
+    retained.add(childRelsPath);
+    const childRelationships = relationshipOverrides.get(childRelsPath) ?? await pkg.readText(childRelsPath);
+    for (const relationship of parseRelationships(childRelationships)) {
+      if (relationship.external) continue;
+      const target = resolvePackageTarget(source, relationship.target);
+      if (closure.has(target) && !retained.has(target)) {
+        retained.add(target);
+        propagate.push(target);
+      }
+    }
+  }
+  return new Set([...closure].filter((path) => !retained.has(path)));
+}
+__name(collectUnreferencedOwnedParts, "collectUnreferencedOwnedParts");
+async function cleanupEmptyDrawingHookup(pkg, drawingPath, drawingXml, touchedEntries) {
+  const inner = /<(?:[A-Za-z_][\w.-]*:)?wsDr\b[^>]*>([\s\S]*)<\/(?:[A-Za-z_][\w.-]*:)?wsDr>/.exec(
+    drawingXml
+  )?.[1];
+  if (inner === void 0 || inner.trim() !== "") return;
+  const drawingRelsPath = relsPathFor2(drawingPath);
+  if (await pkg.has(drawingRelsPath) && /<Relationship\b/.test(await pkg.readText(drawingRelsPath))) {
+    return;
+  }
+  const incoming = [];
+  for (const candidateRelsPath of await pkg.paths()) {
+    if (!candidateRelsPath.endsWith(".rels") || candidateRelsPath === drawingRelsPath) continue;
+    const owner2 = partPathForRels(candidateRelsPath);
+    for (const relationship2 of parseRelationships(await pkg.readText(candidateRelsPath))) {
+      if (!relationship2.external && resolvePackageTarget(owner2, relationship2.target) === drawingPath) {
+        incoming.push({ owner: owner2, relsPath: candidateRelsPath, relationship: relationship2 });
+      }
+    }
+  }
+  if (incoming.length !== 1) return;
+  const incomingReference = incoming[0];
+  if (incomingReference === void 0) return;
+  const { owner, relsPath, relationship } = incomingReference;
+  if (!/^xl\/worksheets\/[^/]+\.xml$/.test(owner) || !/\/drawing$/.test(relationship.type) || relationship.id === void 0 || !await pkg.has(owner)) {
+    return;
+  }
+  const worksheetXml = await pkg.readText(owner);
+  const hookups = [...worksheetXml.matchAll(/<(?:[\w.-]+:)?drawing\b[^>]*\/>/g)].filter(
+    (match) => xmlHasAttributeValue(match[0], relationship.id)
+  );
+  if (hookups.length !== 1 || hookups[0]?.index === void 0) return;
+  const hookup = hookups[0];
+  const withoutHookup = worksheetXml.slice(0, hookup.index) + worksheetXml.slice(hookup.index + hookup[0].length);
+  if (xmlHasAttributeValue(withoutHookup, relationship.id)) return;
+  const worksheetRels = await pkg.readText(relsPath);
+  const withoutRelationship = removeRelationshipById(worksheetRels, relationship.id);
+  if (withoutRelationship === worksheetRels) return;
+  const contentTypesPath = "[Content_Types].xml";
+  const contentTypes = await pkg.readText(contentTypesPath);
+  const stripped = removePartOverride(contentTypes, drawingPath);
+  pkg.write(owner, withoutHookup);
+  touchedEntries.add(owner);
+  if (/<Relationship\b/.test(withoutRelationship)) {
+    pkg.write(relsPath, withoutRelationship);
+    touchedEntries.add(relsPath);
+  } else {
+    pkg.remove(relsPath);
+  }
+  pkg.remove(drawingPath);
+  if (await pkg.has(drawingRelsPath)) pkg.remove(drawingRelsPath);
+  if (stripped !== contentTypes) {
+    pkg.write(contentTypesPath, stripped);
+    touchedEntries.add(contentTypesPath);
+  }
+}
+__name(cleanupEmptyDrawingHookup, "cleanupEmptyDrawingHookup");
+function resolvePackageTarget(fromPart, target) {
+  return target.startsWith("/") ? target.slice(1) : resolveRelTarget(fromPart, target);
+}
+__name(resolvePackageTarget, "resolvePackageTarget");
+function xmlHasAttributeValue(xml, value) {
+  for (const match of xml.matchAll(ATTRIBUTE_PATTERN)) {
+    if (match[1] === value) return true;
+  }
+  return false;
+}
+__name(xmlHasAttributeValue, "xmlHasAttributeValue");
+var escapeRegExp3 = /* @__PURE__ */ __name((value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "escapeRegExp");
+function applyOneEdit(xml, edit, removedRelationships) {
+  const anchors = [...xml.matchAll(ANCHOR_PATTERN)];
+  const match = anchors[edit.drawingIndex];
+  if (!match) {
+    throw new VisualEditError(
+      `Drawing anchor #${edit.drawingIndex} was not found \u2014 the file may have changed.`
+    );
+  }
+  const anchorXml = match[0];
+  const p = match[1] ?? "";
+  const kind = match[2];
+  if (edit.remove) {
+    if (anchorXml.includes(`<${p}graphicFrame`)) {
+      const relId = /<(?:[A-Za-z_][\w.-]*:)?chart\b[^>]*\br:id="([^"]+)"/.exec(anchorXml)?.[1];
+      if (!relId) {
+        throw new VisualEditError(
+          "This graphic frame is not a chart \u2014 deleting it is not supported."
+        );
+      }
+      removedRelationships.push({ id: relId, kind: "chart" });
+    } else if (anchorXml.includes(`<${p}pic`)) {
+      for (const match2 of anchorXml.matchAll(/\s[\w.-]+:(?:embed|link)="([^"]+)"/g)) {
+        const id = match2[1];
+        if (id !== void 0) removedRelationships.push({ id, kind: "image" });
+      }
+    }
+    return xml.slice(0, match.index) + xml.slice(match.index + anchorXml.length);
+  }
+  const anchor = edit.anchor;
+  if (!anchor) throw new VisualEditError("A visual edit needs a removal or a new anchor.");
+  if (kind === "absoluteAnchor") {
+    throw new VisualEditError("This visual uses an absolute anchor \u2014 moving it is not supported.");
+  }
+  const pre = escapeRegExp3(p);
+  const from = `<${p}from><${p}col>${anchor.fromColumn}</${p}col><${p}colOff>${anchor.fromColumnOffset}</${p}colOff><${p}row>${anchor.fromRow}</${p}row><${p}rowOff>${anchor.fromRowOffset}</${p}rowOff></${p}from>`;
+  let patched = anchorXml.replace(new RegExp(`<${pre}from>[\\s\\S]*?</${pre}from>`), () => from);
+  if (patched === anchorXml && !anchorXml.includes(`<${p}from>`)) {
+    throw new VisualEditError("Drawing anchor has no from marker \u2014 moving it is not supported.");
+  }
+  if (kind === "twoCellAnchor") {
+    const to = `<${p}to><${p}col>${anchor.toColumn}</${p}col><${p}colOff>${anchor.toColumnOffset}</${p}colOff><${p}row>${anchor.toRow}</${p}row><${p}rowOff>${anchor.toRowOffset}</${p}rowOff></${p}to>`;
+    const withTo = patched.replace(new RegExp(`<${pre}to>[\\s\\S]*?</${pre}to>`), () => to);
+    if (withTo === patched && !patched.includes(`<${p}to>`)) {
+      throw new VisualEditError("Drawing anchor has no to marker \u2014 moving it is not supported.");
+    }
+    patched = withTo;
+  }
+  if (edit.frameSize) {
+    const ext = `<a:ext cx="${edit.frameSize.width}" cy="${edit.frameSize.height}"/>`;
+    const withExt = patched.replace(
+      /(<a:xfrm\b[^>]*>[\s\S]*?)<a:ext\b[^>]*\/>/,
+      (_, head) => `${head}${ext}`
+    );
+    if (withExt === patched && !/<a:xfrm\b[^>]*>[\s\S]*?<a:ext\b/.test(patched)) {
+      throw new VisualEditError(
+        "Drawing anchor has no frame extent \u2014 resizing it is not supported."
+      );
+    }
+    patched = withExt;
+  }
+  return xml.slice(0, match.index) + patched + xml.slice(match.index + anchorXml.length);
+}
+__name(applyOneEdit, "applyOneEdit");
+
+// vendor/genoffice/packages/xlsx-gateway/src/domain/cell-address.ts
+function columnLabel(column) {
+  if (!Number.isInteger(column) || column < 0) {
+    throw new RangeError(`Invalid column index: ${column}`);
+  }
+  let label = "";
+  let remaining = column + 1;
+  while (remaining > 0) {
+    remaining -= 1;
+    label = String.fromCharCode(65 + remaining % 26) + label;
+    remaining = Math.floor(remaining / 26);
+  }
+  return label;
+}
+__name(columnLabel, "columnLabel");
+function columnIndex(label) {
+  const normalized = label.trim().toUpperCase();
+  if (!/^[A-Z]+$/.test(normalized)) throw new Error(`Invalid column label: ${label}`);
+  let column = 0;
+  for (const character of normalized) {
+    column = column * 26 + character.charCodeAt(0) - 64;
+  }
+  return column - 1;
+}
+__name(columnIndex, "columnIndex");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-table-add.ts
+var TableAddError = class extends Error {
+  static {
+    __name(this, "TableAddError");
+  }
+};
+var TABLE_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table";
+var TABLE_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml";
+var DEFAULT_TABLE_STYLE = "TableStyleMedium2";
+async function applyTableAdditions(pkg, additions, touchedEntries) {
+  if (additions.length === 0) return;
+  const reserved = await collectExistingTableNames(pkg);
+  let nextId = await maxExistingTableId(pkg);
+  for (const addition of additions) {
+    validateAddition(addition);
+    const lowerName = addition.name.toLowerCase();
+    if (reserved.has(lowerName)) {
+      throw new TableAddError(`Table name "${addition.name}" is already taken in this workbook.`);
+    }
+    reserved.add(lowerName);
+    await assertNameNotDefined(pkg, addition.name);
+    await assertNoTableOverlap(pkg, addition);
+    assertNoSheetConflicts(addition, await pkg.readText(addition.worksheetPath));
+    nextId += 1;
+    const tablePath = await allocatePartPath(pkg, "xl/tables/table", ".xml");
+    pkg.add(tablePath, buildTableXml2(nextId, addition));
+    touchedEntries.add(tablePath);
+    await registerContentTypeOverride(pkg, tablePath, TABLE_CONTENT_TYPE, touchedEntries);
+    const relId = await appendRelationship2(
+      pkg,
+      relsPathFor2(addition.worksheetPath),
+      TABLE_REL_TYPE,
+      relativeTarget(addition.worksheetPath, tablePath)
+    );
+    touchedEntries.add(relsPathFor2(addition.worksheetPath));
+    pkg.write(
+      addition.worksheetPath,
+      appendTablePart(await pkg.readText(addition.worksheetPath), relId)
+    );
+    touchedEntries.add(addition.worksheetPath);
+  }
+}
+__name(applyTableAdditions, "applyTableAdditions");
+function validateAddition(addition) {
+  const { area, columnNames } = addition;
+  if (area.endRow <= area.startRow) {
+    throw new TableAddError(
+      `Table "${addition.name}" needs a header row plus at least one data row.`
+    );
+  }
+  const width = area.endColumn - area.startColumn + 1;
+  if (width !== columnNames.length) {
+    throw new TableAddError(
+      `Table "${addition.name}" spans ${width} columns but has ${columnNames.length} column names.`
+    );
+  }
+  const seen = /* @__PURE__ */ new Set();
+  for (const name of columnNames) {
+    const normalized = name.trim().toLowerCase();
+    if (normalized.length === 0) {
+      throw new TableAddError(`Table "${addition.name}" has a blank column name.`);
+    }
+    if (seen.has(normalized)) {
+      throw new TableAddError(`Table "${addition.name}" has duplicate column name "${name}".`);
+    }
+    seen.add(normalized);
+  }
+}
+__name(validateAddition, "validateAddition");
+async function collectExistingTableNames(pkg) {
+  const names2 = /* @__PURE__ */ new Set();
+  for (const path of await tablePartPaths(pkg)) {
+    const xml = await pkg.readText(path);
+    for (const attribute of ["name", "displayName"]) {
+      const value = new RegExp(`<table\\b[^>]*\\b${attribute}="([^"]+)"`).exec(xml)?.[1];
+      if (value) names2.add(value.toLowerCase());
+    }
+  }
+  return names2;
+}
+__name(collectExistingTableNames, "collectExistingTableNames");
+async function maxExistingTableId(pkg) {
+  let max = 0;
+  for (const path of await tablePartPaths(pkg)) {
+    const xml = await pkg.readText(path);
+    const id = Number(/<table\b[^>]*\bid="(\d+)"/.exec(xml)?.[1] ?? 0);
+    if (Number.isFinite(id)) max = Math.max(max, id);
+  }
+  return max;
+}
+__name(maxExistingTableId, "maxExistingTableId");
+async function tablePartPaths(pkg) {
+  return (await pkg.paths()).filter((path) => /^xl\/tables\/[^/]+\.xml$/.test(path));
+}
+__name(tablePartPaths, "tablePartPaths");
+async function assertNameNotDefined(pkg, name) {
+  const workbookXml = await pkg.readText("xl/workbook.xml");
+  for (const match of workbookXml.matchAll(/<definedName\b[^>]*\bname="([^"]+)"/g)) {
+    if (match[1]?.toLowerCase() === name.toLowerCase()) {
+      throw new TableAddError(`Table name "${name}" collides with a defined name in the workbook.`);
+    }
+  }
+}
+__name(assertNameNotDefined, "assertNameNotDefined");
+async function assertNoTableOverlap(pkg, addition) {
+  const relsPath = relsPathFor2(addition.worksheetPath);
+  if (!await pkg.has(relsPath)) return;
+  const relsXml = await pkg.readText(relsPath);
+  for (const match of relsXml.matchAll(/<Relationship\b[^>]*\/?>/g)) {
+    const tag = match[0];
+    if (!tag.includes(`Type="${TABLE_REL_TYPE}"`)) continue;
+    const target = /\bTarget="([^"]+)"/.exec(tag)?.[1];
+    if (!target) continue;
+    const tablePath = resolveTarget2(addition.worksheetPath, target);
+    if (!await pkg.has(tablePath)) continue;
+    const ref = /<table\b[^>]*\bref="([^"]+)"/.exec(await pkg.readText(tablePath))?.[1];
+    if (ref && areasOverlap2(addition.area, parseRef(ref))) {
+      throw new TableAddError(`Table "${addition.name}" overlaps an existing table (${ref}).`);
+    }
+  }
+}
+__name(assertNoTableOverlap, "assertNoTableOverlap");
+function assertNoSheetConflicts(addition, worksheetXml) {
+  const autoFilterRef = /<autoFilter\b[^>]*\bref="([^"]+)"/.exec(worksheetXml)?.[1];
+  if (autoFilterRef && areasOverlap2(addition.area, parseRef(autoFilterRef))) {
+    throw new TableAddError(
+      `Table "${addition.name}" overlaps the sheet auto-filter (${autoFilterRef}) \u2014 clear it first.`
+    );
+  }
+  for (const match of worksheetXml.matchAll(/<mergeCell\b[^>]*\bref="([^"]+)"/g)) {
+    const ref = match[1];
+    if (ref && areasOverlap2(addition.area, parseRef(ref))) {
+      throw new TableAddError(
+        `Table "${addition.name}" overlaps merged cells (${ref}) \u2014 unmerge them first.`
+      );
+    }
+  }
+}
+__name(assertNoSheetConflicts, "assertNoSheetConflicts");
+function resolveTarget2(fromPart, target) {
+  const base = fromPart.split("/").slice(0, -1);
+  for (const segment of target.split("/")) {
+    if (segment === "..") base.pop();
+    else if (segment !== "." && segment !== "") base.push(segment);
+  }
+  return base.join("/");
+}
+__name(resolveTarget2, "resolveTarget");
+function buildTableXml2(id, addition) {
+  const ref = areaToRef(addition.area);
+  const name = escapeAttribute(addition.name);
+  const columns = addition.columnNames.map(
+    (columnName2, index2) => `<tableColumn id="${index2 + 1}" name="${escapeAttribute(columnName2)}"/>`
+  ).join("");
+  const style = escapeAttribute(addition.style ?? DEFAULT_TABLE_STYLE);
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="${id}" name="${name}" displayName="${name}" ref="${ref}" totalsRowShown="0"><autoFilter ref="${ref}"/><tableColumns count="${addition.columnNames.length}">${columns}</tableColumns><tableStyleInfo name="${style}" showFirstColumn="0" showLastColumn="0" showRowStripes="${addition.bandedRows ? 1 : 0}" showColumnStripes="0"/></table>`;
+}
+__name(buildTableXml2, "buildTableXml");
+function appendTablePart(worksheetXml, relId) {
+  const xml = ensureRelationshipNamespace(worksheetXml);
+  const part = `<tablePart r:id="${relId}"/>`;
+  const existing = /<tableParts\b[^>]*count="(\d+)"[^>]*>/.exec(xml);
+  if (existing) {
+    const opener = existing[0];
+    const count = Number(existing[1] ?? 0) + 1;
+    const reopened = opener.replace(/count="\d+"/, `count="${count}"`);
+    return xml.replace(opener, reopened).replace("</tableParts>", `${part}</tableParts>`);
+  }
+  const element = `<tableParts count="1">${part}</tableParts>`;
+  const extLstAt = xml.search(/<extLst\b/);
+  if (extLstAt >= 0) return xml.slice(0, extLstAt) + element + xml.slice(extLstAt);
+  const closeAt = xml.lastIndexOf("</worksheet>");
+  if (closeAt < 0) throw new TableAddError("The worksheet part is malformed.");
+  return xml.slice(0, closeAt) + element + xml.slice(closeAt);
+}
+__name(appendTablePart, "appendTablePart");
+function areaToRef(area) {
+  return `${columnLabel(area.startColumn)}${area.startRow + 1}:${columnLabel(area.endColumn)}${area.endRow + 1}`;
+}
+__name(areaToRef, "areaToRef");
+function parseRef(ref) {
+  const match = /^([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?$/.exec(ref.replace(/\$/g, ""));
+  if (!match || !match[1] || !match[2]) {
+    throw new TableAddError(`Unsupported range reference "${ref}" in the workbook.`);
+  }
+  const startColumn = labelToIndex(match[1]);
+  const startRow = Number(match[2]) - 1;
+  const endColumn = match[3] ? labelToIndex(match[3]) : startColumn;
+  const endRow = match[4] ? Number(match[4]) - 1 : startRow;
+  return { startRow, startColumn, endRow, endColumn };
+}
+__name(parseRef, "parseRef");
+function labelToIndex(label) {
+  let index2 = 0;
+  for (const char of label) index2 = index2 * 26 + (char.charCodeAt(0) - 64);
+  return index2 - 1;
+}
+__name(labelToIndex, "labelToIndex");
+function areasOverlap2(a, b) {
+  return a.startRow <= b.endRow && b.startRow <= a.endRow && a.startColumn <= b.endColumn && b.startColumn <= a.endColumn;
+}
+__name(areasOverlap2, "areasOverlap");
+function escapeAttribute(input) {
+  return input.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+__name(escapeAttribute, "escapeAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/shared/short-date.ts
+var DEFAULT_SHORT_DATE = "m/d/yyyy";
+var systemShortDate = DEFAULT_SHORT_DATE;
+function getSystemShortDate() {
+  return systemShortDate;
+}
+__name(getSystemShortDate, "getSystemShortDate");
+function shortDateNumFmtId(pattern) {
+  const shortDate = getSystemShortDate();
+  if (pattern === shortDate) return 14;
+  if (pattern === `${shortDate} hh:mm` || pattern === `${shortDate} h:mm`) return 22;
+  return void 0;
+}
+__name(shortDateNumFmtId, "shortDateNumFmtId");
+
+// vendor/genoffice/packages/xlsx-gateway/src/domain/pivot-filters.ts
+function isValidPivotFilter(filter) {
+  if (typeof filter !== "object" || filter === null) return false;
+  const candidate = filter;
+  if (typeof candidate.field !== "number") return false;
+  if (candidate.kind === "label") {
+    return (candidate.op === "equal" || candidate.op === "contains" || candidate.op === "beginsWith") && typeof candidate.value === "string";
+  }
+  if (candidate.kind === "value") {
+    if (typeof candidate.dataField !== "number") return false;
+    if (candidate.op === "top") {
+      return typeof candidate.count === "number" && candidate.count >= 1;
+    }
+    if (candidate.op === "greaterThan") return typeof candidate.from === "number";
+    if (candidate.op === "between") {
+      return typeof candidate.from === "number" && typeof candidate.to === "number";
+    }
+    return false;
+  }
+  return false;
+}
+__name(isValidPivotFilter, "isValidPivotFilter");
+
+// vendor/genoffice/packages/xlsx-gateway/src/domain/pivot-formula.ts
+var PivotFormulaError = class extends Error {
+  static {
+    __name(this, "PivotFormulaError");
+  }
+};
+var BARE_NAME_CHAR = /[^\s+\-*/()']/;
+function tokenize(formula) {
+  const tokens = [];
+  let at = 0;
+  while (at < formula.length) {
+    const ch = formula[at];
+    if (/\s/.test(ch)) {
+      at += 1;
+      continue;
+    }
+    if ("+-*/".includes(ch)) {
+      tokens.push({ kind: "op", text: ch });
+      at += 1;
+      continue;
+    }
+    if (ch === "(") {
+      tokens.push({ kind: "lparen", text: ch });
+      at += 1;
+      continue;
+    }
+    if (ch === ")") {
+      tokens.push({ kind: "rparen", text: ch });
+      at += 1;
+      continue;
+    }
+    if (ch === "'") {
+      let name = "";
+      at += 1;
+      for (; ; ) {
+        if (at >= formula.length) throw new PivotFormulaError("Unclosed quote in the formula.");
+        if (formula[at] === "'") {
+          if (formula[at + 1] === "'") {
+            name += "'";
+            at += 2;
+            continue;
+          }
+          at += 1;
+          break;
+        }
+        name += formula[at];
+        at += 1;
+      }
+      if (name.trim() === "")
+        throw new PivotFormulaError("The formula references an empty field name.");
+      tokens.push({ kind: "field", text: name.trim() });
+      continue;
+    }
+    if (/[0-9.]/.test(ch)) {
+      const match = /^\d*\.?\d+(?:[eE][+-]?\d+)?/.exec(formula.slice(at));
+      if (match && Number.isFinite(Number(match[0]))) {
+        tokens.push({ kind: "num", text: match[0] });
+        at += match[0].length;
+        continue;
+      }
+      throw new PivotFormulaError(
+        `Cannot parse a number in the formula: "${formula.slice(at, at + 8)}"`
+      );
+    }
+    if (BARE_NAME_CHAR.test(ch)) {
+      let name = "";
+      while (at < formula.length && BARE_NAME_CHAR.test(formula[at])) {
+        name += formula[at];
+        at += 1;
+      }
+      tokens.push({ kind: "field", text: name });
+      continue;
+    }
+    throw new PivotFormulaError(`Unrecognized character in the formula: "${ch}"`);
+  }
+  return tokens;
+}
+__name(tokenize, "tokenize");
+function parsePivotFormula(formula, fieldNames) {
+  const canonicalByKey = /* @__PURE__ */ new Map();
+  for (const name of fieldNames) canonicalByKey.set(name.trim().toLowerCase(), name);
+  const tokens = tokenize(formula.replace(/^\s*=/, ""));
+  let at = 0;
+  const peek2 = /* @__PURE__ */ __name(() => tokens[at], "peek");
+  const next = /* @__PURE__ */ __name(() => {
+    const token = tokens[at];
+    if (!token) throw new PivotFormulaError("The formula ended unexpectedly.");
+    at += 1;
+    return token;
+  }, "next");
+  const parseExpr = /* @__PURE__ */ __name(() => {
+    let left = parseTerm();
+    while (peek2()?.kind === "op" && (peek2().text === "+" || peek2().text === "-")) {
+      const op = next().text;
+      left = { t: "bin", op, left, right: parseTerm() };
+    }
+    return left;
+  }, "parseExpr");
+  const parseTerm = /* @__PURE__ */ __name(() => {
+    let left = parseUnary();
+    while (peek2()?.kind === "op" && (peek2().text === "*" || peek2().text === "/")) {
+      const op = next().text;
+      left = { t: "bin", op, left, right: parseUnary() };
+    }
+    return left;
+  }, "parseTerm");
+  const parseUnary = /* @__PURE__ */ __name(() => {
+    if (peek2()?.kind === "op" && peek2().text === "-") {
+      next();
+      return { t: "neg", operand: parseUnary() };
+    }
+    if (peek2()?.kind === "op" && peek2().text === "+") {
+      next();
+      return parseUnary();
+    }
+    return parsePrimary();
+  }, "parseUnary");
+  const parsePrimary = /* @__PURE__ */ __name(() => {
+    const token = next();
+    if (token.kind === "num") return { t: "num", value: Number(token.text) };
+    if (token.kind === "field") {
+      const canonical = canonicalByKey.get(token.text.trim().toLowerCase());
+      if (canonical === void 0) {
+        throw new PivotFormulaError(`The formula references a nonexistent field "${token.text}".`);
+      }
+      return { t: "field", name: canonical };
+    }
+    if (token.kind === "lparen") {
+      const inner = parseExpr();
+      if (next().kind !== "rparen")
+        throw new PivotFormulaError("Unclosed parenthesis in the formula.");
+      return inner;
+    }
+    throw new PivotFormulaError(`Unexpected "${token.text}" in the formula.`);
+  }, "parsePrimary");
+  const ast = parseExpr();
+  if (at !== tokens.length) {
+    throw new PivotFormulaError(`The formula cannot be parsed further at "${tokens[at].text}".`);
+  }
+  return ast;
+}
+__name(parsePivotFormula, "parsePivotFormula");
+function formatPivotFormula(ast) {
+  switch (ast.t) {
+    case "num":
+      return String(ast.value);
+    case "field":
+      return `'${ast.name.replace(/'/g, "''")}'`;
+    case "neg":
+      return `(-${formatPivotFormula(ast.operand)})`;
+    case "bin":
+      return `(${formatPivotFormula(ast.left)}${ast.op}${formatPivotFormula(ast.right)})`;
+  }
+}
+__name(formatPivotFormula, "formatPivotFormula");
+
+// vendor/genoffice/packages/xlsx-gateway/src/domain/pivot-grouping.ts
+var MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
+];
+var EXCEL_EPOCH_UTC = Date.UTC(1899, 11, 30);
+var DAY_MS = 864e5;
+function parseDateParts(value) {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value < 0 || value > 2958465) return null;
+    const date2 = new Date(EXCEL_EPOCH_UTC + Math.floor(value) * DAY_MS);
+    return { year: date2.getUTCFullYear(), month: date2.getUTCMonth() + 1 };
+  }
+  const direct = /^\s*(\d{4})[-/](\d{1,2})(?:[-/](\d{1,2}))?/.exec(value);
+  if (direct) {
+    const year = Number(direct[1]);
+    const month = Number(direct[2]);
+    if (month >= 1 && month <= 12) return { year, month };
+    return null;
+  }
+  const parsed2 = Date.parse(value);
+  if (!Number.isFinite(parsed2)) return null;
+  const date = new Date(parsed2);
+  return { year: date.getFullYear(), month: date.getMonth() + 1 };
+}
+__name(parseDateParts, "parseDateParts");
+function formatBoundary(value) {
+  return String(Number(value.toFixed(10)));
+}
+__name(formatBoundary, "formatBoundary");
+function groupValue(grouping, value) {
+  if (value === null || value === void 0 || value === "") {
+    return { label: "", sort: null };
+  }
+  if (grouping.kind === "date") {
+    if (typeof value === "boolean") return { label: String(value), sort: null };
+    const parts = parseDateParts(value);
+    if (!parts) return { label: String(value), sort: null };
+    if (grouping.dateUnit === "year") {
+      return { label: String(parts.year), sort: parts.year };
+    }
+    if (grouping.dateUnit === "quarter") {
+      const quarter = Math.floor((parts.month - 1) / 3) + 1;
+      return { label: `Q${quarter}`, sort: quarter };
+    }
+    return { label: MONTH_LABELS[parts.month - 1], sort: parts.month };
+  }
+  const numeric = typeof value === "number" ? value : Number(String(value).trim());
+  if (!Number.isFinite(numeric)) return { label: String(value), sort: null };
+  const start = grouping.rangeStart ?? 0;
+  const step = grouping.rangeStep;
+  const bucketStart = start + Math.floor((numeric - start) / step) * step;
+  return {
+    label: `${formatBoundary(bucketStart)}-${formatBoundary(bucketStart + step)}`,
+    sort: bucketStart
+  };
+}
+__name(groupValue, "groupValue");
+function groupLabel(grouping, value) {
+  return groupValue(grouping, value).label;
+}
+__name(groupLabel, "groupLabel");
+function isValidGrouping(grouping) {
+  if (typeof grouping !== "object" || grouping === null) return false;
+  const candidate = grouping;
+  if (candidate.kind === "date") {
+    return candidate.dateUnit === "year" || candidate.dateUnit === "quarter" || candidate.dateUnit === "month";
+  }
+  if (candidate.kind === "range") {
+    return typeof candidate.rangeStep === "number" && Number.isFinite(candidate.rangeStep) && candidate.rangeStep > 0 && (candidate.rangeStart === void 0 || typeof candidate.rangeStart === "number" && Number.isFinite(candidate.rangeStart));
+  }
+  return false;
+}
+__name(isValidGrouping, "isValidGrouping");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-pivot-add.ts
+var PivotAddError = class extends Error {
+  static {
+    __name(this, "PivotAddError");
+  }
+};
+function rowLevelItemsOf(addition) {
+  return addition.rowLevelItems ?? [addition.rowItems];
+}
+__name(rowLevelItemsOf, "rowLevelItemsOf");
+function rowLinesOf(addition) {
+  return addition.rowLines ?? addition.rowItems.map((_, index2) => ({ t: "data", members: [index2] }));
+}
+__name(rowLinesOf, "rowLinesOf");
+function colFieldIndicesOf(addition) {
+  if (addition.columnFieldIndices !== void 0) return addition.columnFieldIndices;
+  return addition.columnFieldIndex === void 0 ? [] : [addition.columnFieldIndex];
+}
+__name(colFieldIndicesOf, "colFieldIndicesOf");
+function colLevelItemsOf(addition) {
+  if (addition.colLevelItems !== void 0) return addition.colLevelItems;
+  return addition.columnItems === void 0 ? [] : [addition.columnItems];
+}
+__name(colLevelItemsOf, "colLevelItemsOf");
+function colLinesOf(addition) {
+  return addition.colLines ?? (addition.columnItems ?? []).map((_, index2) => ({ t: "data", members: [index2] }));
+}
+__name(colLinesOf, "colLinesOf");
+function calcValueSpecsOf(addition) {
+  return addition.values.filter((value) => value.formula !== void 0);
+}
+__name(calcValueSpecsOf, "calcValueSpecsOf");
+var PIVOT_TABLE_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotTable";
+var PIVOT_CACHE_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition";
+var PIVOT_RECORDS_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheRecords";
+var PIVOT_TABLE_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml";
+var PIVOT_CACHE_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml";
+var PIVOT_RECORDS_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheRecords+xml";
+var MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+var REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+var AGG_CAPTIONS = {
+  sum: "Sum",
+  count: "Count",
+  average: "Average",
+  max: "Max",
+  min: "Min"
+};
+var AGG_SUBTOTALS = {
+  sum: null,
+  count: "count",
+  average: "average",
+  max: "max",
+  min: "min"
+};
+async function applyPivotAdditions(pkg, additions, workbookXml, touchedEntries) {
+  if (additions.length === 0) return workbookXml;
+  const reserved = await collectExistingPivotNames(pkg);
+  let nextCacheId = maxCacheId(workbookXml);
+  let patchedWorkbookXml = workbookXml;
+  for (const addition of additions) {
+    validateAddition2(addition);
+    const lowerName = addition.name.toLowerCase();
+    if (reserved.has(lowerName)) {
+      throw new PivotAddError(`Pivot name "${addition.name}" is already taken in this workbook.`);
+    }
+    reserved.add(lowerName);
+    nextCacheId += 1;
+    const sourceRows = await readSourceRows(pkg, addition);
+    const recordsXml = buildCacheRecordsXml(sourceRows, addition);
+    const recordCount = sourceRows.length;
+    const recordsPath = await allocatePartPath(pkg, "xl/pivotCache/pivotCacheRecords", ".xml");
+    pkg.add(recordsPath, recordsXml);
+    touchedEntries.add(recordsPath);
+    await registerContentTypeOverride(pkg, recordsPath, PIVOT_RECORDS_CONTENT_TYPE, touchedEntries);
+    const cachePath = await allocatePartPath(pkg, "xl/pivotCache/pivotCacheDefinition", ".xml");
+    const recordsRelId = await appendRelationship2(
+      pkg,
+      relsPathFor2(cachePath),
+      PIVOT_RECORDS_REL_TYPE,
+      relativeTarget(cachePath, recordsPath)
+    );
+    touchedEntries.add(relsPathFor2(cachePath));
+    pkg.add(cachePath, buildCacheDefinitionXml(recordsRelId, addition, recordCount));
+    touchedEntries.add(cachePath);
+    await registerContentTypeOverride(pkg, cachePath, PIVOT_CACHE_CONTENT_TYPE, touchedEntries);
+    const tablePath = await allocatePartPath(pkg, "xl/pivotTables/pivotTable", ".xml");
+    await appendRelationship2(
+      pkg,
+      relsPathFor2(tablePath),
+      PIVOT_CACHE_REL_TYPE,
+      relativeTarget(tablePath, cachePath)
+    );
+    touchedEntries.add(relsPathFor2(tablePath));
+    pkg.add(tablePath, buildPivotTableXml(nextCacheId, addition));
+    touchedEntries.add(tablePath);
+    await registerContentTypeOverride(pkg, tablePath, PIVOT_TABLE_CONTENT_TYPE, touchedEntries);
+    await appendRelationship2(
+      pkg,
+      relsPathFor2(addition.worksheetPath),
+      PIVOT_TABLE_REL_TYPE,
+      relativeTarget(addition.worksheetPath, tablePath)
+    );
+    touchedEntries.add(relsPathFor2(addition.worksheetPath));
+    const workbookRelId = await appendRelationship2(
+      pkg,
+      "xl/_rels/workbook.xml.rels",
+      PIVOT_CACHE_REL_TYPE,
+      relativeTarget("xl/workbook.xml", cachePath)
+    );
+    touchedEntries.add("xl/_rels/workbook.xml.rels");
+    patchedWorkbookXml = addWorkbookPivotCache(patchedWorkbookXml, nextCacheId, workbookRelId);
+  }
+  return patchedWorkbookXml;
+}
+__name(applyPivotAdditions, "applyPivotAdditions");
+async function readPivotSharedStrings(pkg) {
+  if (!await pkg.has("xl/sharedStrings.xml")) return [];
+  const xml = await pkg.readText("xl/sharedStrings.xml");
+  return [...xml.matchAll(/<si(?:\s[^>]*)?>([\s\S]*?)<\/si>/g)].map(
+    (m) => [...(m[1] ?? "").matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((tm) => decodePivotXmlEntities(tm[1] ?? "")).join("")
+  );
+}
+__name(readPivotSharedStrings, "readPivotSharedStrings");
+function decodePivotXmlEntities(s) {
+  return s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+}
+__name(decodePivotXmlEntities, "decodePivotXmlEntities");
+async function resolveSourcePath(pkg, sheetName) {
+  const workbookXml = await pkg.readText("xl/workbook.xml");
+  const relationshipId = parseSheetElements(workbookXml).find(
+    (element) => element.name === sheetName
+  )?.relationshipId;
+  if (relationshipId === void 0)
+    throw new PivotAddError(`Source sheet "${sheetName}" not found in workbook.xml.`);
+  const relXml = await pkg.readText("xl/_rels/workbook.xml.rels");
+  const relationshipXml = new RegExp(
+    `<Relationship\\b[^>]*\\bId="${relationshipId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`
+  ).exec(relXml)?.[0];
+  const relTarget2 = relationshipXml === void 0 ? void 0 : /\bTarget="([^"]+)"/.exec(relationshipXml)?.[1];
+  if (!relTarget2) throw new PivotAddError(`Relationship ${relationshipId} not found.`);
+  const target = relTarget2.replace(/^\/?xl\//, "");
+  return `xl/${target.replace(/^\.\//, "")}`;
+}
+__name(resolveSourcePath, "resolveSourcePath");
+async function readSourceRows(pkg, addition) {
+  let worksheetXml;
+  try {
+    const sourcePath = await resolveSourcePath(pkg, addition.sourceSheetName);
+    worksheetXml = await pkg.readText(sourcePath);
+  } catch {
+    return [];
+  }
+  const sharedStrings = await readPivotSharedStrings(pkg);
+  const { startRow, startColumn, endRow, endColumn } = addition.sourceArea;
+  const rows = [];
+  for (let r = startRow + 1; r <= endRow; r++) {
+    const row = [];
+    for (let c = startColumn; c <= endColumn; c++) {
+      const address = `${columnLabel(c)}${r + 1}`;
+      row.push(extractCellValue(worksheetXml, address, sharedStrings));
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+__name(readSourceRows, "readSourceRows");
+function extractCellValue(worksheetXml, address, sharedStrings) {
+  const cellPattern = new RegExp(
+    `<c\\b([^>]*)\\br="${address.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"([^>]*)(?:/>|>([\\s\\S]*?)</c>)`
+  );
+  const match = cellPattern.exec(worksheetXml);
+  if (!match) return null;
+  const attributes2 = `${match[1] ?? ""}${match[2] ?? ""}`;
+  const body = match[3] ?? "";
+  const type = /\bt="([^"]+)"/.exec(attributes2)?.[1];
+  if (type === "inlineStr") {
+    return decodePivotXmlEntities(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/.exec(body)?.[1] ?? "");
+  }
+  const rawValue = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body)?.[1];
+  if (rawValue === void 0) return null;
+  if (type === "s") {
+    const idx = Number(rawValue);
+    return sharedStrings[idx] ?? null;
+  }
+  if (type === "str") return decodePivotXmlEntities(rawValue);
+  if (type === "b") return rawValue === "1" ? 1 : 0;
+  const n = Number(rawValue);
+  return Number.isFinite(n) ? n : decodePivotXmlEntities(rawValue);
+}
+__name(extractCellValue, "extractCellValue");
+function buildCacheRecordsXml(sourceRows, addition) {
+  if (sourceRows.length === 0) {
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pivotCacheRecords xmlns="${MAIN_NS}" xmlns:r="${REL_NS}" count="0"/>`;
+  }
+  const colFieldIndices = colFieldIndicesOf(addition);
+  const dimensionFields = /* @__PURE__ */ new Set([...addition.rowFieldIndices, ...colFieldIndices]);
+  const sharedItemsByField = /* @__PURE__ */ new Map();
+  const registerLevelItems = /* @__PURE__ */ __name((fieldIndices, levelItems) => {
+    levelItems.forEach((items, level) => {
+      const fieldIdx = fieldIndices[level];
+      if (fieldIdx === void 0) return;
+      const lookup2 = /* @__PURE__ */ new Map();
+      items.forEach((item, i) => lookup2.set(String(item), i));
+      sharedItemsByField.set(fieldIdx, lookup2);
+    });
+  }, "registerLevelItems");
+  registerLevelItems(addition.rowFieldIndices, rowLevelItemsOf(addition));
+  registerLevelItems(colFieldIndices, colLevelItemsOf(addition));
+  const groupingByField = /* @__PURE__ */ new Map();
+  for (const { fieldIndex, ...grouping } of addition.groupings ?? []) {
+    groupingByField.set(fieldIndex, grouping);
+  }
+  const records = sourceRows.map((row) => {
+    const cells = row.map((value, colOffset) => {
+      if (dimensionFields.has(colOffset)) {
+        const lookup2 = sharedItemsByField.get(colOffset);
+        const grouping = groupingByField.get(colOffset);
+        const key = grouping ? groupLabel(grouping, value) : value === null ? "" : String(value);
+        const idx = lookup2.get(key);
+        if (idx === void 0) {
+          return "<m/>";
+        }
+        return `<x v="${idx}"/>`;
+      }
+      if (value === null || value === "") return "<m/>";
+      if (typeof value === "number") return `<n v="${value}"/>`;
+      const n = Number(value);
+      if (Number.isFinite(n)) return `<n v="${n}"/>`;
+      return `<s v="${escapeAttribute2(String(value))}"/>`;
+    });
+    return `<r>${cells.join("")}</r>`;
+  }).join("");
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pivotCacheRecords xmlns="${MAIN_NS}" xmlns:r="${REL_NS}" count="${sourceRows.length}">` + records + "</pivotCacheRecords>";
+}
+__name(buildCacheRecordsXml, "buildCacheRecordsXml");
+function validateAddition2(addition) {
+  const fieldCount = addition.fieldNames.length;
+  const colFieldIndices = colFieldIndicesOf(addition);
+  const inBounds = /* @__PURE__ */ __name((index2) => index2 >= 0 && index2 < fieldCount, "inBounds");
+  if (addition.rowFieldIndices.length === 0 || addition.rowFieldIndices.some((i) => !inBounds(i)) || colFieldIndices.some((i) => !inBounds(i)) || addition.values.some((value) => value.formula === void 0 && !inBounds(value.fieldIndex)) || (addition.pageFieldIndices ?? []).some((i) => !inBounds(i))) {
+    throw new PivotAddError(`Pivot "${addition.name}" references a field outside its source.`);
+  }
+  const calcNames = new Set(addition.fieldNames.map((name) => name.trim().toLowerCase()));
+  for (const value of calcValueSpecsOf(addition)) {
+    const calcName = (value.calcName ?? "").trim();
+    if (calcName === "" || calcNames.has(calcName.toLowerCase()) || value.agg !== "sum") {
+      throw new PivotAddError(`Pivot "${addition.name}" has an invalid calculated field.`);
+    }
+    calcNames.add(calcName.toLowerCase());
+    try {
+      parsePivotFormula(value.formula ?? "", addition.fieldNames);
+    } catch (error) {
+      throw new PivotAddError(
+        `Pivot "${addition.name}" has a bad calculated-field formula: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+  if (colFieldIndices.length > 0 && addition.values.length !== 1) {
+    throw new PivotAddError(
+      `Pivot "${addition.name}" with a column field supports exactly one values entry.`
+    );
+  }
+  const validateAxisLines = /* @__PURE__ */ __name((axis, levels2, levelItems, lines) => {
+    if (levels2 < 2) return;
+    if (!levelItems || levelItems.length !== levels2 || !lines) {
+      throw new PivotAddError(
+        `Pivot "${addition.name}" has ${levels2} ${axis} levels but no per-level items/lines.`
+      );
+    }
+    for (const line2 of lines) {
+      if (line2.members.length === 0 || line2.members.length > levels2 || line2.t === "data" && line2.members.length !== levels2 || line2.members.some(
+        (member, level) => member < 0 || member >= (levelItems[level]?.length ?? 0)
+      )) {
+        throw new PivotAddError(`Pivot "${addition.name}" has an inconsistent ${axis} line.`);
+      }
+    }
+  }, "validateAxisLines");
+  const levels = addition.rowFieldIndices.length;
+  validateAxisLines("row", levels, addition.rowLevelItems, addition.rowLines);
+  validateAxisLines("column", colFieldIndices.length, addition.colLevelItems, addition.colLines);
+  const dimensionFields = /* @__PURE__ */ new Set([...addition.rowFieldIndices, ...colFieldIndices]);
+  for (const { fieldIndex, ...grouping } of addition.groupings ?? []) {
+    if (!dimensionFields.has(fieldIndex) || !isValidGrouping(grouping)) {
+      throw new PivotAddError(`Pivot "${addition.name}" has an invalid field grouping.`);
+    }
+  }
+  const filteredFields = /* @__PURE__ */ new Set();
+  for (const filter of addition.filters ?? []) {
+    if (!isValidPivotFilter(filter) || !dimensionFields.has(filter.field) || filteredFields.has(filter.field) || filter.kind === "value" && (filter.dataField < 0 || filter.dataField >= addition.values.length)) {
+      throw new PivotAddError(`Pivot "${addition.name}" has an invalid pivot filter.`);
+    }
+    filteredFields.add(filter.field);
+  }
+  const validateHidden = /* @__PURE__ */ __name((hiddenPerLevel, levelItems) => (hiddenPerLevel ?? []).every(
+    (hidden, level) => hidden.every((member) => member >= 0 && member < (levelItems[level]?.length ?? 0))
+  ), "validateHidden");
+  if (!validateHidden(addition.rowHiddenItems, rowLevelItemsOf(addition)) || !validateHidden(addition.colHiddenItems, colLevelItemsOf(addition))) {
+    throw new PivotAddError(`Pivot "${addition.name}" has an out-of-range hidden item.`);
+  }
+  const sourceWidth = addition.sourceArea.endColumn - addition.sourceArea.startColumn + 1;
+  if (sourceWidth !== addition.fieldNames.length) {
+    throw new PivotAddError(
+      `Pivot "${addition.name}" has ${addition.fieldNames.length} field names for a ${sourceWidth}-column source.`
+    );
+  }
+}
+__name(validateAddition2, "validateAddition");
+async function collectExistingPivotNames(pkg) {
+  const names2 = /* @__PURE__ */ new Set();
+  for (const path of await pkg.paths()) {
+    if (!/^xl\/pivotTables\/[^/]+\.xml$/.test(path)) continue;
+    const name = /<pivotTableDefinition\b[^>]*\bname="([^"]+)"/.exec(await pkg.readText(path))?.[1];
+    if (name) names2.add(name.toLowerCase());
+  }
+  return names2;
+}
+__name(collectExistingPivotNames, "collectExistingPivotNames");
+function maxCacheId(workbookXml) {
+  let max = 0;
+  for (const match of workbookXml.matchAll(/<pivotCache\b[^>]*\bcacheId="(\d+)"/g)) {
+    max = Math.max(max, Number(match[1]));
+  }
+  return max;
+}
+__name(maxCacheId, "maxCacheId");
+function addWorkbookPivotCache(workbookXml, cacheId, relId) {
+  workbookXml = ensureRelationshipNamespace(workbookXml);
+  const entry = `<pivotCache cacheId="${cacheId}" r:id="${relId}"/>`;
+  if (workbookXml.includes("</pivotCaches>")) {
+    return workbookXml.replace("</pivotCaches>", `${entry}</pivotCaches>`);
+  }
+  const element = `<pivotCaches>${entry}</pivotCaches>`;
+  const extLstAt = workbookXml.search(/<extLst\b/);
+  if (extLstAt >= 0) {
+    return workbookXml.slice(0, extLstAt) + element + workbookXml.slice(extLstAt);
+  }
+  const closeAt = workbookXml.lastIndexOf("</workbook>");
+  if (closeAt < 0) throw new PivotAddError("xl/workbook.xml is malformed.");
+  return workbookXml.slice(0, closeAt) + element + workbookXml.slice(closeAt);
+}
+__name(addWorkbookPivotCache, "addWorkbookPivotCache");
+function buildCacheDefinitionXml(recordsRelId, addition, recordCount) {
+  const colFieldIndices = colFieldIndicesOf(addition);
+  const dimensionFieldSet = /* @__PURE__ */ new Set([
+    ...addition.rowFieldIndices,
+    ...colFieldIndices,
+    ...addition.pageFieldIndices ?? []
+  ]);
+  const levelItemsByField = /* @__PURE__ */ new Map();
+  addition.rowFieldIndices.forEach((fieldIdx, level) => {
+    levelItemsByField.set(fieldIdx, rowLevelItemsOf(addition)[level] ?? []);
+  });
+  colFieldIndices.forEach((fieldIdx, level) => {
+    levelItemsByField.set(fieldIdx, colLevelItemsOf(addition)[level] ?? []);
+  });
+  const fields = addition.fieldNames.map((name, index2) => {
+    if (!dimensionFieldSet.has(index2)) {
+      return `<cacheField name="${escapeAttribute2(name)}" numFmtId="0"><sharedItems/></cacheField>`;
+    }
+    const items = levelItemsByField.get(index2) ?? [];
+    const sharedItems = items.length === 0 ? "<sharedItems/>" : `<sharedItems count="${items.length}">` + items.map((item) => `<s v="${escapeAttribute2(item)}"/>`).join("") + "</sharedItems>";
+    return `<cacheField name="${escapeAttribute2(name)}" numFmtId="0">${sharedItems}</cacheField>`;
+  }).join("");
+  const calcFields = calcValueSpecsOf(addition).map(
+    (spec) => `<cacheField name="${escapeAttribute2(spec.calcName ?? "")}" formula="${escapeAttribute2(formatPivotFormula(parsePivotFormula(spec.formula ?? "", addition.fieldNames)))}" databaseField="0" numFmtId="0"/>`
+  ).join("");
+  const cacheFieldCount = addition.fieldNames.length + calcValueSpecsOf(addition).length;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pivotCacheDefinition xmlns="${MAIN_NS}" xmlns:r="${REL_NS}" r:id="${recordsRelId}" refreshedBy="genoffice" createdVersion="8" refreshedVersion="8" minRefreshableVersion="3" recordCount="${recordCount}"><cacheSource type="worksheet"><worksheetSource ref="${areaToRef2(addition.sourceArea)}" sheet="${escapeAttribute2(addition.sourceSheetName)}"/></cacheSource><cacheFields count="${cacheFieldCount}">${fields}${calcFields}</cacheFields></pivotCacheDefinition>`;
+}
+__name(buildCacheDefinitionXml, "buildCacheDefinitionXml");
+function buildPivotTableXml(cacheId, addition) {
+  const rowLevelItems = rowLevelItemsOf(addition);
+  const levels = addition.rowFieldIndices.length;
+  const colFieldIndices = colFieldIndicesOf(addition);
+  const colLevelItems = colLevelItemsOf(addition);
+  const colLevels = colFieldIndices.length;
+  const tabular = levels >= 2;
+  const levelByField = /* @__PURE__ */ new Map();
+  addition.rowFieldIndices.forEach((fieldIdx, level) => levelByField.set(fieldIdx, level));
+  const colLevelByField = /* @__PURE__ */ new Map();
+  colFieldIndices.forEach((fieldIdx, level) => colLevelByField.set(fieldIdx, level));
+  const pageFieldSet = new Set(addition.pageFieldIndices ?? []);
+  const pivotFields = addition.fieldNames.map((_, index2) => {
+    const level = levelByField.get(index2);
+    if (level !== void 0) {
+      return axisPivotField(
+        "axisRow",
+        (rowLevelItems[level] ?? []).length,
+        tabular,
+        new Set(addition.rowHiddenItems?.[level] ?? [])
+      );
+    }
+    const colLevel = colLevelByField.get(index2);
+    if (colLevel !== void 0) {
+      return axisPivotField(
+        "axisCol",
+        (colLevelItems[colLevel] ?? []).length,
+        tabular,
+        new Set(addition.colHiddenItems?.[colLevel] ?? [])
+      );
+    }
+    if (addition.values.some((value) => value.fieldIndex === index2)) {
+      return `<pivotField dataField="1" showAll="0"${tabular ? ' compact="0" outline="0"' : ""}/>`;
+    }
+    if (pageFieldSet.has(index2)) {
+      return '<pivotField axis="axisPage" showAll="0"><items count="1"><item t="default"/></items></pivotField>';
+    }
+    return `<pivotField showAll="0"${tabular ? ' compact="0" outline="0"' : ""}/>`;
+  }).join("");
+  const calcSpecs = calcValueSpecsOf(addition);
+  const calcPivotFields = calcSpecs.map(
+    () => `<pivotField dataField="1" showAll="0"${tabular ? ' compact="0" outline="0"' : ""}/>`
+  ).join("");
+  const pivotFieldCount = addition.fieldNames.length + calcSpecs.length;
+  const rowFieldsXml = `<rowFields count="${addition.rowFieldIndices.length}">` + addition.rowFieldIndices.map((idx) => `<field x="${idx}"/>`).join("") + "</rowFields>";
+  const rowItems = buildAxisItemsXml(rowLinesOf(addition), levels, "rowItems");
+  const pageFieldsXml = (addition.pageFieldIndices ?? []).length > 0 ? `<pageFields count="${(addition.pageFieldIndices ?? []).length}">` + (addition.pageFieldIndices ?? []).map((idx) => `<pageField fld="${idx}" hier="-1"/>`).join("") + "</pageFields>" : "";
+  let columnPart;
+  if (colFieldIndices.length > 0) {
+    columnPart = `<colFields count="${colFieldIndices.length}">` + colFieldIndices.map((index2) => `<field x="${index2}"/>`).join("") + "</colFields>" + buildAxisItemsXml(colLinesOf(addition), colLevels, "colItems");
+  } else if (addition.values.length > 1) {
+    columnPart = `<colFields count="1"><field x="-2"/></colFields><colItems count="${addition.values.length}">` + addition.values.map((_, index2) => index2 === 0 ? "<i><x/></i>" : `<i i="${index2}"><x v="${index2}"/></i>`).join("") + "</colItems>";
+  } else {
+    columnPart = '<colItems count="1"><i/></colItems>';
+  }
+  const dataFields = addition.values.map((value) => {
+    const isCalc = value.formula !== void 0;
+    const field = isCalc ? value.calcName ?? "" : addition.fieldNames[value.fieldIndex] ?? "";
+    const fld = isCalc ? addition.fieldNames.length + calcSpecs.indexOf(value) : value.fieldIndex;
+    const caption = `${AGG_CAPTIONS[value.agg]} of ${field}`;
+    const subtotal = isCalc ? null : AGG_SUBTOTALS[value.agg];
+    const numFmtId = value.numFmt ? resolveNumFmtId(value.numFmt) : value.showDataAs !== void 0 ? 10 : 0;
+    return `<dataField name="${escapeAttribute2(caption)}" fld="${fld}"${subtotal === null ? "" : ` subtotal="${subtotal}"`}${value.showDataAs === void 0 ? "" : ` showDataAs="${value.showDataAs}"`} baseField="0" baseItem="0"${numFmtId !== 0 ? ` numFmtId="${numFmtId}"` : ""}/>`;
+  }).join("");
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pivotTableDefinition xmlns="${MAIN_NS}" name="${escapeAttribute2(addition.name)}" cacheId="${cacheId}" applyNumberFormats="0" applyBorderFormats="0" applyFontFormats="0" applyPatternFormats="0" applyAlignmentFormats="0" applyWidthHeightFormats="1" dataCaption="Values" updatedVersion="8" createdVersion="8" minRefreshableVersion="3" useAutoFormatting="1" itemPrintTitles="1" ` + (tabular ? 'compact="0" compactData="0" outline="0" outlineData="0" ' : 'outline="1" outlineData="1" ') + `multipleFieldFilters="0"><location ref="${areaToRef2(addition.location)}" firstHeaderRow="1" firstDataRow="${Math.max(1, colLevels)}" firstDataCol="${levels}"/><pivotFields count="${pivotFieldCount}">${pivotFields}${calcPivotFields}</pivotFields>` + rowFieldsXml + rowItems + pageFieldsXml + columnPart + `<dataFields count="${addition.values.length}">${dataFields}</dataFields><pivotTableStyleInfo name="PivotStyleLight16" showRowHeaders="1" showColHeaders="1" showRowStripes="0" showColStripes="0" showLastColumn="1"/>` + buildFiltersXml(addition) + buildGroupingExtLst(addition) + "</pivotTableDefinition>";
+}
+__name(buildPivotTableXml, "buildPivotTableXml");
+function buildFiltersXml(addition) {
+  const filters = addition.filters ?? [];
+  if (filters.length === 0) return "";
+  const entries = filters.map((filter, index2) => {
+    const id = index2 + 1;
+    if (filter.kind === "label") {
+      const type = filter.op === "equal" ? "captionEqual" : filter.op === "contains" ? "captionContains" : "captionBeginsWith";
+      const wildcard = filter.op === "equal" ? filter.value : filter.op === "contains" ? `*${filter.value}*` : `${filter.value}*`;
+      return `<filter fld="${filter.field}" type="${type}" evalOrder="-1" id="${id}" stringValue1="${escapeAttribute2(filter.value)}"><autoFilter ref="A1"><filterColumn colId="0"><customFilters><customFilter val="${escapeAttribute2(wildcard)}"/></customFilters></filterColumn></autoFilter></filter>`;
+    }
+    if (filter.op === "top") {
+      return `<filter fld="${filter.field}" type="count" evalOrder="-1" id="${id}" iMeasureFld="${filter.dataField}"><autoFilter ref="A1"><filterColumn colId="0"><top10 val="${filter.count ?? 10}"/></filterColumn></autoFilter></filter>`;
+    }
+    if (filter.op === "greaterThan") {
+      return `<filter fld="${filter.field}" type="valueGreaterThan" evalOrder="-1" id="${id}" iMeasureFld="${filter.dataField}"><autoFilter ref="A1"><filterColumn colId="0"><customFilters><customFilter operator="greaterThan" val="${filter.from ?? 0}"/></customFilters></filterColumn></autoFilter></filter>`;
+    }
+    return `<filter fld="${filter.field}" type="valueBetween" evalOrder="-1" id="${id}" iMeasureFld="${filter.dataField}"><autoFilter ref="A1"><filterColumn colId="0"><customFilters and="1"><customFilter operator="greaterThanOrEqual" val="${filter.from ?? 0}"/><customFilter operator="lessThanOrEqual" val="${filter.to ?? 0}"/></customFilters></filterColumn></autoFilter></filter>`;
+  });
+  return `<filters count="${entries.length}">${entries.join("")}</filters>`;
+}
+__name(buildFiltersXml, "buildFiltersXml");
+function buildGroupingExtLst(addition) {
+  const groupings = addition.groupings ?? [];
+  if (groupings.length === 0) return "";
+  return `<extLst><ext uri="{AIO-PIVOT-GROUPINGS}" xmlns:aio="urn:aioffice:pivot"><aio:aioPivotGroupings v="${escapeAttribute2(JSON.stringify(groupings))}"/></ext></extLst>`;
+}
+__name(buildGroupingExtLst, "buildGroupingExtLst");
+function resolveNumFmtId(numFmt) {
+  const fmt = numFmt.trim();
+  const shortDate = shortDateNumFmtId(fmt);
+  if (shortDate !== void 0) return shortDate;
+  const knownFormats = {
+    "0": 1,
+    "0.00": 2,
+    "#,##0": 3,
+    "#,##0.00": 4,
+    "0%": 9,
+    "0.00%": 10,
+    "0.00E+00": 11,
+    "# ?/?": 12,
+    "# ??/??": 13,
+    "mm-dd-yy": 14,
+    "m/d/yyyy": 14,
+    "d-mmm-yy": 15,
+    "h:mm AM/PM": 18,
+    "h:mm:ss AM/PM": 19,
+    "h:mm": 20,
+    "h:mm:ss": 21,
+    "#,##0.00;(#,##0.00)": 4,
+    '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)': 164
+  };
+  return knownFormats[fmt] ?? 0;
+}
+__name(resolveNumFmtId, "resolveNumFmtId");
+function axisPivotField(axis, itemCount, tabular = false, hidden) {
+  const items = Array.from(
+    { length: itemCount },
+    (_, index2) => `<item x="${index2}"${hidden?.has(index2) ? ' h="1"' : ""}/>`
+  ).join("");
+  return `<pivotField axis="${axis}" showAll="0"${tabular ? ' compact="0" outline="0"' : ""}><items count="${itemCount + 1}">${items}<item t="default"/></items></pivotField>`;
+}
+__name(axisPivotField, "axisPivotField");
+function buildAxisItemsXml(lines, levels, tag) {
+  const parts = [];
+  let carried = new Array(levels).fill(null);
+  for (const line2 of lines) {
+    const fixed = line2.members.length;
+    let repeat = 0;
+    while (repeat < fixed - 1 && carried[repeat] !== null && carried[repeat] === line2.members[repeat]) {
+      repeat += 1;
+    }
+    const xs = line2.members.slice(repeat).map((member) => member === 0 ? "<x/>" : `<x v="${member}"/>`).join("");
+    parts.push(
+      `<i${repeat === 0 ? "" : ` r="${repeat}"`}${line2.t === "data" ? "" : ` t="${line2.t}"`}>${xs}</i>`
+    );
+    carried = [...line2.members];
+    while (carried.length < levels) carried.push(null);
+  }
+  parts.push('<i t="grand"><x/></i>');
+  return `<${tag} count="${lines.length + 1}">${parts.join("")}</${tag}>`;
+}
+__name(buildAxisItemsXml, "buildAxisItemsXml");
+function areaToRef2(area) {
+  return `${columnLabel(area.startColumn)}${area.startRow + 1}:${columnLabel(area.endColumn)}${area.endRow + 1}`;
+}
+__name(areaToRef2, "areaToRef");
+function escapeAttribute2(input) {
+  return input.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+__name(escapeAttribute2, "escapeAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-filter.ts
+var FilterEditError = class extends Error {
+  static {
+    __name(this, "FilterEditError");
+  }
+};
+var CUSTOM_OPERATORS = /* @__PURE__ */ new Set([
+  "equal",
+  "notEqual",
+  "greaterThan",
+  "greaterThanOrEqual",
+  "lessThan",
+  "lessThanOrEqual"
+]);
+function applyFilterState(worksheetXml, state) {
+  const element = state.filter === null ? "" : serializeAutoFilter(state.filter);
+  const existing = /<autoFilter\b[^>]*\/>|<autoFilter\b[^>]*>[\s\S]*?<\/autoFilter>/.exec(
+    worksheetXml
+  );
+  let xml = worksheetXml;
+  if (existing) {
+    xml = worksheetXml.slice(0, existing.index) + element + worksheetXml.slice(existing.index + existing[0].length);
+  } else if (element !== "") {
+    xml = insertAfterSheetData(worksheetXml, element);
+  }
+  return applyRowVisibility(xml, state.visibilityRange, new Set(state.hiddenRows));
+}
+__name(applyFilterState, "applyFilterState");
+function serializeAutoFilter(filter) {
+  const ref = toRef2(filter.range);
+  const columns = [...filter.columns].sort((left, right) => left.colId - right.colId).map(serializeFilterColumn).join("");
+  return columns === "" ? `<autoFilter ref="${ref}"/>` : `<autoFilter ref="${ref}">${columns}</autoFilter>`;
+}
+__name(serializeAutoFilter, "serializeAutoFilter");
+function serializeFilterColumn(column) {
+  const parts = [];
+  if (column.values !== void 0 || column.blank) {
+    const blank = column.blank ? ' blank="1"' : "";
+    const values = (column.values ?? []).map((value) => `<filter val="${escapeXmlAttribute4(value)}"/>`).join("");
+    parts.push(`<filters${blank}>${values}</filters>`);
+  }
+  if (column.customs) {
+    for (const custom of column.customs.filters) {
+      if (custom.operator !== void 0 && !CUSTOM_OPERATORS.has(custom.operator)) {
+        throw new FilterEditError(
+          `Filter condition "${custom.operator}" cannot be saved as XLSX yet.`
+        );
+      }
+    }
+    const and = column.customs.and ? ' and="1"' : "";
+    const filters = column.customs.filters.map((custom) => {
+      const operator = custom.operator === void 0 || custom.operator === "equal" ? "" : ` operator="${custom.operator}"`;
+      return `<customFilter${operator} val="${escapeXmlAttribute4(String(custom.val))}"/>`;
+    }).join("");
+    parts.push(`<customFilters${and}>${filters}</customFilters>`);
+  }
+  if (parts.length === 0) return "";
+  return `<filterColumn colId="${column.colId}">${parts.join("")}</filterColumn>`;
+}
+__name(serializeFilterColumn, "serializeFilterColumn");
+function insertAfterSheetData(worksheetXml, element) {
+  let insertAt = -1;
+  for (const pattern of [
+    /<sheetData\s*\/>|<\/sheetData>/,
+    /<sheetProtection\b[^>]*\/>/,
+    /<protectedRanges\b[^>]*\/>|<\/protectedRanges>/,
+    /<\/scenarios>/
+  ]) {
+    const match = pattern.exec(worksheetXml);
+    if (match) insertAt = Math.max(insertAt, match.index + match[0].length);
+  }
+  if (insertAt < 0) throw new FilterEditError("Worksheet has no sheetData element.");
+  return worksheetXml.slice(0, insertAt) + element + worksheetXml.slice(insertAt);
+}
+__name(insertAfterSheetData, "insertAfterSheetData");
+function applyRowVisibility(worksheetXml, range2, hiddenRows) {
+  const firstDataRow = range2.startRow + 1;
+  const seen = /* @__PURE__ */ new Set();
+  let xml = worksheetXml.replace(
+    /<row\b([^>]*?)(\/>|>)/g,
+    (full, attributes2, close) => {
+      const rowNumber = /(?:^|\s)r="([0-9]+)"/.exec(attributes2)?.[1];
+      if (rowNumber === void 0) return full;
+      const rowIndex = Number(rowNumber) - 1;
+      if (rowIndex < firstDataRow || rowIndex > range2.endRow) return full;
+      seen.add(rowIndex);
+      const withoutHidden = attributes2.replace(/\s*hidden="[^"]*"/, "");
+      const hidden = hiddenRows.has(rowIndex) ? ' hidden="1"' : "";
+      return `<row${withoutHidden}${hidden}${close}`;
+    }
+  );
+  const missing = [...hiddenRows].filter(
+    (rowIndex) => !seen.has(rowIndex) && rowIndex >= firstDataRow && rowIndex <= range2.endRow
+  ).sort((left, right) => left - right);
+  for (const rowIndex of missing) {
+    xml = insertEmptyHiddenRow(xml, rowIndex + 1);
+  }
+  return xml;
+}
+__name(applyRowVisibility, "applyRowVisibility");
+function insertEmptyHiddenRow(worksheetXml, rowNumber) {
+  const newRow = `<row r="${rowNumber}" hidden="1"/>`;
+  const rowStartPattern = /<row\b[^>]*?\br="([1-9][0-9]*)"/g;
+  let match;
+  while ((match = rowStartPattern.exec(worksheetXml)) !== null) {
+    if (Number(match[1]) > rowNumber) {
+      return worksheetXml.slice(0, match.index) + newRow + worksheetXml.slice(match.index);
+    }
+  }
+  if (worksheetXml.includes("</sheetData>")) {
+    return worksheetXml.replace("</sheetData>", () => `${newRow}</sheetData>`);
+  }
+  const emptySheetData = /<sheetData\s*\/>/;
+  if (emptySheetData.test(worksheetXml)) {
+    return worksheetXml.replace(emptySheetData, () => `<sheetData>${newRow}</sheetData>`);
+  }
+  throw new FilterEditError("Worksheet has no sheetData element.");
+}
+__name(insertEmptyHiddenRow, "insertEmptyHiddenRow");
+function toRef2(range2) {
+  return `${columnToLetters2(range2.startColumn)}${range2.startRow + 1}:${columnToLetters2(range2.endColumn)}${range2.endRow + 1}`;
+}
+__name(toRef2, "toRef");
+function columnToLetters2(column) {
+  let letters = "";
+  let remaining = column + 1;
+  while (remaining > 0) {
+    remaining -= 1;
+    letters = String.fromCharCode(65 + remaining % 26) + letters;
+    remaining = Math.floor(remaining / 26);
+  }
+  return letters;
+}
+__name(columnToLetters2, "columnToLetters");
+function escapeXmlAttribute4(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&apos;");
+}
+__name(escapeXmlAttribute4, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-cf.ts
+var CfEditError = class extends Error {
+  static {
+    __name(this, "CfEditError");
+  }
+};
+var OOXML_ICON_SETS = /* @__PURE__ */ new Set([
+  "3Arrows",
+  "3ArrowsGray",
+  "3Flags",
+  "3TrafficLights1",
+  "3TrafficLights2",
+  "3Signs",
+  "3Symbols",
+  "3Symbols2",
+  "4Arrows",
+  "4ArrowsGray",
+  "4RedToBlack",
+  "4Rating",
+  "4TrafficLights",
+  "5Arrows",
+  "5ArrowsGray",
+  "5Quarters",
+  "5Rating"
+]);
+var WORST_FIRST_ICON_SETS = /* @__PURE__ */ new Set(["4Rating", "5Rating"]);
+function applyCfRules(worksheetXml, rules, dxfs, options = {}) {
+  if (options.append) return appendCfRules(worksheetXml, rules, dxfs);
+  const preserved = [];
+  const xml = worksheetXml.replace(
+    /<conditionalFormatting\b[^>]*>[\s\S]*?<\/conditionalFormatting>|<conditionalFormatting\b[^>]*\/>/g,
+    (block) => {
+      if (!/<extLst\b/.test(block)) return "";
+      const sqref = /\bsqref="([^"]*)"/.exec(block)?.[1];
+      if (sqref === void 0) throw new CfEditError(linkedMessage(block));
+      preserved.push({ sqref, text: block, matched: false });
+      return block;
+    }
+  );
+  const used = /* @__PURE__ */ new Set();
+  for (const match of xml.matchAll(/<(?:\w+:)?cfRule\b[^>]*?\spriority="(\d+)"/g)) {
+    used.add(Number(match[1]));
+  }
+  let priority = 0;
+  const nextPriority = /* @__PURE__ */ __name(() => {
+    do
+      priority += 1;
+    while (used.has(priority));
+    return priority;
+  }, "nextPriority");
+  const sections = [];
+  for (const rule of rules) {
+    const sqref = rule.ranges.map(toRef3).join(" ");
+    const linked = preserved.find((block) => !block.matched && block.sqref === sqref);
+    if (linked) {
+      const original = /<cfRule\b[^>]*?\spriority="(\d+)"/.exec(linked.text);
+      const bare = linked.text.replace(/<extLst\b[\s\S]*?<\/extLst>/, "");
+      let probe;
+      try {
+        probe = original === null ? null : serializeRule(rule, Number(original[1]), dxfs);
+      } catch {
+        probe = null;
+      }
+      if (probe !== bare) throw new CfEditError(linkedMessage(linked.text));
+      linked.matched = true;
+      continue;
+    }
+    sections.push(serializeRule(rule, nextPriority(), dxfs));
+  }
+  const removed = preserved.find((block) => !block.matched);
+  if (removed) throw new CfEditError(linkedMessage(removed.text));
+  if (sections.length === 0) return xml;
+  const body = sections.join("");
+  const last = preserved[preserved.length - 1];
+  if (last) {
+    const end = xml.lastIndexOf(last.text) + last.text.length;
+    return xml.slice(0, end) + body + xml.slice(end);
+  }
+  return insertBeforeTail(xml, body);
+}
+__name(applyCfRules, "applyCfRules");
+var CF_BLOCK_RE = /<conditionalFormatting\b[^>]*?\/>|<conditionalFormatting\b[^>]*>[\s\S]*?<\/conditionalFormatting>/g;
+function appendCfRules(xml, rules, dxfs) {
+  if (rules.length === 0) return xml;
+  const used = /* @__PURE__ */ new Set();
+  for (const match of xml.matchAll(/<(?:\w+:)?cfRule\b[^>]*?\spriority="(\d+)"/g)) {
+    used.add(Number(match[1]));
+  }
+  let priority = 0;
+  const nextPriority = /* @__PURE__ */ __name(() => {
+    do
+      priority += 1;
+    while (used.has(priority));
+    return priority;
+  }, "nextPriority");
+  const body = rules.map((rule) => serializeRule(rule, nextPriority(), dxfs)).join("");
+  let end = -1;
+  for (const block of xml.matchAll(CF_BLOCK_RE)) end = block.index + block[0].length;
+  if (end !== -1) return xml.slice(0, end) + body + xml.slice(end);
+  return insertBeforeTail(xml, body);
+}
+__name(appendCfRules, "appendCfRules");
+function insertBeforeTail(xml, body) {
+  const anchor = /<dataValidations\b|<hyperlinks\b|<printOptions\b|<pageMargins\b|<pageSetup\b|<headerFooter\b|<rowBreaks\b|<colBreaks\b|<drawing\b|<legacyDrawing\b|<picture\b|<oleObjects\b|<tableParts\b|<extLst\b/.exec(
+    xml
+  );
+  if (anchor) return xml.slice(0, anchor.index) + body + xml.slice(anchor.index);
+  const end = xml.lastIndexOf("</worksheet>");
+  if (end === -1) throw new CfEditError("Worksheet has no closing element.");
+  return xml.slice(0, end) + body + xml.slice(end);
+}
+__name(insertBeforeTail, "insertBeforeTail");
+function linkedMessage(block) {
+  return block.includes('type="dataBar"') ? "This range has a data-bar extension format (x14) that cannot be modified yet" : "This range has extended conditional formatting (x14) that cannot be modified yet";
+}
+__name(linkedMessage, "linkedMessage");
+function serializeRule(wireRule, priority, dxfs) {
+  if (wireRule.ranges.length === 0) {
+    throw new CfEditError("A conditional-formatting rule has no ranges.");
+  }
+  const sqref = wireRule.ranges.map(toRef3).join(" ");
+  const anchor = `${columnToLetters3(wireRule.ranges[0]?.startColumn ?? 0)}${(wireRule.ranges[0]?.startRow ?? 0) + 1}`;
+  const cfRule = serializeCfRule(wireRule.rule, priority, wireRule.stopIfTrue, anchor, dxfs);
+  return `<conditionalFormatting sqref="${sqref}">${cfRule}</conditionalFormatting>`;
+}
+__name(serializeRule, "serializeRule");
+function serializeCfRule(rule, priority, stopIfTrue, anchor, dxfs) {
+  const type = rule.type;
+  if (type === "colorScale") return colorScaleRule(rule, priority, stopIfTrue);
+  if (type === "dataBar") return dataBarRule(rule, priority, stopIfTrue);
+  if (type === "iconSet") return iconSetRule(rule, priority, stopIfTrue);
+  if (type === "highlightCell") return highlightRule(rule, priority, stopIfTrue, anchor, dxfs);
+  throw new CfEditError(`Unsupported conditional-formatting rule type "${String(type)}".`);
+}
+__name(serializeCfRule, "serializeCfRule");
+function attributes(base, priority, stopIfTrue, dxfId) {
+  return `type="${base}"${dxfId === void 0 ? "" : ` dxfId="${dxfId}"`} priority="${priority}"` + (stopIfTrue ? ' stopIfTrue="1"' : "");
+}
+__name(attributes, "attributes");
+function highlightRule(rule, priority, stopIfTrue, anchor, dxfs) {
+  const dxfId = dxfs.internDxf(buildDxfXml(rule.style));
+  const subType = rule.subType;
+  const value = rule.value;
+  const operator = typeof rule.operator === "string" ? rule.operator : void 0;
+  const element = /* @__PURE__ */ __name((attrs, formulas = []) => {
+    const body = formulas.map((formula) => `<formula>${escapeXmlText6(formula)}</formula>`).join("");
+    return body === "" ? `<cfRule ${attrs}/>` : `<cfRule ${attrs}>${body}</cfRule>`;
+  }, "element");
+  switch (subType) {
+    case "number": {
+      if (operator === void 0) throw new CfEditError("A number rule needs an operator.");
+      const values = Array.isArray(value) ? value : [value];
+      const formulas = values.map((entry) => {
+        if (typeof entry !== "number" || !Number.isFinite(entry)) {
+          throw new CfEditError("A number rule needs finite values.");
+        }
+        return String(entry);
+      });
+      return element(
+        `${attributes("cellIs", priority, stopIfTrue, dxfId)} operator="${operator}"`,
+        formulas
+      );
+    }
+    case "text": {
+      const text = typeof value === "string" ? value : "";
+      const quoted = `"${text.replaceAll('"', '""')}"`;
+      switch (operator) {
+        case "containsText":
+          return element(
+            `${attributes("containsText", priority, stopIfTrue, dxfId)} operator="containsText" text="${escapeXmlAttribute5(text)}"`,
+            [`NOT(ISERROR(SEARCH(${quoted},${anchor})))`]
+          );
+        case "notContainsText":
+          return element(
+            `${attributes("notContainsText", priority, stopIfTrue, dxfId)} operator="notContains" text="${escapeXmlAttribute5(text)}"`,
+            [`ISERROR(SEARCH(${quoted},${anchor}))`]
+          );
+        case "beginsWith":
+          return element(
+            `${attributes("beginsWith", priority, stopIfTrue, dxfId)} operator="beginsWith" text="${escapeXmlAttribute5(text)}"`,
+            [`LEFT(${anchor},LEN(${quoted}))=${quoted}`]
+          );
+        case "endsWith":
+          return element(
+            `${attributes("endsWith", priority, stopIfTrue, dxfId)} operator="endsWith" text="${escapeXmlAttribute5(text)}"`,
+            [`RIGHT(${anchor},LEN(${quoted}))=${quoted}`]
+          );
+        case "equal":
+          return element(`${attributes("cellIs", priority, stopIfTrue, dxfId)} operator="equal"`, [
+            quoted
+          ]);
+        case "notEqual":
+          return element(
+            `${attributes("cellIs", priority, stopIfTrue, dxfId)} operator="notEqual"`,
+            [quoted]
+          );
+        case "containsBlanks":
+          return element(attributes("containsBlanks", priority, stopIfTrue, dxfId), [
+            `LEN(TRIM(${anchor}))=0`
+          ]);
+        case "notContainsBlanks":
+          return element(attributes("notContainsBlanks", priority, stopIfTrue, dxfId), [
+            `LEN(TRIM(${anchor}))>0`
+          ]);
+        case "containsErrors":
+          return element(attributes("containsErrors", priority, stopIfTrue, dxfId), [
+            `ISERROR(${anchor})`
+          ]);
+        case "notContainsErrors":
+          return element(attributes("notContainsErrors", priority, stopIfTrue, dxfId), [
+            `NOT(ISERROR(${anchor}))`
+          ]);
+        default:
+          throw new CfEditError(`Unsupported text operator "${String(operator)}".`);
+      }
+    }
+    case "duplicateValues":
+      return element(attributes("duplicateValues", priority, stopIfTrue, dxfId));
+    case "uniqueValues":
+      return element(attributes("uniqueValues", priority, stopIfTrue, dxfId));
+    case "rank": {
+      const rank = typeof value === "number" && Number.isFinite(value) ? value : void 0;
+      if (rank === void 0) throw new CfEditError("A top/bottom rule needs a rank value.");
+      return element(
+        `${attributes("top10", priority, stopIfTrue, dxfId)}${rule.isPercent === true ? ' percent="1"' : ""}${rule.isBottom === true ? ' bottom="1"' : ""} rank="${rank}"`
+      );
+    }
+    case "average": {
+      const map = {
+        greaterThan: "",
+        greaterThanOrEqual: ' equalAverage="1"',
+        lessThan: ' aboveAverage="0"',
+        lessThanOrEqual: ' aboveAverage="0" equalAverage="1"'
+      };
+      const extra = operator === void 0 ? void 0 : map[operator];
+      if (extra === void 0) {
+        throw new CfEditError(`Average rule operator "${String(operator)}" cannot be saved.`);
+      }
+      return element(`${attributes("aboveAverage", priority, stopIfTrue, dxfId)}${extra}`);
+    }
+    case "formula": {
+      if (typeof value !== "string" || value.length === 0) {
+        throw new CfEditError("A formula rule needs a formula.");
+      }
+      return element(attributes("expression", priority, stopIfTrue, dxfId), [
+        value.startsWith("=") ? value.slice(1) : value
+      ]);
+    }
+    case "timePeriod":
+      throw new CfEditError("Date-occurring rules cannot be saved yet.");
+    default:
+      throw new CfEditError(`Unsupported highlight rule "${String(subType)}".`);
+  }
+}
+__name(highlightRule, "highlightRule");
+function colorScaleRule(rule, priority, stopIfTrue) {
+  const config = rule.config;
+  if (!Array.isArray(config) || config.length < 2) {
+    throw new CfEditError("A color scale needs at least two stops.");
+  }
+  const stops = [...config].sort(
+    (left, right) => Number(left?.index ?? 0) - Number(right?.index ?? 0)
+  );
+  const cfvos = stops.map((stop) => serializeCfvo(stop?.value)).join("");
+  const colors = stops.map(
+    (stop) => `<color rgb="${toArgb(requireColor(stop?.color ?? "#FFFFFF", "color scale"))}"/>`
+  ).join("");
+  return `<cfRule ${attributes("colorScale", priority, stopIfTrue)}><colorScale>${cfvos}${colors}</colorScale></cfRule>`;
+}
+__name(colorScaleRule, "colorScaleRule");
+function dataBarRule(rule, priority, stopIfTrue) {
+  const config = rule.config;
+  if (typeof config !== "object" || config === null) {
+    throw new CfEditError("A data bar rule has no configuration.");
+  }
+  const showValue = rule.isShowValue === false ? ' showValue="0"' : "";
+  return `<cfRule ${attributes("dataBar", priority, stopIfTrue)}><dataBar${showValue}>${serializeCfvo(config.min)}${serializeCfvo(config.max)}<color rgb="${toArgb(requireColor(config.positiveColor ?? "#638EC6", "data bar"))}"/></dataBar></cfRule>`;
+}
+__name(dataBarRule, "dataBarRule");
+function iconSetRule(rule, priority, stopIfTrue) {
+  const config = rule.config;
+  if (!Array.isArray(config) || config.length < 2) {
+    throw new CfEditError("An icon set needs at least two thresholds.");
+  }
+  const iconTypes = new Set(config.map((entry) => String(entry?.iconType)));
+  if (iconTypes.size !== 1) {
+    throw new CfEditError("Mixed icon sets are extended-format-only and cannot be saved.");
+  }
+  const iconSet = [...iconTypes][0] ?? "";
+  if (!OOXML_ICON_SETS.has(iconSet)) {
+    throw new CfEditError(`The "${iconSet}" icon set cannot be saved to xlsx.`);
+  }
+  const ascending = [...config].reverse();
+  const iconIds = ascending.map((entry) => String(entry?.iconId));
+  const upIds = ascending.map((_, index2) => String(index2));
+  const downIds = ascending.map((_, index2) => String(ascending.length - 1 - index2));
+  const [naturalIds, reversedIds] = WORST_FIRST_ICON_SETS.has(iconSet) ? [upIds, downIds] : [downIds, upIds];
+  let reverse = "";
+  if (iconIds.every((id, index2) => id === reversedIds[index2])) reverse = ' reverse="1"';
+  else if (!iconIds.every((id, index2) => id === naturalIds[index2])) {
+    throw new CfEditError("Custom icon orderings are extended-format-only and cannot be saved.");
+  }
+  const cfvos = ascending.map((entry, index2) => {
+    const gte = entry?.operator === "greaterThan" ? ' gte="0"' : "";
+    if (index2 === 0) return '<cfvo type="percent" val="0"/>';
+    return serializeCfvo(entry?.value, gte);
+  }).join("");
+  const showValue = rule.isShowValue === false ? ' showValue="0"' : "";
+  return `<cfRule ${attributes("iconSet", priority, stopIfTrue)}><iconSet iconSet="${escapeXmlAttribute5(iconSet)}"${showValue}${reverse}>${cfvos}</iconSet></cfRule>`;
+}
+__name(iconSetRule, "iconSetRule");
+function serializeCfvo(value, extra = "") {
+  const config = value;
+  const type = String(config?.type ?? "");
+  if (type === "min" || type === "max") return `<cfvo type="${type}"${extra}/>`;
+  if (!["num", "percent", "percentile", "formula"].includes(type)) {
+    throw new CfEditError(`Unsupported threshold type "${type}".`);
+  }
+  const raw = config?.value;
+  const val = type === "formula" ? String(raw ?? "0") : String(Number(raw ?? 0));
+  return `<cfvo type="${type}" val="${escapeXmlAttribute5(val)}"${extra}/>`;
+}
+__name(serializeCfvo, "serializeCfvo");
+function buildDxfXml(style) {
+  const s = typeof style === "object" && style !== null ? style : {};
+  const fontParts = [];
+  if (s.bl === 1) fontParts.push("<b/>");
+  if (s.it === 1) fontParts.push("<i/>");
+  if (isLine(s.st)) fontParts.push("<strike/>");
+  if (isLine(s.ul)) fontParts.push("<u/>");
+  const fontColor = rgbOf(s.cl);
+  if (fontColor) fontParts.push(`<color rgb="${toArgb(fontColor)}"/>`);
+  const fillColor = rgbOf(s.bg);
+  const font = fontParts.length === 0 ? "" : `<font>${fontParts.join("")}</font>`;
+  const fill = fillColor === void 0 ? "" : `<fill><patternFill><bgColor rgb="${toArgb(fillColor)}"/></patternFill></fill>`;
+  return `<dxf>${font}${fill}</dxf>`;
+}
+__name(buildDxfXml, "buildDxfXml");
+function isLine(value) {
+  return typeof value === "object" && value !== null && value.s === 1;
+}
+__name(isLine, "isLine");
+function rgbOf(value) {
+  if (typeof value !== "object" || value === null) return void 0;
+  const rgb2 = value.rgb;
+  return typeof rgb2 === "string" ? parseColor(rgb2) : void 0;
+}
+__name(rgbOf, "rgbOf");
+function parseColor(input) {
+  const value = input.trim();
+  const hex = /^#?([0-9a-fA-F]{6})([0-9a-fA-F]{2})?$/.exec(value);
+  if (hex?.[1]) return `#${hex[1].toUpperCase()}`;
+  const rgb2 = /^rgba?\(\s*(\d+)\s*[, ]\s*(\d+)\s*[, ]\s*(\d+)/.exec(value);
+  if (!rgb2) return void 0;
+  const channels = rgb2.slice(1, 4).map((channel) => Math.min(255, Number(channel)).toString(16).padStart(2, "0")).join("");
+  return `#${channels}`.toUpperCase();
+}
+__name(parseColor, "parseColor");
+function requireColor(input, what) {
+  const parsed2 = typeof input === "string" ? parseColor(input) : void 0;
+  if (parsed2 === void 0) {
+    throw new CfEditError(`The ${what} color "${String(input)}" cannot be saved.`);
+  }
+  return parsed2;
+}
+__name(requireColor, "requireColor");
+function toRef3(range2) {
+  return range2.startRow === range2.endRow && range2.startColumn === range2.endColumn ? `${columnToLetters3(range2.startColumn)}${range2.startRow + 1}` : `${columnToLetters3(range2.startColumn)}${range2.startRow + 1}:${columnToLetters3(range2.endColumn)}${range2.endRow + 1}`;
+}
+__name(toRef3, "toRef");
+function columnToLetters3(column) {
+  let letters = "";
+  let remaining = column + 1;
+  while (remaining > 0) {
+    remaining -= 1;
+    letters = String.fromCharCode(65 + remaining % 26) + letters;
+    remaining = Math.floor(remaining / 26);
+  }
+  return letters;
+}
+__name(columnToLetters3, "columnToLetters");
+function toArgb(hexColor) {
+  return `FF${hexColor.replace("#", "").toUpperCase()}`;
+}
+__name(toArgb, "toArgb");
+function escapeXmlText6(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+__name(escapeXmlText6, "escapeXmlText");
+function escapeXmlAttribute5(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+__name(escapeXmlAttribute5, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-defined-names.ts
+var DefinedNameError = class extends Error {
+  static {
+    __name(this, "DefinedNameError");
+  }
+};
+var NAME_PATTERN = /^[\p{L}_\\][\p{L}\p{N}_.\\]*$/u;
+var CELL_REF_PATTERN = /^(?:[A-Za-z]{1,3}[0-9]+|[Rr][0-9]*[Cc][0-9]*)$/;
+function applyDefinedNamesState(workbookXml, state) {
+  const preserved = new Set(state.preserveNames);
+  const seen = /* @__PURE__ */ new Set();
+  for (const entry of state.names) {
+    validateName(entry.name);
+    if (preserved.has(entry.name)) {
+      throw new DefinedNameError(
+        `The name "${entry.name}" also exists in a form the editor cannot model \u2014 saving would duplicate it.`
+      );
+    }
+    const key = `${entry.name}\0${entry.sheetIndex ?? -1}`;
+    if (seen.has(key)) {
+      throw new DefinedNameError(`The name "${entry.name}" is defined twice.`);
+    }
+    seen.add(key);
+  }
+  const xml = workbookXml.replace(
+    /<definedName\b[^>]*>[\s\S]*?<\/definedName>|<definedName\b[^>]*\/>/g,
+    (element) => {
+      const name = /\bname="([^"]*)"/.exec(element)?.[1] ?? "";
+      const unescaped = unescapeXml2(name);
+      const keep = unescaped.startsWith("_xlnm") || /\bhidden="(?:1|true)"/.test(element) || preserved.has(unescaped);
+      return keep ? element : "";
+    }
+  );
+  const additions = state.names.map(
+    (entry) => `<definedName name="${escapeXmlAttribute6(entry.name)}"` + (entry.sheetIndex === void 0 ? "" : ` localSheetId="${entry.sheetIndex}"`) + `>${escapeXmlText7(withFutureFunctionMarkers(entry.formula.replace(/^=/, "")))}</definedName>`
+  ).join("");
+  const section = /<definedNames\b[^>]*>([\s\S]*?)<\/definedNames>|<definedNames\b[^>]*\/>/.exec(
+    xml
+  );
+  if (section) {
+    const inner = (section[1] ?? "") + additions;
+    const replacement = inner === "" ? "" : `<definedNames>${inner}</definedNames>`;
+    return xml.slice(0, section.index) + replacement + xml.slice(section.index + section[0].length);
+  }
+  if (additions === "") return xml;
+  const anchor = /<\/sheets>|<sheets\b[^>]*\/>/.exec(xml);
+  if (!anchor) throw new DefinedNameError("workbook.xml has no sheets element.");
+  const externals = /<externalReferences\b[^>]*>[\s\S]*?<\/externalReferences>|<externalReferences\b[^>]*\/>/.exec(
+    xml
+  );
+  const at = externals ? externals.index + externals[0].length : anchor.index + anchor[0].length;
+  return `${xml.slice(0, at)}<definedNames>${additions}</definedNames>${xml.slice(at)}`;
+}
+__name(applyDefinedNamesState, "applyDefinedNamesState");
+function validateName(name) {
+  if (name.length === 0 || name.length > 255 || !NAME_PATTERN.test(name) || CELL_REF_PATTERN.test(name) || name.toLowerCase() === "true" || name.toLowerCase() === "false") {
+    throw new DefinedNameError(`"${name}" is not a valid defined name.`);
+  }
+  if (name.startsWith("_xlnm")) {
+    throw new DefinedNameError('Names starting with "_xlnm" are reserved by Excel.');
+  }
+}
+__name(validateName, "validateName");
+function unescapeXml2(input) {
+  return input.replaceAll("&quot;", '"').replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
+}
+__name(unescapeXml2, "unescapeXml");
+function escapeXmlText7(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+__name(escapeXmlText7, "escapeXmlText");
+function escapeXmlAttribute6(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+__name(escapeXmlAttribute6, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-dv.ts
+var DvEditError = class extends Error {
+  static {
+    __name(this, "DvEditError");
+  }
+};
+var DV_TYPES = /* @__PURE__ */ new Set(["whole", "decimal", "list", "date", "time", "textLength", "custom"]);
+var DV_OPERATORS = /* @__PURE__ */ new Set([
+  "between",
+  "notBetween",
+  "equal",
+  "notEqual",
+  "greaterThan",
+  "greaterThanOrEqual",
+  "lessThan",
+  "lessThanOrEqual"
+]);
+var DV_ERROR_STYLE_NAMES = {
+  0: "information",
+  1: void 0,
+  2: "warning"
+};
+function applyDvRules(worksheetXml, rules, options = {}) {
+  if (options.append) return appendDvRules(worksheetXml, rules, options.remove ?? []);
+  if (/<x14:dataValidation\b/.test(worksheetXml)) {
+    throw new DvEditError(
+      "This sheet has extended (x14) data validation \u2014 editing its rules is not supported yet."
+    );
+  }
+  const xml = worksheetXml.replace(
+    /<dataValidations\b[^>]*>[\s\S]*?<\/dataValidations>|<dataValidations\b[^>]*\/>/g,
+    ""
+  );
+  if (rules.length === 0) return xml;
+  const body = rules.map(serializeRule2).join("");
+  const section = `<dataValidations count="${rules.length}">${body}</dataValidations>`;
+  const anchor = /<hyperlinks\b|<printOptions\b|<pageMargins\b|<pageSetup\b|<headerFooter\b|<rowBreaks\b|<colBreaks\b|<drawing\b|<legacyDrawing\b|<picture\b|<oleObjects\b|<tableParts\b|<extLst\b/.exec(
+    xml
+  );
+  if (anchor) {
+    return xml.slice(0, anchor.index) + section + xml.slice(anchor.index);
+  }
+  const end = xml.lastIndexOf("</worksheet>");
+  if (end === -1) throw new DvEditError("Worksheet has no closing element.");
+  return xml.slice(0, end) + section + xml.slice(end);
+}
+__name(applyDvRules, "applyDvRules");
+var DV_SECTION_RE = /<dataValidations\b[^>]*>([\s\S]*?)<\/dataValidations>|<dataValidations\b[^>]*\/>/;
+var DV_ENTRY_RE = /<dataValidation\b[^>]*?\/>|<dataValidation\b[^>]*>[\s\S]*?<\/dataValidation>/g;
+function appendDvRules(worksheetXml, rules, remove) {
+  const section = DV_SECTION_RE.exec(worksheetXml);
+  const replaced = new Set(
+    [...rules.flatMap((rule) => rule.ranges), ...remove].map((area) => normalizeRef(toRef4(area)))
+  );
+  const kept = [];
+  for (const entry of section?.[1] ? [...section[1].matchAll(DV_ENTRY_RE)].map((m) => m[0]) : []) {
+    const sqref = /\bsqref="([^"]*)"/.exec(entry)?.[1] ?? "";
+    const areas = sqref.split(/\s+/).filter(Boolean);
+    const remaining = areas.filter((area) => !replaced.has(normalizeRef(area)));
+    if (remaining.length === 0) continue;
+    kept.push(
+      remaining.length === areas.length ? entry : entry.replace(/\bsqref="[^"]*"/, `sqref="${remaining.join(" ")}"`)
+    );
+  }
+  const entries = [...kept, ...rules.map(serializeRule2)];
+  const xml = section ? worksheetXml.replace(section[0], "") : worksheetXml;
+  if (entries.length === 0) return xml;
+  const body = `<dataValidations count="${entries.length}">${entries.join("")}</dataValidations>`;
+  if (section) return xml.slice(0, section.index) + body + xml.slice(section.index);
+  return insertBeforeTail2(xml, body);
+}
+__name(appendDvRules, "appendDvRules");
+function normalizeRef(ref) {
+  const [a, b] = ref.replace(/\$/g, "").split(":");
+  return b === void 0 || b === a ? a : `${a}:${b}`;
+}
+__name(normalizeRef, "normalizeRef");
+function insertBeforeTail2(xml, section) {
+  const anchor = /<hyperlinks\b|<printOptions\b|<pageMargins\b|<pageSetup\b|<headerFooter\b|<rowBreaks\b|<colBreaks\b|<drawing\b|<legacyDrawing\b|<picture\b|<oleObjects\b|<tableParts\b|<extLst\b/.exec(
+    xml
+  );
+  if (anchor) return xml.slice(0, anchor.index) + section + xml.slice(anchor.index);
+  const end = xml.lastIndexOf("</worksheet>");
+  if (end === -1) throw new DvEditError("Worksheet has no closing element.");
+  return xml.slice(0, end) + section + xml.slice(end);
+}
+__name(insertBeforeTail2, "insertBeforeTail");
+function serializeRule2(wireRule) {
+  if (wireRule.ranges.length === 0) {
+    throw new DvEditError("A data-validation rule has no ranges.");
+  }
+  let rule = wireRule.rule;
+  let rawType = String(rule.type ?? "");
+  if (rawType === "listMultiple") {
+    throw new DvEditError(
+      "Multi-select list rules are Univer-only and cannot be saved to xlsx \u2014 delete the rule before saving."
+    );
+  }
+  if (rawType === "checkbox") {
+    const checked = rule.formula1 === void 0 || rule.formula1 === "" ? "1" : String(rule.formula1);
+    const unchecked = rule.formula2 === void 0 || rule.formula2 === "" ? "0" : String(rule.formula2);
+    rule = {
+      ...rule,
+      type: "list",
+      operator: void 0,
+      formula1: `${checked},${unchecked}`,
+      formula2: void 0
+    };
+    rawType = "list";
+  }
+  const type = rawType === "any" || rawType === "none" ? void 0 : rawType;
+  if (type !== void 0 && !DV_TYPES.has(type)) {
+    throw new DvEditError(`Unsupported data-validation type "${rawType}".`);
+  }
+  const attrs = [];
+  if (type !== void 0) attrs.push(`type="${type}"`);
+  const operator = rule.operator === void 0 ? void 0 : String(rule.operator);
+  if (operator !== void 0 && operator !== "") {
+    if (!DV_OPERATORS.has(operator)) {
+      throw new DvEditError(`Unsupported data-validation operator "${operator}".`);
+    }
+    if (operator !== "between" && type !== void 0 && type !== "list" && type !== "custom") {
+      attrs.push(`operator="${operator}"`);
+    }
+  }
+  if (rule.allowBlank === true) attrs.push('allowBlank="1"');
+  if (type === "list" && rule.showDropDown === false) attrs.push('showDropDown="1"');
+  if (rule.showInputMessage === true) attrs.push('showInputMessage="1"');
+  if (rule.showErrorMessage === true) attrs.push('showErrorMessage="1"');
+  const errorStyle = errorStyleName(rule.errorStyle);
+  if (errorStyle !== void 0) attrs.push(`errorStyle="${errorStyle}"`);
+  for (const [key, attribute] of [
+    ["errorTitle", "errorTitle"],
+    ["error", "error"],
+    ["promptTitle", "promptTitle"],
+    ["prompt", "prompt"]
+  ]) {
+    const value = rule[key];
+    if (typeof value === "string" && value.length > 0) {
+      attrs.push(`${attribute}="${escapeXmlAttribute7(value)}"`);
+    }
+  }
+  attrs.push(`sqref="${wireRule.ranges.map(toRef4).join(" ")}"`);
+  const formulas = serializeFormulas(type, rule);
+  return formulas === "" ? `<dataValidation ${attrs.join(" ")}/>` : `<dataValidation ${attrs.join(" ")}>${formulas}</dataValidation>`;
+}
+__name(serializeRule2, "serializeRule");
+function errorStyleName(value) {
+  if (value === void 0 || value === null) return void 0;
+  const style = Number(value);
+  if (!(style in DV_ERROR_STYLE_NAMES)) {
+    throw new DvEditError(`Unsupported data-validation error style "${String(value)}".`);
+  }
+  return DV_ERROR_STYLE_NAMES[style];
+}
+__name(errorStyleName, "errorStyleName");
+function serializeFormulas(type, rule) {
+  const formula1 = formulaText(type, rule.formula1);
+  const formula2 = formulaText(type, rule.formula2);
+  return (formula1 === void 0 ? "" : `<formula1>${escapeXmlText8(formula1)}</formula1>`) + (formula2 === void 0 ? "" : `<formula2>${escapeXmlText8(formula2)}</formula2>`);
+}
+__name(serializeFormulas, "serializeFormulas");
+function formulaText(type, raw) {
+  if (raw === void 0 || raw === null) return void 0;
+  const text = String(raw);
+  if (text === "") return void 0;
+  if (type === "list") {
+    return text.startsWith("=") ? text.slice(1) : `"${text}"`;
+  }
+  if (type === "custom") {
+    return text.startsWith("=") ? text.slice(1) : text;
+  }
+  if (type === "date") {
+    const serial = dateToSerial(text);
+    if (serial !== void 0) return String(serial);
+  }
+  if (type === "time") {
+    const fraction = timeToFraction(text);
+    if (fraction !== void 0) return String(fraction);
+  }
+  return text.startsWith("=") ? text.slice(1) : text;
+}
+__name(formulaText, "formulaText");
+function dateToSerial(text) {
+  const match = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/.exec(
+    text.trim()
+  );
+  if (!match) return void 0;
+  const [, year, month, day, hour, minute, second] = match;
+  const yearNum = Number(year);
+  const monthNum = Number(month);
+  const dayNum = Number(day);
+  if (monthNum < 1 || monthNum > 12) return void 0;
+  if (dayNum < 1 || dayNum > daysInMonth(yearNum, monthNum)) return void 0;
+  let seconds = 0;
+  if (hour !== void 0) {
+    const hourNum = Number(hour);
+    const minuteNum = Number(minute);
+    const secondNum = Number(second ?? 0);
+    if (hourNum < 0 || hourNum > 23) return void 0;
+    if (minuteNum < 0 || minuteNum > 59) return void 0;
+    if (secondNum < 0 || secondNum > 59) return void 0;
+    seconds = hourNum * 3600 + minuteNum * 60 + secondNum;
+  }
+  const days = (Date.UTC(yearNum, monthNum - 1, dayNum) - Date.UTC(1899, 11, 30)) / 864e5;
+  return seconds === 0 ? days : days + seconds / 86400;
+}
+__name(dateToSerial, "dateToSerial");
+function daysInMonth(year, month) {
+  if (month === 2) return isLeapYear(year) ? 29 : 28;
+  if (month === 4 || month === 6 || month === 9 || month === 11) return 30;
+  return 31;
+}
+__name(daysInMonth, "daysInMonth");
+function isLeapYear(year) {
+  return year % 4 === 0 && year % 100 !== 0 || year % 400 === 0;
+}
+__name(isLeapYear, "isLeapYear");
+function timeToFraction(text) {
+  const match = /^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/.exec(text.trim());
+  if (!match) return void 0;
+  const [, hour, minute, second] = match;
+  const hourNum = Number(hour);
+  const minuteNum = Number(minute);
+  const secondNum = Number(second ?? 0);
+  if (hourNum < 0 || hourNum > 23) return void 0;
+  if (minuteNum < 0 || minuteNum > 59) return void 0;
+  if (secondNum < 0 || secondNum > 59) return void 0;
+  return (hourNum * 3600 + minuteNum * 60 + secondNum) / 86400;
+}
+__name(timeToFraction, "timeToFraction");
+function toRef4(range2) {
+  const start = `${columnToLetters4(range2.startColumn)}${range2.startRow + 1}`;
+  return range2.startRow === range2.endRow && range2.startColumn === range2.endColumn ? start : `${start}:${columnToLetters4(range2.endColumn)}${range2.endRow + 1}`;
+}
+__name(toRef4, "toRef");
+function columnToLetters4(column) {
+  let letters = "";
+  let remaining = column + 1;
+  while (remaining > 0) {
+    remaining -= 1;
+    letters = String.fromCharCode(65 + remaining % 26) + letters;
+    remaining = Math.floor(remaining / 26);
+  }
+  return letters;
+}
+__name(columnToLetters4, "columnToLetters");
+function escapeXmlText8(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+__name(escapeXmlText8, "escapeXmlText");
+function escapeXmlAttribute7(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("\n", "&#10;");
+}
+__name(escapeXmlAttribute7, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-page-setup.ts
+var PageSetupError = class extends Error {
+  static {
+    __name(this, "PageSetupError");
+  }
+};
+var MARGIN_PRESETS = {
+  normal: { left: 0.7, right: 0.7, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 },
+  wide: { left: 1, right: 1, top: 1, bottom: 1, header: 0.5, footer: 0.5 },
+  narrow: { left: 0.25, right: 0.25, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 }
+};
+var AFTER_PAGE_SETUP = /<headerFooter\b|<rowBreaks\b|<colBreaks\b|<customProperties\b|<cellWatches\b|<ignoredErrors\b|<smartTags\b|<drawing\b|<legacyDrawing\b|<legacyDrawingHF\b|<picture\b|<oleObjects\b|<controls\b|<webPublishItems\b|<tableParts\b|<extLst\b/;
+var AFTER_HEADER_FOOTER = /<rowBreaks\b|<colBreaks\b|<customProperties\b|<cellWatches\b|<ignoredErrors\b|<smartTags\b|<drawing\b|<legacyDrawing\b|<legacyDrawingHF\b|<picture\b|<oleObjects\b|<controls\b|<webPublishItems\b|<tableParts\b|<extLst\b/;
+var AFTER_ROW_BREAKS = /<colBreaks\b|<customProperties\b|<cellWatches\b|<ignoredErrors\b|<smartTags\b|<drawing\b|<legacyDrawing\b|<legacyDrawingHF\b|<picture\b|<oleObjects\b|<controls\b|<webPublishItems\b|<tableParts\b|<extLst\b/;
+var AFTER_COL_BREAKS = /<customProperties\b|<cellWatches\b|<ignoredErrors\b|<smartTags\b|<drawing\b|<legacyDrawing\b|<legacyDrawingHF\b|<picture\b|<oleObjects\b|<controls\b|<webPublishItems\b|<tableParts\b|<extLst\b/;
+function insertWorksheetElement(xml, element, anchor) {
+  const found = anchor.exec(xml);
+  if (found) return xml.slice(0, found.index) + element + xml.slice(found.index);
+  const end = xml.lastIndexOf("</worksheet>");
+  if (end === -1) throw new PageSetupError("Worksheet has no closing element.");
+  return xml.slice(0, end) + element + xml.slice(end);
+}
+__name(insertWorksheetElement, "insertWorksheetElement");
+function mergeElementAttrs(xml, tag, attrs, insertAnchor) {
+  const entries = Object.entries(attrs);
+  const pattern = new RegExp(`<${tag}\\b[^>]*?(/?)>`);
+  const existing = pattern.exec(xml);
+  if (existing) {
+    let element = existing[0];
+    for (const [name, value] of entries) {
+      const attrPattern = new RegExp(` ${name}="[^"]*"`);
+      if (value === null) {
+        element = element.replace(attrPattern, "");
+      } else if (attrPattern.test(element)) {
+        element = element.replace(attrPattern, ` ${name}="${value}"`);
+      } else {
+        element = element.replace(new RegExp(`<${tag}\\b`), `<${tag} ${name}="${value}"`);
+      }
+    }
+    return xml.slice(0, existing.index) + element + xml.slice(existing.index + existing[0].length);
+  }
+  const kept = entries.filter(([, value]) => value !== null);
+  if (kept.length === 0) return xml;
+  const body = kept.map(([name, value]) => ` ${name}="${value}"`).join("");
+  return insertWorksheetElement(xml, `<${tag}${body}/>`, insertAnchor);
+}
+__name(mergeElementAttrs, "mergeElementAttrs");
+function setFitToPage(xml, enabled) {
+  const pageSetUpPr = /<pageSetUpPr\b[^>]*\/?>/.exec(xml);
+  if (pageSetUpPr) {
+    const updated = pageSetUpPr[0].includes(' fitToPage="') ? pageSetUpPr[0].replace(/ fitToPage="[^"]*"/, enabled ? ' fitToPage="1"' : "") : enabled ? pageSetUpPr[0].replace(/<pageSetUpPr\b/, '<pageSetUpPr fitToPage="1"') : pageSetUpPr[0];
+    return xml.replace(pageSetUpPr[0], updated);
+  }
+  if (!enabled) return xml;
+  const sheetPr = /<sheetPr\b[^>]*(\/?)>/.exec(xml);
+  if (sheetPr) {
+    if (sheetPr[1] === "/") {
+      const expanded = `${sheetPr[0].slice(0, -2)}><pageSetUpPr fitToPage="1"/></sheetPr>`;
+      return xml.replace(sheetPr[0], expanded);
+    }
+    const at2 = sheetPr.index + sheetPr[0].length;
+    return `${xml.slice(0, at2)}<pageSetUpPr fitToPage="1"/>${xml.slice(at2)}`;
+  }
+  const worksheetOpen = /<worksheet\b[^>]*>/.exec(xml);
+  if (!worksheetOpen) throw new PageSetupError("Worksheet has no root element.");
+  const at = worksheetOpen.index + worksheetOpen[0].length;
+  return `${xml.slice(0, at)}<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>${xml.slice(at)}`;
+}
+__name(setFitToPage, "setFitToPage");
+function setSheetViewAttr(xml, name, value) {
+  const sheetView = /<sheetView\b[^>]*?\/?>/.exec(xml);
+  if (!sheetView) {
+    if (value === null) return xml;
+    const element2 = `<sheetViews><sheetView workbookViewId="0" ${name}="${value}"/></sheetViews>`;
+    const anchor = /<sheetFormatPr\b|<cols\b|<sheetData\b/.exec(xml);
+    if (!anchor) throw new PageSetupError("Worksheet has no sheetData element.");
+    return xml.slice(0, anchor.index) + element2 + xml.slice(anchor.index);
+  }
+  let element = sheetView[0];
+  const attrPattern = new RegExp(` ${name}="[^"]*"`);
+  if (value === null) {
+    element = element.replace(attrPattern, "");
+  } else if (attrPattern.test(element)) {
+    element = element.replace(attrPattern, ` ${name}="${value}"`);
+  } else {
+    element = element.replace(/<sheetView\b/, `<sheetView ${name}="${value}"`);
+  }
+  return xml.slice(0, sheetView.index) + element + xml.slice(sheetView.index + sheetView[0].length);
+}
+__name(setSheetViewAttr, "setSheetViewAttr");
+function paneColumnLabel(index2) {
+  let label = "";
+  for (let i = index2; i >= 0; i = Math.floor(i / 26) - 1) {
+    label = String.fromCharCode(65 + i % 26) + label;
+  }
+  return label;
+}
+__name(paneColumnLabel, "paneColumnLabel");
+function setFrozenPane(xml, rows, columns) {
+  let result = xml;
+  const sheetView = /<sheetView\b[^>]*?(\/?)>/.exec(result);
+  if (!sheetView) {
+    if (rows === 0 && columns === 0) return result;
+    const element = '<sheetViews><sheetView workbookViewId="0"/></sheetViews>';
+    const anchor = /<sheetFormatPr\b|<cols\b|<sheetData\b/.exec(result);
+    if (!anchor) throw new PageSetupError("Worksheet has no sheetData element.");
+    result = result.slice(0, anchor.index) + element + result.slice(anchor.index);
+    return setFrozenPane(result, rows, columns);
+  }
+  if (sheetView[1] === "/") {
+    const expanded = `${sheetView[0].slice(0, -2)}></sheetView>`;
+    result = result.slice(0, sheetView.index) + expanded + result.slice(sheetView.index + sheetView[0].length);
+  }
+  result = result.replace(/<pane\b[^>]*\/?>(?:[\s\S]*?<\/pane>)?/, "");
+  result = result.replace(/<selection\b[^>]*\bpane="[^"]*"[^>]*\/?>/g, "");
+  if (rows === 0 && columns === 0) return result;
+  const activePane = rows > 0 && columns > 0 ? "bottomRight" : rows > 0 ? "bottomLeft" : "topRight";
+  const pane = "<pane" + (columns > 0 ? ` xSplit="${columns}"` : "") + (rows > 0 ? ` ySplit="${rows}"` : "") + ` topLeftCell="${paneColumnLabel(columns)}${rows + 1}" activePane="${activePane}" state="frozen"/>`;
+  const opened = /<sheetView\b[^>]*?>/.exec(result);
+  if (!opened) throw new PageSetupError("Worksheet lost its sheetView element.");
+  const at = opened.index + opened[0].length;
+  return result.slice(0, at) + pane + result.slice(at);
+}
+__name(setFrozenPane, "setFrozenPane");
+function encodeHeaderFooterSections(parts) {
+  const sections = [
+    ["&L", parts.left],
+    ["&C", parts.center],
+    ["&R", parts.right]
+  ];
+  return sections.filter(([, text]) => text !== void 0 && text !== "").map(([marker, text]) => marker + (text ?? "")).join("");
+}
+__name(encodeHeaderFooterSections, "encodeHeaderFooterSections");
+function headerFooterSectionPattern(tag) {
+  return new RegExp(`<${tag}\\b[^>]*>[\\s\\S]*?</${tag}>|<${tag}\\b[^>]*/>`);
+}
+__name(headerFooterSectionPattern, "headerFooterSectionPattern");
+function setHeaderFooter(xml, header, footer) {
+  const existing = /<headerFooter\b([^>]*?)(?:\/>|>([\s\S]*?)<\/headerFooter>)/.exec(xml);
+  const attributes2 = existing?.[1] ?? "";
+  let body = existing?.[2] ?? "";
+  const setSection = /* @__PURE__ */ __name((tag, text) => {
+    if (text === void 0) return;
+    const pattern = headerFooterSectionPattern(tag);
+    const element2 = text === "" ? "" : `<${tag}>${text}</${tag}>`;
+    if (pattern.test(body)) {
+      body = body.replace(pattern, () => element2);
+      return;
+    }
+    if (element2 === "") return;
+    const oddHeader = tag === "oddFooter" ? headerFooterSectionPattern("oddHeader").exec(body) : null;
+    const at = oddHeader ? oddHeader.index + oddHeader[0].length : 0;
+    body = body.slice(0, at) + element2 + body.slice(at);
+  }, "setSection");
+  const encode = /* @__PURE__ */ __name((parts) => parts === void 0 ? void 0 : parts === null ? "" : escapeXml(encodeHeaderFooterSections(parts)), "encode");
+  setSection("oddHeader", encode(header));
+  setSection("oddFooter", encode(footer));
+  const element = body.trim() === "" ? attributes2.trim() === "" ? "" : `<headerFooter${attributes2}/>` : `<headerFooter${attributes2}>${body}</headerFooter>`;
+  if (existing) {
+    return xml.slice(0, existing.index) + element + xml.slice(existing.index + existing[0].length);
+  }
+  if (element === "") return xml;
+  return insertWorksheetElement(xml, element, AFTER_HEADER_FOOTER);
+}
+__name(setHeaderFooter, "setHeaderFooter");
+function setPageBreaks(xml, tag, breaks, anchor) {
+  const existing = new RegExp(`<${tag}\\b[^>]*(?:/>|>[\\s\\S]*?</${tag}>)`).exec(xml);
+  const result = existing ? xml.slice(0, existing.index) + xml.slice(existing.index + existing[0].length) : xml;
+  const ids = [...new Set(breaks)].filter((id) => id > 0).sort((a, b) => a - b);
+  if (ids.length === 0) return result;
+  const max = tag === "rowBreaks" ? 16383 : 1048575;
+  const body = ids.map((id) => `<brk id="${id}" max="${max}" man="1"/>`).join("");
+  const element = `<${tag} count="${ids.length}" manualBreakCount="${ids.length}">` + body + `</${tag}>`;
+  return insertWorksheetElement(result, element, anchor);
+}
+__name(setPageBreaks, "setPageBreaks");
+function applyPageSetupState(worksheetXml, state) {
+  let xml = worksheetXml;
+  if (state.frozenRows !== void 0 || state.frozenColumns !== void 0) {
+    xml = setFrozenPane(xml, state.frozenRows ?? 0, state.frozenColumns ?? 0);
+  }
+  if (state.showGridlines !== void 0) {
+    xml = setSheetViewAttr(xml, "showGridLines", state.showGridlines ? null : "0");
+  }
+  if (state.showFormulas !== void 0) {
+    xml = setSheetViewAttr(xml, "showFormulas", state.showFormulas ? "1" : null);
+  }
+  if (state.zoomScale !== void 0) {
+    const zoom = state.zoomScale === 100 ? null : String(state.zoomScale);
+    xml = setSheetViewAttr(xml, "zoomScale", zoom);
+    xml = setSheetViewAttr(xml, "zoomScaleNormal", zoom);
+  }
+  if (state.showHeadings !== void 0) {
+    xml = setSheetViewAttr(xml, "showRowColHeaders", state.showHeadings ? null : "0");
+  }
+  const printOptions = {};
+  if (state.printGridlines !== void 0) {
+    printOptions.gridLines = state.printGridlines ? "1" : null;
+  }
+  if (state.printHeadings !== void 0) {
+    printOptions.headings = state.printHeadings ? "1" : null;
+  }
+  if (Object.keys(printOptions).length > 0) {
+    xml = mergeElementAttrs(
+      xml,
+      "printOptions",
+      printOptions,
+      /<pageMargins\b|<pageSetup\b|<headerFooter\b|<rowBreaks\b|<colBreaks\b|<drawing\b|<legacyDrawing\b|<picture\b|<oleObjects\b|<tableParts\b|<extLst\b/
+    );
+  }
+  if (state.margins !== void 0) {
+    const preset = MARGIN_PRESETS[state.margins];
+    xml = mergeElementAttrs(
+      xml,
+      "pageMargins",
+      {
+        left: String(preset.left),
+        right: String(preset.right),
+        top: String(preset.top),
+        bottom: String(preset.bottom),
+        header: String(preset.header),
+        footer: String(preset.footer)
+      },
+      /<pageSetup\b|<headerFooter\b|<rowBreaks\b|<colBreaks\b|<drawing\b|<legacyDrawing\b|<picture\b|<oleObjects\b|<tableParts\b|<extLst\b/
+    );
+  }
+  const pageSetup = {};
+  if (state.orientation !== void 0) pageSetup.orientation = state.orientation;
+  if (state.paperSize !== void 0) pageSetup.paperSize = String(state.paperSize);
+  if (state.scale !== void 0) {
+    pageSetup.scale = state.scale === 100 ? null : String(state.scale);
+  }
+  if (state.fitToWidth !== void 0) {
+    pageSetup.fitToWidth = state.fitToWidth === 1 ? null : String(state.fitToWidth);
+  }
+  if (state.fitToHeight !== void 0) {
+    pageSetup.fitToHeight = state.fitToHeight === 1 ? null : String(state.fitToHeight);
+  }
+  if (Object.keys(pageSetup).length > 0) {
+    xml = mergeElementAttrs(xml, "pageSetup", pageSetup, AFTER_PAGE_SETUP);
+  }
+  if (state.fitToPage !== void 0) {
+    xml = setFitToPage(xml, state.fitToPage);
+  }
+  if (state.header !== void 0 || state.footer !== void 0) {
+    xml = setHeaderFooter(xml, state.header, state.footer);
+  }
+  if (state.rowBreaks !== void 0) {
+    xml = setPageBreaks(xml, "rowBreaks", state.rowBreaks, AFTER_ROW_BREAKS);
+  }
+  if (state.colBreaks !== void 0) {
+    xml = setPageBreaks(xml, "colBreaks", state.colBreaks, AFTER_COL_BREAKS);
+  }
+  return xml;
+}
+__name(applyPageSetupState, "applyPageSetupState");
+function applyPrintAreas(workbookXml, areas) {
+  let xml = workbookXml;
+  const sheetOrder = parseSheetElements(xml).map((element) => element.name);
+  for (const { sheetName, printArea, printTitles } of areas) {
+    const sheetIndex = sheetOrder.indexOf(sheetName);
+    if (sheetIndex === -1) {
+      throw new PageSetupError(`Sheet "${sheetName}" was not found in the workbook.`);
+    }
+    const quoted = `'${sheetName.replace(/'/g, "''")}'`;
+    if (printArea !== void 0) {
+      xml = setSheetScopedName(
+        xml,
+        "_xlnm.Print_Area",
+        sheetIndex,
+        printArea === null ? null : `${quoted}!${toAbsoluteRange(printArea)}`
+      );
+    }
+    if (printTitles !== void 0) {
+      xml = setSheetScopedName(
+        xml,
+        "_xlnm.Print_Titles",
+        sheetIndex,
+        printTitles === null ? null : `${quoted}!${toAbsoluteRowSpan(printTitles)}`
+      );
+    }
+  }
+  return xml.replace(/<definedNames>\s*<\/definedNames>|<definedNames\s*\/>/, "");
+}
+__name(applyPrintAreas, "applyPrintAreas");
+function setSheetScopedName(workbookXml, name, sheetIndex, reference) {
+  const escapedName = name.replace(/\./g, "\\.");
+  const namePattern = new RegExp(
+    `<definedName[^>]*name="${escapedName}"[^>]*localSheetId="${sheetIndex}"[^>]*>[\\s\\S]*?</definedName>|<definedName[^>]*localSheetId="${sheetIndex}"[^>]*name="${escapedName}"[^>]*>[\\s\\S]*?</definedName>`
+  );
+  const xml = workbookXml.replace(namePattern, "");
+  if (reference === null) return xml;
+  const element = `<definedName name="${name}" localSheetId="${sheetIndex}">${escapeXml(reference)}</definedName>`;
+  const empty = /<definedNames\b[^>]*\/>/.exec(xml);
+  if (empty) {
+    return xml.slice(0, empty.index) + `<definedNames>${element}</definedNames>` + xml.slice(empty.index + empty[0].length);
+  }
+  const section = /<definedNames\b[^>]*>/.exec(xml);
+  if (section) {
+    const at2 = section.index + section[0].length;
+    return xml.slice(0, at2) + element + xml.slice(at2);
+  }
+  const anchor = /<externalReferences\b[^>]*>[\s\S]*?<\/externalReferences>|<externalReferences\b[^>]*\/>/.exec(
+    xml
+  ) ?? /<functionGroups\b[^>]*>[\s\S]*?<\/functionGroups>|<functionGroups\b[^>]*\/>/.exec(xml) ?? /<\/sheets>|<sheets\b[^>]*\/>/.exec(xml);
+  if (!anchor) throw new PageSetupError("workbook.xml has no sheets section.");
+  const at = anchor.index + anchor[0].length;
+  return `${xml.slice(0, at)}<definedNames>${element}</definedNames>${xml.slice(at)}`;
+}
+__name(setSheetScopedName, "setSheetScopedName");
+function toAbsoluteRowSpan(rows) {
+  const match = /^\$?(\d{1,7}):\$?(\d{1,7})$/.exec(rows);
+  if (!match || Number(match[1]) > Number(match[2])) {
+    throw new PageSetupError(`Invalid print titles "${rows}".`);
+  }
+  return `$${match[1]}:$${match[2]}`;
+}
+__name(toAbsoluteRowSpan, "toAbsoluteRowSpan");
+function toAbsoluteRange(range2) {
+  if (!/^[$A-Za-z0-9:]+$/.test(range2)) {
+    throw new PageSetupError(`Invalid print area "${range2}".`);
+  }
+  return range2.split(":").map((part) => part.replace(/^\$?([A-Za-z]{1,3})\$?(\d{1,7})$/, "$$$1$$$2")).join(":");
+}
+__name(toAbsoluteRange, "toAbsoluteRange");
+function escapeXml(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+__name(escapeXml, "escapeXml");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-protection.ts
+var SheetProtectionError = class extends Error {
+  static {
+    __name(this, "SheetProtectionError");
+  }
+};
+var ELEMENT_PATTERN = /<sheetProtection\b[^>]*\/>|<sheetProtection\b[^>]*>\s*<\/sheetProtection>/;
+function applySheetProtection(worksheetXml, protect) {
+  const existing = ELEMENT_PATTERN.exec(worksheetXml);
+  if (!protect) {
+    if (!existing) return worksheetXml;
+    if (/\b(?:password|hashValue)="/.test(existing[0])) {
+      throw new SheetProtectionError(
+        "This sheet is protected with a password \u2014 removing its protection is not supported."
+      );
+    }
+    return worksheetXml.replace(existing[0], "");
+  }
+  if (existing) {
+    if (/\bsheet="(?:1|true)"/.test(existing[0])) return worksheetXml;
+    const updated = existing[0].includes(' sheet="') ? existing[0].replace(/ sheet="[^"]*"/, ' sheet="1"') : existing[0].replace(/<sheetProtection\b/, '<sheetProtection sheet="1"');
+    return worksheetXml.replace(existing[0], updated);
+  }
+  const element = '<sheetProtection sheet="1" objects="1" scenarios="1"/>';
+  const anchor = /<sheetCalcPr\b[^>]*\/?>/.exec(worksheetXml) ?? /<\/sheetData>|<sheetData\b[^>]*\/>/.exec(worksheetXml);
+  if (!anchor) throw new SheetProtectionError("Worksheet has no sheetData element.");
+  const at = anchor.index + anchor[0].length;
+  return worksheetXml.slice(0, at) + element + worksheetXml.slice(at);
+}
+__name(applySheetProtection, "applySheetProtection");
+var WORKBOOK_PROTECTION_PATTERN = /<workbookProtection\b[^>]*\/>|<workbookProtection\b[^>]*>\s*<\/workbookProtection>/;
+function applyWorkbookProtection(workbookXml, lockStructure) {
+  const existing = WORKBOOK_PROTECTION_PATTERN.exec(workbookXml);
+  if (!lockStructure) {
+    if (!existing) return workbookXml;
+    if (/\bworkbook(?:Password|HashValue)="/.test(existing[0])) {
+      throw new SheetProtectionError(
+        "The workbook structure is protected with a password \u2014 removing its protection is not supported."
+      );
+    }
+    const stripped = existing[0].replace(/\s+lockStructure="[^"]*"/, "");
+    const empty = /^<workbookProtection\s*(?:\/>|>\s*<\/workbookProtection>)$/.test(stripped);
+    return workbookXml.slice(0, existing.index) + (empty ? "" : stripped) + workbookXml.slice(existing.index + existing[0].length);
+  }
+  if (existing) {
+    if (/\blockStructure="(?:1|true)"/.test(existing[0])) return workbookXml;
+    const updated = /\slockStructure="/.test(existing[0]) ? existing[0].replace(/(\s+lockStructure=)"[^"]*"/, '$1"1"') : existing[0].replace(/<workbookProtection\b/, '<workbookProtection lockStructure="1"');
+    return workbookXml.slice(0, existing.index) + updated + workbookXml.slice(existing.index + existing[0].length);
+  }
+  const element = '<workbookProtection lockStructure="1"/>';
+  const anchor = /<bookViews\b|<sheets\b/.exec(workbookXml);
+  if (!anchor) throw new SheetProtectionError("Workbook has no sheets element.");
+  return workbookXml.slice(0, anchor.index) + element + workbookXml.slice(anchor.index);
+}
+__name(applyWorkbookProtection, "applyWorkbookProtection");
+var PROTECTED_RANGES_PATTERN = /<protectedRanges\b[^>]*\/>|<protectedRanges\b[^>]*>[\s\S]*?<\/protectedRanges>/;
+function escapeAttr2(value) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+__name(escapeAttr2, "escapeAttr");
+function applyProtectedRanges(worksheetXml, ranges) {
+  const existing = PROTECTED_RANGES_PATTERN.exec(worksheetXml);
+  if (existing && /\b(?:password|hashValue)="|securityDescriptor/.test(existing[0])) {
+    throw new SheetProtectionError(
+      "This sheet has password- or permission-protected edit ranges \u2014 editing them is not supported."
+    );
+  }
+  const stripped = existing ? worksheetXml.slice(0, existing.index) + worksheetXml.slice(existing.index + existing[0].length) : worksheetXml;
+  if (ranges.length === 0) return stripped;
+  const body = ranges.map(
+    (range2) => `<protectedRange sqref="${escapeAttr2(range2.sqref)}" name="${escapeAttr2(range2.name)}"/>`
+  ).join("");
+  const element = `<protectedRanges>${body}</protectedRanges>`;
+  const anchor = /<sheetProtection\b[^>]*\/?>/.exec(stripped) ?? /<sheetCalcPr\b[^>]*\/?>/.exec(stripped) ?? /<\/sheetData>|<sheetData\b[^>]*\/>/.exec(stripped);
+  if (!anchor) throw new SheetProtectionError("Worksheet has no sheetData element.");
+  const at = anchor.index + anchor[0].length;
+  return stripped.slice(0, at) + element + stripped.slice(at);
+}
+__name(applyProtectedRanges, "applyProtectedRanges");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-theme.ts
+var ThemeStateError = class extends Error {
+  static {
+    __name(this, "ThemeStateError");
+  }
+};
+var SCHEME_SLOTS = [
+  ["dk1", 1],
+  ["lt1", 0],
+  ["dk2", 3],
+  ["lt2", 2],
+  ["accent1", 4],
+  ["accent2", 5],
+  ["accent3", 6],
+  ["accent4", 7],
+  ["accent5", 8],
+  ["accent6", 9],
+  ["hlink", 10],
+  ["folHlink", 11]
+];
+function escapeAttr3(value) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+__name(escapeAttr3, "escapeAttr");
+function applyThemeState(themeXml, state) {
+  let xml = themeXml;
+  if (state.colors !== void 0) {
+    const { name, values } = state.colors;
+    if (values.length !== 12) throw new ThemeStateError("A theme palette needs 12 colors.");
+    for (const [slot, index2] of SCHEME_SLOTS) {
+      const hex = (values[index2] ?? "").replace(/^#/, "").toUpperCase();
+      if (!/^[0-9A-F]{6}$/.test(hex)) {
+        throw new ThemeStateError(`Theme color ${slot} is not a valid #RRGGBB value.`);
+      }
+      const pattern = new RegExp(`<a:${slot}>[\\s\\S]*?</a:${slot}>`);
+      if (!pattern.test(xml)) {
+        throw new ThemeStateError(`The theme has no ${slot} color scheme slot.`);
+      }
+      xml = xml.replace(pattern, `<a:${slot}><a:srgbClr val="${hex}"/></a:${slot}>`);
+    }
+    xml = xml.replace(/(<a:clrScheme name=")[^"]*(")/, `$1${escapeAttr3(name)}$2`);
+  }
+  if (state.fonts !== void 0) {
+    const { name, major, minor } = state.fonts;
+    const majorPattern = /(<a:majorFont>[\s\S]*?<a:latin[^>]*typeface=")[^"]*(")/;
+    const minorPattern = /(<a:minorFont>[\s\S]*?<a:latin[^>]*typeface=")[^"]*(")/;
+    if (!majorPattern.test(xml) || !minorPattern.test(xml)) {
+      throw new ThemeStateError("The theme has no font scheme to rewrite.");
+    }
+    xml = xml.replace(majorPattern, `$1${escapeAttr3(major)}$2`);
+    xml = xml.replace(minorPattern, `$1${escapeAttr3(minor)}$2`);
+    xml = xml.replace(/(<a:fontScheme name=")[^"]*(")/, `$1${escapeAttr3(name)}$2`);
+  }
+  return xml;
+}
+__name(applyThemeState, "applyThemeState");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-notes.ts
+var NoteEditError = class extends Error {
+  static {
+    __name(this, "NoteEditError");
+  }
+};
+var COMMENTS_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
+var VML_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing";
+var COMMENTS_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml";
+var CONTENT_TYPES_PATH = "[Content_Types].xml";
+function escapeXml2(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+__name(escapeXml2, "escapeXml");
+function columnName(index2) {
+  let label = "";
+  for (let i = index2; i >= 0; i = Math.floor(i / 26) - 1) {
+    label = String.fromCharCode(65 + i % 26) + label;
+  }
+  return label;
+}
+__name(columnName, "columnName");
+function worksheetRelsPath(worksheetPath) {
+  return worksheetPath.replace(/^(xl\/worksheets\/)([^/]+)$/, "$1_rels/$2.rels");
+}
+__name(worksheetRelsPath, "worksheetRelsPath");
+function relTarget(relsXml, type) {
+  const pattern = new RegExp(`<Relationship\\b[^>]*Type="${type}"[^>]*/?>`);
+  const found = pattern.exec(relsXml);
+  if (!found) return null;
+  const target = / Target="([^"]*)"/.exec(found[0]);
+  return target?.[1] ?? null;
+}
+__name(relTarget, "relTarget");
+function resolveRelTarget2(worksheetPath, target) {
+  if (target.startsWith("/")) return target.slice(1);
+  const base = worksheetPath.split("/").slice(0, -1);
+  for (const part of target.split("/")) {
+    if (part === "..") base.pop();
+    else if (part !== ".") base.push(part);
+  }
+  return base.join("/");
+}
+__name(resolveRelTarget2, "resolveRelTarget");
+function nextFreeRid(relsXml) {
+  const ids = [...relsXml.matchAll(/ Id="rId(\d+)"/g)].map((match) => Number(match[1]));
+  return `rId${ids.length === 0 ? 1 : Math.max(...ids) + 1}`;
+}
+__name(nextFreeRid, "nextFreeRid");
+async function nextFreePath(pkg, template) {
+  for (let index2 = 1; index2 < 1e4; index2 += 1) {
+    const candidate = template(index2);
+    if (!await pkg.has(candidate)) return candidate;
+  }
+  throw new NoteEditError("No free part name for the comments part.");
+}
+__name(nextFreePath, "nextFreePath");
+function buildCommentsXml(notes) {
+  const authors = [];
+  const authorId = /* @__PURE__ */ __name((author) => {
+    const existing = authors.indexOf(author);
+    if (existing !== -1) return existing;
+    authors.push(author);
+    return authors.length - 1;
+  }, "authorId");
+  const comments = notes.map((note) => {
+    const ref = `${columnName(note.column)}${note.row + 1}`;
+    return `<comment ref="${ref}" authorId="${authorId(note.author)}"><text><t xml:space="preserve">${escapeXml2(note.text)}</t></text></comment>`;
+  }).join("");
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<comments xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><authors>${authors.map((author) => `<author>${escapeXml2(author)}</author>`).join("")}</authors><commentList>${comments}</commentList></comments>`;
+}
+__name(buildCommentsXml, "buildCommentsXml");
+var VML_HEADER = '<xml xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><o:shapelayout v:ext="edit"><o:idmap v:ext="edit" data="1"/></o:shapelayout><v:shapetype id="_x0000_t202" coordsize="21600,21600" o:spt="202" path="m,l,21600r21600,l21600,xe"><v:stroke joinstyle="miter"/><v:path gradientshapeok="t" o:connecttype="rect"/></v:shapetype>';
+function noteShape(note, index2) {
+  const anchor = [note.column + 1, 15, note.row, 2, note.column + 4, 15, note.row + 4, 2].join(",");
+  return `<v:shape id="_x0000_s${1025 + index2}" type="#_x0000_t202" style="position:absolute;margin-left:80pt;margin-top:2pt;width:108pt;height:60pt;z-index:${index2 + 1};visibility:hidden" fillcolor="#ffffe1" o:insetmode="auto"><v:fill color2="#ffffe1"/><v:shadow on="t" color="black" obscured="t"/><v:path o:connecttype="none"/><v:textbox style="mso-direction-alt:auto"><div style="text-align:left"></div></v:textbox><x:ClientData ObjectType="Note"><x:MoveWithCells/><x:SizeWithCells/><x:Anchor>${anchor}</x:Anchor><x:AutoFill>False</x:AutoFill><x:Row>${note.row}</x:Row><x:Column>${note.column}</x:Column></x:ClientData></v:shape>`;
+}
+__name(noteShape, "noteShape");
+function stripNoteShapes(vmlXml) {
+  return vmlXml.replace(
+    /<v:shape\b[\s\S]*?<\/v:shape>/g,
+    (shape) => shape.includes('ObjectType="Note"') ? "" : shape
+  );
+}
+__name(stripNoteShapes, "stripNoteShapes");
+function ensureContentTypeOverride(contentTypes, partName) {
+  if (contentTypes.includes(`PartName="/${partName}"`)) return contentTypes;
+  return contentTypes.replace(
+    "</Types>",
+    `<Override PartName="/${partName}" ContentType="${COMMENTS_CONTENT_TYPE}"/></Types>`
+  );
+}
+__name(ensureContentTypeOverride, "ensureContentTypeOverride");
+function ensureVmlDefault(contentTypes) {
+  if (/<Default\b[^>]*Extension="vml"/.test(contentTypes)) return contentTypes;
+  return contentTypes.replace(
+    "</Types>",
+    '<Default Extension="vml" ContentType="application/vnd.openxmlformats-officedocument.vmlDrawing"/></Types>'
+  );
+}
+__name(ensureVmlDefault, "ensureVmlDefault");
+function appendRel2(relsXml, id, type, target) {
+  return relsXml.replace(
+    "</Relationships>",
+    `<Relationship Id="${id}" Type="${type}" Target="${target}"/></Relationships>`
+  );
+}
+__name(appendRel2, "appendRel");
+function removeRel(relsXml, type) {
+  return relsXml.replace(new RegExp(`<Relationship\\b[^>]*Type="${type}"[^>]*/?>`), "");
+}
+__name(removeRel, "removeRel");
+var EMPTY_RELS2 = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
+var AFTER_LEGACY_DRAWING = /<legacyDrawingHF\b|<picture\b|<oleObjects\b|<controls\b|<webPublishItems\b|<tableParts\b|<extLst\b/;
+function ensureLegacyDrawingElement(worksheetXml, rid) {
+  if (/<legacyDrawing\b/.test(worksheetXml)) return worksheetXml;
+  worksheetXml = ensureRelationshipNamespace(worksheetXml);
+  const element = `<legacyDrawing r:id="${rid}"/>`;
+  const anchor = AFTER_LEGACY_DRAWING.exec(worksheetXml);
+  if (anchor) {
+    return worksheetXml.slice(0, anchor.index) + element + worksheetXml.slice(anchor.index);
+  }
+  const end = worksheetXml.lastIndexOf("</worksheet>");
+  if (end === -1) throw new NoteEditError("Worksheet has no closing element.");
+  return worksheetXml.slice(0, end) + element + worksheetXml.slice(end);
+}
+__name(ensureLegacyDrawingElement, "ensureLegacyDrawingElement");
+async function applySheetNotes(pkg, worksheetPath, notes, touchedEntries) {
+  const relsPath = worksheetRelsPath(worksheetPath);
+  const hasRels = await pkg.has(relsPath);
+  let relsXml = hasRels ? await pkg.readText(relsPath) : EMPTY_RELS2;
+  const existingCommentsTarget = relTarget(relsXml, COMMENTS_REL_TYPE);
+  const existingCommentsPath = existingCommentsTarget === null ? null : resolveRelTarget2(worksheetPath, existingCommentsTarget);
+  const existingVmlTarget = relTarget(relsXml, VML_REL_TYPE);
+  const existingVmlPath = existingVmlTarget === null ? null : resolveRelTarget2(worksheetPath, existingVmlTarget);
+  let relsChanged = false;
+  if (notes.length === 0) {
+    if (existingCommentsPath === null) return;
+    pkg.remove(existingCommentsPath);
+    touchedEntries.add(existingCommentsPath);
+    relsXml = removeRel(relsXml, COMMENTS_REL_TYPE);
+    const contentTypes2 = await pkg.readText(CONTENT_TYPES_PATH);
+    const stripped = contentTypes2.replace(
+      new RegExp(
+        `<Override\\b[^>]*PartName="/${existingCommentsPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/>`
+      ),
+      ""
+    );
+    if (stripped !== contentTypes2) {
+      pkg.write(CONTENT_TYPES_PATH, stripped);
+      touchedEntries.add(CONTENT_TYPES_PATH);
+    }
+    if (existingVmlPath !== null && await pkg.has(existingVmlPath)) {
+      const remaining = stripNoteShapes(await pkg.readText(existingVmlPath));
+      if (/<v:shape\b/.test(remaining)) {
+        pkg.write(existingVmlPath, remaining);
+      } else {
+        pkg.remove(existingVmlPath);
+        relsXml = removeRel(relsXml, VML_REL_TYPE);
+        const worksheetXml = await pkg.readText(worksheetPath);
+        const withoutLegacy = worksheetXml.replace(/<legacyDrawing\b[^>]*\/>/, "");
+        if (withoutLegacy !== worksheetXml) {
+          pkg.write(worksheetPath, withoutLegacy);
+          touchedEntries.add(worksheetPath);
+        }
+      }
+      touchedEntries.add(existingVmlPath);
+    }
+    pkg.write(relsPath, relsXml);
+    touchedEntries.add(relsPath);
+    return;
+  }
+  let commentsPath = existingCommentsPath;
+  if (commentsPath === null) {
+    commentsPath = await nextFreePath(pkg, (index2) => `xl/comments${index2}.xml`);
+    const rid = nextFreeRid(relsXml);
+    const target = `../${commentsPath.replace(/^xl\//, "")}`;
+    relsXml = appendRel2(relsXml, rid, COMMENTS_REL_TYPE, target);
+    relsChanged = true;
+    pkg.add(commentsPath, buildCommentsXml(notes));
+  } else {
+    pkg.write(commentsPath, buildCommentsXml(notes));
+  }
+  touchedEntries.add(commentsPath);
+  const shapes = notes.map((note, index2) => noteShape(note, index2)).join("");
+  if (existingVmlPath !== null && await pkg.has(existingVmlPath)) {
+    const vml = stripNoteShapes(await pkg.readText(existingVmlPath));
+    const end = vml.lastIndexOf("</xml>");
+    if (end === -1) throw new NoteEditError(`${existingVmlPath} is not a VML drawing.`);
+    pkg.write(existingVmlPath, vml.slice(0, end) + shapes + vml.slice(end));
+    touchedEntries.add(existingVmlPath);
+  } else {
+    const vmlPath = await nextFreePath(pkg, (index2) => `xl/drawings/vmlDrawing${index2}.vml`);
+    const rid = nextFreeRid(relsXml);
+    relsXml = appendRel2(relsXml, rid, VML_REL_TYPE, `../drawings/${vmlPath.split("/").pop()}`);
+    relsChanged = true;
+    pkg.add(vmlPath, `${VML_HEADER}${shapes}</xml>`);
+    touchedEntries.add(vmlPath);
+    const worksheetXml = await pkg.readText(worksheetPath);
+    const withLegacy = ensureLegacyDrawingElement(worksheetXml, rid);
+    if (withLegacy !== worksheetXml) {
+      pkg.write(worksheetPath, withLegacy);
+      touchedEntries.add(worksheetPath);
+    }
+  }
+  const contentTypes = await pkg.readText(CONTENT_TYPES_PATH);
+  const updatedTypes = ensureVmlDefault(ensureContentTypeOverride(contentTypes, commentsPath));
+  if (updatedTypes !== contentTypes) {
+    pkg.write(CONTENT_TYPES_PATH, updatedTypes);
+    touchedEntries.add(CONTENT_TYPES_PATH);
+  }
+  if (relsChanged) {
+    if (hasRels) pkg.write(relsPath, relsXml);
+    else pkg.add(relsPath, relsXml);
+    touchedEntries.add(relsPath);
+  }
+}
+__name(applySheetNotes, "applySheetNotes");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-sparkline.ts
+var SparklineAddError = class extends Error {
+  static {
+    __name(this, "SparklineAddError");
+  }
+};
+var SPARKLINE_EXT_URI = "{05C60535-1F16-4fd2-B633-F4F36F0B64E0}";
+var X14_NS = "http://schemas.microsoft.com/office/spreadsheetml/2009/9/main";
+var XM_NS = "http://schemas.microsoft.com/office/excel/2006/main";
+var DEFAULT_SERIES_ARGB = "FF376092";
+var NEGATIVE_ARGB = "FFD00000";
+function escapeXml3(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+__name(escapeXml3, "escapeXml");
+function toArgb2(color) {
+  if (color === void 0) return DEFAULT_SERIES_ARGB;
+  if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+    throw new SparklineAddError(`"${color}" is not a #RRGGBB color.`);
+  }
+  return `FF${color.slice(1).toUpperCase()}`;
+}
+__name(toArgb2, "toArgb");
+function buildGroupXml(group2) {
+  const typeAttribute = group2.type === "line" ? "" : ` type="${group2.type}"`;
+  const sparklines = group2.cells.map(
+    (cell) => `<x14:sparkline><xm:f>${escapeXml3(cell.sourceRef)}</xm:f><xm:sqref>${cell.cell}</xm:sqref></x14:sparkline>`
+  ).join("");
+  return `<x14:sparklineGroup displayEmptyCellsAs="gap"${typeAttribute}><x14:colorSeries rgb="${toArgb2(group2.color)}"/><x14:colorNegative rgb="${NEGATIVE_ARGB}"/><x14:sparklines>${sparklines}</x14:sparklines></x14:sparklineGroup>`;
+}
+__name(buildGroupXml, "buildGroupXml");
+function wrapGroups(groupsXml) {
+  return `<x14:sparklineGroups xmlns:xm="${XM_NS}">${groupsXml}</x14:sparklineGroups>`;
+}
+__name(wrapGroups, "wrapGroups");
+function insertGroups(worksheetXml, groupsXml) {
+  const extOpen = /<ext\b[^>]*\buri="\{05C60535-1F16-4FD2-B633-F4F36F0B64E0\}"[^>]*>/i.exec(
+    worksheetXml
+  );
+  if (extOpen && !extOpen[0].endsWith("/>")) {
+    const closeAt = worksheetXml.indexOf("</ext>", extOpen.index);
+    if (closeAt === -1) throw new SparklineAddError("The sparkline ext element is malformed.");
+    const block = worksheetXml.slice(extOpen.index, closeAt);
+    const groupsClose = block.lastIndexOf("</x14:sparklineGroups>");
+    const patched = groupsClose === -1 ? block + wrapGroups(groupsXml) : block.slice(0, groupsClose) + groupsXml + block.slice(groupsClose);
+    return worksheetXml.slice(0, extOpen.index) + patched + worksheetXml.slice(closeAt);
+  }
+  const ext = `<ext uri="${SPARKLINE_EXT_URI}" xmlns:x14="${X14_NS}">${wrapGroups(groupsXml)}</ext>`;
+  const extLstClose = worksheetXml.lastIndexOf("</extLst>");
+  if (extLstClose !== -1 && extLstClose > worksheetXml.lastIndexOf("</sheetData>")) {
+    return worksheetXml.slice(0, extLstClose) + ext + worksheetXml.slice(extLstClose);
+  }
+  const worksheetClose = worksheetXml.lastIndexOf("</worksheet>");
+  if (worksheetClose === -1) throw new SparklineAddError("Worksheet has no closing element.");
+  return worksheetXml.slice(0, worksheetClose) + `<extLst>${ext}</extLst>` + worksheetXml.slice(worksheetClose);
+}
+__name(insertGroups, "insertGroups");
+function applySparklineAdditions(worksheetXml, additions) {
+  if (additions.length === 0) return worksheetXml;
+  const seen = /* @__PURE__ */ new Set();
+  for (const group2 of additions) {
+    for (const { cell } of group2.cells) {
+      if (seen.has(cell) || worksheetXml.includes(`<xm:sqref>${cell}</xm:sqref>`)) {
+        throw new SparklineAddError(`${cell} already has a sparkline.`);
+      }
+      seen.add(cell);
+    }
+  }
+  return insertGroups(worksheetXml, additions.map(buildGroupXml).join(""));
+}
+__name(applySparklineAdditions, "applySparklineAdditions");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-pivot.ts
+var PivotParseError = class extends Error {
+  static {
+    __name(this, "PivotParseError");
+  }
+};
+function setPivotRefreshOnLoad(cacheDefinitionXml) {
+  const root = /<pivotCacheDefinition\b[^>]*>/.exec(cacheDefinitionXml);
+  if (!root) throw new PivotParseError("pivotCacheDefinition part has no root element.");
+  const updated = root[0].includes(' refreshOnLoad="') ? root[0].replace(/ refreshOnLoad="[^"]*"/, ' refreshOnLoad="1"') : root[0].replace("<pivotCacheDefinition", '<pivotCacheDefinition refreshOnLoad="1"');
+  return cacheDefinitionXml.slice(0, root.index) + updated + cacheDefinitionXml.slice(root.index + root[0].length);
+}
+__name(setPivotRefreshOnLoad, "setPivotRefreshOnLoad");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-pivot-expand.ts
+var PivotExpandError = class extends Error {
+  static {
+    __name(this, "PivotExpandError");
+  }
+};
+function parseCellRef(ref) {
+  const m = /^([A-Z]+)(\d+)$/.exec(ref.trim().toUpperCase());
+  if (!m) throw new PivotExpandError(`Cannot parse cell address "${ref}".`);
+  return { col: columnIndex(m[1]), row: Number(m[2]) - 1 };
+}
+__name(parseCellRef, "parseCellRef");
+function parseAreaRef(ref) {
+  const parts = ref.trim().toUpperCase().split(":");
+  if (parts.length !== 2) throw new PivotExpandError(`Cannot parse area ref "${ref}".`);
+  return { start: parseCellRef(parts[0]), end: parseCellRef(parts[1]) };
+}
+__name(parseAreaRef, "parseAreaRef");
+function areaRefToString(area) {
+  return `${columnLabel(area.start.col)}${area.start.row + 1}:${columnLabel(area.end.col)}${area.end.row + 1}`;
+}
+__name(areaRefToString, "areaRefToString");
+async function findPivotTablePathForCache(pkg, cachePath) {
+  const allPaths = await pkg.paths();
+  const tableRelsPattern = /^xl\/pivotTables\/_rels\/[^/]+\.rels$/;
+  for (const relsPath of allPaths) {
+    if (!tableRelsPattern.test(relsPath)) continue;
+    const relsXml = await pkg.readText(relsPath);
+    const targetMatch = /Target="([^"]+)"[^>]*Type="[^"]*pivotCacheDefinition[^"]*"/.exec(relsXml) ?? /Type="[^"]*pivotCacheDefinition[^"]*"[^>]*Target="([^"]+)"/.exec(relsXml);
+    if (!targetMatch?.[1]) continue;
+    const relsDir = relsPath.replace(/\/_rels\/[^/]+$/, "");
+    const resolved = resolveRelativePath(relsDir, targetMatch[1]);
+    if (resolved !== cachePath) continue;
+    const tableFilename = relsPath.replace(/.*\/_rels\//, "").replace(/\.rels$/, "");
+    return `${relsDir}/${tableFilename}`;
+  }
+  return null;
+}
+__name(findPivotTablePathForCache, "findPivotTablePathForCache");
+function resolveRelativePath(baseDir, target) {
+  const segments = baseDir.split("/");
+  for (const part of target.split("/")) {
+    if (part === "..") segments.pop();
+    else if (part !== ".") segments.push(part);
+  }
+  return segments.join("/");
+}
+__name(resolveRelativePath, "resolveRelativePath");
+function extractLocationRef(pivotTableXml) {
+  return /<location\b[^>]*\bref="([^"]+)"/.exec(pivotTableXml)?.[1] ?? null;
+}
+__name(extractLocationRef, "extractLocationRef");
+function updateLocationRef(pivotTableXml, newRef) {
+  return pivotTableXml.replace(
+    /<location\b([^>]*)\bref="[^"]*"([^>]*)>/,
+    (_, before, after) => `<location${before}ref="${newRef}"${after}>`
+  );
+}
+__name(updateLocationRef, "updateLocationRef");
+function worksheetHasContentInArea(worksheetXml, area) {
+  const { start, end } = area;
+  const rowPattern = /<row\b([^>]*)>([\s\S]*?)<\/row>/g;
+  for (const rowMatch of worksheetXml.matchAll(rowPattern)) {
+    const rAttr = /\br="(\d+)"/.exec(rowMatch[1] ?? "");
+    if (!rAttr) continue;
+    const rowIdx = Number(rAttr[1]) - 1;
+    if (rowIdx < start.row || rowIdx > end.row) continue;
+    const cellPattern = /<c\b([^>]*)(?:\/>|>[\s\S]*?<\/c>)/g;
+    for (const cellMatch of rowMatch[2].matchAll(cellPattern)) {
+      const rCell = /\br="([A-Z]+\d+)"/.exec(cellMatch[1] ?? "");
+      if (!rCell) continue;
+      const colMatch = /^([A-Z]+)/.exec(rCell[1]);
+      if (!colMatch) continue;
+      const colIdx = columnIndex(colMatch[1]);
+      if (colIdx < start.col || colIdx > end.col) continue;
+      const cellXml = cellMatch[0];
+      if (cellXml.endsWith("/>")) continue;
+      if (!/<v[^>]*>/.test(cellXml) && !/<is>/.test(cellXml)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+__name(worksheetHasContentInArea, "worksheetHasContentInArea");
+function subtractAreas(outer, inner) {
+  const result = [];
+  if (inner.start.col > outer.start.col || inner.end.col < outer.end.col || inner.start.row > outer.start.row || inner.end.row < outer.end.row) {
+    if (inner.end.row < outer.end.row) {
+      result.push({
+        start: { col: outer.start.col, row: inner.end.row + 1 },
+        end: { col: outer.end.col, row: outer.end.row }
+      });
+    }
+    if (inner.end.col < outer.end.col) {
+      result.push({
+        start: { col: inner.end.col + 1, row: outer.start.row },
+        end: { col: outer.end.col, row: Math.min(inner.end.row, outer.end.row) }
+      });
+    }
+  }
+  return result;
+}
+__name(subtractAreas, "subtractAreas");
+async function applyPivotLayoutExpansions(pkg, updates, touchedEntries) {
+  for (const update of updates) {
+    const pivotTablePath = await findPivotTablePathForCache(pkg, update.cachePath);
+    if (!pivotTablePath) {
+      continue;
+    }
+    const pivotTableXml = await pkg.readText(pivotTablePath);
+    const currentRef = extractLocationRef(pivotTableXml);
+    if (!currentRef) continue;
+    const oldArea = parseAreaRef(currentRef);
+    const newArea = parseAreaRef(update.newOutputRef);
+    const sameArea = oldArea.start.col === newArea.start.col && oldArea.start.row === newArea.start.row && oldArea.end.col === newArea.end.col && oldArea.end.row === newArea.end.row;
+    if (sameArea && update.relayout === void 0) continue;
+    if (oldArea.start.col !== newArea.start.col || oldArea.start.row !== newArea.start.row) {
+      throw new PivotExpandError(
+        `Pivot "${update.newOutputRef}" cannot change its top-left cell during refresh.`
+      );
+    }
+    const grows = newArea.end.row > oldArea.end.row || newArea.end.col > oldArea.end.col;
+    if (grows) {
+      if (update.worksheetPath === void 0) {
+        throw new PivotExpandError("Pivot expansion needs a resolved worksheet path.");
+      }
+      const worksheetXml = await pkg.readText(update.worksheetPath);
+      const addedAreas = subtractAreas(newArea, oldArea);
+      for (const added of addedAreas) {
+        if (worksheetHasContentInArea(worksheetXml, added)) {
+          const addedRef = areaRefToString(added);
+          throw new PivotExpandError(
+            `Pivot expansion into ${addedRef} conflicts with existing worksheet content. Clear the area first or move the pivot.`
+          );
+        }
+      }
+    }
+    if (update.relayout === void 0) {
+      const updatedTableXml = updateLocationRef(pivotTableXml, update.newOutputRef);
+      pkg.write(pivotTablePath, updatedTableXml);
+      touchedEntries.add(pivotTablePath);
+      continue;
+    }
+    await applyPivotRelayout(pkg, update, pivotTablePath, pivotTableXml, touchedEntries);
+  }
+}
+__name(applyPivotLayoutExpansions, "applyPivotLayoutExpansions");
+async function applyPivotRelayout(pkg, update, pivotTablePath, pivotTableXml, touchedEntries) {
+  const relayout = update.relayout;
+  const name = unescapeAttribute(
+    /<pivotTableDefinition\b[^>]*?\bname="([^"]*)"/.exec(pivotTableXml)?.[1] ?? ""
+  );
+  const cacheId = Number(/\bcacheId="(\d+)"/.exec(pivotTableXml)?.[1]);
+  if (!name || !Number.isInteger(cacheId)) {
+    throw new PivotExpandError("The pivot table definition is missing its name or cacheId.");
+  }
+  const addition = {
+    ...relayout,
+    name,
+    worksheetPath: update.worksheetPath ?? "",
+    location: refToArea(update.newOutputRef)
+  };
+  pkg.write(pivotTablePath, buildPivotTableXml(cacheId, addition));
+  touchedEntries.add(pivotTablePath);
+  const cacheXml = await pkg.readText(update.cachePath);
+  const recordsRelId = /<pivotCacheDefinition\b[^>]*?\br:id="([^"]+)"/.exec(cacheXml)?.[1];
+  if (!recordsRelId) {
+    throw new PivotExpandError("The pivot cache definition is missing its records relationship.");
+  }
+  pkg.write(update.cachePath, buildCacheDefinitionXml(recordsRelId, addition, 0));
+  touchedEntries.add(update.cachePath);
+  const cacheRelsPath = update.cachePath.replace(/\/([^/]+)$/, "/_rels/$1.rels");
+  if (await pkg.has(cacheRelsPath)) {
+    const relsXml = await pkg.readText(cacheRelsPath);
+    const target = /Target="([^"]+)"[^>]*Type="[^"]*pivotCacheRecords[^"]*"/.exec(relsXml)?.[1] ?? /Type="[^"]*pivotCacheRecords[^"]*"[^>]*Target="([^"]+)"/.exec(relsXml)?.[1];
+    if (target) {
+      const recordsPath = resolveRelativePath(update.cachePath.replace(/\/[^/]+$/, ""), target);
+      pkg.write(
+        recordsPath,
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<pivotCacheRecords xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" count="0"/>'
+      );
+      touchedEntries.add(recordsPath);
+    }
+  }
+}
+__name(applyPivotRelayout, "applyPivotRelayout");
+function refToArea(ref) {
+  const area = parseAreaRef(ref);
+  return {
+    startRow: area.start.row,
+    startColumn: area.start.col,
+    endRow: area.end.row,
+    endColumn: area.end.col
+  };
+}
+__name(refToArea, "refToArea");
+function unescapeAttribute(input) {
+  return input.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"').replaceAll("&apos;", "'").replaceAll("&amp;", "&");
+}
+__name(unescapeAttribute, "unescapeAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-hyperlinks.ts
+var HyperlinkEditError = class extends Error {
+  static {
+    __name(this, "HyperlinkEditError");
+  }
+};
+var HYPERLINK_REL_TYPE2 = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
+var EMPTY_RELS3 = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
+function applyHyperlinkEdits(worksheetXml, relsXml, edits) {
+  let xml = worksheetXml;
+  let rels = relsXml;
+  let relsChanged = false;
+  const relIdsInUse = /* @__PURE__ */ __name(() => {
+    const used = /* @__PURE__ */ new Set();
+    for (const element of xml.matchAll(/<hyperlink\b[^>]*?\br:id="([^"]+)"/g)) {
+      if (element[1]) used.add(element[1]);
+    }
+    return used;
+  }, "relIdsInUse");
+  const dropUnusedRel = /* @__PURE__ */ __name((relId) => {
+    if (rels === null || relIdsInUse().has(relId)) return;
+    const next = rels.replace(new RegExp(`<Relationship\\b[^>]*\\bId="${relId}"[^>]*/>`), "");
+    if (next !== rels) {
+      rels = next;
+      relsChanged = true;
+    }
+  }, "dropUnusedRel");
+  const allocateRel = /* @__PURE__ */ __name((target) => {
+    if (rels === null) {
+      rels = EMPTY_RELS3;
+      relsChanged = true;
+    }
+    let maximum = 0;
+    for (const id of rels.matchAll(/\bId="rId([0-9]+)"/g)) {
+      maximum = Math.max(maximum, Number(id[1]));
+    }
+    const relId = `rId${maximum + 1}`;
+    const element = `<Relationship Id="${relId}" Type="${HYPERLINK_REL_TYPE2}" Target="${escapeXmlAttribute8(target)}" TargetMode="External"/>`;
+    rels = rels.replace("</Relationships>", () => `${element}</Relationships>`);
+    relsChanged = true;
+    return relId;
+  }, "allocateRel");
+  for (const edit of edits) {
+    const ref = toA1(edit.row, edit.column);
+    const existingPattern = new RegExp(`<hyperlink\\b[^>]*?\\bref="${ref}"[^>]*/>`);
+    const existing = existingPattern.exec(xml)?.[0];
+    const existingRelId = existing === void 0 ? void 0 : /\br:id="([^"]+)"/.exec(existing)?.[1];
+    if (existing !== void 0) {
+      xml = xml.replace(existingPattern, "");
+    }
+    if (existingRelId !== void 0) dropUnusedRel(existingRelId);
+    if (edit.target === null) continue;
+    const element = edit.target.startsWith("#") ? `<hyperlink ref="${ref}" location="${escapeXmlAttribute8(edit.target.slice(1))}"/>` : `<hyperlink ref="${ref}" r:id="${allocateRel(edit.target)}"/>`;
+    xml = insertHyperlinkElement(xml, element);
+  }
+  xml = xml.replace(/<hyperlinks>\s*<\/hyperlinks>/, "");
+  return { worksheetXml: xml, relsXml: rels, relsChanged };
+}
+__name(applyHyperlinkEdits, "applyHyperlinkEdits");
+function insertHyperlinkElement(xml, element) {
+  if (xml.includes("</hyperlinks>")) {
+    return xml.replace("</hyperlinks>", () => `${element}</hyperlinks>`);
+  }
+  const section = `<hyperlinks>${element}</hyperlinks>`;
+  const anchor = /<printOptions\b|<pageMargins\b|<pageSetup\b|<headerFooter\b|<rowBreaks\b|<colBreaks\b|<drawing\b|<legacyDrawing\b|<picture\b|<oleObjects\b|<tableParts\b|<extLst\b/.exec(
+    xml
+  );
+  if (anchor) {
+    return xml.slice(0, anchor.index) + section + xml.slice(anchor.index);
+  }
+  const end = xml.lastIndexOf("</worksheet>");
+  if (end === -1) throw new HyperlinkEditError("Worksheet has no closing element.");
+  return xml.slice(0, end) + section + xml.slice(end);
+}
+__name(insertHyperlinkElement, "insertHyperlinkElement");
+function toA1(row, column) {
+  let letters = "";
+  let remaining = column + 1;
+  while (remaining > 0) {
+    remaining -= 1;
+    letters = String.fromCharCode(65 + remaining % 26) + letters;
+    remaining = Math.floor(remaining / 26);
+  }
+  return `${letters}${row + 1}`;
+}
+__name(toA1, "toA1");
+function escapeXmlAttribute8(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+__name(escapeXmlAttribute8, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/domain/style-color.ts
+function isGradientFill(fill) {
+  return "gradient" in fill;
+}
+__name(isGradientFill, "isGradientFill");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-styles.ts
+var StylesheetEditor = class {
+  static {
+    __name(this, "StylesheetEditor");
+  }
+  source;
+  numFmts;
+  fonts;
+  fills;
+  borders;
+  hadBordersSection;
+  cellXfs;
+  dxfs;
+  hadDxfsSection;
+  originalCounts;
+  cache = /* @__PURE__ */ new Map();
+  nextNumFmtId;
+  constructor(stylesXml) {
+    this.source = stylesXml;
+    this.numFmts = extractElements(sectionInner(stylesXml, "numFmts") ?? "", "numFmt");
+    const fontsInner = sectionInner(stylesXml, "fonts");
+    const fillsInner = sectionInner(stylesXml, "fills");
+    const bordersInner = sectionInner(stylesXml, "borders");
+    const cellXfsInner = sectionInner(stylesXml, "cellXfs");
+    if (fontsInner === null || fillsInner === null || cellXfsInner === null) {
+      throw new Error(
+        "The workbook stylesheet is missing fonts, fills, or cellXfs \u2014 style edits cannot be saved."
+      );
+    }
+    this.fonts = extractElements(fontsInner, "font");
+    this.fills = extractElements(fillsInner, "fill");
+    this.hadBordersSection = bordersInner !== null;
+    this.borders = bordersInner === null ? ["<border/>"] : extractElements(bordersInner, "border");
+    if (this.borders.length === 0) this.borders.push("<border/>");
+    this.cellXfs = extractElements(cellXfsInner, "xf");
+    const dxfsInner = sectionInner(stylesXml, "dxfs");
+    this.hadDxfsSection = dxfsInner !== null;
+    this.dxfs = dxfsInner === null ? [] : extractElements(dxfsInner, "dxf");
+    if (this.fonts.length === 0 || this.cellXfs.length === 0) {
+      throw new Error(
+        "The workbook stylesheet has no base font or cell format \u2014 style edits cannot be saved."
+      );
+    }
+    this.originalCounts = {
+      numFmts: this.numFmts.length,
+      fonts: this.fonts.length,
+      fills: this.fills.length,
+      borders: this.borders.length,
+      cellXfs: this.cellXfs.length,
+      dxfs: this.dxfs.length
+    };
+    this.nextNumFmtId = this.numFmts.reduce(
+      (maximum, entry) => Math.max(maximum, Number(readAttribute2(entry, "numFmtId") ?? 0)),
+      163
+    ) + 1;
+  }
+  get changed() {
+    return this.numFmts.length !== this.originalCounts.numFmts || this.fonts.length !== this.originalCounts.fonts || this.fills.length !== this.originalCounts.fills || this.borders.length !== this.originalCounts.borders || this.cellXfs.length !== this.originalCounts.cellXfs || this.dxfs.length !== this.originalCounts.dxfs;
+  }
+  /// Conditional-formatting highlight styles; deduped like every other list.
+  internDxf(dxfXml) {
+    return internElement(this.dxfs, dxfXml);
+  }
+  /// Returns the cellXfs index of a format equal to the base format with the
+  /// delta applied, appending new numFmt/font/fill/xf entries as needed.
+  resolveStyle(baseXfIndex, delta) {
+    const cacheKey = `${baseXfIndex}|${stableJson(delta)}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached !== void 0) return cached;
+    const baseXf = this.cellXfs[baseXfIndex] ?? this.cellXfs[0] ?? "<xf/>";
+    let fontId = Number(readAttribute2(baseXf, "fontId") ?? 0);
+    let fillId = Number(readAttribute2(baseXf, "fillId") ?? 0);
+    let numFmtId = Number(readAttribute2(baseXf, "numFmtId") ?? 0);
+    let borderId = Number(readAttribute2(baseXf, "borderId") ?? 0);
+    const xfId = readAttribute2(baseXf, "xfId");
+    if (hasFontDelta(delta)) {
+      fontId = this.internFont(buildFont(this.fonts[fontId] ?? "<font/>", delta));
+    }
+    if (delta.fill !== void 0) {
+      fillId = delta.fill === null ? 0 : this.internFill(buildFill(delta.fill));
+    } else if (delta.fillColor !== void 0) {
+      fillId = delta.fillColor === null ? 0 : this.internFill(buildSolidFill(delta.fillColor));
+    }
+    if (delta.numberFormat !== void 0) {
+      numFmtId = this.internNumberFormat(delta.numberFormat);
+    }
+    if (hasBorderDelta(delta)) {
+      borderId = internElement(
+        this.borders,
+        buildBorder(this.borders[borderId] ?? "<border/>", delta)
+      );
+    }
+    const alignment = buildAlignment(baseXf, delta);
+    const protection = buildProtection(baseXf, delta);
+    const attributes2 = [
+      `numFmtId="${numFmtId}"`,
+      `fontId="${fontId}"`,
+      `fillId="${fillId}"`,
+      `borderId="${borderId}"`,
+      ...xfId === void 0 ? [] : [`xfId="${xfId}"`],
+      ...numFmtId !== 0 ? ['applyNumberFormat="1"'] : [],
+      ...fontId !== 0 ? ['applyFont="1"'] : [],
+      ...fillId !== 0 ? ['applyFill="1"'] : [],
+      ...borderId !== 0 ? ['applyBorder="1"'] : [],
+      ...alignment !== "" ? ['applyAlignment="1"'] : [],
+      ...protection !== "" ? ['applyProtection="1"'] : []
+    ].join(" ");
+    const children = `${alignment}${protection}`;
+    const xf = children === "" ? `<xf ${attributes2}/>` : `<xf ${attributes2}>${children}</xf>`;
+    const index2 = internElement(this.cellXfs, xf);
+    this.cache.set(cacheKey, index2);
+    return index2;
+  }
+  serialize() {
+    let result = this.source;
+    result = replaceSection(result, "fonts", this.fonts);
+    result = replaceSection(result, "fills", this.fills);
+    if (this.hadBordersSection) {
+      result = replaceSection(result, "borders", this.borders);
+    } else if (this.borders.length > this.originalCounts.borders) {
+      const section = `<borders count="${this.borders.length}">${this.borders.join("")}</borders>`;
+      result = result.replace(/<\/fills>|<fills\b[^>]*\/>/, (match) => `${match}${section}`);
+    }
+    result = replaceSection(result, "cellXfs", this.cellXfs);
+    if (this.hadDxfsSection) {
+      result = replaceSection(result, "dxfs", this.dxfs);
+    } else if (this.dxfs.length > 0) {
+      const section = `<dxfs count="${this.dxfs.length}">${this.dxfs.join("")}</dxfs>`;
+      const anchor = /<\/cellStyles>|<cellStyles\b[^>]*\/>/.exec(result) ?? /<\/cellXfs>|<cellXfs\b[^>]*\/>/.exec(result);
+      if (anchor) {
+        const at = anchor.index + anchor[0].length;
+        result = result.slice(0, at) + section + result.slice(at);
+      }
+    }
+    if (this.numFmts.length > 0) {
+      const section = `<numFmts count="${this.numFmts.length}">${this.numFmts.join("")}</numFmts>`;
+      if (sectionInner(result, "numFmts") !== null) {
+        result = result.replace(
+          /<numFmts\b[^>]*>[\s\S]*?<\/numFmts>|<numFmts\b[^>]*\/>/,
+          () => section
+        );
+      } else {
+        result = result.replace(/<fonts\b/, () => `${section}<fonts`);
+      }
+    }
+    return result;
+  }
+  internFont(fontXml) {
+    return internElement(this.fonts, fontXml);
+  }
+  internFill(fillXml) {
+    return internElement(this.fills, fillXml);
+  }
+  internNumberFormat(pattern) {
+    const builtin = BUILTIN_NUMBER_FORMATS.get(pattern) ?? shortDateNumFmtId(pattern);
+    if (builtin !== void 0) return builtin;
+    for (const entry of this.numFmts) {
+      if (readAttribute2(entry, "formatCode") === escapeXmlAttribute9(pattern)) {
+        return Number(readAttribute2(entry, "numFmtId") ?? 0);
+      }
+    }
+    const id = this.nextNumFmtId;
+    this.nextNumFmtId += 1;
+    this.numFmts.push(`<numFmt numFmtId="${id}" formatCode="${escapeXmlAttribute9(pattern)}"/>`);
+    return id;
+  }
+};
+var BUILTIN_NUMBER_FORMATS = /* @__PURE__ */ new Map([
+  ["General", 0],
+  ["0", 1],
+  ["0.00", 2],
+  ["#,##0", 3],
+  ["#,##0.00", 4],
+  ["0%", 9],
+  ["0.00%", 10],
+  ["0.00E+00", 11],
+  ["@", 49]
+]);
+function hasFontDelta(delta) {
+  return delta.bold !== void 0 || delta.italic !== void 0 || delta.underline !== void 0 || delta.underlineStyle !== void 0 || delta.strikethrough !== void 0 || delta.fontFamily !== void 0 || delta.fontSize !== void 0 || delta.fontColor !== void 0;
+}
+__name(hasFontDelta, "hasFontDelta");
+function buildFont(baseFontXml, delta) {
+  let inner = /<font\b[^>]*>([\s\S]*?)<\/font>/.exec(baseFontXml)?.[1] ?? "";
+  const added = [];
+  const override = /* @__PURE__ */ __name((pattern, replacement) => {
+    inner = inner.replace(pattern, "");
+    if (replacement !== "") added.push(replacement);
+  }, "override");
+  if (delta.bold !== void 0) override(/<b\b[^>]*\/?>/g, delta.bold ? "<b/>" : "");
+  if (delta.italic !== void 0) override(/<i\b[^>]*\/?>/g, delta.italic ? "<i/>" : "");
+  if (delta.underline !== void 0 || delta.underlineStyle !== void 0) {
+    const on = delta.underline ?? true;
+    override(
+      /<u\b[^>]*\/?>/g,
+      on ? delta.underlineStyle === "double" ? '<u val="double"/>' : "<u/>" : ""
+    );
+  }
+  if (delta.strikethrough !== void 0) {
+    override(/<strike\b[^>]*\/?>/g, delta.strikethrough ? "<strike/>" : "");
+  }
+  if (delta.fontSize !== void 0) {
+    override(/<sz\b[^>]*\/?>/g, `<sz val="${delta.fontSize}"/>`);
+  }
+  if (delta.fontColor !== void 0) {
+    override(
+      /<color\b[^>]*\/?>/g,
+      delta.fontColor === null ? "" : `<color ${colorAttributes(delta.fontColor)}/>`
+    );
+  }
+  if (delta.fontFamily !== void 0) {
+    override(/<name\b[^>]*\/?>/g, `<name val="${escapeXmlAttribute9(delta.fontFamily)}"/>`);
+  }
+  const content = `${added.join("")}${inner}`;
+  return content === "" ? "<font/>" : `<font>${content}</font>`;
+}
+__name(buildFont, "buildFont");
+function buildSolidFill(fillColor) {
+  return `<fill><patternFill patternType="solid"><fgColor ${colorAttributes(fillColor)}/><bgColor indexed="64"/></patternFill></fill>`;
+}
+__name(buildSolidFill, "buildSolidFill");
+function buildFill(fill) {
+  if (isGradientFill(fill)) {
+    const g = fill.gradient;
+    const attributes2 = [
+      ...g.type === "path" ? ['type="path"'] : [],
+      ...g.type !== "path" && g.angle !== void 0 ? [`degree="${g.angle}"`] : [],
+      ...["left", "right", "top", "bottom"].flatMap(
+        (edge) => g.type === "path" && g[edge] !== void 0 ? [`${edge}="${g[edge]}"`] : []
+      )
+    ];
+    const stops = g.stops.map(
+      (stop) => `<stop position="${stop.position}"><color ${colorAttributes(stop.color)}/></stop>`
+    ).join("");
+    const open = attributes2.length === 0 ? "<gradientFill>" : `<gradientFill ${attributes2.join(" ")}>`;
+    return `<fill>${open}${stops}</gradientFill></fill>`;
+  }
+  if (fill.pattern === "solid" && fill.bg === void 0) return buildSolidFill(fill.fg);
+  const bg = fill.bg === void 0 ? "" : `<bgColor ${colorAttributes(fill.bg)}/>`;
+  return `<fill><patternFill patternType="${fill.pattern}"><fgColor ${colorAttributes(fill.fg)}/>${bg}</patternFill></fill>`;
+}
+__name(buildFill, "buildFill");
+function colorAttributes(color) {
+  if (typeof color === "string") return `rgb="${toArgb3(color)}"`;
+  const tint2 = color.tint === void 0 || color.tint === 0 ? "" : ` tint="${color.tint}"`;
+  return `theme="${color.theme}"${tint2}`;
+}
+__name(colorAttributes, "colorAttributes");
+var BORDER_EDGE_TAGS = ["left", "right", "top", "bottom"];
+var BORDER_DELTA_KEYS = {
+  left: "borderLeft",
+  right: "borderRight",
+  top: "borderTop",
+  bottom: "borderBottom"
+};
+function hasBorderDelta(delta) {
+  return delta.borderTop !== void 0 || delta.borderBottom !== void 0 || delta.borderLeft !== void 0 || delta.borderRight !== void 0;
+}
+__name(hasBorderDelta, "hasBorderDelta");
+function buildBorder(baseBorderXml, delta) {
+  const attributes2 = /<border\b([^>]*?)\/?>/.exec(baseBorderXml)?.[1] ?? "";
+  const inner = /<border\b[^>]*>([\s\S]*?)<\/border>/.exec(baseBorderXml)?.[1] ?? "";
+  const childOf = /* @__PURE__ */ __name((tag) => new RegExp(`<${tag}\\b[^>]*/>|<${tag}\\b[^>]*>[\\s\\S]*?</${tag}>`).exec(inner)?.[0] ?? "", "childOf");
+  const children = BORDER_EDGE_TAGS.map((tag) => {
+    const edge = delta[BORDER_DELTA_KEYS[tag]];
+    if (edge === void 0) return childOf(tag);
+    if (edge === null) return `<${tag}/>`;
+    const color = edge.color === void 0 ? "" : `<color ${colorAttributes(edge.color)}/>`;
+    return color === "" ? `<${tag} style="${edge.style}"/>` : `<${tag} style="${edge.style}">${color}</${tag}>`;
+  });
+  children.push(childOf("diagonal"));
+  const content = children.join("");
+  return content === "" && attributes2.trim() === "" ? "<border/>" : `<border${attributes2}>${content}</border>`;
+}
+__name(buildBorder, "buildBorder");
+var ALIGNMENT_CARRIED = ["relativeIndent", "justifyLastLine", "shrinkToFit", "readingOrder"];
+function buildAlignment(baseXf, delta) {
+  const baseAlignment = /<alignment\b[^>]*\/?>/.exec(baseXf)?.[0] ?? "";
+  const horizontal = delta.horizontalAlignment ?? readAttribute2(baseAlignment, "horizontal");
+  const vertical = delta.verticalAlignment !== void 0 ? XLSX_VERTICAL[delta.verticalAlignment] : readAttribute2(baseAlignment, "vertical");
+  const wrap = delta.wrapText !== void 0 ? delta.wrapText : readAttribute2(baseAlignment, "wrapText") === "1";
+  const rotation = delta.textRotation !== void 0 ? delta.textRotation === 0 ? void 0 : String(delta.textRotation) : readAttribute2(baseAlignment, "textRotation");
+  const indent = delta.indent !== void 0 ? delta.indent === 0 ? void 0 : String(delta.indent) : readAttribute2(baseAlignment, "indent");
+  const modeled = [
+    ...horizontal ? [`horizontal="${horizontal}"`] : [],
+    ...vertical ? [`vertical="${vertical}"`] : [],
+    ...wrap ? ['wrapText="1"'] : [],
+    ...rotation ? [`textRotation="${rotation}"`] : [],
+    ...indent ? [`indent="${indent}"`] : []
+  ];
+  const applyAlignment = readCoreAttribute(baseXf, "applyAlignment");
+  const applies = modeled.length > 0 || applyAlignment === "1" || applyAlignment === "true";
+  const attributes2 = applies && ownsItsAlignment(baseXf) ? [...modeled, ...carriedAttributes(baseAlignment, ALIGNMENT_CARRIED)] : modeled;
+  return attributes2.length === 0 ? "" : `<alignment ${attributes2.join(" ")}/>`;
+}
+__name(buildAlignment, "buildAlignment");
+function ownsItsAlignment(xf) {
+  for (const element of xf.matchAll(/<\/?([\w.-]+(?::[\w.-]+)?)/g)) {
+    if (!/^(xf|alignment|protection)$/.test(element[1] ?? "")) return false;
+  }
+  return true;
+}
+__name(ownsItsAlignment, "ownsItsAlignment");
+function buildProtection(baseXf, delta) {
+  const baseProtection = /<protection\b[^>]*\/?>/.exec(baseXf)?.[0] ?? "";
+  const locked = delta.protectionLocked ?? (readAttribute2(baseProtection, "locked") === "0" ? false : void 0);
+  const hidden = delta.protectionHidden ?? (readAttribute2(baseProtection, "hidden") === "1" ? true : void 0);
+  const attributes2 = [
+    ...locked === false ? ['locked="0"'] : [],
+    ...hidden === true ? ['hidden="1"'] : []
+  ];
+  return attributes2.length === 0 ? "" : `<protection ${attributes2.join(" ")}/>`;
+}
+__name(buildProtection, "buildProtection");
+var XLSX_VERTICAL = {
+  top: "top",
+  center: "center",
+  bottom: "bottom"
+};
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value).filter(([, v]) => v !== void 0).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`);
+    return `{${entries.join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+__name(stableJson, "stableJson");
+function internElement(list, element) {
+  const existing = list.indexOf(element);
+  if (existing !== -1) return existing;
+  list.push(element);
+  return list.length - 1;
+}
+__name(internElement, "internElement");
+function sectionInner(xml, tag) {
+  const selfClosing = new RegExp(`<${tag}\\b[^>]*/>`);
+  if (selfClosing.test(xml)) return "";
+  const match = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`).exec(xml);
+  return match?.[1] ?? null;
+}
+__name(sectionInner, "sectionInner");
+function replaceSection(xml, tag, elements) {
+  const section = `<${tag} count="${elements.length}">${elements.join("")}</${tag}>`;
+  return xml.replace(
+    new RegExp(`<${tag}\\b[^>]*>[\\s\\S]*?</${tag}>|<${tag}\\b[^>]*/>`),
+    () => section
+  );
+}
+__name(replaceSection, "replaceSection");
+function extractElements(inner, tag) {
+  return [
+    ...inner.matchAll(new RegExp(`<${tag}\\b[^>]*/>|<${tag}\\b[^>]*>[\\s\\S]*?</${tag}>`, "g"))
+  ].map((match) => match[0]);
+}
+__name(extractElements, "extractElements");
+function readAttribute2(element, name) {
+  return new RegExp(`\\b${name}="([^"]*)"`).exec(element)?.[1];
+}
+__name(readAttribute2, "readAttribute");
+function readCoreAttribute(element, name) {
+  return new RegExp(`(?<![\\w:.-])${name}="([^"]*)"`).exec(element)?.[1];
+}
+__name(readCoreAttribute, "readCoreAttribute");
+function carriedAttributes(element, names2) {
+  return names2.flatMap((name) => {
+    const value = readCoreAttribute(element, name);
+    return value === void 0 ? [] : [`${name}="${value}"`];
+  });
+}
+__name(carriedAttributes, "carriedAttributes");
+function toArgb3(hexColor) {
+  return `FF${hexColor.slice(1).toUpperCase()}`;
+}
+__name(toArgb3, "toArgb");
+function escapeXmlAttribute9(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&apos;");
+}
+__name(escapeXmlAttribute9, "escapeXmlAttribute");
+
+// vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-gateway.ts
+var XLSX_ZIP_LIMITS = { maxParts: 1e4, maxTotalBytes: 256 * 1024 * 1024 };
+var MAX_ENTRY_COUNT = XLSX_ZIP_LIMITS.maxParts;
+var MAX_UNCOMPRESSED_BYTES = XLSX_ZIP_LIMITS.maxTotalBytes;
+var PackageEditor = class {
+  constructor(source) {
+    this.source = source;
+  }
+  static {
+    __name(this, "PackageEditor");
+  }
+  overlay = /* @__PURE__ */ new Map();
+  binaryOverlay = /* @__PURE__ */ new Map();
+  removed = /* @__PURE__ */ new Set();
+  addedPaths = /* @__PURE__ */ new Set();
+  async paths() {
+    const base = (await this.source.paths()).filter((path) => !this.removed.has(path));
+    return [...base, ...this.addedPaths, ...this.binaryOverlay.keys()];
+  }
+  async has(path) {
+    if (this.removed.has(path)) return false;
+    if (this.overlay.has(path) || this.binaryOverlay.has(path)) return true;
+    return this.source.has(path);
+  }
+  async readText(path) {
+    if (!this.removed.has(path)) {
+      const pending = this.overlay.get(path);
+      if (pending !== void 0) return pending;
+      if (await this.source.has(path)) return this.source.readText(path);
+    }
+    throw new Error(`Workbook is missing ${path}.`);
+  }
+  write(path, content) {
+    if (this.removed.has(path)) throw new Error(`Cannot write removed entry ${path}.`);
+    this.overlay.set(path, content);
+  }
+  add(path, content) {
+    this.addedPaths.add(path);
+    this.overlay.set(path, content);
+  }
+  addBinary(path, bytes) {
+    if (this.removed.has(path)) throw new Error(`Cannot write removed entry ${path}.`);
+    this.binaryOverlay.set(path, bytes);
+  }
+  remove(path) {
+    this.overlay.delete(path);
+    if (!this.addedPaths.delete(path)) this.removed.add(path);
+  }
+  async canPatch(path) {
+    if (this.overlay.has(path)) return true;
+    return this.source.canPatch?.(path) ?? true;
+  }
+  async containsText(path, needle) {
+    const pending = this.overlay.get(path);
+    if (pending !== void 0) return pending.includes(needle);
+    if (!this.source.containsText) {
+      throw new Error(`Cannot scan ${path} for references.`);
+    }
+    return this.source.containsText(path, needle);
+  }
+  releaseSourceText(path) {
+    this.source.releaseText?.(path);
+  }
+  toPlan(touchedEntries) {
+    const replaced = /* @__PURE__ */ new Map();
+    const added = /* @__PURE__ */ new Map();
+    for (const [path, content] of this.overlay) {
+      if (this.addedPaths.has(path)) added.set(path, content);
+      else replaced.set(path, content);
+    }
+    return {
+      replaced,
+      added,
+      addedBinary: new Map(this.binaryOverlay),
+      removedEntries: [...this.removed].sort(),
+      addedEntries: [...this.addedPaths, ...this.binaryOverlay.keys()].sort(),
+      touchedEntries: [...touchedEntries].sort()
+    };
+  }
+};
+var DEFAULT_STYLESHEET_XML = MINIMAL_STYLESHEET_XML;
+var STYLES_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
+var STYLES_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml";
+async function addDefaultStylesheet(pkg, touchedEntries) {
+  const stylesPath = "xl/styles.xml";
+  pkg.add(stylesPath, DEFAULT_STYLESHEET_XML);
+  touchedEntries.add(stylesPath);
+  const relationshipsPath = "xl/_rels/workbook.xml.rels";
+  const relationships = await pkg.readText(relationshipsPath);
+  if (!relationships.includes(`Type="${STYLES_REL_TYPE}"`)) {
+    const relationship = `<Relationship Id="rId${maxRelationshipId(relationships) + 1}" Type="${STYLES_REL_TYPE}" Target="styles.xml"/>`;
+    pkg.write(
+      relationshipsPath,
+      relationships.replace("</Relationships>", `${relationship}</Relationships>`)
+    );
+    touchedEntries.add(relationshipsPath);
+  }
+  const contentTypesPath = "[Content_Types].xml";
+  const contentTypes = await pkg.readText(contentTypesPath);
+  if (!contentTypes.includes('PartName="/xl/styles.xml"')) {
+    const override = `<Override PartName="/xl/styles.xml" ContentType="${STYLES_CONTENT_TYPE}"/>`;
+    pkg.write(contentTypesPath, contentTypes.replace("</Types>", `${override}</Types>`));
+    touchedEntries.add(contentTypesPath);
+  }
+}
+__name(addDefaultStylesheet, "addDefaultStylesheet");
+var METADATA_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata";
+var METADATA_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml";
+var DYNAMIC_ARRAY_METADATA_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><metadata xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:xda="http://schemas.microsoft.com/office/spreadsheetml/2017/dynamicarray"><metadataTypes count="1"><metadataType name="XLDAPR" minSupportedVersion="120000" copy="1" pasteAll="1" pasteValues="1" merge="1" splitFirst="1" rowColShift="1" clearFormats="1" clearComments="1" assign="1" coerce="1" cellMeta="1"/></metadataTypes><futureMetadata name="XLDAPR" count="1"><bk><extLst><ext uri="{bdbb8cdc-fa1e-496e-a857-3c3f30c029c3}"><xda:dynamicArrayProperties fDynamic="1" fCollapsed="0"/></ext></extLst></bk></futureMetadata><cellMetadata count="1"><bk><rc t="1" v="0"/></bk></cellMetadata></metadata>';
+function dynamicArrayCellMetaIndex(metadataXml) {
+  const types = [...metadataXml.matchAll(/<metadataType\b[^>]*\bname="([^"]*)"/g)].map((m) => m[1]);
+  const typeIndex = types.indexOf("XLDAPR") + 1;
+  if (typeIndex === 0) return null;
+  const cellMeta = /<cellMetadata\b[^>]*>([\s\S]*?)<\/cellMetadata>/.exec(metadataXml)?.[1];
+  if (!cellMeta) return null;
+  const records = [...cellMeta.matchAll(/<bk\b[^>]*>([\s\S]*?)<\/bk>/g)];
+  const at = records.findIndex((bk) => new RegExp(`<rc\\b[^>]*\\bt="${typeIndex}"`).test(bk[1]));
+  return at === -1 ? null : at + 1;
+}
+__name(dynamicArrayCellMetaIndex, "dynamicArrayCellMetaIndex");
+async function ensureDynamicArrayMetadata(pkg, touchedEntries) {
+  const metadataPath = "xl/metadata.xml";
+  if (await pkg.has(metadataPath)) {
+    return dynamicArrayCellMetaIndex(await pkg.readText(metadataPath));
+  }
+  pkg.add(metadataPath, DYNAMIC_ARRAY_METADATA_XML);
+  touchedEntries.add(metadataPath);
+  const relationshipsPath = "xl/_rels/workbook.xml.rels";
+  const relationships = await pkg.readText(relationshipsPath);
+  if (!relationships.includes(`Type="${METADATA_REL_TYPE}"`)) {
+    const relationship = `<Relationship Id="rId${maxRelationshipId(relationships) + 1}" Type="${METADATA_REL_TYPE}" Target="metadata.xml"/>`;
+    pkg.write(
+      relationshipsPath,
+      relationships.replace("</Relationships>", `${relationship}</Relationships>`)
+    );
+    touchedEntries.add(relationshipsPath);
+  }
+  const contentTypesPath = "[Content_Types].xml";
+  const contentTypes = await pkg.readText(contentTypesPath);
+  if (!contentTypes.includes('PartName="/xl/metadata.xml"')) {
+    const override = `<Override PartName="/xl/metadata.xml" ContentType="${METADATA_CONTENT_TYPE}"/>`;
+    pkg.write(contentTypesPath, contentTypes.replace("</Types>", `${override}</Types>`));
+    touchedEntries.add(contentTypesPath);
+  }
+  return 1;
+}
+__name(ensureDynamicArrayMetadata, "ensureDynamicArrayMetadata");
+function markDynamicArrayAnchor(worksheetXml, address, cm) {
+  const cellPattern = new RegExp(`<c\\b([^>]*)\\br="${address}"([^>]*)>`);
+  return worksheetXml.replace(
+    cellPattern,
+    (open, before, after) => /\bcm="/.test(open) ? open : `<c${before}r="${address}"${after} cm="${cm}">`
+  );
+}
+__name(markDynamicArrayAnchor, "markDynamicArrayAnchor");
+async function createBufferEntrySource(buffer) {
+  const zip = await loadSafeZip(buffer);
+  return {
+    paths: /* @__PURE__ */ __name(async () => Object.entries(zip.files).filter(([, file]) => !file.dir).map(([path]) => path), "paths"),
+    has: /* @__PURE__ */ __name(async (path) => zip.file(path) !== null, "has"),
+    readText: /* @__PURE__ */ __name(async (path) => normalizeOoxmlPartPrefix(await readTextEntry(zip, path)), "readText")
+  };
+}
+__name(createBufferEntrySource, "createBufferEntrySource");
+async function readBasicWorkbook(buffer) {
+  const zip = await createBufferEntrySource(buffer);
+  const workbookXml = await zip.readText("xl/workbook.xml");
+  const sharedStrings = await readSharedStrings(zip);
+  const sheets = [];
+  const sheetNamesById = {};
+  const sheetPattern = /<sheet\b((?:"[^"]*"|'[^']*'|[^>"'])*?)\/?>/g;
+  let match;
+  while ((match = sheetPattern.exec(workbookXml)) !== null) {
+    const attributes2 = match[1] ?? "";
+    const name = readXmlAttribute(attributes2, "name");
+    const sheetNumber = readXmlAttribute(attributes2, "sheetId");
+    if (!name || !sheetNumber) continue;
+    const decodedName = decodeXmlText(name);
+    const id = `sheet-${sheetNumber}`;
+    const worksheetPath = await resolveWorksheetPath(zip, decodedName);
+    const worksheetXml = await zip.readText(worksheetPath);
+    sheets.push({
+      id,
+      name: decodedName,
+      cells: parseWorksheetCells(worksheetXml, sharedStrings)
+    });
+    sheetNamesById[id] = decodedName;
+  }
+  if (sheets.length === 0) throw new Error("Workbook contains no readable worksheets.");
+  return {
+    snapshot: { revision: 0, sheets },
+    sheetNamesById
+  };
+}
+__name(readBasicWorkbook, "readBasicWorkbook");
+async function planCellEditsToXlsx(source, edits, structuralOps = [], chartEdits = [], sheetPlan, filterStates = [], hyperlinkEdits = [], cfStates = [], dvStates = [], sheetProtections = [], definedNamesState = null, visualAdditions = [], pageSetupStates = [], noteStates = [], tableAdditions = [], pivotAdditions = [], pivotCacheRefreshPaths = [], pivotRefreshUpdates = [], visualEdits = [], sparklineAdditions = [], formulaValues = [], themeState = null, workbookProtectionState = null, protectedRangeStates = [], bulkConstantFills = []) {
+  if (pivotAdditions.length > 0) {
+    if (sheetPlan !== void 0) {
+      throw new Error(
+        "A new pivot cannot be saved together with sheet management changes \u2014 save the pivot first."
+      );
+    }
+    const pivotSheets = new Set(
+      pivotAdditions.flatMap((pivot) => [pivot.sheetName, pivot.sourceSheetName])
+    );
+    if (structuralOps.some((sheet) => sheet.ops.length > 0 && pivotSheets.has(sheet.sheetName))) {
+      throw new Error(
+        "A new pivot cannot be saved together with row/column changes on its sheets \u2014 save the pivot first."
+      );
+    }
+  }
+  if (tableAdditions.length > 0) {
+    const tableSheets = new Set(tableAdditions.map((table) => table.sheetName));
+    if (structuralOps.some((sheet) => sheet.ops.length > 0 && tableSheets.has(sheet.sheetName))) {
+      throw new Error(
+        "A new table cannot be saved together with row/column changes on its sheet \u2014 save the table first."
+      );
+    }
+  }
+  if (definedNamesState !== null && (structuralOps.some((sheet) => sheet.ops.length > 0) || sheetPlan !== void 0)) {
+    throw new DefinedNameError(
+      "Defined-name edits cannot be saved together with row/column or sheet changes \u2014 save one of them first."
+    );
+  }
+  const pkg = new PackageEditor(source);
+  const touchedEntries = /* @__PURE__ */ new Set();
+  const additions = sheetPlan === void 0 ? [] : await allocateAddedSheets(
+    pkg,
+    sheetPlan.additions.map((addition) => addition.name)
+  );
+  const additionPaths = new Map(additions.map((addition) => [addition.name, addition.path]));
+  for (const [index2, addition] of additions.entries()) {
+    const sourceSheetName = sheetPlan?.additions[index2]?.sourceSheetName;
+    if (sourceSheetName === void 0) {
+      pkg.add(addition.path, buildWorksheetPartXml());
+      continue;
+    }
+    const sourcePath = await resolveWorksheetPath(pkg, sourceSheetName);
+    if (!await pkg.canPatch(sourcePath)) {
+      throw new SheetEditError(
+        `${sourcePath} is too large to load \u2014 duplicating "${sourceSheetName}" cannot be saved.`
+      );
+    }
+    assertNoSheetScopedDefinedNames(await pkg.readText("xl/workbook.xml"), sourceSheetName);
+    let cloneXml = sanitizeClonedWorksheetXml(await pkg.readText(sourcePath));
+    const sourceRelsPath = sourcePath.replace(/^(xl\/worksheets\/)([^/]+)$/, "$1_rels/$2.rels");
+    if (await pkg.has(sourceRelsPath)) {
+      const rels = prepareClonedSheetRels(await pkg.readText(sourceRelsPath), sourceSheetName);
+      if (rels.droppedPrinterSettings) cloneXml = stripPageSetupRelIds(cloneXml);
+      if (rels.relsXml !== null) {
+        pkg.add(
+          addition.path.replace(/^(xl\/worksheets\/)([^/]+)$/, "$1_rels/$2.rels"),
+          rels.relsXml
+        );
+      }
+    }
+    pkg.add(addition.path, cloneXml);
+  }
+  const sheetNames = /* @__PURE__ */ new Set([
+    ...edits.map((edit) => edit.sheetName),
+    ...bulkConstantFills.map((fill) => fill.sheetName),
+    ...structuralOps.map((sheet) => sheet.sheetName),
+    ...filterStates.map((state) => state.sheetName),
+    ...hyperlinkEdits.map((sheet) => sheet.sheetName),
+    ...cfStates.map((state) => state.sheetName),
+    ...dvStates.map((state) => state.sheetName),
+    ...sheetProtections.map((state) => state.sheetName),
+    ...pageSetupStates.map((state) => state.sheetName),
+    ...protectedRangeStates.map((state) => state.sheetName)
+  ]);
+  const worksheetXmls = /* @__PURE__ */ new Map();
+  const worksheetPaths = /* @__PURE__ */ new Map();
+  for (const sheetName of sheetNames) {
+    const worksheetPath = additionPaths.get(sheetName) ?? await resolveWorksheetPath(pkg, sheetName);
+    worksheetPaths.set(sheetName, worksheetPath);
+    const worksheetXml = await pkg.readText(worksheetPath);
+    if (!worksheetXml.includes("<sheetData")) {
+      throw new Error(
+        `${worksheetPath} (sheet "${sheetName}") has no sheetData element \u2014 ${worksheetXml.length} characters read.`
+      );
+    }
+    worksheetXmls.set(sheetName, worksheetXml);
+    pkg.releaseSourceText(worksheetPath);
+  }
+  if (pivotRefreshUpdates.length > 0) {
+    const resolvedUpdates = [];
+    for (const update of pivotRefreshUpdates) {
+      const worksheetPath = update.worksheetPath ?? (update.sheetName !== void 0 ? await resolveWorksheetPath(pkg, update.sheetName) : void 0);
+      if (worksheetPath === void 0) {
+        throw new Error("A pivot refresh update needs a worksheetPath or sheetName.");
+      }
+      resolvedUpdates.push({ ...update, worksheetPath });
+    }
+    await applyPivotLayoutExpansions(pkg, resolvedUpdates, touchedEntries);
+  }
+  let stylesheet = null;
+  const stylesPath = "xl/styles.xml";
+  if (edits.some((edit) => edit.style !== void 0) || cfStates.length > 0 || structuralOps.some(({ ops }) => ops.some((op) => op.kind === "set-col-style"))) {
+    if (!await pkg.has(stylesPath)) await addDefaultStylesheet(pkg, touchedEntries);
+    stylesheet = new StylesheetEditor(await pkg.readText(stylesPath));
+  }
+  const resolveColStyle = stylesheet === null ? void 0 : (baseXfIndex, delta) => stylesheet.resolveStyle(baseXfIndex, delta);
+  const workbookPath = "xl/workbook.xml";
+  const originalWorkbookXml = await pkg.readText(workbookPath);
+  let workbookXml = originalWorkbookXml;
+  const pendingTableColumnSyncs = [];
+  for (const { sheetName, ops } of structuralOps) {
+    if (ops.length === 0) continue;
+    worksheetXmls.set(
+      sheetName,
+      applyStructuralOps(worksheetXmls.get(sheetName) ?? "", ops, sheetName, resolveColStyle)
+    );
+    const editedPath = worksheetPaths.get(sheetName);
+    if (editedPath !== void 0) {
+      const tableInsertions = [];
+      await shiftAnchoredSheetParts(
+        pkg,
+        editedPath,
+        worksheetXmls.get(sheetName) ?? "",
+        ops,
+        touchedEntries,
+        tableInsertions
+      );
+      for (const entry of tableInsertions) {
+        pendingTableColumnSyncs.push({ sheetName, ...entry });
+      }
+    }
+    const nameByPath = new Map([...worksheetPaths].map(([name, path]) => [path, name]));
+    for (const path of await pkg.paths()) {
+      const isOtherSheet = path.startsWith("xl/worksheets/") && path.endsWith(".xml") && path !== editedPath;
+      const isChart = path.startsWith("xl/charts/") && path.endsWith(".xml");
+      if (!isOtherSheet && !isChart) continue;
+      const trackedName = nameByPath.get(path);
+      if (trackedName === void 0 && !await pkg.canPatch(path)) {
+        if (await pkg.containsText(path, sheetName)) {
+          throw new Error(
+            `${path} references "${sheetName}" but is too large to rewrite \u2014 this structural change cannot be saved.`
+          );
+        }
+        continue;
+      }
+      const xml = trackedName !== void 0 ? worksheetXmls.get(trackedName) ?? "" : await pkg.readText(path);
+      const shifted = isChart ? shiftChartReferences(xml, sheetName, ops) : shiftCrossSheetFormulas(xml, sheetName, ops);
+      if (shifted === xml) continue;
+      if (trackedName !== void 0) {
+        worksheetXmls.set(trackedName, shifted);
+      } else {
+        pkg.write(path, shifted);
+        touchedEntries.add(path);
+      }
+    }
+    const shiftedWorkbook = shiftDefinedNames(workbookXml, sheetName, ops);
+    if (shiftedWorkbook !== workbookXml) {
+      workbookXml = shiftedWorkbook;
+      pkg.write(workbookPath, workbookXml);
+      touchedEntries.add(workbookPath);
+    }
+  }
+  const spillEdits = edits.filter(
+    (edit) => edit.writeValue && edit.cell.formula && spillsDynamicArray(edit.cell.formula)
+  );
+  const dynamicArrayCm = spillEdits.length > 0 ? await ensureDynamicArrayMetadata(pkg, touchedEntries) : null;
+  const editsBySheet = groupBySheet(edits);
+  const fillsBySheet = groupBySheet(bulkConstantFills);
+  const cellMutationSheets = /* @__PURE__ */ new Set([...fillsBySheet.keys(), ...editsBySheet.keys()]);
+  for (const sheetName of cellMutationSheets) {
+    const worksheetXml = worksheetXmls.get(sheetName) ?? "";
+    const cellMutations = groupCellMutations(
+      fillsBySheet.get(sheetName) ?? [],
+      editsBySheet.get(sheetName) ?? []
+    );
+    const materialized = materializeEditedSharedFormulaGroups(worksheetXml, cellMutations);
+    const dimensionPatch = worksheetDimensionPatcher(cellMutations, materialized);
+    const edited = transformWorksheetCells(
+      materialized,
+      cellMutations,
+      (cellXml, rowNumber, column, mutation) => {
+        let result = cellXml;
+        if (mutation.fill) {
+          result = applyEditToCellXml(
+            result,
+            toA1Address(rowNumber - 1, column),
+            {
+              sheetName,
+              row: rowNumber - 1,
+              column,
+              writeValue: true,
+              cell: { value: mutation.fill.value }
+            },
+            stylesheet
+          );
+        }
+        return mutation.edits ? applyCellEdits(result, rowNumber, column, mutation.edits, stylesheet) : result;
+      },
+      true,
+      dimensionPatch?.patch
+    );
+    worksheetXmls.set(
+      sheetName,
+      dimensionPatch !== null && !dimensionPatch.matched() ? expandWorksheetDimensionToCells(edited) : edited
+    );
+  }
+  if (dynamicArrayCm !== null) {
+    for (const [sheetName, group2] of groupBySheet(spillEdits)) {
+      let worksheetXml = worksheetXmls.get(sheetName) ?? "";
+      for (const edit of group2) {
+        worksheetXml = markDynamicArrayAnchor(
+          worksheetXml,
+          toA1Address(edit.row, edit.column),
+          dynamicArrayCm
+        );
+      }
+      worksheetXmls.set(sheetName, worksheetXml);
+    }
+  }
+  for (const sheet of formulaValues) {
+    if (sheet.cells.length === 0) continue;
+    const worksheetXml = worksheetXmls.get(sheet.sheetName);
+    if (worksheetXml === void 0) continue;
+    worksheetXmls.set(
+      sheet.sheetName,
+      transformWorksheetCells(
+        worksheetXml,
+        groupFormulaValuesByCell(sheet.cells),
+        (cellXml, rowNumber, column, value) => patchFormulaCachedValue(cellXml, toA1Address(rowNumber - 1, column), value),
+        false
+      )
+    );
+  }
+  if (pendingTableColumnSyncs.length > 0) {
+    const sharedStrings = await readSharedStrings(pkg);
+    for (const sync of pendingTableColumnSyncs) {
+      let worksheetXml = worksheetXmls.get(sync.sheetName);
+      if (worksheetXml === void 0) continue;
+      let tableXml = await pkg.readText(sync.partPath);
+      const names2 = /* @__PURE__ */ new Set();
+      for (const match of tableXml.matchAll(/<tableColumn\b[^>]*?\bname="([^"]*)"/g)) {
+        names2.add(decodeXmlText(match[1] ?? "").toLowerCase());
+      }
+      for (const insertion of sync.insertions) {
+        if (insertion.headerRow === null) continue;
+        for (const column of insertion.columns) {
+          const address = toA1Address(insertion.headerRow, column.column);
+          const header = readHeaderCellText(worksheetXml, address, sharedStrings);
+          if (header.kind === "blank") {
+            worksheetXml = writeHeaderCellText(worksheetXml, address, column.name);
+            continue;
+          }
+          if (header.kind !== "text") continue;
+          const unique = uniqueTableColumnName(header.text, names2, column.name);
+          if (!header.plain && unique !== header.text) continue;
+          if (unique.toLowerCase() !== column.name.toLowerCase()) {
+            names2.delete(column.name.toLowerCase());
+            names2.add(unique.toLowerCase());
+            tableXml = renameTableColumn(tableXml, column.id, unique);
+          }
+          if (header.plain && unique !== header.text) {
+            worksheetXml = writeHeaderCellText(worksheetXml, address, unique);
+          }
+        }
+      }
+      worksheetXmls.set(sync.sheetName, worksheetXml);
+      pkg.write(sync.partPath, tableXml);
+      touchedEntries.add(sync.partPath);
+    }
+  }
+  for (const sheet of hyperlinkEdits) {
+    if (sheet.edits.length === 0) continue;
+    const worksheetPath = worksheetPaths.get(sheet.sheetName);
+    const worksheetXml = worksheetXmls.get(sheet.sheetName);
+    if (!worksheetPath || worksheetXml === void 0) continue;
+    const relsPath = worksheetPath.replace(/^(xl\/worksheets\/)([^/]+)$/, "$1_rels/$2.rels");
+    const relsExisted = await pkg.has(relsPath);
+    const relsXml = relsExisted ? await pkg.readText(relsPath) : null;
+    const patch = applyHyperlinkEdits(worksheetXml, relsXml, sheet.edits);
+    worksheetXmls.set(sheet.sheetName, ensureRelationshipNamespace(patch.worksheetXml));
+    if (patch.relsChanged && patch.relsXml !== null) {
+      if (relsExisted) {
+        pkg.write(relsPath, patch.relsXml);
+      } else {
+        pkg.add(relsPath, patch.relsXml);
+      }
+      touchedEntries.add(relsPath);
+    }
+  }
+  for (const state of cfStates) {
+    const worksheetXml = worksheetXmls.get(state.sheetName);
+    if (worksheetXml === void 0 || stylesheet === null) continue;
+    worksheetXmls.set(
+      state.sheetName,
+      applyCfRules(worksheetXml, state.rules, stylesheet, { append: state.append })
+    );
+  }
+  for (const state of dvStates) {
+    const worksheetXml = worksheetXmls.get(state.sheetName);
+    if (worksheetXml === void 0) continue;
+    worksheetXmls.set(
+      state.sheetName,
+      applyDvRules(worksheetXml, state.rules, { append: state.append, remove: state.remove })
+    );
+  }
+  for (const state of sheetProtections) {
+    const worksheetXml = worksheetXmls.get(state.sheetName);
+    if (worksheetXml === void 0) continue;
+    worksheetXmls.set(state.sheetName, applySheetProtection(worksheetXml, state.protected));
+  }
+  for (const state of protectedRangeStates) {
+    const worksheetXml = worksheetXmls.get(state.sheetName);
+    if (worksheetXml === void 0) continue;
+    worksheetXmls.set(state.sheetName, applyProtectedRanges(worksheetXml, state.ranges));
+  }
+  for (const state of pageSetupStates) {
+    const worksheetXml = worksheetXmls.get(state.sheetName);
+    if (worksheetXml === void 0) continue;
+    worksheetXmls.set(state.sheetName, applyPageSetupState(worksheetXml, state));
+  }
+  for (const state of filterStates) {
+    const worksheetXml = worksheetXmls.get(state.sheetName);
+    if (worksheetXml === void 0) continue;
+    worksheetXmls.set(state.sheetName, applyFilterState(worksheetXml, state));
+  }
+  for (const [sheetName, worksheetXml] of worksheetXmls) {
+    const worksheetPath = worksheetPaths.get(sheetName);
+    if (!worksheetPath) continue;
+    if (additionPaths.has(sheetName)) {
+      pkg.add(worksheetPath, worksheetXml);
+    } else {
+      pkg.write(worksheetPath, worksheetXml);
+    }
+    touchedEntries.add(worksheetPath);
+  }
+  if (stylesheet?.changed) {
+    pkg.write(stylesPath, stylesheet.serialize());
+    touchedEntries.add(stylesPath);
+  }
+  for (const chartEdit of chartEdits) {
+    const chartXml = await pkg.readText(chartEdit.chartPath);
+    pkg.write(chartEdit.chartPath, applyChartEdit(chartXml, chartEdit));
+    touchedEntries.add(chartEdit.chartPath);
+  }
+  if (visualEdits.length > 0) {
+    await applyVisualEdits(pkg, visualEdits, touchedEntries);
+  }
+  if (visualAdditions.length > 0) {
+    const resolved = [];
+    for (const addition of visualAdditions) {
+      resolved.push({
+        worksheetPath: additionPaths.get(addition.sheetName) ?? await resolveWorksheetPath(pkg, addition.sheetName),
+        anchor: addition.anchor,
+        chart: addition.chart,
+        shape: addition.shape,
+        image: addition.image
+      });
+    }
+    await applyVisualAdditions(pkg, resolved, touchedEntries);
+  }
+  for (const state of noteStates) {
+    const worksheetPath = additionPaths.get(state.sheetName) ?? await resolveWorksheetPath(pkg, state.sheetName);
+    await applySheetNotes(pkg, worksheetPath, state.notes, touchedEntries);
+  }
+  for (const cachePath of pivotCacheRefreshPaths) {
+    const cacheXml = await pkg.readText(cachePath);
+    pkg.write(cachePath, setPivotRefreshOnLoad(cacheXml));
+    touchedEntries.add(cachePath);
+  }
+  if (tableAdditions.length > 0) {
+    const resolvedTables = [];
+    for (const addition of tableAdditions) {
+      resolvedTables.push({
+        worksheetPath: additionPaths.get(addition.sheetName) ?? await resolveWorksheetPath(pkg, addition.sheetName),
+        area: addition.area,
+        name: addition.name,
+        columnNames: addition.columnNames,
+        style: addition.style,
+        bandedRows: addition.bandedRows
+      });
+    }
+    await applyTableAdditions(pkg, resolvedTables, touchedEntries);
+  }
+  if (sparklineAdditions.length > 0) {
+    const groupsBySheet = /* @__PURE__ */ new Map();
+    for (const { sheetName, ...group2 } of sparklineAdditions) {
+      const groups = groupsBySheet.get(sheetName) ?? [];
+      groups.push(group2);
+      groupsBySheet.set(sheetName, groups);
+    }
+    for (const [sheetName, groups] of groupsBySheet) {
+      const worksheetPath = additionPaths.get(sheetName) ?? await resolveWorksheetPath(pkg, sheetName);
+      pkg.write(worksheetPath, applySparklineAdditions(await pkg.readText(worksheetPath), groups));
+      touchedEntries.add(worksheetPath);
+    }
+  }
+  const sheetSetChanged = sheetPlan !== void 0 && (sheetPlan.additions.length > 0 || sheetPlan.removals.length > 0 || sheetPlan.orderChanged === true);
+  const worksheetTouched = [...touchedEntries].some((path) => path.startsWith("xl/worksheets/"));
+  if ((worksheetTouched || sheetSetChanged) && await pkg.has("xl/calcChain.xml")) {
+    pkg.remove("xl/calcChain.xml");
+    const contentTypesPath = "[Content_Types].xml";
+    const contentTypes = await pkg.readText(contentTypesPath);
+    const strippedTypes = contentTypes.replace(
+      /<Override\b[^>]*PartName="\/xl\/calcChain\.xml"[^>]*\/>/,
+      ""
+    );
+    if (strippedTypes !== contentTypes) {
+      pkg.write(contentTypesPath, strippedTypes);
+      touchedEntries.add(contentTypesPath);
+    }
+    const workbookRelsPath = "xl/_rels/workbook.xml.rels";
+    const workbookRels = await pkg.readText(workbookRelsPath);
+    const strippedRels = workbookRels.replace(
+      /<Relationship\b[^>]*Target="calcChain\.xml"[^>]*\/>/,
+      ""
+    );
+    if (strippedRels !== workbookRels) {
+      pkg.write(workbookRelsPath, strippedRels);
+      touchedEntries.add(workbookRelsPath);
+    }
+  }
+  if (sheetPlan !== void 0) {
+    workbookXml = await applySheetPlanToPackage(
+      pkg,
+      sheetPlan,
+      additions,
+      workbookXml,
+      touchedEntries
+    );
+  }
+  if (definedNamesState !== null) {
+    workbookXml = applyDefinedNamesState(workbookXml, definedNamesState);
+  }
+  if (workbookProtectionState !== null) {
+    workbookXml = applyWorkbookProtection(workbookXml, workbookProtectionState.lockStructure);
+  }
+  if (themeState !== null) {
+    const themePath = "xl/theme/theme1.xml";
+    if (!await pkg.has(themePath)) {
+      throw new Error("The workbook has no theme part \u2014 theme changes cannot be saved.");
+    }
+    pkg.write(themePath, applyThemeState(await pkg.readText(themePath), themeState));
+    touchedEntries.add(themePath);
+  }
+  const printAreas = pageSetupStates.filter((state) => state.printArea !== void 0 || state.printTitles !== void 0).map((state) => ({
+    sheetName: state.sheetName,
+    printArea: state.printArea,
+    printTitles: state.printTitles
+  }));
+  if (printAreas.length > 0) {
+    workbookXml = applyPrintAreas(workbookXml, printAreas);
+  }
+  if (pivotAdditions.length > 0) {
+    const resolvedPivots = [];
+    for (const addition of pivotAdditions) {
+      resolvedPivots.push({
+        worksheetPath: additionPaths.get(addition.sheetName) ?? await resolveWorksheetPath(pkg, addition.sheetName),
+        sourceSheetName: addition.sourceSheetName,
+        sourceArea: addition.sourceArea,
+        location: addition.location,
+        name: addition.name,
+        fieldNames: addition.fieldNames,
+        rowFieldIndices: addition.rowFieldIndices,
+        columnFieldIndex: addition.columnFieldIndex,
+        pageFieldIndices: addition.pageFieldIndices,
+        rowItems: addition.rowItems,
+        rowLevelItems: addition.rowLevelItems,
+        rowLines: addition.rowLines,
+        columnItems: addition.columnItems,
+        columnFieldIndices: addition.columnFieldIndices,
+        colLevelItems: addition.colLevelItems,
+        colLines: addition.colLines,
+        groupings: addition.groupings,
+        filters: addition.filters,
+        rowHiddenItems: addition.rowHiddenItems,
+        colHiddenItems: addition.colHiddenItems,
+        values: addition.values
+      });
+    }
+    workbookXml = await applyPivotAdditions(pkg, resolvedPivots, workbookXml, touchedEntries);
+  }
+  workbookXml = ensureFullCalcOnLoad(workbookXml);
+  if (workbookXml !== originalWorkbookXml) {
+    pkg.write(workbookPath, workbookXml);
+    touchedEntries.add(workbookPath);
+  }
+  return pkg.toPlan(touchedEntries);
+}
+__name(planCellEditsToXlsx, "planCellEditsToXlsx");
+async function allocateAddedSheets(pkg, names2) {
+  if (names2.length === 0) return [];
+  const workbookXml = await pkg.readText("xl/workbook.xml");
+  const relationshipsXml = await pkg.readText("xl/_rels/workbook.xml.rels");
+  let nextPartNumber = 1;
+  for (const path of await pkg.paths()) {
+    const match = /^xl\/worksheets\/sheet([0-9]+)\.xml$/.exec(path);
+    if (match) nextPartNumber = Math.max(nextPartNumber, Number(match[1]) + 1);
+  }
+  const nextSheetId = maxSheetIdInWorkbook(workbookXml) + 1;
+  const nextRelationshipId = maxRelationshipId(relationshipsXml) + 1;
+  return names2.map((name, index2) => ({
+    name,
+    path: `xl/worksheets/sheet${nextPartNumber + index2}.xml`,
+    sheetId: nextSheetId + index2,
+    relationshipId: `rId${nextRelationshipId + index2}`
+  }));
+}
+__name(allocateAddedSheets, "allocateAddedSheets");
+async function applySheetPlanToPackage(pkg, plan, additions, workbookXml, touchedEntries) {
+  const elements = parseSheetElements(workbookXml);
+  const originalNames = elements.map((element) => element.name);
+  const originalSet = new Set(originalNames);
+  const renameByOriginal = new Map(plan.renames.map((rename2) => [rename2.sheetName, rename2.newName]));
+  for (const rename2 of plan.renames) {
+    validateSheetName(rename2.newName);
+    if (!originalSet.has(rename2.sheetName)) {
+      throw new SheetEditError(`Sheet "${rename2.sheetName}" was not found in the workbook.`);
+    }
+  }
+  for (const addition of additions) validateSheetName(addition.name);
+  for (const removal of plan.removals) {
+    if (!originalSet.has(removal)) {
+      throw new SheetEditError(`Sheet "${removal}" was not found in the workbook.`);
+    }
+    if (renameByOriginal.has(removal)) {
+      throw new SheetEditError(`Sheet "${removal}" cannot be renamed and removed in one save.`);
+    }
+  }
+  const finalNames = [
+    ...originalNames.filter((name) => !plan.removals.includes(name)).map((name) => renameByOriginal.get(name) ?? name),
+    ...additions.map((addition) => addition.name)
+  ];
+  if (new Set(finalNames).size !== finalNames.length) {
+    throw new SheetEditError("Two sheets would end up with the same name \u2014 aborted.");
+  }
+  const removalPaths = /* @__PURE__ */ new Map();
+  for (const removal of plan.removals) {
+    removalPaths.set(removal, await resolveWorksheetPath(pkg, removal));
+  }
+  const removedPathSet = new Set(removalPaths.values());
+  const packagePaths = await pkg.paths();
+  const survivingWorksheetPaths = packagePaths.filter(
+    (path) => /^xl\/worksheets\/[^/]+\.xml$/.test(path) && !removedPathSet.has(path)
+  );
+  const chartPaths = packagePaths.filter(
+    (path) => path.startsWith("xl/charts/") && path.endsWith(".xml")
+  );
+  const pivotCacheDefinitionPaths = packagePaths.filter(
+    (path) => /^xl\/pivotCache\/pivotCacheDefinition[^/]*\.xml$/.test(path)
+  );
+  const removalRelsPaths = /* @__PURE__ */ new Map();
+  const ownedPartsByRemoval = /* @__PURE__ */ new Map();
+  const removedOwnedParts = /* @__PURE__ */ new Set();
+  for (const removal of plan.removals) {
+    const removalPath = removalPaths.get(removal) ?? "";
+    const relsPath = relsPathFor2(removalPath);
+    removalRelsPaths.set(removal, relsPath);
+    const owned = /* @__PURE__ */ new Set();
+    if (await pkg.has(relsPath)) {
+      const targets = classifyRemovedSheetRels(await pkg.readText(relsPath), removal);
+      const queue = targets.map((target) => resolveRelTarget(removalPath, target));
+      while (queue.length > 0) {
+        const part = queue.pop();
+        if (owned.has(part) || !await pkg.has(part)) continue;
+        owned.add(part);
+        const childRelsPath = relsPathFor2(part);
+        if (!await pkg.has(childRelsPath)) continue;
+        owned.add(childRelsPath);
+        for (const entry of parseRelationships(await pkg.readText(childRelsPath))) {
+          if (!entry.external) queue.push(resolveRelTarget(part, entry.target));
+        }
+      }
+    }
+    ownedPartsByRemoval.set(removal, owned);
+    for (const part of owned) removedOwnedParts.add(part);
+  }
+  const dyingRelsParts = /* @__PURE__ */ new Set([
+    ...removalRelsPaths.values(),
+    ...[...removedOwnedParts].filter((part) => part.endsWith(".rels"))
+  ]);
+  const keepQueue = [];
+  for (const relsPath of packagePaths) {
+    if (!relsPath.endsWith(".rels") || dyingRelsParts.has(relsPath)) continue;
+    const owner = partPathForRels(relsPath);
+    if (removedPathSet.has(owner)) continue;
+    for (const entry of parseRelationships(await pkg.readText(relsPath))) {
+      if (entry.external) continue;
+      const target = resolveRelTarget(owner, entry.target);
+      if (removedOwnedParts.has(target)) keepQueue.push(target);
+    }
+  }
+  while (keepQueue.length > 0) {
+    const part = keepQueue.pop();
+    if (!removedOwnedParts.delete(part)) continue;
+    const childRelsPath = relsPathFor2(part);
+    if (removedOwnedParts.delete(childRelsPath)) {
+      for (const entry of parseRelationships(await pkg.readText(childRelsPath))) {
+        if (!entry.external) keepQueue.push(resolveRelTarget(part, entry.target));
+      }
+    }
+  }
+  const removedLocalIds = new Set(
+    originalNames.flatMap((name, index2) => plan.removals.includes(name) ? [index2] : [])
+  );
+  for (const removal of plan.removals) {
+    for (const path of survivingWorksheetPaths) {
+      if (!await pkg.canPatch(path)) {
+        if (await pkg.containsText(path, removal)) {
+          throw new SheetEditError(
+            `Another sheet's formulas reference "${removal}" \u2014 deleting it is not allowed.`
+          );
+        }
+        continue;
+      }
+      if (worksheetReferencesSheet(await pkg.readText(path), removal)) {
+        throw new SheetEditError(
+          `Another sheet's formulas reference "${removal}" \u2014 deleting it is not allowed.`
+        );
+      }
+    }
+    for (const chartPath of chartPaths) {
+      if (removedOwnedParts.has(chartPath)) continue;
+      if (chartReferencesSheet(await pkg.readText(chartPath), removal)) {
+        throw new SheetEditError(
+          `A chart reads its data from "${removal}" \u2014 deleting it is not allowed.`
+        );
+      }
+    }
+    if (definedNamesReferenceSheet(workbookXml, removal, removedLocalIds)) {
+      throw new SheetEditError(
+        `A workbook defined name references "${removal}" \u2014 deleting it is not allowed.`
+      );
+    }
+    for (const cachePath of pivotCacheDefinitionPaths) {
+      if (pivotCacheReadsFromSheet(await pkg.readText(cachePath), removal)) {
+        throw new SheetEditError(
+          `A pivot table reads its source data from "${removal}" \u2014 deleting it is not allowed.`
+        );
+      }
+    }
+    for (const part of ownedPartsByRemoval.get(removal) ?? []) {
+      if (!removedOwnedParts.has(part) || !/^xl\/tables\/[^/]+\.xml$/.test(part)) continue;
+      const name = tableDisplayName(await pkg.readText(part));
+      if (name === void 0) continue;
+      const needle = `${name}[`;
+      const needleLower = needle.toLowerCase();
+      for (const path of survivingWorksheetPaths) {
+        const referenced = await pkg.canPatch(path) ? (await pkg.readText(path)).toLowerCase().includes(needleLower) : await pkg.containsText(path, needle);
+        if (referenced) {
+          throw new SheetEditError(
+            `Another sheet's formulas use table "${name}" on "${removal}" \u2014 deleting it is not allowed.`
+          );
+        }
+      }
+      if (definedNamesUseToken(workbookXml, needle, removedLocalIds)) {
+        throw new SheetEditError(
+          `A workbook defined name uses table "${name}" on "${removal}" \u2014 deleting it is not allowed.`
+        );
+      }
+    }
+  }
+  for (const removal of plan.removals) {
+    const relsPath = removalRelsPaths.get(removal) ?? "";
+    if (await pkg.has(relsPath)) pkg.remove(relsPath);
+    pkg.remove(removalPaths.get(removal) ?? "");
+  }
+  for (const part of removedOwnedParts) pkg.remove(part);
+  for (const rename2 of plan.renames) {
+    for (const path of survivingWorksheetPaths) {
+      if (!await pkg.canPatch(path)) {
+        if (await pkg.containsText(path, rename2.sheetName)) {
+          throw new SheetEditError(
+            `${path} references "${rename2.sheetName}" but is too large to rewrite \u2014 renaming this sheet cannot be saved.`
+          );
+        }
+        continue;
+      }
+      const xml = await pkg.readText(path);
+      const renamed = renameSheetReferencesInWorksheet(xml, rename2.sheetName, rename2.newName);
+      if (renamed !== xml) {
+        pkg.write(path, renamed);
+        touchedEntries.add(path);
+      }
+    }
+    for (const chartPath of chartPaths) {
+      if (removedOwnedParts.has(chartPath)) continue;
+      const xml = await pkg.readText(chartPath);
+      const renamed = renameSheetReferencesInChart(xml, rename2.sheetName, rename2.newName);
+      if (renamed !== xml) {
+        pkg.write(chartPath, renamed);
+        touchedEntries.add(chartPath);
+      }
+    }
+    for (const cachePath of pivotCacheDefinitionPaths) {
+      const xml = await pkg.readText(cachePath);
+      const renamed = renameSheetInPivotCacheSource(xml, rename2.sheetName, rename2.newName);
+      if (renamed !== xml) {
+        pkg.write(cachePath, renamed);
+        touchedEntries.add(cachePath);
+      }
+    }
+    workbookXml = renameSheetReferencesInDefinedNames(workbookXml, rename2.sheetName, rename2.newName);
+  }
+  const relationshipsPath = "xl/_rels/workbook.xml.rels";
+  const originalRelationships = await pkg.readText(relationshipsPath);
+  let relationshipsXml = originalRelationships;
+  for (const removal of plan.removals) {
+    const relationshipId = elements.find((element) => element.name === removal)?.relationshipId;
+    if (relationshipId) relationshipsXml = removeRelationshipById(relationshipsXml, relationshipId);
+  }
+  for (const addition of additions) {
+    relationshipsXml = addWorksheetRelationship(
+      relationshipsXml,
+      addition.relationshipId,
+      addition.path.replace(/^xl\//, "")
+    );
+  }
+  if (relationshipsXml !== originalRelationships) {
+    pkg.write(relationshipsPath, relationshipsXml);
+    touchedEntries.add(relationshipsPath);
+  }
+  const contentTypesPath = "[Content_Types].xml";
+  const originalContentTypes = await pkg.readText(contentTypesPath);
+  let contentTypesXml = originalContentTypes;
+  for (const removal of plan.removals) {
+    contentTypesXml = removePartOverride(contentTypesXml, removalPaths.get(removal) ?? "");
+  }
+  for (const part of removedOwnedParts) {
+    contentTypesXml = removePartOverride(contentTypesXml, part);
+  }
+  for (const addition of additions) {
+    contentTypesXml = addWorksheetOverride(contentTypesXml, addition.path);
+  }
+  if (contentTypesXml !== originalContentTypes) {
+    pkg.write(contentTypesPath, contentTypesXml);
+    touchedEntries.add(contentTypesPath);
+  }
+  return applySheetPlanToWorkbookXml(workbookXml, plan, additions);
+}
+__name(applySheetPlanToPackage, "applySheetPlanToPackage");
+function toA1Address(row, column) {
+  if (!Number.isInteger(row) || row < 0 || !Number.isInteger(column) || column < 0) {
+    throw new Error(`Invalid cell coordinates: ${row},${column}`);
+  }
+  let letters = "";
+  let remaining = column + 1;
+  while (remaining > 0) {
+    remaining -= 1;
+    letters = String.fromCharCode(65 + remaining % 26) + letters;
+    remaining = Math.floor(remaining / 26);
+  }
+  return `${letters}${row + 1}`;
+}
+__name(toA1Address, "toA1Address");
+function canonicalEntryName(raw) {
+  if (raw.includes("\0")) return null;
+  const segments = [];
+  for (const segment of raw.split(/[/\\]/)) {
+    if (segment === "" || segment === ".") continue;
+    if (segment === "..") {
+      if (segments.pop() === void 0) return null;
+      continue;
+    }
+    segments.push(segment);
+  }
+  const name = segments.join("/");
+  return name && /[/\\]$/.test(raw) ? `${name}/` : name;
+}
+__name(canonicalEntryName, "canonicalEntryName");
+async function loadSafeZip(buffer) {
+  const zip = await import_jszip4.default.loadAsync(buffer, { checkCRC32: true });
+  const paths = Object.keys(zip.files);
+  if (paths.length > MAX_ENTRY_COUNT) throw new Error("Workbook contains too many ZIP entries.");
+  const files = paths.map((path) => [path, zip.files[path]]);
+  for (const [path, file] of files) {
+    const canonical = canonicalEntryName(path);
+    if (canonical === null) throw new Error("Workbook contains an unsafe ZIP path.");
+    if (canonical === path) continue;
+    zip.remove(path);
+    if (file && !file.dir && canonical && !zip.files[canonical]) {
+      zip.file(canonical, await file.async("nodebuffer"), { createFolders: false, date: file.date });
+    }
+  }
+  return zip;
+}
+__name(loadSafeZip, "loadSafeZip");
+async function readTextEntry(zip, path) {
+  const entry = zip.file(path);
+  if (!entry) throw new Error(`Workbook is missing ${path}.`);
+  return entry.async("text");
+}
+__name(readTextEntry, "readTextEntry");
+async function shiftAnchoredSheetParts(pkg, worksheetPath, worksheetXml, ops, touchedEntries, tableInsertions) {
+  if (!ops.some(isShiftingOp)) return;
+  const parts = [];
+  const drawingRelId = /<drawing\b[^>]*\br:id="([^"]+)"/.exec(worksheetXml)?.[1];
+  if (drawingRelId !== void 0) parts.push({ relId: drawingRelId, kind: "drawing" });
+  for (const match of worksheetXml.matchAll(/<tablePart\b[^>]*\br:id="([^"]+)"/g)) {
+    if (match[1] !== void 0) parts.push({ relId: match[1], kind: "table" });
+  }
+  const legacyRelId = /<legacyDrawing\b[^>]*\br:id="([^"]+)"/.exec(worksheetXml)?.[1];
+  if (legacyRelId !== void 0 && worksheetXml.includes("<oleObjects")) {
+    parts.push({ relId: legacyRelId, kind: "vml" });
+  }
+  if (parts.length === 0) return;
+  const relsPath = relsPathFor2(worksheetPath);
+  if (!await pkg.has(relsPath)) {
+    throw new StructuralShiftError(
+      `${worksheetPath} has anchored parts but ${relsPath} is missing \u2014 rows/columns cannot shift here.`
+    );
+  }
+  const relsXml = await pkg.readText(relsPath);
+  for (const { relId, kind } of parts) {
+    const relationshipXml = new RegExp(
+      `<Relationship\\b[^>]*\\bId="${escapeRegExp4(relId)}"[^>]*/?>`
+    ).exec(relsXml)?.[0];
+    const target = relationshipXml === void 0 ? void 0 : /\bTarget="([^"]+)"/.exec(relationshipXml)?.[1];
+    if (target === void 0) {
+      throw new StructuralShiftError(
+        `${worksheetPath} references ${kind} ${relId} but its relationship is missing \u2014 rows/columns cannot shift here.`
+      );
+    }
+    const partPath = resolveRelTarget(worksheetPath, target);
+    if (!await pkg.canPatch(partPath)) {
+      throw new StructuralShiftError(
+        `${partPath} is too large to rewrite \u2014 rows/columns cannot shift here.`
+      );
+    }
+    const xml = await pkg.readText(partPath);
+    const insertions = [];
+    const shifted = kind === "drawing" ? shiftDrawingAnchors(xml, ops) : kind === "vml" ? shiftVmlObjectAnchors(xml, ops) : shiftTablePart(xml, ops, insertions);
+    if (insertions.length > 0) tableInsertions?.push({ partPath, insertions });
+    if (shifted === xml) continue;
+    pkg.write(partPath, shifted);
+    touchedEntries.add(partPath);
+  }
+}
+__name(shiftAnchoredSheetParts, "shiftAnchoredSheetParts");
+function findSheetElement(workbookXml, sheetName) {
+  return parseSheetElements(workbookXml).find((element) => element.name === sheetName);
+}
+__name(findSheetElement, "findSheetElement");
+async function resolveWorksheetPath(reader, sheetName) {
+  const workbookXml = await reader.readText("xl/workbook.xml");
+  const relationshipId = findSheetElement(workbookXml, sheetName)?.relationshipId;
+  if (relationshipId === void 0)
+    throw new Error(`Sheet "${sheetName}" was not found in workbook.xml.`);
+  const relationshipsXml = await reader.readText("xl/_rels/workbook.xml.rels");
+  const relationshipXml = new RegExp(
+    `<Relationship\\b[^>]*\\bId="${escapeRegExp4(relationshipId)}"[^>]*/?>`
+  ).exec(relationshipsXml)?.[0];
+  const targetMatch = relationshipXml === void 0 ? void 0 : /\bTarget="([^"]+)"/.exec(relationshipXml)?.[1];
+  if (!targetMatch) throw new Error(`Relationship ${relationshipId} was not found.`);
+  const target = targetMatch.replace(/^\/?xl\//, "");
+  return `xl/${target.replace(/^\.\//, "")}`;
+}
+__name(resolveWorksheetPath, "resolveWorksheetPath");
+function patchCell(worksheetXml, address, cell) {
+  const cellPattern = new RegExp(`<c\\b[^>]*\\br="${address}"[^>]*(?:/>|>[\\s\\S]*?</c>)`);
+  const replacement = serializeCell(address, cell);
+  if (cellPattern.test(worksheetXml)) {
+    return worksheetXml.replace(cellPattern, replacement);
+  }
+  if (replacement === "") return worksheetXml;
+  const rowNumber = address.match(/[1-9][0-9]*$/)?.[0];
+  if (!rowNumber) throw new Error(`Invalid cell address: ${address}`);
+  const rowPattern = new RegExp(`(<row\\b[^>]*\\br="${rowNumber}"[^>]*>)([\\s\\S]*?)(</row>)`);
+  if (rowPattern.test(worksheetXml)) {
+    return worksheetXml.replace(rowPattern, `$1$2${replacement}$3`);
+  }
+  const newRow = `<row r="${rowNumber}">${replacement}</row>`;
+  if (worksheetXml.includes("</sheetData>")) {
+    return worksheetXml.replace("</sheetData>", () => `${newRow}</sheetData>`);
+  }
+  const emptySheetData = /<sheetData\s*\/>/;
+  if (emptySheetData.test(worksheetXml)) {
+    return worksheetXml.replace(emptySheetData, () => `<sheetData>${newRow}</sheetData>`);
+  }
+  throw new Error("Worksheet has no sheetData element.");
+}
+__name(patchCell, "patchCell");
+function readHeaderCellText(worksheetXml, address, sharedStrings) {
+  const match = new RegExp(`<c\\b([^>]*)\\br="${address}"([^>]*?)(?:/>|>([\\s\\S]*?)</c>)`).exec(
+    worksheetXml
+  );
+  if (!match) return { kind: "blank" };
+  const attributes2 = `${match[1] ?? ""} ${match[2] ?? ""}`;
+  const body = match[3] ?? "";
+  if (/<f[\s/>]/.test(body)) return { kind: "opaque" };
+  const type = readXmlAttribute(attributes2, "t");
+  if (type === "e") return { kind: "opaque" };
+  if (type === "inlineStr") {
+    const text2 = [...body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((textMatch) => decodeCellText(textMatch[1] ?? "")).join("");
+    return text2 === "" ? { kind: "blank" } : { kind: "text", text: text2, plain: true };
+  }
+  const rawValue = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body)?.[1];
+  if (rawValue === void 0) return { kind: "blank" };
+  if (type === "s") {
+    const text2 = sharedStrings[Number(rawValue)] ?? "";
+    return text2 === "" ? { kind: "blank" } : { kind: "text", text: text2, plain: true };
+  }
+  if (type === "b") return { kind: "text", text: rawValue === "1" ? "TRUE" : "FALSE", plain: false };
+  const text = type === "str" ? decodeCellText(rawValue) : decodeXmlText(rawValue);
+  if (text === "") return { kind: "blank" };
+  return { kind: "text", text, plain: type === "str" };
+}
+__name(readHeaderCellText, "readHeaderCellText");
+function writeHeaderCellText(worksheetXml, address, text) {
+  const pattern = new RegExp(`<c\\b([^>]*)\\br="${address}"([^>]*?)(?:/>|>[\\s\\S]*?</c>)`);
+  const match = pattern.exec(worksheetXml);
+  const body = `<is><t xml:space="preserve">${escapeCellText(text)}</t></is>`;
+  if (match) {
+    const style = readXmlAttribute(`${match[1] ?? ""} ${match[2] ?? ""}`, "s");
+    const cell2 = `<c r="${address}"${style === void 0 ? "" : ` s="${style}"`} t="inlineStr">${body}</c>`;
+    return worksheetXml.slice(0, match.index) + cell2 + worksheetXml.slice(match.index + match[0].length);
+  }
+  const rowNumber = address.match(/[1-9][0-9]*$/)?.[0];
+  const rowMatch = rowNumber === void 0 ? null : new RegExp(`<row\\b[^>]*\\br="${rowNumber}"[^>]*?(/>|>)`).exec(worksheetXml);
+  if (!rowMatch) return patchCell(worksheetXml, address, { value: text });
+  const cell = `<c r="${address}" t="inlineStr">${body}</c>`;
+  const rowStart = rowMatch.index + rowMatch[0].length;
+  if (rowMatch[1] === "/>") {
+    const opened = rowMatch[0].slice(0, -2) + ">";
+    return worksheetXml.slice(0, rowMatch.index) + `${opened}${cell}</row>` + worksheetXml.slice(rowStart);
+  }
+  const rowEnd = worksheetXml.indexOf("</row>", rowStart);
+  if (rowEnd === -1) return patchCell(worksheetXml, address, { value: text });
+  const column = parseA1Column(address);
+  const siblings = worksheetXml.slice(rowStart, rowEnd);
+  let insertAt = rowEnd;
+  for (const sibling of siblings.matchAll(/<c\b[^>]*?\br="([A-Z]{1,3})[0-9]+"/g)) {
+    if (parseA1Column(`${sibling[1]}1`) > column) {
+      insertAt = rowStart + sibling.index;
+      break;
+    }
+  }
+  return worksheetXml.slice(0, insertAt) + cell + worksheetXml.slice(insertAt);
+}
+__name(writeHeaderCellText, "writeHeaderCellText");
+function uniqueTableColumnName(text, taken, ownName) {
+  const isFree = /* @__PURE__ */ __name((candidate) => candidate.toLowerCase() === ownName.toLowerCase() || !taken.has(candidate.toLowerCase()), "isFree");
+  if (isFree(text)) return text;
+  for (let suffix = 2; ; suffix += 1) {
+    const candidate = `${text}${suffix}`;
+    if (isFree(candidate)) return candidate;
+  }
+}
+__name(uniqueTableColumnName, "uniqueTableColumnName");
+function renameTableColumn(tableXml, id, name) {
+  return tableXml.replace(
+    new RegExp(`(<tableColumn\\b[^>]*?\\bid="${id}"[^>]*?\\bname=")[^"]*(")`),
+    (_m, prefix, suffix) => `${prefix}${escapeXmlAttribute10(name)}${suffix}`
+  );
+}
+__name(renameTableColumn, "renameTableColumn");
+function readCellStyleIndex(worksheetXml, address) {
+  const match = new RegExp(`<c\\b([^>]*)\\br="${address}"([^>]*?)[/>]`).exec(worksheetXml);
+  if (!match) return void 0;
+  const index2 = readXmlAttribute(`${match[1] ?? ""} ${match[2] ?? ""}`, "s");
+  return index2 === void 0 ? void 0 : Number(index2);
+}
+__name(readCellStyleIndex, "readCellStyleIndex");
+function patchCellStyleOnly(worksheetXml, address, styleIndex) {
+  if (styleIndex === void 0) return worksheetXml;
+  const cellPattern = new RegExp(`(<c\\b[^>]*?\\br="${address}"[^>]*?)(\\s*/>|>)`);
+  const existing = cellPattern.exec(worksheetXml);
+  if (existing) {
+    const opening = existing[1] ?? "";
+    const patched = /\bs="[^"]*"/.test(opening) ? opening.replace(/\bs="[^"]*"/, () => `s="${styleIndex}"`) : opening.replace(`r="${address}"`, () => `r="${address}" s="${styleIndex}"`);
+    return worksheetXml.replace(cellPattern, () => `${patched}${existing[2] ?? ""}`);
+  }
+  return insertMissingCell(worksheetXml, address, `<c r="${address}" s="${styleIndex}"/>`);
+}
+__name(patchCellStyleOnly, "patchCellStyleOnly");
+function patchCellKeepingStyle(worksheetXml, address, cell, styleOverride, rich) {
+  const cellPattern = new RegExp(`<c\\b([^>]*)\\br="${address}"([^>]*?)(?:/>|>[\\s\\S]*?</c>)`);
+  const existing = cellPattern.exec(worksheetXml);
+  const styleIndex = styleOverride !== void 0 ? String(styleOverride) : existing ? readXmlAttribute(`${existing[1] ?? ""} ${existing[2] ?? ""}`, "s") : void 0;
+  const replacement = serializeStyledCell(address, cell, styleIndex, rich);
+  if (existing) return worksheetXml.replace(cellPattern, () => replacement);
+  if (replacement === "") return worksheetXml;
+  return insertMissingCell(worksheetXml, address, replacement);
+}
+__name(patchCellKeepingStyle, "patchCellKeepingStyle");
+function patchFormulaCachedValue(worksheetXml, address, value) {
+  const cellPattern = new RegExp(`<c\\b([^>]*)\\br="${address}"([^>]*)>([\\s\\S]*?)</c>`);
+  const existing = cellPattern.exec(worksheetXml);
+  if (!existing) return worksheetXml;
+  const body = existing[3] ?? "";
+  if (!/<f[\s/>]/.test(body)) return worksheetXml;
+  const attrs = `${existing[1] ?? ""}${existing[2] ?? ""}`;
+  const numeric = typeof value === "number" && Number.isFinite(value);
+  const stripped = attrs.replace(/\st="[^"]*"/g, "");
+  let typeAttr = "";
+  let valueXml = "";
+  if (numeric) {
+    valueXml = `<v>${value}</v>`;
+  } else if (typeof value === "boolean") {
+    typeAttr = ' t="b"';
+    valueXml = `<v>${value ? 1 : 0}</v>`;
+  } else if (typeof value === "object" && value !== null) {
+    typeAttr = ' t="e"';
+    valueXml = `<v>${escapeCellText(value.error)}</v>`;
+  } else if (value !== null && value !== void 0 && value !== "") {
+    typeAttr = ' t="str"';
+    valueXml = `<v>${escapeCellText(String(value))}</v>`;
+  }
+  const kept = body.replace(/<v\b[^>]*\/>|<v\b[^>]*>[\s\S]*?<\/v>/g, "");
+  const replacement = `<c r="${address}"${stripped}${typeAttr}>${kept}${valueXml}</c>`;
+  return worksheetXml.replace(cellPattern, () => replacement);
+}
+__name(patchFormulaCachedValue, "patchFormulaCachedValue");
+function applyEditToCellXml(cellXml, address, edit, stylesheet) {
+  let styleOverride;
+  if (edit.styleReset) {
+    styleOverride = edit.style && stylesheet ? stylesheet.resolveStyle(0, edit.style) : 0;
+  } else if (edit.style && stylesheet) {
+    const baseIndex = (cellXml === "" ? void 0 : readCellStyleIndex(cellXml, address)) ?? 0;
+    styleOverride = stylesheet.resolveStyle(baseIndex, edit.style);
+  }
+  if (edit.writeValue) {
+    if (cellXml !== "") {
+      return patchCellKeepingStyle(cellXml, address, edit.cell, styleOverride, edit.rich);
+    }
+    const styleIndex = styleOverride === void 0 ? void 0 : String(styleOverride);
+    return serializeStyledCell(address, edit.cell, styleIndex, edit.rich);
+  }
+  if (styleOverride === void 0) return cellXml;
+  if (cellXml === "") return `<c r="${address}" s="${styleOverride}"/>`;
+  return patchCellStyleOnly(cellXml, address, styleOverride);
+}
+__name(applyEditToCellXml, "applyEditToCellXml");
+function groupBySheet(items) {
+  const grouped = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    const sheetItems = grouped.get(item.sheetName) ?? [];
+    sheetItems.push(item);
+    grouped.set(item.sheetName, sheetItems);
+  }
+  return grouped;
+}
+__name(groupBySheet, "groupBySheet");
+function materializeEditedSharedFormulaGroups(worksheetXml, cellMutations) {
+  if (!worksheetXml.includes('t="shared"')) return worksheetXml;
+  const rewritten = /* @__PURE__ */ new Set();
+  for (const [rowNumber, columns] of cellMutations) {
+    for (const [column, mutation] of columns) {
+      const edits = mutation.edits === void 0 ? [] : Array.isArray(mutation.edits) ? mutation.edits : [mutation.edits];
+      if (mutation.fill !== void 0 || edits.some((edit) => edit.writeValue)) {
+        rewritten.add(toA1Address(rowNumber - 1, column));
+      }
+    }
+  }
+  if (rewritten.size === 0) return worksheetXml;
+  const fragments = [];
+  const sharedOpen = /<f\b[^>]*?\bt="shared"[^>]*?(\/?)>/g;
+  let match;
+  while ((match = sharedOpen.exec(worksheetXml)) !== null) {
+    const openTag = match[0];
+    const si = /\bsi="([^"]+)"/.exec(openTag)?.[1];
+    if (si === void 0) continue;
+    const openEnd = match.index + openTag.length;
+    let end = openEnd;
+    let body = "";
+    if (match[1] !== "/") {
+      const close = worksheetXml.indexOf("</f>", openEnd);
+      if (close === -1) continue;
+      body = worksheetXml.slice(openEnd, close);
+      end = close + "</f>".length;
+    }
+    const cellOpen = worksheetXml.lastIndexOf("<c", match.index);
+    const address = /\br="([A-Z]{1,3}[0-9]+)"/.exec(worksheetXml.slice(cellOpen, match.index))?.[1];
+    if (address === void 0) continue;
+    const parsed2 = /^([A-Z]{1,3})([0-9]+)$/.exec(address);
+    if (!parsed2) continue;
+    fragments.push({
+      start: match.index,
+      end,
+      address,
+      row: Number(parsed2[2]) - 1,
+      column: parseA1Column(address),
+      si,
+      isMaster: /\bref="/.test(openTag),
+      body
+    });
+  }
+  const killedMasters = /* @__PURE__ */ new Map();
+  for (const fragment of fragments) {
+    if (fragment.isMaster && fragment.body !== "" && rewritten.has(fragment.address)) {
+      killedMasters.set(fragment.si, fragment);
+    }
+  }
+  if (killedMasters.size === 0) return worksheetXml;
+  const parts = [];
+  let cursor = 0;
+  for (const fragment of fragments) {
+    const master = killedMasters.get(fragment.si);
+    if (master === void 0 || fragment.isMaster || fragment.body !== "" || rewritten.has(fragment.address)) {
+      continue;
+    }
+    const translated = translateSharedFormula(
+      decodeXmlText(master.body),
+      fragment.row - master.row,
+      fragment.column - master.column
+    );
+    parts.push(worksheetXml.slice(cursor, fragment.start));
+    if (translated !== null) parts.push(`<f>${escapeXmlText9(translated)}</f>`);
+    cursor = fragment.end;
+  }
+  if (parts.length === 0) return worksheetXml;
+  parts.push(worksheetXml.slice(cursor));
+  return parts.join("");
+}
+__name(materializeEditedSharedFormulaGroups, "materializeEditedSharedFormulaGroups");
+function groupCellMutations(fills, edits) {
+  const cells = /* @__PURE__ */ new Map();
+  for (const fill of fills) {
+    for (let row = fill.startRow; row <= fill.endRow; row += 1) {
+      const rowNumber = row + 1;
+      let columns = cells.get(rowNumber);
+      if (!columns) {
+        columns = /* @__PURE__ */ new Map();
+        cells.set(rowNumber, columns);
+      }
+      for (let column = fill.startColumn; column <= fill.endColumn; column += 1) {
+        columns.set(column, { ...columns.get(column), fill });
+      }
+    }
+  }
+  for (const edit of edits) {
+    const rowNumber = edit.row + 1;
+    let columns = cells.get(rowNumber);
+    if (!columns) {
+      columns = /* @__PURE__ */ new Map();
+      cells.set(rowNumber, columns);
+    }
+    const mutation = columns.get(edit.column) ?? {};
+    const existing = mutation.edits;
+    mutation.edits = existing === void 0 ? edit : Array.isArray(existing) ? [...existing, edit] : [existing, edit];
+    columns.set(edit.column, mutation);
+  }
+  return cells;
+}
+__name(groupCellMutations, "groupCellMutations");
+function applyCellEdits(cellXml, rowNumber, column, item, stylesheet) {
+  const address = toA1Address(rowNumber - 1, column);
+  if (!Array.isArray(item)) return applyEditToCellXml(cellXml, address, item, stylesheet);
+  return item.reduce(
+    (current, edit) => applyEditToCellXml(current, address, edit, stylesheet),
+    cellXml
+  );
+}
+__name(applyCellEdits, "applyCellEdits");
+function groupFormulaValuesByCell(cells) {
+  const valuesByCell = /* @__PURE__ */ new Map();
+  for (const cell of cells) {
+    const rowNumber = cell.row + 1;
+    let columns = valuesByCell.get(rowNumber);
+    if (columns === void 0) {
+      columns = /* @__PURE__ */ new Map();
+      valuesByCell.set(rowNumber, columns);
+    }
+    columns.set(cell.column, cell.value);
+  }
+  return valuesByCell;
+}
+__name(groupFormulaValuesByCell, "groupFormulaValuesByCell");
+function transformWorksheetCells(worksheetXml, cellItems, applyItem, insertMissing, patchPrefix) {
+  if (cellItems.size === 0) return worksheetXml;
+  const remainingRows = new Map(cellItems);
+  const targetRows = [...cellItems.keys()].sort((left, right) => left - right);
+  const buildRow = /* @__PURE__ */ __name((rowNumber) => {
+    const rowItems = remainingRows.get(rowNumber);
+    if (!rowItems) return "";
+    remainingRows.delete(rowNumber);
+    const cells = [...rowItems.entries()].sort((left, right) => left[0] - right[0]).map(([column, item]) => applyItem("", rowNumber, column, item)).filter((cellXml) => cellXml !== "");
+    return cells.length === 0 ? "" : `<row r="${rowNumber}">${cells.join("")}</row>`;
+  }, "buildRow");
+  const openIndex = worksheetXml.indexOf("<sheetData");
+  const emptySheetData = /<sheetData\s*\/>/.exec(worksheetXml);
+  if (emptySheetData || openIndex === -1) {
+    if (!insertMissing) return worksheetXml;
+    const rowsXml = targetRows.map(buildRow).join("");
+    if (rowsXml === "") return worksheetXml;
+    if (emptySheetData) {
+      const grown = worksheetXml.replace(
+        /<sheetData\s*\/>/,
+        () => `<sheetData>${rowsXml}</sheetData>`
+      );
+      return patchPrefix ? patchPrefix(grown) : grown;
+    }
+    throw new Error("Worksheet has no sheetData element.");
+  }
+  const closeIndex = worksheetXml.lastIndexOf("</sheetData>");
+  if (closeIndex === -1) throw new Error("Worksheet has no sheetData element.");
+  const bodyStart = worksheetXml.indexOf(">", openIndex) + 1;
+  const body = worksheetXml.slice(bodyStart, closeIndex);
+  const documentPrefix = worksheetXml.slice(0, bodyStart);
+  const parts = [patchPrefix ? patchPrefix(documentPrefix) : documentPrefix];
+  let cursor = 0;
+  let pendingIndex = 0;
+  const rowOpenPattern = /<row\b[^>]*>/g;
+  let openMatch;
+  while ((openMatch = rowOpenPattern.exec(body)) !== null) {
+    const openTag = openMatch[0];
+    let rowEnd;
+    if (openTag.endsWith("/>")) {
+      rowEnd = openMatch.index + openTag.length;
+    } else {
+      const closePosition = body.indexOf("</row>", openMatch.index + openTag.length);
+      if (closePosition === -1) break;
+      rowEnd = closePosition + "</row>".length;
+    }
+    const rowXml = body.slice(openMatch.index, rowEnd);
+    parts.push(body.slice(cursor, openMatch.index));
+    cursor = rowEnd;
+    rowOpenPattern.lastIndex = rowEnd;
+    const rowNumber = Number(/\br="([1-9][0-9]*)"/.exec(openTag)?.[1]);
+    if (!Number.isFinite(rowNumber)) {
+      parts.push(rowXml);
+      continue;
+    }
+    if (insertMissing) {
+      while (pendingIndex < targetRows.length && (targetRows[pendingIndex] ?? 0) < rowNumber) {
+        parts.push(buildRow(targetRows[pendingIndex] ?? 0));
+        pendingIndex += 1;
+      }
+      if (targetRows[pendingIndex] === rowNumber) pendingIndex += 1;
+    }
+    const rowItems = remainingRows.get(rowNumber);
+    if (rowItems === void 0) {
+      parts.push(rowXml);
+      continue;
+    }
+    remainingRows.delete(rowNumber);
+    parts.push(transformRowCells(rowXml, rowNumber, rowItems, applyItem, insertMissing));
+  }
+  parts.push(body.slice(cursor));
+  if (insertMissing) {
+    while (pendingIndex < targetRows.length) {
+      parts.push(buildRow(targetRows[pendingIndex] ?? 0));
+      pendingIndex += 1;
+    }
+  }
+  parts.push(worksheetXml.slice(closeIndex));
+  return parts.join("");
+}
+__name(transformWorksheetCells, "transformWorksheetCells");
+function transformRowCells(rowXml, rowNumber, rowItems, applyItem, insertMissing) {
+  const openEnd = rowXml.indexOf(">") + 1;
+  const selfClosing = rowXml.slice(0, openEnd).endsWith("/>");
+  const openTag = selfClosing ? `${rowXml.slice(0, openEnd - 2)}>` : rowXml.slice(0, openEnd);
+  const body = selfClosing ? "" : rowXml.slice(openEnd, rowXml.length - "</row>".length);
+  const remaining = new Map(rowItems);
+  const targetColumns = [...rowItems.keys()].sort((left, right) => left - right);
+  const insertColumn = /* @__PURE__ */ __name((column) => {
+    const item = remaining.get(column);
+    if (item === void 0) return "";
+    remaining.delete(column);
+    return applyItem("", rowNumber, column, item);
+  }, "insertColumn");
+  const parts = [];
+  let cursor = 0;
+  let pendingIndex = 0;
+  const cellOpenPattern = /<c\b[^>]*>/g;
+  let openMatch;
+  while ((openMatch = cellOpenPattern.exec(body)) !== null) {
+    const openCell = openMatch[0];
+    let cellEnd;
+    if (openCell.endsWith("/>")) {
+      cellEnd = openMatch.index + openCell.length;
+    } else {
+      const closePosition = body.indexOf("</c>", openMatch.index + openCell.length);
+      if (closePosition === -1) break;
+      cellEnd = closePosition + "</c>".length;
+    }
+    const cellXml = body.slice(openMatch.index, cellEnd);
+    parts.push(body.slice(cursor, openMatch.index));
+    cursor = cellEnd;
+    cellOpenPattern.lastIndex = cellEnd;
+    const letters = /\br="([A-Z]{1,3})[1-9][0-9]*"/.exec(openCell)?.[1];
+    const column = letters === void 0 ? void 0 : lettersToColumn2(letters);
+    if (column === void 0) {
+      parts.push(cellXml);
+      continue;
+    }
+    if (insertMissing) {
+      while (pendingIndex < targetColumns.length && (targetColumns[pendingIndex] ?? 0) < column) {
+        parts.push(insertColumn(targetColumns[pendingIndex] ?? 0));
+        pendingIndex += 1;
+      }
+      if (targetColumns[pendingIndex] === column) pendingIndex += 1;
+    }
+    const item = remaining.get(column);
+    if (item === void 0) {
+      parts.push(cellXml);
+      continue;
+    }
+    remaining.delete(column);
+    parts.push(applyItem(cellXml, rowNumber, column, item));
+  }
+  parts.push(body.slice(cursor));
+  if (insertMissing) {
+    while (pendingIndex < targetColumns.length) {
+      parts.push(insertColumn(targetColumns[pendingIndex] ?? 0));
+      pendingIndex += 1;
+    }
+  }
+  return `${openTag}${parts.join("")}</row>`;
+}
+__name(transformRowCells, "transformRowCells");
+function insertMissingCell(worksheetXml, address, cellXml) {
+  const rowNumber = Number(/[1-9][0-9]*$/.exec(address)?.[0]);
+  if (!Number.isFinite(rowNumber)) throw new Error(`Invalid cell address: ${address}`);
+  const targetColumn = parseA1Column(address);
+  const rowPattern = new RegExp(`<row\\b([^>]*?\\br="${rowNumber}"[^>]*?)(/>|>([\\s\\S]*?)</row>)`);
+  const rowMatch = rowPattern.exec(worksheetXml);
+  if (rowMatch) {
+    const attributes2 = rowMatch[1] ?? "";
+    const body = rowMatch[2] === "/>" ? "" : rowMatch[3] ?? "";
+    return worksheetXml.replace(
+      rowPattern,
+      () => `<row${attributes2}>${insertCellInColumnOrder(body, cellXml, targetColumn)}</row>`
+    );
+  }
+  return insertRowInOrder(worksheetXml, rowNumber, cellXml);
+}
+__name(insertMissingCell, "insertMissingCell");
+function insertCellInColumnOrder(rowBody, cellXml, targetColumn) {
+  const siblingPattern = /<c\b[^>]*?\br="([A-Z]{1,3})[1-9][0-9]*"/g;
+  let match;
+  while ((match = siblingPattern.exec(rowBody)) !== null) {
+    if (lettersToColumn2(match[1] ?? "") > targetColumn) {
+      return rowBody.slice(0, match.index) + cellXml + rowBody.slice(match.index);
+    }
+  }
+  return rowBody + cellXml;
+}
+__name(insertCellInColumnOrder, "insertCellInColumnOrder");
+function insertRowInOrder(worksheetXml, rowNumber, cellXml) {
+  const newRow = `<row r="${rowNumber}">${cellXml}</row>`;
+  const rowStartPattern = /<row\b[^>]*?\br="([1-9][0-9]*)"/g;
+  let match;
+  while ((match = rowStartPattern.exec(worksheetXml)) !== null) {
+    if (Number(match[1]) > rowNumber) {
+      return worksheetXml.slice(0, match.index) + newRow + worksheetXml.slice(match.index);
+    }
+  }
+  if (worksheetXml.includes("</sheetData>")) {
+    return worksheetXml.replace("</sheetData>", () => `${newRow}</sheetData>`);
+  }
+  const emptySheetData = /<sheetData\s*\/>/;
+  if (emptySheetData.test(worksheetXml)) {
+    return worksheetXml.replace(emptySheetData, () => `<sheetData>${newRow}</sheetData>`);
+  }
+  throw new Error("Worksheet has no sheetData element.");
+}
+__name(insertRowInOrder, "insertRowInOrder");
+function worksheetDimensionPatcher(items, worksheetXml) {
+  if (items.size === 0) return null;
+  let targetRow = 1;
+  let targetColumn = 0;
+  for (const [row, columns] of items) {
+    targetRow = Math.max(targetRow, row);
+    for (const column of columns.keys()) targetColumn = Math.max(targetColumn, column);
+  }
+  let sawDimension = false;
+  const patch = /* @__PURE__ */ __name((prefix) => {
+    const dimension = /<dimension\b[^>]*\bref="([^"]+)"[^>]*\/?>(?:\s*<\/dimension\s*>)?/.exec(
+      prefix
+    );
+    if (!dimension?.[1]) return prefix;
+    sawDimension = true;
+    let currentRow = 1;
+    let currentColumn = 0;
+    for (const reference of dimension[1].split(":")) {
+      const cell = /^([A-Z]{1,3})([1-9][0-9]*)$/.exec(reference.replace(/\$/g, ""));
+      if (!cell?.[1] || !cell[2]) continue;
+      currentRow = Math.max(currentRow, Number(cell[2]));
+      currentColumn = Math.max(currentColumn, lettersToColumn2(cell[1]));
+    }
+    if (currentRow >= targetRow && currentColumn >= targetColumn) return prefix;
+    const used = scanExplicitCellBounds(worksheetXml);
+    const start = dimension[1].replace(/\$/g, "").split(":")[0] ?? "A1";
+    const end = toA1Address(
+      Math.max(currentRow, targetRow, used.row) - 1,
+      Math.max(currentColumn, targetColumn, used.column)
+    );
+    return prefix.slice(0, dimension.index) + `<dimension ref="${start}:${end}"/>` + prefix.slice(dimension.index + dimension[0].length);
+  }, "patch");
+  return { patch, matched: /* @__PURE__ */ __name(() => sawDimension, "matched") };
+}
+__name(worksheetDimensionPatcher, "worksheetDimensionPatcher");
+function scanExplicitCellBounds(xml) {
+  let row = 1;
+  let column = 0;
+  let at = xml.indexOf(' r="');
+  while (at !== -1) {
+    let index2 = at + 4;
+    let letters = 0;
+    let letterCount = 0;
+    while (index2 < xml.length) {
+      const code = xml.charCodeAt(index2);
+      if (code < 65 || code > 90) break;
+      letters = letters * 26 + (code - 64);
+      letterCount += 1;
+      index2 += 1;
+    }
+    let digits = 0;
+    let sawDigit = false;
+    while (index2 < xml.length) {
+      const code = xml.charCodeAt(index2);
+      if (code < 48 || code > 57) break;
+      digits = digits * 10 + (code - 48);
+      sawDigit = true;
+      index2 += 1;
+    }
+    if (sawDigit && letterCount <= 3 && xml.charCodeAt(index2) === 34) {
+      row = Math.max(row, digits);
+      if (letterCount > 0) column = Math.max(column, letters - 1);
+    }
+    at = xml.indexOf(' r="', index2);
+  }
+  return { row, column };
+}
+__name(scanExplicitCellBounds, "scanExplicitCellBounds");
+function expandWorksheetDimensionToCells(worksheetXml) {
+  let maximumRow = 1;
+  let maximumColumn = 0;
+  const include = /* @__PURE__ */ __name((reference2) => {
+    const cleaned = reference2.replace(/\$/g, "");
+    const cell = /^([A-Z]{1,3})([1-9][0-9]*)$/.exec(cleaned);
+    if (!cell?.[1] || !cell[2]) return;
+    const row = Number(cell[2]);
+    const column = lettersToColumn2(cell[1]);
+    maximumRow = Math.max(maximumRow, row);
+    maximumColumn = Math.max(maximumColumn, column);
+  }, "include");
+  const dimension = /<dimension\b[^>]*\bref="([^"]+)"[^>]*\/?>/.exec(worksheetXml);
+  if (dimension?.[1]) {
+    for (const reference2 of dimension[1].split(":")) include(reference2);
+  }
+  for (const match of worksheetXml.matchAll(/<c\b[^>]*\br="([A-Z]{1,3}[1-9][0-9]*)"/g)) {
+    if (match[1]) include(match[1]);
+  }
+  const last = toA1Address(maximumRow - 1, maximumColumn);
+  const reference = last === "A1" ? "A1" : `A1:${last}`;
+  if (dimension) {
+    return worksheetXml.replace(/(<dimension\b[^>]*\bref=")[^"]+("[^>]*\/?>)/, `$1${reference}$2`);
+  }
+  return worksheetXml.replace(/(<worksheet\b[^>]*>)/, `$1<dimension ref="${reference}"/>`);
+}
+__name(expandWorksheetDimensionToCells, "expandWorksheetDimensionToCells");
+function serializeStyledCell(address, cell, styleIndex, rich) {
+  const style = styleIndex === void 0 ? "" : ` s="${styleIndex}"`;
+  if (cell.formula) {
+    return `<c r="${address}"${style}>${formulaXml(address, cell.formula.replace(/^=/, ""))}</c>`;
+  }
+  if (cell.value === null) {
+    return styleIndex === void 0 ? "" : `<c r="${address}"${style}/>`;
+  }
+  if (typeof cell.value === "string") {
+    if (rich && rich.length > 0) {
+      const runs = rich.map(
+        (run) => `<r>${serializeRunProperties(run)}<t xml:space="preserve">${escapeCellText(run.text)}</t></r>`
+      ).join("");
+      return `<c r="${address}"${style} t="inlineStr"><is>${runs}</is></c>`;
+    }
+    return `<c r="${address}"${style} t="inlineStr"><is><t xml:space="preserve">${escapeCellText(cell.value)}</t></is></c>`;
+  }
+  if (typeof cell.value === "boolean") {
+    return `<c r="${address}"${style} t="b"><v>${cell.value ? 1 : 0}</v></c>`;
+  }
+  return `<c r="${address}"${style}><v>${cell.value}</v></c>`;
+}
+__name(serializeStyledCell, "serializeStyledCell");
+function serializeRunProperties(run) {
+  const parts = [];
+  if (run.bold) parts.push("<b/>");
+  if (run.italic) parts.push("<i/>");
+  if (run.strikethrough) parts.push("<strike/>");
+  if (run.underline) parts.push("<u/>");
+  if (run.size !== void 0) parts.push(`<sz val="${run.size}"/>`);
+  if (run.color !== void 0) {
+    const hex = run.color.replace(/^#/, "").toUpperCase();
+    if (/^[0-9A-F]{6}$/.test(hex)) parts.push(`<color rgb="FF${hex}"/>`);
+  }
+  if (run.family !== void 0) {
+    parts.push(`<rFont val="${escapeXmlAttribute10(run.family)}"/>`);
+  }
+  if (run.vertAlign !== void 0) parts.push(`<vertAlign val="${run.vertAlign}"/>`);
+  return parts.length === 0 ? "" : `<rPr>${parts.join("")}</rPr>`;
+}
+__name(serializeRunProperties, "serializeRunProperties");
+function ensureFullCalcOnLoad(workbookXml) {
+  if (/<calcPr\b[^>]*\bfullCalcOnLoad="1"/.test(workbookXml)) return workbookXml;
+  if (/<calcPr\b/.test(workbookXml)) {
+    return workbookXml.replace(
+      /<calcPr\b([^>]*?)(\/?>)/,
+      (_full, attributes2, close) => {
+        const cleaned = attributes2.replace(/\s*fullCalcOnLoad="[^"]*"/, "");
+        return `<calcPr${cleaned} fullCalcOnLoad="1"${close}`;
+      }
+    );
+  }
+  const anchor = workbookXml.includes("</definedNames>") ? "</definedNames>" : "</sheets>";
+  if (!workbookXml.includes(anchor)) return workbookXml;
+  return workbookXml.replace(anchor, `${anchor}<calcPr fullCalcOnLoad="1"/>`);
+}
+__name(ensureFullCalcOnLoad, "ensureFullCalcOnLoad");
+function parseA1Column(address) {
+  const letters = /^[A-Z]{1,3}/.exec(address)?.[0];
+  if (!letters) throw new Error(`Invalid cell address: ${address}`);
+  return lettersToColumn2(letters);
+}
+__name(parseA1Column, "parseA1Column");
+function lettersToColumn2(letters) {
+  let column = 0;
+  for (const character of letters) {
+    column = column * 26 + character.charCodeAt(0) - 64;
+  }
+  return column - 1;
+}
+__name(lettersToColumn2, "lettersToColumn");
+function formulaXml(address, formula) {
+  const text = escapeXmlText9(withFutureFunctionMarkers(formula));
+  return spillsDynamicArray(formula) ? `<f t="array" ref="${address}">${text}</f>` : `<f>${text}</f>`;
+}
+__name(formulaXml, "formulaXml");
+function serializeCell(address, cell) {
+  if (cell.formula) {
+    return `<c r="${address}">${formulaXml(address, cell.formula.slice(1))}</c>`;
+  }
+  if (cell.value === null) return "";
+  if (typeof cell.value === "string") {
+    return `<c r="${address}" t="inlineStr"><is><t xml:space="preserve">${escapeCellText(cell.value)}</t></is></c>`;
+  }
+  if (typeof cell.value === "boolean") {
+    return `<c r="${address}" t="b"><v>${cell.value ? 1 : 0}</v></c>`;
+  }
+  return `<c r="${address}"><v>${cell.value}</v></c>`;
+}
+__name(serializeCell, "serializeCell");
+function parseWorksheetCells(worksheetXml, sharedStrings) {
+  const cells = {};
+  const cellPattern = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  let match;
+  while ((match = cellPattern.exec(worksheetXml)) !== null) {
+    const attributes2 = match[1] ?? "";
+    const address = readXmlAttribute(attributes2, "r");
+    if (!address || !/^[A-Z]{1,3}[1-9][0-9]{0,6}$/.test(address)) continue;
+    const body = match[2] ?? "";
+    const formula = /<f(?:\s[^>]*[^/>])?>([\s\S]*?)<\/f>/.exec(body)?.[1];
+    if (formula !== void 0) {
+      cells[address] = { value: null, formula: `=${decodeXmlText(formula)}` };
+      continue;
+    }
+    const type = readXmlAttribute(attributes2, "t");
+    if (type === "inlineStr") {
+      const text = [...body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((textMatch) => decodeCellText(textMatch[1] ?? "")).join("");
+      cells[address] = { value: text };
+      continue;
+    }
+    const rawValue = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body)?.[1];
+    if (rawValue === void 0) {
+      cells[address] = { value: null };
+    } else if (type === "s") {
+      const index2 = Number(rawValue);
+      cells[address] = { value: sharedStrings[index2] ?? "" };
+    } else if (type === "b") {
+      cells[address] = { value: rawValue === "1" };
+    } else if (type === "str") {
+      cells[address] = { value: decodeCellText(rawValue) };
+    } else {
+      const numericValue = Number(rawValue);
+      cells[address] = {
+        value: Number.isFinite(numericValue) ? numericValue : decodeXmlText(rawValue)
+      };
+    }
+  }
+  return cells;
+}
+__name(parseWorksheetCells, "parseWorksheetCells");
+async function readSharedStrings(source) {
+  if (!await source.has("xl/sharedStrings.xml")) return [];
+  const xml = await source.readText("xl/sharedStrings.xml");
+  return [...xml.matchAll(/<si(?:\s[^>]*)?>([\s\S]*?)<\/si>/g)].map(
+    (itemMatch) => [...(itemMatch[1] ?? "").matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((textMatch) => decodeCellText(textMatch[1] ?? "")).join("")
+  );
+}
+__name(readSharedStrings, "readSharedStrings");
+function escapeXmlText9(input) {
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+__name(escapeXmlText9, "escapeXmlText");
+function escapeCellText(input) {
+  return escapeXmlText9(encodeXlsxEscapes(input));
+}
+__name(escapeCellText, "escapeCellText");
+function decodeCellText(input) {
+  const text = decodeXmlText(input).replace(/\r\n?/g, "\n");
+  return decodeXlsxEscapes(text).replace(/\r\n?/g, "\n");
+}
+__name(decodeCellText, "decodeCellText");
+var XML_NAMED_ENTITIES = {
+  quot: '"',
+  apos: "'",
+  lt: "<",
+  gt: ">",
+  amp: "&"
+};
+function decodeXmlText(input) {
+  return input.replace(
+    /&(?:#x([0-9A-Fa-f]+)|#([0-9]+)|(quot|apos|lt|gt|amp));/g,
+    (match, hex, dec, named) => {
+      if (named !== void 0) return XML_NAMED_ENTITIES[named] ?? match;
+      const code = hex !== void 0 ? Number.parseInt(hex, 16) : Number(dec);
+      return code <= 1114111 ? String.fromCodePoint(code) : match;
+    }
+  );
+}
+__name(decodeXmlText, "decodeXmlText");
+function escapeXmlAttribute10(input) {
+  return escapeXmlText9(input).replaceAll('"', "&quot;").replaceAll("'", "&apos;");
+}
+__name(escapeXmlAttribute10, "escapeXmlAttribute");
+function escapeRegExp4(input) {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+__name(escapeRegExp4, "escapeRegExp");
+function readXmlAttribute(attributes2, name) {
+  return new RegExp(`(?:^|\\s)${escapeRegExp4(name)}="([^"]*)"`).exec(attributes2)?.[1];
+}
+__name(readXmlAttribute, "readXmlAttribute");
+
+// src/backend/xlsx.ts
+function zipEntrySource(zip) {
+  return {
+    paths: /* @__PURE__ */ __name(async () => Object.keys(zip.files), "paths"),
+    has: /* @__PURE__ */ __name(async (path) => zip.file(path) !== null, "has"),
+    readText: /* @__PURE__ */ __name(async (path) => {
+      const file = zip.file(path);
+      if (!file) throw new Error(`workbook is missing ${path}`);
+      return normalizeOoxmlPartPrefix((await file.async("string")).replace(/^﻿/, ""));
+    }, "readText")
+  };
+}
+__name(zipEntrySource, "zipEntrySource");
+async function readXlsxStructure(bytes) {
+  const { snapshot } = await readBasicWorkbook(Buffer.from(bytes));
+  return snapshot.sheets.map((sheet) => ({
+    id: sheet.id,
+    name: sheet.name,
+    cells: Object.entries(sheet.cells).map(([address, cell]) => ({
+      address,
+      value: cell.value,
+      ...cell.formula ? { formula: cell.formula } : {}
+    }))
+  }));
+}
+__name(readXlsxStructure, "readXlsxStructure");
+function addressToRowColumn(address) {
+  const match = /^([A-Za-z]+)(\d+)$/.exec(address.trim());
+  if (!match) throw new Error(`not an A1-style address: ${address}`);
+  const [, letters, digits] = match;
+  let column = 0;
+  for (const ch of letters.toUpperCase()) {
+    column = column * 26 + (ch.charCodeAt(0) - 64);
+  }
+  return { row: Number(digits) - 1, column: column - 1 };
+}
+__name(addressToRowColumn, "addressToRowColumn");
+function toCellEdit(op) {
+  const { row, column } = addressToRowColumn(op.cell);
+  const cell = { value: op.value };
+  return {
+    sheetName: op.sheet,
+    row,
+    column,
+    writeValue: true,
+    cell
+  };
+}
+__name(toCellEdit, "toCellEdit");
+async function planXlsxEdits(bytes, ops) {
+  if (ops.length === 0) throw new Error("no ops to apply");
+  const zip = await import_jszip5.default.loadAsync(bytes);
+  const plan = await planCellEditsToXlsx(zipEntrySource(zip), ops.map(toCellEdit));
+  return {
+    touchedEntries: [...plan.touchedEntries],
+    addedEntries: [...plan.addedEntries],
+    removedEntries: [...plan.removedEntries]
+  };
+}
+__name(planXlsxEdits, "planXlsxEdits");
+async function applyXlsxEdits(bytes, ops) {
+  if (ops.length === 0) throw new Error("no ops to apply");
+  const zip = await import_jszip5.default.loadAsync(bytes);
+  const plan = await planCellEditsToXlsx(
+    zipEntrySource(zip),
+    ops.map(toCellEdit)
+  );
+  for (const name of plan.removedEntries) zip.remove(name);
+  for (const [name, text] of plan.replaced) zip.file(name, text);
+  for (const [name, text] of plan.added) zip.file(name, text);
+  for (const [name, data] of plan.addedBinary) zip.file(name, data);
+  return zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+}
+__name(applyXlsxEdits, "applyXlsxEdits");
+
+// src/backend/docx.ts
+var DOCX_OP_GROUPS = {
+  text: ["setFont", "setMatchedFont", "setParagraphFormat", "setHeadingLevel", "findReplace"],
+  lists: ["setList", "clearList", "applyStyle"],
+  blocks: ["deleteBlocks", "moveBlocks"],
+  tables: [
+    "insertTableRow",
+    "deleteTableRow",
+    "insertTableColumn",
+    "deleteTableColumn",
+    "mergeTableCells",
+    "splitTableCell",
+    "setTableCellFormat",
+    "setTableStyle"
+  ],
+  images: ["setImageProperties", "insertToc"],
+  fields: ["insertField", "insertBookmark", "updateFields"]
+};
+var DOCX_OPS = Object.values(DOCX_OP_GROUPS).flat();
+function docxGuide() {
+  return [
+    "docx ops edit the OPEN document through GenOffice's own editor. They are:",
+    "",
+    `  { op: "<name>", target: {...}, <the op's fields> }`,
+    "",
+    "Target \u2014 which part of the document the op applies to. Conditions AND together,",
+    "and AT LEAST ONE is required:",
+    "",
+    "  blockIndexes: number[]   block indexes as office_read reported them, 0-based",
+    "  containsText: string     the block's text contains this (+ matchCase: boolean)",
+    '  nodeType: "docHeading" | "docParagraph" | "docListItem" | "image" | "table"',
+    '  headingLevel: number     only with nodeType "docHeading"',
+    '  scope: "selection"       only the blocks the current selection covers',
+    "  range: { from, to }      explicit ProseMirror positions",
+    "",
+    "THE WHOLE DOCUMENT IS SPELLED BY OMITTING `target` ENTIRELY \u2014 there is no",
+    '`scope: "document"`. Writing one is rejected as "target requires at least one',
+    'condition", which is the validator saying it saw no condition at all.',
+    "",
+    '`scope: "selection"` IS NOT "the bit the user selected" \u2014 it is "whatever range is',
+    'selected RIGHT NOW", and with nothing selected it silently becomes the block the',
+    'CARET is in. office_read reports both (it ends with e.g. "No selection; cursor is',
+    'in block 2"), so read that line before choosing. When the user selected something',
+    "and then asked for a change, that selection is already gone by the time you run \u2014",
+    "use the block indexes office_read gave you instead.",
+    "",
+    "Fields are PATCHES: a key present sets it, null clears it, a key absent leaves it",
+    'alone. So { op: "setFont", target, bold: true } bolds without touching size or colour.',
+    "",
+    `Ops (${DOCX_OPS.length}):`,
+    ...Object.entries(DOCX_OP_GROUPS).map(([group2, names2]) => `  ${group2.padEnd(7)} ${names2.join(", ")}`),
+    "",
+    "Examples:",
+    '  { op: "findReplace", find: "\u7532\u65B9", replace: "\u4E59\u65B9" }              // whole document',
+    '  { op: "setFont", target: { blockIndexes: [0] }, bold: true }',
+    '  { op: "setHeadingLevel", target: { blockIndexes: [3] }, level: 1 }',
+    '  { op: "setParagraphFormat", target: { containsText: "\u6458\u8981" }, align: "center" }',
+    "",
+    "Two whole-block commands are also accepted in the same `ops` array, for adding",
+    "content the op registry cannot express:",
+    "",
+    '  { op: "insert_content",  html: "<p>\u2026</p>", afterBlockIndex?: number }   -1 = at the very start',
+    '  { op: "replace_blocks",  startBlockIndex: number, endBlockIndex: number, html: "\u2026" }',
+    "",
+    "A batch is validated as a whole: if any op is rejected, none of it is applied and the",
+    "failure says which op and why. Pass dryRun: true to validate without writing.",
+    "",
+    "TWO THINGS THAT WILL BITE:",
+    "  - The document must be OPEN in the file viewer. These ops drive a live editor;",
+    "    there is no headless path. If it is not open, office_edit says so \u2014 open it",
+    "    (files_probe_open) and retry.",
+    "  - Block indexes come from office_read and go stale the moment anything edits the",
+    "    document. Read again rather than reusing an index from earlier in the session."
+  ].join("\n");
+}
+__name(docxGuide, "docxGuide");
+function planDocxCommands(ops, dryRun) {
+  const commands = [];
+  let batch = [];
+  const flush = /* @__PURE__ */ __name(() => {
+    if (batch.length === 0) return;
+    commands.push({ command: "apply_ops", payload: { ops: batch, ...dryRun ? { dryRun: true } : {} } });
+    batch = [];
+  }, "flush");
+  for (const entry of ops) {
+    const name = typeof entry?.op === "string" ? entry.op : "";
+    if (name === "insert_content" || name === "replace_blocks") {
+      if (dryRun) {
+        throw new Error(
+          `dryRun cannot validate "${name}" \u2014 it has no dry-run mode, and running it would edit the document. Validate the registry ops separately, or drop dryRun to apply the whole batch.`
+        );
+      }
+      flush();
+      if (name === "insert_content") {
+        const html = entry.html;
+        if (typeof html !== "string") throw new Error('insert_content: "html" is required');
+        const after = entry.afterBlockIndex;
+        commands.push({
+          command: "insert_content",
+          payload: { html, ...typeof after === "number" ? { afterBlockIndex: after } : {} }
+        });
+      } else {
+        const { startBlockIndex: start, endBlockIndex: end, html } = entry;
+        if (typeof start !== "number" || typeof end !== "number" || typeof html !== "string") {
+          throw new Error(
+            'replace_blocks: "startBlockIndex", "endBlockIndex" (numbers) and "html" (string) are all required'
+          );
+        }
+        commands.push({ command: "replace_blocks", payload: { startBlockIndex: start, endBlockIndex: end, html } });
+      }
+      continue;
+    }
+    batch.push(entry);
+  }
+  flush();
+  if (commands.length === 0) throw new Error("no ops to apply");
+  return commands;
+}
+__name(planDocxCommands, "planDocxCommands");
+
 // vendor/genoffice/packages/pptx-ops/src/ops/registry.ts
 var GuidedError = class extends Error {
   static {
@@ -58404,12 +66919,12 @@ register({
     const { slide, el } = resolveElement(ctx, op);
     const p1 = op.p1;
     const p2 = op.p2;
-    const start = toRef(
+    const start = toRef5(
       slide,
       "start",
       op.start
     );
-    const end = toRef(slide, "end", op.end);
+    const end = toRef5(slide, "end", op.end);
     const before = { ...el.transform.offset };
     el.transform = {
       ...el.transform,
@@ -58428,7 +66943,7 @@ register({
     return { op, before, after: { p1, p2 } };
   }
 });
-function toRef(slide, which, v) {
+function toRef5(slide, which, v) {
   if (v === void 0) return void 0;
   if (v === null) return null;
   const target = slide.elements.find((x) => matchesElementRef(x, v.targetId));
@@ -58440,7 +66955,7 @@ function toRef(slide, which, v) {
   }
   return { id: spid, idx: v.idx };
 }
-__name(toRef, "toRef");
+__name(toRef5, "toRef");
 register({
   name: "flipElements",
   validate(op, ctx) {
@@ -59991,12 +68506,12 @@ function resolveTopLevel(op, ctx, min) {
   return { slide, els };
 }
 __name(resolveTopLevel, "resolveTopLevel");
-function toRef2(op) {
+function toRef6(op) {
   if (op.to === void 0 || op.to === "selection") return "selection";
   if (op.to === "slide") return "slide";
   throw new GuidedError(`op "${op.op}": "to" must be "selection" (default) or "slide".`);
 }
-__name(toRef2, "toRef");
+__name(toRef6, "toRef");
 function moveTo(slide, els, pos) {
   const moved = [];
   els.forEach((el, i) => {
@@ -60023,10 +68538,10 @@ register({
         `op "alignElements" needs "mode": ${Object.keys(ALIGN_MODES).join("/")}.`
       );
     }
-    resolveTopLevel(op, ctx, toRef2(op) === "slide" ? 1 : 2);
+    resolveTopLevel(op, ctx, toRef6(op) === "slide" ? 1 : 2);
   },
   apply(op, ctx) {
-    const to = toRef2(op);
+    const to = toRef6(op);
     const { slide, els } = resolveTopLevel(op, ctx, to === "slide" ? 1 : 2);
     const size = ctx.opened.deck.size;
     const container = to === "slide" ? { x: 0, y: 0, w: size.cx, h: size.cy } : null;
@@ -60042,10 +68557,10 @@ register({
     if (op.axis !== "horizontal" && op.axis !== "vertical") {
       throw new GuidedError('op "distributeElements" needs "axis": "horizontal" or "vertical".');
     }
-    resolveTopLevel(op, ctx, toRef2(op) === "slide" ? 1 : 3);
+    resolveTopLevel(op, ctx, toRef6(op) === "slide" ? 1 : 3);
   },
   apply(op, ctx) {
-    const to = toRef2(op);
+    const to = toRef6(op);
     const { slide, els } = resolveTopLevel(op, ctx, to === "slide" ? 1 : 3);
     const horizontal = op.axis === "horizontal";
     const rects = rectsOf(els);
@@ -60500,12 +69015,12 @@ var parserOptions = {
 var xmlParser = new XMLParser(parserOptions);
 var deepXmlParser = new XMLParser({ ...parserOptions, maxNestedTags: 1e5 });
 var ILLEGAL_XML_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g;
-function escapeXmlText2(text) {
+function escapeXmlText10(text) {
   return text.replace(ILLEGAL_XML_CHARS, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
-__name(escapeXmlText2, "escapeXmlText");
+__name(escapeXmlText10, "escapeXmlText");
 function escapeXmlAttr2(text) {
-  return escapeXmlText2(text).replace(/"/g, "&quot;");
+  return escapeXmlText10(text).replace(/"/g, "&quot;");
 }
 __name(escapeXmlAttr2, "escapeXmlAttr");
 
@@ -60725,7 +69240,7 @@ __name(latexToOmml, "latexToOmml");
 function mathRun(text, plain = false) {
   if (text === "") return "";
   const rPr = plain ? '<m:rPr><m:sty m:val="p"/></m:rPr>' : "";
-  return `<m:r>${rPr}<m:t xml:space="preserve">${escapeXmlText2(text)}</m:t></m:r>`;
+  return `<m:r>${rPr}<m:t xml:space="preserve">${escapeXmlText10(text)}</m:t></m:r>`;
 }
 __name(mathRun, "mathRun");
 function peek(p) {
@@ -61568,6 +70083,14 @@ __name(runTxn, "runTxn");
 
 // src/backend/index.ts
 var MAX_READ_BYTES = 200 * 1024 * 1024;
+function samePath(a, b) {
+  try {
+    return resolvePath(a) === resolvePath(b);
+  } catch {
+    return a === b;
+  }
+}
+__name(samePath, "samePath");
 function main(parentPort) {
   const state = { uiPort: null, currentFile: "" };
   let seq = 0;
@@ -61597,6 +70120,39 @@ function main(parentPort) {
     renderViewer(state.currentFile ? { path: state.currentFile } : {});
   }
   __name(openFile, "openFile");
+  const mcpPending = /* @__PURE__ */ new Map();
+  let mcpSeq = 0;
+  let mcpReady = false;
+  function requireDocxOpen(path) {
+    if (!state.uiPort) {
+      throw new Error("the file viewer is not open \u2014 open this document in the viewer, then retry");
+    }
+    const open = state.currentFile;
+    if (open.toLowerCase().endsWith(".docx") && samePath(open, path)) return;
+    throw new Error(
+      open ? `the viewer is showing ${open}, not ${path} \u2014 open the document you want to edit in the viewer, then retry` : `no document is open in the viewer \u2014 open ${path} there, then retry`
+    );
+  }
+  __name(requireDocxOpen, "requireDocxOpen");
+  function mcpCommand(command, payload, timeoutMs = 12e4) {
+    const requestId = "m" + ++mcpSeq;
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        mcpPending.delete(requestId);
+        reject(
+          new Error(
+            `the viewer did not answer "${command}" within ${Math.round(timeoutMs / 1e3)}s \u2014 is the document still open and finished loading?`
+          )
+        );
+      }, timeoutMs);
+      mcpPending.set(requestId, { resolve, reject, timer });
+      uiPost({ kind: "event", event: "mcp-command", data: { requestId, command, payload } });
+      if (!mcpReady) {
+        log("info", "docx bridge: no ready signal yet, sending anyway");
+      }
+    });
+  }
+  __name(mcpCommand, "mcpCommand");
   async function readOfficeBytes(path) {
     const info = await stat(path).catch(() => null);
     if (!info || !info.isFile()) throw new Error(`not a file: ${path}`);
@@ -61620,8 +70176,17 @@ function main(parentPort) {
   }), "text");
   async function toolGuide(p) {
     const domain = String(p.domain ?? "pptx");
+    if (domain === "xlsx") {
+      return text(
+        "xlsx ops are cell edits. Each one is:\n  { sheet: string, cell: string, value: string | number | boolean | null }\n\n  sheet \u2014 a sheet name exactly as office_read reported it\n  cell  \u2014 an A1-style address, also from office_read\n  value \u2014 null clears the cell\n\nPut them in office_edit's `ops` array. Read first; the addresses come from office_read.\nNOT yet supported for xlsx: adding or removing sheets, formulas, formatting,\ncharts, merged cells. Those need a different op set; say so instead of retrying.",
+        { domain, op: "setCell" }
+      );
+    }
+    if (domain === "docx") {
+      return text(docxGuide(), { domain, ops: DOCX_OP_GROUPS });
+    }
     if (domain !== "pptx") {
-      return text(`domain "${domain}" is not wired yet \u2014 only pptx is. Do not retry with another argument; tell the user this format has no structural editing yet.`);
+      return text(`domain "${domain}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry with another argument; tell the user this format has no structural editing yet.`);
     }
     const group2 = p.group === void 0 ? void 0 : String(p.group);
     if (group2 !== void 0) {
@@ -61646,8 +70211,27 @@ Call office_guide again with { group } for one group's field tables and examples
     const path = String(p.path ?? "");
     if (!path) throw new Error("office_read: path is required");
     const ext = path.toLowerCase().split(".").pop();
+    if (ext === "xlsx") {
+      const sheets = await readXlsxStructure(await readOfficeBytes(path));
+      const MAX_CELLS = 40;
+      return text(
+        `${path}: ${sheets.length} sheet(s)
+` + sheets.map((s) => {
+          const shown = s.cells.slice(0, MAX_CELLS);
+          const more = s.cells.length - shown.length;
+          const cells = shown.map((c) => `${c.address}=${c.value === null ? "\u2205" : c.value}${c.formula ? ` [${c.formula}]` : ""}`).join(", ");
+          return `  ${s.name} \u2014 ${s.cells.length} cell(s)${cells ? `: ${cells}` : ""}${more > 0 ? ` \u2026 ${more} more` : ""}`;
+        }).join("\n"),
+        { sheetCount: sheets.length, sheets }
+      );
+    }
+    if (ext === "docx") {
+      requireDocxOpen(path);
+      const result = await mcpCommand("read_document", {});
+      return text(String(result?.text ?? ""), { path, via: "viewer" });
+    }
     if (ext !== "pptx") {
-      return text(`office_read: "${ext}" is not wired yet \u2014 only pptx is. Do not retry; this format has no structural reading yet.`);
+      return text(`office_read: "${ext}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry; this format has no structural reading yet.`);
     }
     const opened = await openPptx(await readOfficeBytes(path));
     const slides = opened.deck.slides.map((s, i) => ({
@@ -61680,8 +70264,53 @@ Call office_guide again with { group } for one group's field tables and examples
     if (ops.length === 0) throw new Error("office_edit: ops is required and must be non-empty");
     const dryRun = p.dryRun === true;
     const ext = path.toLowerCase().split(".").pop();
+    if (ext === "xlsx") {
+      const info2 = await stat(path);
+      const bytes2 = await readOfficeBytes(path);
+      const cellOps = ops;
+      if (dryRun) {
+        const planned = await planXlsxEdits(bytes2, cellOps);
+        return text(
+          `dry run ok \u2014 ${cellOps.length} op(s) validated, nothing written:
+  would touch: ${planned.touchedEntries.join(", ") || "(nothing)"}`,
+          { applied: false, dryRun: true, plan: planned.touchedEntries }
+        );
+      }
+      const next = await applyXlsxEdits(bytes2, cellOps);
+      const written2 = await writeOfficeBytes(path, next, info2.mtimeMs);
+      return text(`applied ${cellOps.length} op(s) to ${path} and saved (${next.length} bytes)`, {
+        applied: true,
+        mtime: written2?.mtime
+      });
+    }
+    if (ext === "docx") {
+      requireDocxOpen(path);
+      const commands = planDocxCommands(ops, dryRun);
+      const steps = [];
+      for (const step of commands) {
+        steps.push(await mcpCommand(step.command, step.payload));
+      }
+      if (dryRun) {
+        const plan = steps[0]?.output ?? "";
+        return text(`dry run ok \u2014 ${ops.length} op(s) validated, nothing written:
+${plan}`, {
+          applied: false,
+          dryRun: true,
+          steps
+        });
+      }
+      const saved = await mcpCommand("save_document", { path, overwrite: true });
+      if (saved?.ok !== true) throw new Error(`office_edit: the document could not be saved to ${path}`);
+      const info2 = await stat(path).catch(() => null);
+      return text(`applied ${ops.length} op(s) to ${path} and saved`, {
+        applied: true,
+        path,
+        mtime: info2?.mtimeMs,
+        steps
+      });
+    }
     if (ext !== "pptx") {
-      return text(`office_edit: "${ext}" is not wired yet \u2014 only pptx is. Do not retry; this format has no structural editing yet.`);
+      return text(`office_edit: "${ext}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry; this format has no structural editing yet.`);
     }
     const info = await stat(path);
     const opened = await openPptx(await readOfficeBytes(path));
@@ -61769,6 +70398,44 @@ ${String(result?.content ?? "").slice(0, 4e3)}`, result));
             const t = String(params.text ?? "").trim();
             if (!t) throw new Error("chat.send: text is required");
             return call("chat.send", { text: t });
+          }
+          case "mcp.ready": {
+            mcpReady = true;
+            return { ok: true };
+          }
+          case "mcp.result": {
+            const requestId = String(params.requestId ?? "");
+            const entry = mcpPending.get(requestId);
+            if (!entry) return { ok: false, reason: "no such pending command" };
+            mcpPending.delete(requestId);
+            clearTimeout(entry.timer);
+            if (params.ok === false) {
+              entry.reject(new Error(String(params.error ?? "the viewer reported a failure")));
+            } else {
+              entry.resolve(params.result);
+            }
+            return { ok: true };
+          }
+          case "file.scratchPath": {
+            const dir = join4(tmpdir(), "pi-files-preview");
+            await mkdir(dir, { recursive: true });
+            return { path: join4(dir, `preview-${process.pid}.html`) };
+          }
+          case "file.pickOpenPath": {
+            const opened = await call("dialog.openFile", {
+              ...params.title ? { title: String(params.title) } : {},
+              ...params.filters ? { filters: params.filters } : {},
+              ...params.multi ? { multi: true } : {}
+            });
+            return { path: opened?.path ?? null, paths: opened?.paths ?? [] };
+          }
+          case "file.pickSavePath": {
+            const saved = await call("dialog.saveFile", {
+              ...params.title ? { title: String(params.title) } : {},
+              ...params.defaultName ? { defaultName: String(params.defaultName) } : {},
+              ...params.filters ? { filters: params.filters } : {}
+            });
+            return { path: saved?.path ?? null };
           }
           case "file.write": {
             const path = String(params.path ?? "");

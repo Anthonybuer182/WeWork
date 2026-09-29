@@ -109,6 +109,29 @@ const APPS = [
       ['apps/sheets/src/renderer/ai/transport.ts', 'genoffice agent transport — only AiPanel used it.'],
     ],
   },
+  // The text formats. These two were simply never listed: the manifest has
+  // always routed txt/md/html to this plugin, and the panel has always rendered
+  // them — but through `@genoffice/ui`'s Markdown component, which is the
+  // chat-bubble one (no images, links or blockquotes). These are the real
+  // viewers. Same layout and the same two AI files as the other four.
+  {
+    name: 'markdown',
+    dirs: ['apps/markdown/src/renderer', 'apps/markdown/src/shared', 'apps/markdown/src/main'],
+    entries: ['main.tsx', 'App.tsx'],
+    exclude: [
+      ['apps/markdown/src/renderer/ai/AiPanel.tsx', 'replaced by our AI panel (host agent).'],
+      ['apps/markdown/src/renderer/ai/transport.ts', 'genoffice agent transport — only AiPanel used it.'],
+    ],
+  },
+  {
+    name: 'html',
+    dirs: ['apps/html/src/renderer', 'apps/html/src/shared', 'apps/html/src/main'],
+    entries: ['main.tsx', 'App.tsx'],
+    exclude: [
+      ['apps/html/src/renderer/ai/AiPanel.tsx', 'replaced by our AI panel (host agent).'],
+      ['apps/html/src/renderer/ai/transport.ts', 'genoffice agent transport — only AiPanel used it.'],
+    ],
+  },
 ];
 
 /** Shared across apps: pagination/measurement live outside any single app. */

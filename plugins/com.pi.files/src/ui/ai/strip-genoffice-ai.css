@@ -55,12 +55,15 @@
   display: none !important;
 }
 
-/* The selection popovers ("ask about this") in all four apps. The trigger is the
-   affordance that appears next to a selection; the pop is the panel it opens. */
-.ai-ask-trigger,
-.ai-ask-pop {
-  display: none !important;
-}
+/*
+ * The selection popovers ("ask about this") are deliberately NOT hidden.
+ *
+ * They were, along with the ribbon entries — but they are the one AI affordance
+ * worth keeping: the user pointed at something on purpose. Their submission now
+ * goes to the host agent (see src/ui/ai/no-ai-surface.tsx), so what is left is a
+ * document-local way to ask about a selection, which is exactly what the host
+ * cannot offer on its own.
+ */
 
 /*
  * sheets: its panel is a GRID COLUMN, not a floated dock —

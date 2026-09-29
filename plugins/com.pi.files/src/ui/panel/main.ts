@@ -18,6 +18,9 @@
 // popover) from every renderer this page loads. Must be part of the entry chunk:
 // the renderers arrive via dynamic import, and this has to be in <head> by then.
 import '../ai/strip-genoffice-ai.css';
+// GenOffice's chrome assumes it IS the window (OS caption-button insets, a
+// ribbon laid out for a window's width); this drops those assumptions.
+import './panel-fit.css';
 
 import { persistPendingPath, readPersistedPath } from '../shims/common';
 import { mountEmptyState } from './empty-state';
@@ -94,12 +97,14 @@ void (async () => {
   // from a message it may have missed.
   (window as unknown as { __PI_OPEN_PATH__?: string }).__PI_OPEN_PATH__ = path || undefined;
 
-  if (ext === 'docx') {
+  // `.docm` is `.docx` plus a `vbaProject.bin` part — the same OOXML the docs
+  // renderer already parses, exactly as `.xlsm` is to `.xlsx`. Same for `.pptm`.
+  if (ext === 'docx' || ext === 'docm') {
     await import('../docx/main');
     return;
   }
 
-  if (ext === 'pptx') {
+  if (ext === 'pptx' || ext === 'pptm') {
     await import('../slides/main');
     return;
   }
@@ -109,8 +114,25 @@ void (async () => {
     return;
   }
 
-  if (ext === 'xlsx' || ext === 'xls' || ext === 'xlsm' || ext === 'csv' || ext === 'ods') {
+  // No `ods`: the spreadsheet renderer is Univer, which speaks OOXML. An
+  // OpenDocument file is a different format entirely — a zip with content.xml,
+  // not a variant of xlsx — so listing the extension here would only promise a
+  // render that cannot happen. `.xlsm` IS here and does work: it is xlsx plus a
+  // macro payload. The manifest is the gate for all of these either way.
+  if (ext === 'xlsx' || ext === 'xls' || ext === 'xlsm' || ext === 'csv') {
     await import('../sheets/main');
+    return;
+  }
+
+  // The text formats: GenOffice's own markdown viewer, rather than the
+  // chat-bubble Markdown component they used to go through (see text-preview.tsx).
+  if (ext === 'md' || ext === 'markdown') {
+    await import('../markdown/main');
+    return;
+  }
+
+  if (ext === 'html' || ext === 'htm') {
+    await import('../html/main');
     return;
   }
 

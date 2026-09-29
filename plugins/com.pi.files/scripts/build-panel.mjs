@@ -312,6 +312,20 @@ const result = await build({
     '.webp': 'file',
   },
   assetNames: 'assets/[name]-[hash]',
+  // `?url` assets must be addressed from the DOCUMENT, not from the chunk that
+  // mentions them. esbuild's default is a path relative to the referencing
+  // output file, so the pdf.js worker — imported by a chunk under `chunks/` but
+  // placed in `assets/` — came out as `../assets/pdf.worker.min-<hash>.mjs`.
+  // That resolves correctly from `chunks/` and WRONG from the panel: pdf.js
+  // resolves `GlobalWorkerOptions.workerSrc` against `window.location`, which is
+  // `ui-dist/panel/index.html`, so `../assets/` climbed to `ui-dist/assets/` —
+  // a 404 served as text/plain, which is how it surfaced: "Failed to load
+  // module script: ... MIME type of text/plain", the worker silently fell back
+  // to the fake one, and pdf pages stopped painting.
+  //
+  // Absolute prefix instead. It has to match where the manifest's panel entry
+  // is served from (`contributes.panels[].entry`).
+  publicPath: '/ui-dist/panel/',
   resolveExtensions: ['.tsx', '.ts', '.js'],
   plugins: [aiPanelSwap, shimSwap, urlAsset, genofficeResolver, rawText, cssInject, nodeBuiltins],
 });

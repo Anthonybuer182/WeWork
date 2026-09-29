@@ -21,8 +21,12 @@
  * so `scripts/smoke-backend.mjs` can drive the whole tool surface in plain Node.
  */
 
-import { readFile, stat } from 'node:fs/promises';
+import { mkdir, readFile, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve as resolvePath } from 'node:path';
 import { createBlankPptx, openPptx, savePptx } from '@genoffice/pptx-engine';
+import { applyXlsxEdits, planXlsxEdits, readXlsxStructure, type CellOp } from './xlsx';
+import { DOCX_OP_GROUPS, docxGuide, planDocxCommands, type DocxOp } from './docx';
 import {
   OP_GROUPS,
   opGuide,
@@ -49,6 +53,15 @@ type ToolResult = {
 };
 
 const MAX_READ_BYTES = 200 * 1024 * 1024;
+
+/** Whether two paths name the same file, forgiving `.` `..` and a trailing slash. */
+function samePath(a: string, b: string): boolean {
+  try {
+    return resolvePath(a) === resolvePath(b);
+  } catch {
+    return a === b;
+  }
+}
 
 export function main(parentPort: HostPort): void {
   const state = { uiPort: null as null | { postMessage(m: unknown): void }, currentFile: '' };
@@ -85,6 +98,71 @@ export function main(parentPort: HostPort): void {
     // The viewer loads content itself over ws-file; mtime rides along so the
     // first save's conflict detection has a baseline.
     renderViewer(state.currentFile ? { path: state.currentFile } : {});
+  }
+
+  // ── GenOffice's external-agent bridge (docx) ─────────────────────────
+  //
+  // Editing a docx means driving a LIVE Tiptap editor, so the work happens in
+  // the panel: GenOffice ships exactly that bridge itself
+  // (`apps/docs/src/renderer/mcp-bridge.ts`), and its executors are the built-in
+  // agent's own `executeTool` — so an external command inherits the same
+  // parsing, atomicity, formatting rules and stale-index guard.
+  //
+  // This side only carries the commands. They travel over the plugin's OWN
+  // point-to-point panel port and come back as an ordinary UI request, so
+  // nothing here reaches the host: no host capability, no protocol surface,
+  // no manifest change. The plugin's `office_*` tools are the only thing the
+  // agent sees, exactly as for any other plugin.
+  //
+  // The one consequence worth knowing: the document has to be OPEN in the
+  // viewer. That is GenOffice's own model — its built-in AI works the same way —
+  // and it is why `requireDocxOpen` below fails loudly instead of hanging.
+  const mcpPending = new Map<
+    string,
+    { resolve: (v: unknown) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout> }
+  >();
+  let mcpSeq = 0;
+
+  /** True once a docs panel has announced it can take commands. */
+  let mcpReady = false;
+
+  function requireDocxOpen(path: string): void {
+    if (!state.uiPort) {
+      throw new Error('the file viewer is not open — open this document in the viewer, then retry');
+    }
+    const open = state.currentFile;
+    if (open.toLowerCase().endsWith('.docx') && samePath(open, path)) return;
+    throw new Error(
+      open
+        ? `the viewer is showing ${open}, not ${path} — open the document you want to edit in the viewer, then retry`
+        : `no document is open in the viewer — open ${path} there, then retry`,
+    );
+  }
+
+  function mcpCommand(
+    command: string,
+    payload: Record<string, unknown>,
+    timeoutMs = 120_000,
+  ): Promise<unknown> {
+    const requestId = 'm' + ++mcpSeq;
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        mcpPending.delete(requestId);
+        reject(
+          new Error(
+            `the viewer did not answer "${command}" within ${Math.round(timeoutMs / 1000)}s — ` +
+              'is the document still open and finished loading?',
+          ),
+        );
+      }, timeoutMs);
+      mcpPending.set(requestId, { resolve, reject, timer });
+      uiPost({ kind: 'event', event: 'mcp-command', data: { requestId, command, payload } });
+      if (!mcpReady) {
+        // Not fatal: readiness is only a hint (the panel announces it once the
+        // editor has a loaded document), and the command may still be answered.
+        log('info', 'docx bridge: no ready signal yet, sending anyway');
+      }
+    });
   }
 
   // ── Office engine helpers ────────────────────────────────────────────
@@ -126,8 +204,30 @@ export function main(parentPort: HostPort): void {
    */
   async function toolGuide(p: Record<string, unknown>): Promise<ToolResult> {
     const domain = String(p.domain ?? 'pptx');
+    if (domain === 'xlsx') {
+      // Not the pptx op vocabulary: a spreadsheet edit addresses a cell, and
+      // there is no op registry behind it to enumerate.
+      return text(
+        'xlsx ops are cell edits. Each one is:\n' +
+          '  { sheet: string, cell: string, value: string | number | boolean | null }\n' +
+          '\n' +
+          '  sheet — a sheet name exactly as office_read reported it\n' +
+          '  cell  — an A1-style address, also from office_read\n' +
+          '  value — null clears the cell\n' +
+          '\n' +
+          'Put them in office_edit\'s `ops` array. Read first; the addresses come from office_read.\n' +
+          'NOT yet supported for xlsx: adding or removing sheets, formulas, formatting,\n' +
+          'charts, merged cells. Those need a different op set; say so instead of retrying.',
+        { domain, op: 'setCell' },
+      );
+    }
+    if (domain === 'docx') {
+      // Not a byte-level engine: see backend/docx.ts. The ops drive the editor
+      // the document is open in, which is why the guide leads with that.
+      return text(docxGuide(), { domain, ops: DOCX_OP_GROUPS });
+    }
     if (domain !== 'pptx') {
-      return text(`domain "${domain}" is not wired yet — only pptx is. Do not retry with another argument; tell the user this format has no structural editing yet.`);
+      return text(`domain "${domain}" is not wired yet — pptx, xlsx and docx are. Do not retry with another argument; tell the user this format has no structural editing yet.`);
     }
     const group = p.group === undefined ? undefined : String(p.group);
     if (group !== undefined) {
@@ -150,8 +250,37 @@ export function main(parentPort: HostPort): void {
     const path = String(p.path ?? '');
     if (!path) throw new Error('office_read: path is required');
     const ext = path.toLowerCase().split('.').pop();
+    if (ext === 'xlsx') {
+      const sheets = await readXlsxStructure(await readOfficeBytes(path));
+      // Capped per sheet: a real workbook holds more cells than an agent needs
+      // to see, and the ADDRESSES are the point — they are what an edit targets.
+      const MAX_CELLS = 40;
+      return text(
+        `${path}: ${sheets.length} sheet(s)\n` +
+          sheets
+            .map((s) => {
+              const shown = s.cells.slice(0, MAX_CELLS);
+              const more = s.cells.length - shown.length;
+              const cells = shown
+                .map((c) => `${c.address}=${c.value === null ? '∅' : c.value}${c.formula ? ` [${c.formula}]` : ''}`)
+                .join(', ');
+              return `  ${s.name} — ${s.cells.length} cell(s)${cells ? `: ${cells}` : ''}${more > 0 ? ` … ${more} more` : ''}`;
+            })
+            .join('\n'),
+        { sheetCount: sheets.length, sheets },
+      );
+    }
+    if (ext === 'docx') {
+      // Read through the bridge, because the useful readout — block indexes
+      // against the CURRENT editor state — only exists there. Reading the bytes
+      // instead would produce indexes that go stale the moment anything else
+      // touches the document.
+      requireDocxOpen(path);
+      const result = (await mcpCommand('read_document', {})) as { text?: string } | undefined;
+      return text(String(result?.text ?? ''), { path, via: 'viewer' });
+    }
     if (ext !== 'pptx') {
-      return text(`office_read: "${ext}" is not wired yet — only pptx is. Do not retry; this format has no structural reading yet.`);
+      return text(`office_read: "${ext}" is not wired yet — pptx, xlsx and docx are. Do not retry; this format has no structural reading yet.`);
     }
     const opened = await openPptx(await readOfficeBytes(path));
     const slides = opened.deck.slides.map((s, i) => ({
@@ -187,8 +316,65 @@ export function main(parentPort: HostPort): void {
     if (ops.length === 0) throw new Error('office_edit: ops is required and must be non-empty');
     const dryRun = p.dryRun === true;
     const ext = path.toLowerCase().split('.').pop();
+    if (ext === 'xlsx') {
+      // Same mtime baseline as pptx below: `filesystem.write` is a
+      // compare-and-swap, so an edit made between read and save is refused
+      // rather than clobbered.
+      const info = await stat(path);
+      const bytes = await readOfficeBytes(path);
+      const cellOps = ops as unknown as CellOp[];
+      if (dryRun) {
+        const planned = await planXlsxEdits(bytes, cellOps);
+        return text(
+          `dry run ok — ${cellOps.length} op(s) validated, nothing written:\n` +
+            `  would touch: ${planned.touchedEntries.join(', ') || '(nothing)'}`,
+          { applied: false, dryRun: true, plan: planned.touchedEntries },
+        );
+      }
+      const next = await applyXlsxEdits(bytes, cellOps);
+      const written = await writeOfficeBytes(path, next, info.mtimeMs);
+      return text(`applied ${cellOps.length} op(s) to ${path} and saved (${next.length} bytes)`, {
+        applied: true,
+        mtime: (written as { mtime?: number })?.mtime,
+      });
+    }
+    if (ext === 'docx') {
+      // GenOffice's editor bridge does the work — see backend/docx.ts for why
+      // there is no byte-level path here. `apply_ops` is validated as a batch by
+      // the op registry itself, so a rejection names the offending op.
+      requireDocxOpen(path);
+      const commands = planDocxCommands(ops as unknown as DocxOp[], dryRun);
+      const steps: unknown[] = [];
+      for (const step of commands) {
+        steps.push(await mcpCommand(step.command, step.payload));
+      }
+      if (dryRun) {
+        const plan = (steps[0] as { output?: string } | undefined)?.output ?? '';
+        return text(`dry run ok — ${ops.length} op(s) validated, nothing written:\n${plan}`, {
+          applied: false,
+          dryRun: true,
+          steps,
+        });
+      }
+      // The edits so far are in the LIVE editor; the file on disk still holds
+      // the old bytes until this save. `overwrite` says "write this path
+      // deliberately" — the real guard is `filesystem.write`'s mtime
+      // compare-and-swap, which refuses if the file changed since the viewer
+      // opened it.
+      const saved = (await mcpCommand('save_document', { path, overwrite: true })) as
+        | { ok?: boolean; path?: string }
+        | undefined;
+      if (saved?.ok !== true) throw new Error(`office_edit: the document could not be saved to ${path}`);
+      const info = await stat(path).catch(() => null);
+      return text(`applied ${ops.length} op(s) to ${path} and saved`, {
+        applied: true,
+        path,
+        mtime: info?.mtimeMs,
+        steps,
+      });
+    }
     if (ext !== 'pptx') {
-      return text(`office_edit: "${ext}" is not wired yet — only pptx is. Do not retry; this format has no structural editing yet.`);
+      return text(`office_edit: "${ext}" is not wired yet — pptx, xlsx and docx are. Do not retry; this format has no structural editing yet.`);
     }
 
     // The mtime read here is the baseline the host's conflict check compares
@@ -300,6 +486,62 @@ export function main(parentPort: HostPort): void {
             const t = String(params.text ?? '').trim();
             if (!t) throw new Error('chat.send: text is required');
             return call('chat.send', { text: t });
+          }
+          case 'mcp.ready': {
+            // The docs panel announces itself once its editor has a loaded
+            // document. Only a hint — `mcpCommand` does not require it — but it
+            // makes the "is anything listening?" question answerable in a log.
+            mcpReady = true;
+            return { ok: true };
+          }
+          case 'mcp.result': {
+            const requestId = String(params.requestId ?? '');
+            const entry = mcpPending.get(requestId);
+            // A late or duplicate report is not an error: the command already
+            // settled (usually by timing out) and nobody is waiting any more.
+            if (!entry) return { ok: false, reason: 'no such pending command' };
+            mcpPending.delete(requestId);
+            clearTimeout(entry.timer);
+            if (params.ok === false) {
+              entry.reject(new Error(String(params.error ?? 'the viewer reported a failure')));
+            } else {
+              entry.resolve(params.result);
+            }
+            return { ok: true };
+          }
+          case 'file.scratchPath': {
+            // A stable, writable file the panel can push content into and then
+            // read back over `pi-plugin://…/ws-file`. The html viewer's preview
+            // frame needs exactly that shape: its iframe src is
+            // `${url}?v=${nonce}` (PreviewFrame.tsx), so the URL has to stay put
+            // while its CONTENT changes between reloads. GenOffice serves that
+            // from `html-preview://` in its own main process; here a temp file
+            // behind ws-file gives the same behaviour without a new scheme.
+            //
+            // One file per backend process: there is one viewer panel, and a
+            // stable name is the point.
+            const dir = join(tmpdir(), 'pi-files-preview');
+            await mkdir(dir, { recursive: true });
+            return { path: join(dir, `preview-${process.pid}.html`) };
+          }
+          case 'file.pickOpenPath': {
+            // The host owns the dialog; the panel shim has always asked for this
+            // and used to get "unknown ui request" back, which is why "打开" and
+            // "另存为" quietly did nothing.
+            const opened = (await call('dialog.openFile', {
+              ...(params.title ? { title: String(params.title) } : {}),
+              ...(params.filters ? { filters: params.filters } : {}),
+              ...(params.multi ? { multi: true } : {}),
+            })) as { path?: string | null; paths?: string[] } | undefined;
+            return { path: opened?.path ?? null, paths: opened?.paths ?? [] };
+          }
+          case 'file.pickSavePath': {
+            const saved = (await call('dialog.saveFile', {
+              ...(params.title ? { title: String(params.title) } : {}),
+              ...(params.defaultName ? { defaultName: String(params.defaultName) } : {}),
+              ...(params.filters ? { filters: params.filters } : {}),
+            })) as { path?: string | null } | undefined;
+            return { path: saved?.path ?? null };
           }
           case 'file.write': {
             const path = String(params.path ?? '');

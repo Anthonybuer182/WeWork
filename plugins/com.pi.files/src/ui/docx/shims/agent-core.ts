@@ -44,15 +44,40 @@ export type AgentImage = unknown;
  * never calls the host.
  */
 export class AgentLoop {
+  /** sheets' `events` object, so `run` can report through the loop's own
+   *  channel. See `run`. */
+  private readonly events?: {
+    onError?: (message: string) => void;
+  };
+
   /** Constructible but inert. Throwing here was wrong: sheets' App builds one
    *  during render, so a throw took the whole editor down with it — the AI
-   *  panel is optional, the spreadsheet is not. Methods refuse instead. */
-  run(): never {
-    throw new Error('GenOffice 的 agent 未随插件分发；AI 由宿主的 agent 处理');
+   *  panel is optional, the spreadsheet is not. */
+  constructor(options?: { events?: { onError?: (message: string) => void } }) {
+    this.events = options?.events;
   }
+
+  /**
+   * Report the run as failed, through `onError`.
+   *
+   * This used to throw. That looked equivalent and was not: the caller is
+   * `void collectImageAttachments(...).then(...).catch(...)`, so a synchronous
+   * throw became an unhandled rejection and the loop's own `onError` — the only
+   * thing that clears `aiBusy` — never ran. `aiBusy` is checked at the top of
+   * `handleSend`, so the FIRST sheets submission went through and every one
+   * after it returned silently: the panel answered once per launch.
+   *
+   * Reporting through `onError` is what the loop would do for a real transport
+   * failure, and it lands the message in the status bar the same way.
+   */
+  run(): void {
+    this.events?.onError?.('由宿主 AI 处理中，回复见主对话');
+  }
+
   abort(): void {
     /* nothing to abort */
   }
+
   dispose(): void {
     /* nothing to dispose */
   }

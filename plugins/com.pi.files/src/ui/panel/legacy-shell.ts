@@ -11,7 +11,7 @@
  */
 
 export const LEGACY_CSS = String.raw`
-:root { color-scheme: dark; --bg: #0f1115; --card: #171a21; --border: #2a2f3a; --fg: #e6e9ef; --muted: #8b93a3; --accent: #4f8cff; --ok: #3ecf8e; --err: #f87171; }
+:root { color-scheme: light dark; --bg: hsl(var(--background, 0 0% 100%)); --card: hsl(var(--card, 0 0% 100%)); --border: hsl(var(--border, 214.3 31.8% 91.4%)); --fg: hsl(var(--foreground, 222.2 84% 4.9%)); --muted: hsl(var(--muted-foreground, 215.4 16.3% 46.9%)); --accent: #4f8cff; --ok: #3ecf8e; --err: #f87171; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font: 13px/1.6 -apple-system, "PingFang SC", sans-serif; background: var(--bg); color: var(--fg); }
     header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

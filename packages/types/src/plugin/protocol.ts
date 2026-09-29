@@ -199,9 +199,14 @@ export type CapabilityMethod =
   | 'storage.set'
   | 'storage.delete'
   | 'notify.show'
+  /** Put a native file picker in front of the user and return the choice. */
+  | 'dialog.openFile'
+  | 'dialog.saveFile'
   | 'panel.setStatus'
   | 'panel.open'
   | 'filesystem.read'
+  | 'filesystem.write'
+  /** Structured text extraction from docx / xlsx / pptx / pdf. */
   | 'office.read'
   | 'browser.navigate'
   | 'browser.back'

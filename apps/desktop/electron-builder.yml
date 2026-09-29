@@ -22,6 +22,55 @@ asarUnpack:
   - "node_modules/@earendil-works/pi-coding-agent/**/*"
   - "node_modules/@mariozechner/clipboard*/**/*"
 
+# ── Built-in plugins ──
+#
+# Packaged, the registry looks for plugins at `process.resourcesPath/plugins`
+# (registry.ts getBuiltinRoot). Nothing was putting them there, so a release
+# build shipped with ZERO built-in plugins — no file viewer, no browser, no
+# office tools — while dev looked fine because PI_DEV_PLUGINS supplies the
+# repo's plugins/ directory instead.
+#
+# It has to be extraResources rather than `files`: `files` lands inside the
+# asar, and getBuiltinRoot resolves a real path next to the app bundle.
+#
+# The filter is exclude-based on purpose. A plugin's runtime payload follows the
+# build conventions this repo already uses — the manifest points at `dist/`
+# (backend, bundled), `contributes.panels[].entry` at `ui-dist/` (panel,
+# bundled), and `assets/` for icons — while `src/`, `tests/`, `scripts/` and
+# `vendor/` are build INPUTS, never read at runtime. Both bundlers inline
+# everything they reach: `com.pi.files/dist/main.mjs` is the whole backend and
+# its only surviving dynamic import is `import("module")`.
+#
+# Excluding is still the safer default than an allowlist: a third-party plugin
+# that ships something unusual keeps working, and the thing that actually
+# matters — the 627 MB of node_modules under com.pi.files — is what gets cut.
+#
+# Anchored because a platform that sets extraResources REPLACES the top-level
+# list rather than extending it, so each one below has to name this entry again.
+#
+# The `{,/**/*}` braces are load-bearing, not decoration. electron-builder
+# matches a directory against a negated pattern with partial matching OFF, so
+# `!**/node_modules/**` excludes everything INSIDE node_modules but not the
+# directory itself — shipping an empty `node_modules/`, `src/`, `vendor/` … in
+# every plugin. The brace form covers the directory and its contents.
+extraResources:
+  - &pluginResource
+    from: "../../plugins"
+    to: "plugins"
+    filter:
+      - "**/*"
+      - "!**/node_modules{,/**/*}"
+      - "!**/src{,/**/*}"
+      - "!**/tests{,/**/*}"
+      - "!**/scripts{,/**/*}"
+      - "!**/vendor{,/**/*}"
+      - "!**/package-lock.json"
+      - "!**/pnpm-lock.yaml"
+      - "!**/tsconfig*.json"
+      - "!**/*.tsbuildinfo"
+      - "!**/.git{,/**/*}"
+      - "!**/.DS_Store"
+
 # Office document support used to ship here as a bundled `officecli` skill
 # plus a binary fetched at startup. It is now a plugin (com.pi.files) running
 # the vendored GenOffice engines in its own backend — nothing to bundle and
@@ -32,6 +81,8 @@ mac:
   target:
     - dmg
     - zip
+  extraResources:
+    - *pluginResource
   # Code signing: requires Apple Developer account.
   # Uncomment and set these when you have a signing identity:
   # hardenedRuntime: true
@@ -45,6 +96,7 @@ win:
   # Note: platform-level extraResources OVERRIDE the top-level list rather than
   # extending it, so anything the top level ships must be repeated here.
   extraResources:
+    - *pluginResource
     - from: "bash-bundle/"
       to: "bash-bundle/"
   target:
@@ -68,3 +120,5 @@ linux:
     - deb
   category: Development
   maintainer: pi@example.com
+  extraResources:
+    - *pluginResource

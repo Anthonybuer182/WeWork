@@ -24,14 +24,18 @@
     "tools": [
       {
         "name": "office_guide",
-        "description": "The Office op vocabulary for this plugin's engine. Call with no group for the grouped op list and a one-line signature for each; call with a group for that group's field tables, examples and common mistakes. Read this BEFORE writing ops — guessing field names is the usual cause of a rejected batch.",
+        "description": "The op vocabulary for this plugin's engine. pptx has a grouped op list — call with no group for the grouped names and a one-line signature for each, or with a group for that group's field tables, examples and common mistakes. docx returns its op shape and op list. xlsx has no op registry: its ops are plain cell edits, and this tool returns their shape. Read this BEFORE writing ops — guessing field names is the usual cause of a rejected batch.",
         "inputSchema": {
           "type": "object",
           "properties": {
             "domain": {
               "type": "string",
-              "enum": ["pptx", "docx", "xlsx"],
-              "description": "Which document family. Only pptx is wired so far; the others answer with a plain \"not wired yet\"."
+              "enum": [
+                "pptx",
+                "docx",
+                "xlsx"
+              ],
+              "description": "Which document family. pptx, docx and xlsx are wired; pdf is not, and answers with a plain \"not wired yet\"."
             },
             "group": {
               "type": "string",
@@ -39,42 +43,60 @@
             },
             "style": {
               "type": "string",
-              "enum": ["vocabulary", "signatures"],
+              "enum": [
+                "vocabulary",
+                "signatures"
+              ],
               "description": "vocabulary (default) = grouped names, cheapest. signatures = one signature line per op."
             }
           },
-          "required": ["domain"]
+          "required": [
+            "domain"
+          ]
         }
       },
       {
         "name": "office_read",
-        "description": "Read a document's structure: slides and their elements (with the ids ops target). Ids are what office_edit takes — read first, then edit.",
+        "description": "Read a document's structure: pptx slides and their elements, xlsx sheets and their cells, or a docx document's blocks. Ids, cell addresses and block indexes are what office_edit takes — read first, then edit. For docx the document must already be open in the file viewer.",
         "inputSchema": {
           "type": "object",
           "properties": {
-            "path": { "type": "string", "description": "Absolute path to the document." }
+            "path": {
+              "type": "string",
+              "description": "Absolute path to the document. For docx it must be the document currently open in the viewer."
+            }
           },
-          "required": ["path"]
+          "required": [
+            "path"
+          ]
         }
       },
       {
         "name": "office_edit",
-        "description": "Apply a batch of ops to a document and save it. The batch is atomic: if any op is rejected, nothing is written and the failures say what to fix. Use dryRun to validate a batch without touching the file.",
+        "description": "Apply a batch of ops to a document and save it. The batch is atomic: if any op is rejected, nothing is written and the failures say what to fix. Use dryRun to validate a batch without touching the file. Get the shape of each op from office_guide — pptx ops are named operations, xlsx ops are cell edits, docx ops are {op, target, fields} records. For docx the document must already be open in the file viewer: its ops drive the live editor, so there is no headless path.",
         "inputSchema": {
           "type": "object",
           "properties": {
-            "path": { "type": "string", "description": "Absolute path to the document." },
+            "path": {
+              "type": "string",
+              "description": "Absolute path to the document. For docx it must be the document currently open in the viewer."
+            },
             "ops": {
               "type": "array",
               "description": "The ops to apply, in order. Get the shape of each op from office_guide.",
-              "items": { "type": "object" }
+              "items": {
+                "type": "object"
+              }
             },
             "dryRun": {
               "type": "boolean",
               "description": "Validate and report the plan without writing anything."
             }
           },
-          "required": ["path", "ops"]
+          "required": [
+            "path",
+            "ops"
+          ]
         }
       },
       {
@@ -139,8 +161,11 @@
       {
         "match": [
           "docx",
+          "docm",
           "xlsx",
+          "xlsm",
           "pptx",
+          "pptm",
           "pdf",
           "xls",
           "csv",
@@ -149,7 +174,8 @@
           "markdown",
           "json",
           "log",
-          "html"
+          "html",
+          "htm"
         ]
       }
     ]

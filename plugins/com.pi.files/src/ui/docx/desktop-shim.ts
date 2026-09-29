@@ -105,6 +105,44 @@ const aiStreamed = emitter<unknown>();
 const viewImage = emitter<string>();
 const teardown = emitter<void>();
 
+// ── MCP bridge transport ────────────────────────────────────────────────
+//
+// GenOffice ships the bridge itself (`apps/docs/src/renderer/mcp-bridge.ts`,
+// mounted by App.tsx): an external agent drives the LIVE Tiptap editor through
+// the built-in agent's own `executeTool`, so it inherits the same parsing,
+// atomicity, formatting rules and stale-index guard as GenOffice's own AI. It
+// exposes read_document / replace_blocks / insert_content / apply_ops /
+// save_document — read, edit and save.
+//
+// Its only gate is
+//
+//     if (!desktop?.onMcpCommand || !desktop.reportMcpResult) return () => {}
+//
+// so it has been inert here purely because those were no-ops. Switching it on
+// is the three members below plus this subscription.
+//
+// The channel is the plugin's OWN point-to-point panel↔backend port: the
+// commands travel from this plugin's backend to this plugin's panel and no
+// further. The host relays nothing here and never sees a method name, so
+// bridging GenOffice this way adds no host capability and no protocol surface.
+
+interface McpCommandMessage {
+  requestId: string;
+  command: string;
+  payload?: unknown;
+}
+
+const mcpCommands = emitter<McpCommandMessage>();
+
+window.piSDK?.onMessage((payload) => {
+  const msg = payload as { kind?: string; event?: string; data?: unknown } | null;
+  if (msg?.kind !== 'event' || msg.event !== 'mcp-command') return;
+  const data = msg.data as McpCommandMessage | undefined;
+  if (!data || typeof data.requestId !== 'string' || typeof data.command !== 'string') return;
+  // The bridge serializes its own runs; this only avoids a second listener pass.
+  mcpCommands.fire(data);
+});
+
 /** Theme tokens the host streams into every panel → `data-theme` for GenOffice. */
 function installThemeBridge(): void {
   let last: string | null = null;
@@ -174,7 +212,9 @@ window.piSDK?.onMessage((payload) => {
   // must not be handed to it: a .pptx fed to the docx engine fails with
   // "document.xml has no <w:body> element". Reload instead, and let the panel's
   // dispatcher choose the right renderer.
-  if (reloadForOtherFormat(path, DOCX_EXTS) === 'reloading') return;
+  // docs is the one renderer that opens a second file IN PLACE (openDocxPath
+  // below) — see reloadForOtherFormat for why the others reload instead.
+  if (reloadForOtherFormat(path, DOCX_EXTS, { handlesSameFormat: true }) === 'reloading') return;
 
   if (path === currentPath) return;
   void openDocxPath(path)
@@ -418,9 +458,14 @@ export function installDesktopShim(): void {
     getRecentFiles: async () => [],
     respellKick: async () => undefined,
     spellDiag: () => undefined,
-    onMcpCommand: () => () => undefined,
-    reportMcpResult: () => undefined,
-    signalMcpReady: () => undefined,
+    // GenOffice's own external-agent bridge — see the transport block above.
+    onMcpCommand: (handler: (msg: McpCommandMessage) => void) => mcpCommands.on(handler),
+    reportMcpResult: (result: Record<string, unknown>) => {
+      void backend('mcp.result', result).catch(() => undefined);
+    },
+    signalMcpReady: () => {
+      void backend('mcp.ready', {}).catch(() => undefined);
+    },
     zoteroCommand: async () => ({ ok: false }),
     onZoteroRequest: () => () => undefined,
     respondToZotero: () => undefined,

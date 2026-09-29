@@ -12,6 +12,8 @@
  * paints a background of its own.
  */
 
+import { PLUGIN_ID } from '../shims/common';
+
 const EMPTY_CSS = `
   .fi-empty {
     min-height: 100%;
@@ -23,21 +25,25 @@ const EMPTY_CSS = `
     padding: 32px 24px;
     text-align: center;
     font-family: var(--font-sans, -apple-system, "PingFang SC", sans-serif);
-    color: var(--foreground, #111);
+    /* Host tokens are HSL COMPONENTS (--foreground arrives as "222.2 84% 4.9%"),
+       so they need wrapping in hsl(). Bare, the value is not a colour, the
+       declaration is dropped, and the var() fallback does NOT rescue it — that
+       only fires for an UNDEFINED variable, not an invalid one. */
+    color: hsl(var(--foreground, 222.2 84% 4.9%));
   }
-  .fi-empty svg { color: var(--muted-foreground, #9ca3af); }
+  .fi-empty svg { color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%)); }
   .fi-empty-title { font-size: 14px; font-weight: 600; }
   .fi-empty-hint {
     font-size: 12.5px;
     line-height: 1.7;
-    color: var(--muted-foreground, #6b7280);
+    color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
     max-width: 30em;
   }
   .fi-empty-formats {
     margin-top: 6px;
     font-size: 11.5px;
     letter-spacing: 0.02em;
-    color: var(--muted-foreground, #9ca3af);
+    color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
     opacity: 0.85;
   }
 `;
@@ -51,9 +57,37 @@ const EMPTY_BODY = `
     </svg>
     <div class="fi-empty-title">未选择文件</div>
     <div class="fi-empty-hint">在左侧文件树点开一个文件，它就会在这里打开。</div>
-    <div class="fi-empty-formats">docx · xlsx · pptx · pdf · txt · md · json · html</div>
+    <div class="fi-empty-formats"></div>
   </div>
 `;
+
+/**
+ * The formats this plugin handles, as its own manifest declares them.
+ *
+ * Read rather than restated, because `contributes.filePreview.match` is what the
+ * host routes by — a copy here is a second source of truth that drifts without
+ * anything failing. It had already drifted: the hardcoded line named eight
+ * formats while the manifest matched twelve, leaving xls, csv, markdown and log
+ * unmentioned to anyone who looked at this screen to find out what opens.
+ *
+ * The manifest is served from the plugin root by the same `pi-plugin://` handler
+ * that serves this page (`protocol.ts`), so this is a same-origin read of a file
+ * already on disk — no capability, no network.
+ */
+async function formatList(): Promise<string> {
+  try {
+    const res = await fetch(`pi-plugin://${PLUGIN_ID}/manifest.json`);
+    if (!res.ok) return '';
+    const manifest = (await res.json()) as {
+      contributes?: { filePreview?: { match?: string[] }[] };
+    };
+    const exts = (manifest.contributes?.filePreview ?? []).flatMap((f) => f.match ?? []);
+    return [...new Set(exts)].join(' · ');
+  } catch {
+    // A hint line is not worth failing the panel over.
+    return '';
+  }
+}
 
 /** Render the empty state into the panel's root element. */
 export function mountEmptyState(): void {
@@ -63,4 +97,10 @@ export function mountEmptyState(): void {
   style.textContent = EMPTY_CSS;
   document.head.appendChild(style);
   root.innerHTML = EMPTY_BODY;
+  // Filled in when the manifest arrives; an empty line until then, which is why
+  // the formats row has no other content to collide with.
+  void formatList().then((list) => {
+    const slot = root.querySelector('.fi-empty-formats');
+    if (slot) slot.textContent = list;
+  });
 }

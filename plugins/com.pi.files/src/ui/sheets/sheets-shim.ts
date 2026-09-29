@@ -42,7 +42,9 @@ import {
 } from '../shims/common';
 import { sheetsApiStubs } from './stubs';
 
-const SHEET_EXTS = ['xlsx', 'xls', 'xlsm', 'csv', 'ods'];
+/** Extensions the sheets renderer is loaded for. No `ods` — see the note in
+ *  src/ui/panel/main.ts; the engine speaks OOXML, not OpenDocument. */
+const SHEET_EXTS = ['xlsx', 'xls', 'xlsm', 'csv'];
 
 interface CellScalar {
   value: string | number | boolean | null;
@@ -214,6 +216,41 @@ const api: Record<string, unknown> = {
 
   /** The renderer polls this on mount; a queued path is how a file arrives. */
   hasQueuedWorkbook: async () => !!(pendingPath || readPersistedPath()),
+
+  /*
+   * Reported as CONFIGURED, and that is the whole point — not a claim that this
+   * plugin has a model.
+   *
+   * `handleSend` (vendored) picks between two ways of answering locally:
+   *
+   *     if (agentConfigured) { runAgent(...); return }
+   *     const outcome = runDeterministicPlan(instruction)   // local regex DSL
+   *
+   * and `isAgentConfigured()` is `providers[provider]?.model && apiKey`. Answer
+   * `null` — which is what a plugin with no provider "should" say — and every
+   * submission takes the second branch, where `runDeterministicPlan` matches
+   * only a fixed English micro-DSL ("set A1 to 42"). Anything else comes back as
+   * `UnsupportedPromptError` written straight into the status bar
+   * (`onError: (error) => setMessage(error)`), telling the user to rephrase in a
+   * DSL this product does not have. And an instruction that DOES match would be
+   * applied to the workbook locally — a second writer, racing the host agent
+   * that the same submission was forwarded to.
+   *
+   * Claiming a provider sends it down the `runAgent` branch instead. That is
+   * safe here because the loop it drives is built on the inert transport
+   * (shims/ai-transport.ts): it reports a run, the transport refuses, and
+   * `onError` clears `aiBusy` and puts the transport's own sentence in the
+   * status bar. Nothing else reads these settings in a way that matters —
+   * `imageGenerationAvailable` is this plugin's own stub and returns false
+   * regardless.
+   *
+   * The values are deliberately not a real provider id, so nothing can mistake
+   * them for one.
+   */
+  getAiSettings: async () => ({
+    provider: 'host',
+    providers: { host: { apiKey: 'host', model: 'host-agent' } },
+  }),
 
   /** GenOffice opens through a dialog; here the host already chose the file. */
   selectWorkbook: async () => {

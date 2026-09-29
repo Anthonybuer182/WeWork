@@ -1,0 +1,112 @@
+/*
+ * Make GenOffice's chrome fit a PANEL rather than a window.
+ *
+ * Two kinds of change live here. Both override GenOffice's own chrome, both are
+ * a handful of declarations, and every one of them is removable by deleting the
+ * rule:
+ *
+ *  1. SIZE — assumptions that its chrome IS the window (room reserved for the OS
+ *     caption buttons, a ribbon laid out for a window's width). False inside a
+ *     WebContentsView embedded in someone else's window.
+ *
+ *  2. VERSION — a control the vendored revision has and the shipped GenOffice
+ *     client no longer does. Aligning the two is a product choice, not a fix;
+ *     see the `.rb-font-scope-row` rule for the evidence.
+ *
+ * Not the AI surface — that is strip-genoffice-ai.css, which exists for a
+ * different reason (one product's AI, not two).
+ *
+ * Everything is `!important` for the same reason as in that file: insertion
+ * order between our stylesheet and GenOffice's is a bundler detail, not a
+ * guarantee.
+ */
+
+/*
+ * The quick-access row (save / undo / autosave) insets itself to clear the OS
+ * window buttons:
+ *
+ *     .ribbon-tabs-mac { padding-left: 84px }   room for traffic lights
+ *     .ribbon-tabs-win { padding-right: 150px } room for caption buttons
+ *
+ * Both are correct in a standalone window and wrong here — those buttons belong
+ * to the window that CONTAINS this view, so the inset is dead space with the
+ * save icon floating 84px from the edge. Measured in the running panel: the
+ * first button sat at x=84 in an otherwise empty strip.
+ */
+.ribbon-tabs-mac {
+  padding-left: 8px !important;
+}
+.ribbon-tabs-win {
+  padding-right: 8px !important;
+}
+
+/*
+ * The ribbon body is `height: 80px; overflow: scroll`, and its content is wider
+ * than any panel, so a horizontal scrollbar is always present. That bar is drawn
+ * INSIDE the box, taking 5px the content could have used.
+ *
+ * Upstream reserves that lane deliberately ("`scroll` keeps the 5px lane
+ * reserved even without overflow — the content area never changes and crossing
+ * the overflow threshold cannot cause a jitter"). That reasoning holds when the
+ * content only sometimes overflows. Here it always does — the ribbon's groups
+ * measure ~1289px against a ~701px panel — so the lane is a permanent tax paid
+ * to protect against a transition this panel never makes. Dropping it costs
+ * nothing and gives the content those 5px back. Scrolling is unaffected
+ * (trackpad, shift-wheel).
+ *
+ * NO height override. One was here briefly, to fit a caption row that landed
+ * 4px below the box; dropping the font-scope row below removed the need for it.
+ * Measured at the vendor's own 80px with these rules on — docs 开始,
+ * pdf (6 tabs) and slides (9 tabs) all report scrollHeight == clientHeight == 80.
+ * GenOffice's height stands as written.
+ *
+ * docs, slides and pdf all use the same 80px body. sheets scrolls on the outer
+ * `.ribbon` instead, and there the bar is not covering anything — measured:
+ * clientHeight 75 of an 80px box with the group captions ending at 70 — so it
+ * is deliberately left alone; it is the only affordance that says more groups
+ * are off to the right.
+ */
+.ribbon-body {
+  scrollbar-width: none;
+}
+.ribbon-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/*
+ * The font group's scope row — the "字体" caption plus a dropdown choosing what
+ * a font change applies to (the current selection / the document defaults / a
+ * named style).
+ *
+ * Removed to match the shipping GenOffice client, which no longer has it. This
+ * is a VERSION difference, not a bug in the vendored copy: ours is commit
+ * f5247d33 (2026-09-22) and the client is 0.10.1467 (built 2026-09-26).
+ *
+ * Evidence — grep the client's own bundle, which lives at
+ * `/Applications/GenOffice.app/Contents/Resources/modules/docs/renderer/assets/index-*.js`:
+ *
+ *     ribbon-group-label   58   (group captions in general: still there)
+ *     rb-font-group         2   (the font group: still there)
+ *     rb-font-scope-row     0   \
+ *     ribbonFontScope       0    |  this row, and every string it needs
+ *     ribbonFontSelection   0    |
+ *     ribbonGroupFont       0   /    — including its caption
+ *
+ * …while all of those are present in the vendored source. The client's font
+ * group now renders only `ribbon-group-items rb-font-group`, with no label row.
+ * Hiding this one row leaves the same shape.
+ *
+ * This is also what made the body overflow: the row is the group's caption, so
+ * it sat below the two rows of font controls and pushed 4px past the box. With
+ * it gone the vendor's own 80px fits, which is why there is no height override
+ * above.
+ *
+ * Scoped to the row rather than to `.ribbon-group-label`, which every group
+ * uses (58 occurrences in that bundle) — only the font group's caption is the
+ * one upstream dropped. The class exists in docs alone, so this cannot reach
+ * the slides, sheets or pdf ribbons.
+ */
+.rb-font-scope-row {
+  display: none !important;
+}

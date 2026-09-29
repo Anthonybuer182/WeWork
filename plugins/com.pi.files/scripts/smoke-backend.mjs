@@ -66,8 +66,10 @@ const fakePort = {
     if (event === 'message') listeners.push(cb);
   },
 };
-const hostSend = (msg) => {
-  for (const cb of listeners) cb({ data: msg });
+// `ports` only rides the ui-port handshake; every other message is data-only,
+// and attaching an empty array would be a lie about what the host sent.
+const hostSend = (msg, ports) => {
+  for (const cb of listeners) cb(ports ? { data: msg, ports } : { data: msg });
 };
 
 /** Wait for an outbound message matching `pred`, or time out. */
@@ -126,10 +128,15 @@ console.log(`  fixture: ${deckPath} (${original.length} bytes)\n`);
 }
 
 // ── unwired domains/extensions answer plainly ──────────────────────────
+//
+// pdf is the remaining one. These assertions used to name docx, which stopped
+// being unwired when GenOffice's editor bridge was switched on — keep them
+// pointed at a format that genuinely has no path, so a future wiring shows up
+// here as a failure rather than as a stale claim.
 {
-  const r = await callTool('office_guide', { domain: 'docx' });
+  const r = await callTool('office_guide', { domain: 'pdf' });
   check('an unwired domain says so', /not wired yet/.test(r.content?.[0]?.text ?? ''), r.content?.[0]?.text?.slice(0, 100));
-  const r2 = await callTool('office_read', { path: join(dir, 'nope.docx') });
+  const r2 = await callTool('office_read', { path: join(dir, 'nope.pdf') });
   check('an unwired extension says so', /not wired yet/.test(r2.content?.[0]?.text ?? ''));
 }
 
@@ -198,6 +205,100 @@ console.log(`  fixture: ${deckPath} (${original.length} bytes)\n`);
 {
   const onDisk = await readFile(deckPath);
   check('the file on disk matches what was handed to the host', onDisk.equals(written.get(deckPath)));
+}
+
+// ── docx: the panel carries the edit, this side only routes it ─────────
+//
+// A docx has no headless engine here — GenOffice's document model IS a live
+// editor, so the commands go out to the panel and the outcome comes back. The
+// panel half (GenOffice's own bridge, switched on by our shim) is verified
+// against the real editor separately; what this pins is OUR half: the routing,
+// the guard that stops a command being sent to a viewer showing something else,
+// and the command sequence office_edit produces.
+{
+  const docxPath = join(dir, 'smoke.docx');
+  // The backend never reads a docx's bytes on this path — it only stats it — so
+  // the fixture does not have to be a real document.
+  writeFileSync(docxPath, 'placeholder');
+
+  /** Commands the backend pushed at the "panel", in order. */
+  const pushed = [];
+  let portListener = null;
+  const reply = (requestId, ok, extra) =>
+    portListener?.({
+      data: { kind: 'request', id: 'r' + Math.random().toString(36).slice(2, 8), method: 'mcp.result', params: { requestId, ok, ...extra } },
+    });
+
+  const fakeUiPort = {
+    postMessage: (m) => {
+      if (m?.kind !== 'event' || m.event !== 'mcp-command') return;
+      pushed.push({ command: m.data.command, payload: m.data.payload });
+      const { requestId, command, payload } = m.data;
+      // Answer on a later tick, like the real bridge (it awaits the editor).
+      setTimeout(() => {
+        if (command === 'read_document') reply(requestId, true, { result: { text: 'FAKE DOCUMENT CONTEXT' } });
+        else if (command === 'apply_ops') reply(requestId, true, { result: { summary: 'ok', mutated: true } });
+        else if (command === 'save_document') reply(requestId, true, { result: { ok: true, path: payload.path } });
+        else reply(requestId, false, { error: `unexpected command ${command}` });
+      }, 0);
+    },
+    on: (event, cb) => {
+      if (event === 'message') portListener = cb;
+    },
+    start: () => {},
+  };
+
+  hostSend({ type: 'ui-port' }, [fakeUiPort]);
+  // Which document the viewer has open — this is what the guard reads.
+  portListener({ data: { kind: 'event', event: 'panel.mounted', data: { params: { file: docxPath } } } });
+
+  const guide = await callTool('office_guide', { domain: 'docx' });
+  check('office_guide serves the docx vocabulary', /findReplace/.test(guide.content?.[0]?.text ?? ''));
+  check('the docx guide states the viewer requirement', /viewer/i.test(guide.content?.[0]?.text ?? ''));
+  check('the docx guide does not advertise hidden ops', !/setParagraphAttrs|stepIndent/.test(guide.content?.[0]?.text ?? ''));
+
+  const read = await callTool('office_read', { path: docxPath });
+  check('office_read routes through the bridge', read.content?.[0]?.text === 'FAKE DOCUMENT CONTEXT', read.content?.[0]?.text);
+  check('read_document was the command sent', pushed.at(-1)?.command === 'read_document');
+
+  pushed.length = 0;
+  const edited = await callTool('office_edit', {
+    path: docxPath,
+    ops: [
+      { op: 'setFont', target: { blockIndexes: [0] }, bold: true },
+      { op: 'setHeadingLevel', target: { blockIndexes: [0] }, level: 1 },
+    ],
+  });
+  check('office_edit applies then saves', pushed.map((p) => p.command).join(',') === 'apply_ops,save_document', pushed.map((p) => p.command).join(','));
+  check('the two ops ride in ONE apply_ops', pushed[0]?.payload?.ops?.length === 2, JSON.stringify(pushed[0]?.payload));
+  check('the save targets the document path', pushed[1]?.payload?.path === docxPath);
+  check('the save asks to overwrite', pushed[1]?.payload?.overwrite === true);
+  check('a real edit reports applied', edited.details?.applied === true, edited.content?.[0]?.text);
+
+  pushed.length = 0;
+  const dry = await callTool('office_edit', {
+    path: docxPath,
+    dryRun: true,
+    ops: [{ op: 'setFont', target: { blockIndexes: [0] }, bold: true }],
+  });
+  check('a dry run validates without saving', pushed.map((p) => p.command).join(',') === 'apply_ops', pushed.map((p) => p.command).join(','));
+  check('the dry run flag reaches the bridge', pushed[0]?.payload?.dryRun === true);
+  check('a dry run does not claim to have applied', dry.details?.applied === false);
+
+  // The guard: a live editor is the only place these ops can run, so sending
+  // one for a document the viewer is not showing has to fail loudly instead of
+  // silently editing whatever happens to be open.
+  // The guard throws, and a throw surfaces as `error` on the result — the host
+  // drops `details` on a throw, which is why the actionable wording has to be in
+  // the message itself.
+  pushed.length = 0;
+  const wrong = await callTool('office_read', { path: join(dir, 'other.docx') });
+  check('editing a document the viewer is not showing is refused', pushed.length === 0, `pushed ${pushed.length} command(s)`);
+  check(
+    'the refusal names the open document and says what to do',
+    /viewer/i.test(wrong.error ?? '') && /other\.docx|smoke\.docx/.test(wrong.error ?? ''),
+    wrong.error,
+  );
 }
 
 rmSync(dir, { recursive: true, force: true });

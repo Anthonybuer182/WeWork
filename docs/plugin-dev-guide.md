@@ -272,6 +272,13 @@ await call('network.fetch', { url, method: 'GET' });
 await call('notify.show', { title, body });
 await call('storage.set', { key, value });
 await call('panel.open', { panelId, focus: true });
+
+// 要让用户选文件,只能用宿主对话框:插件拿不到路径,只能拿到用户选中的结果。
+// 这两个能力不需要权限——用户亲手选就是授权。
+await call('dialog.openFile', { filters: [{ name: 'Word', extensions: ['docx'] }] });
+// → { canceled, path, paths }
+await call('dialog.saveFile', { defaultName: '未命名.docx' });
+// → { canceled, path }
 ```
 
 ### UI 通信(MessagePort 点对点)
@@ -317,10 +324,18 @@ uiPort.postMessage({ kind: 'event', event: 'ui.render', panelId, data: state });
 | `clipboard` | 系统剪贴板 |
 | `browser` | 驱动宿主浏览器自动化 |
 | `network:&lt;host&gt;` | 出站网络(域名白名单) |
-| `filesystem` | 工作区文件读写(含二进制) |
+| `filesystem` | 读写文件,**任意绝对路径**(含二进制) — 不限于工作区,见下方说明 |
 | `secrets:&lt;ns&gt;` | 凭据保管箱 |
 
 权限在安装时逐条展示给用户确认。运行时 CapabilityHub 强制校验,未授权调用直接拒绝。
+
+> **`filesystem` 的范围,是这台机器上本进程能碰到的所有路径**,不是某个工作区。
+> 写清楚是因为安装时用户是看着这句话点同意的:一个 `filesystem` 插件能读
+> `~/.ssh/id_rsa`,也能写 `~/.zshrc`。真要收窄,得给 manifest 一个路径范围声明
+> (例如 `filesystem:~/Documents`)—— 那是协议层的改动,目前没有。
+>
+> 所以:**需要用户指定文件时,用 `dialog.*` 让用户自己选**,别去猜路径。用户亲手
+> 选出来的路径,才是这条权限唯一有意义的边界。
 
 ## 定时任务
 
