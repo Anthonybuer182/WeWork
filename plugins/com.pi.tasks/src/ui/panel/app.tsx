@@ -9,12 +9,14 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MonthOccurrence, MonthView, ViewItem, Views } from '../../core/view.js';
-import { dayKey } from '../../core/time.js';
+import type { DayPage } from '../../core/day.js';
+import { dayKey, dayStart, formatDay, weekdayLabel } from '../../core/time.js';
 import type { PiSDK } from './sdk.js';
 import { Editor, Confirm } from './editor.js';
 import { AgendaView, LogView, MonthViewPanel } from './views.js';
+import { DayPageView } from './day.js';
 
-type Tab = 'agenda' | 'month' | 'log';
+type Tab = 'agenda' | 'month' | 'day' | 'log';
 
 export function App({ sdk }: { sdk: PiSDK }) {
   const [view, setView] = useState<Views | null>(null);
@@ -29,6 +31,10 @@ export function App({ sdk }: { sdk: PiSDK }) {
   const [cursor, setCursor] = useState(() => new Date());
   const [monthView, setMonthView] = useState<MonthView | null>(null);
   const [selectedDay, setSelectedDay] = useState(() => dayKey(new Date()));
+
+  // 回顾 — one day at a time.
+  const [day, setDay] = useState(() => dayKey(new Date()));
+  const [dayPage, setDayPage] = useState<DayPage | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -50,6 +56,17 @@ export function App({ sdk }: { sdk: PiSDK }) {
     [sdk],
   );
 
+  const loadDay = useCallback(
+    async (d: string) => {
+      try {
+        setDayPage(await sdk.request<DayPage>('day.get', { day: d }));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [sdk],
+  );
+
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -57,6 +74,10 @@ export function App({ sdk }: { sdk: PiSDK }) {
   useEffect(() => {
     if (tab === 'month') void loadMonth(cursor);
   }, [tab, cursor, loadMonth]);
+
+  useEffect(() => {
+    if (tab === 'day') void loadDay(day);
+  }, [tab, day, loadDay]);
 
   // Backend pushes. The ref keeps the latest handler without re-subscribing.
   const onMessage = useRef<(payload: unknown) => void>(() => {});
@@ -75,11 +96,12 @@ export function App({ sdk }: { sdk: PiSDK }) {
         await sdk.request(method, params);
         await refresh();
         if (tab === 'month') await loadMonth(cursor);
+        if (tab === 'day') await loadDay(day);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       }
     },
-    [sdk, refresh, loadMonth, tab, cursor],
+    [sdk, refresh, loadMonth, loadDay, tab, cursor, day],
   );
 
   const now = view ? new Date(view.now) : new Date();
@@ -90,6 +112,23 @@ export function App({ sdk }: { sdk: PiSDK }) {
     return all.filter(
       (i) => i.title.includes(needle) || (i.note ?? '').includes(needle) || i.repeatLabel.includes(needle),
     );
+  }, [view, query]);
+
+  /**
+   * Days whose written note matches the search box.
+   *
+   * Found here rather than with a real search index, which would be a project
+   * in itself and premature against a few weeks of notes. It exists so that
+   * "where did I write about X" has an answer that does not mean clicking
+   * through the month grid.
+   */
+  const noteHits = useMemo(() => {
+    const needle = query.trim();
+    if (!needle || !view) return [];
+    return Object.entries(view.notes)
+      .filter(([, n]) => n.text.includes(needle))
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .slice(0, 20);
   }, [view, query]);
 
   const openCount = items.filter((i) => !i.done && i.group !== 'later').length;
@@ -110,6 +149,9 @@ export function App({ sdk }: { sdk: PiSDK }) {
             </button>
             <button className="tab" data-on={tab === 'month'} onClick={() => setTab('month')}>
               月
+            </button>
+            <button className="tab" data-on={tab === 'day'} onClick={() => setTab('day')}>
+              回顾
             </button>
             <button className="tab" data-on={tab === 'log'} onClick={() => setTab('log')}>
               记录
@@ -145,18 +187,58 @@ export function App({ sdk }: { sdk: PiSDK }) {
         {!view ? (
           <div className="empty">读取中…</div>
         ) : tab === 'agenda' ? (
-          <AgendaView
-            items={items}
-            now={now}
-            selectedId={editing && editing !== 'new' ? editing.id : undefined}
-            onSelect={(item) => setEditing(item)}
-            onToggle={(item) => void act('item.toggle', { id: item.id, occurrenceKey: item.occurrenceKey })}
+          <>
+            {noteHits.length > 0 && (
+              <div className="day-col" style={{ marginBottom: 10 }}>
+                <div className="day-sec-hd">日记里提到「{query.trim()}」</div>
+                {noteHits.map(([d, n]) => (
+                  <div
+                    key={d}
+                    className="row"
+                    onClick={() => {
+                      setDay(d);
+                      setTab('day');
+                    }}
+                  >
+                    <div className="main">
+                      <div className="title">
+                        {formatDay(dayStart(d))} {weekdayLabel(dayStart(d))}
+                      </div>
+                      <div className="meta">
+                        <span>{n.text.replace(/\s+/g, ' ').slice(0, 70)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <AgendaView
+              items={items}
+              now={now}
+              selectedId={editing && editing !== 'new' ? editing.id : undefined}
+              onSelect={(item) => setEditing(item)}
+              onToggle={(item) => void act('item.toggle', { id: item.id, occurrenceKey: item.occurrenceKey })}
+            />
+          </>
+        ) : tab === 'day' ? (
+          <DayPageView
+            page={dayPage}
+            onNavigate={setDay}
+            onSaveNote={async (d, t) => {
+              await act('day.note.set', { day: d, text: t, mode: 'replace' });
+            }}
+            onRerun={(key) => void act('run.rerun', { key })}
+            onOpenItem={(id) => {
+              const found = view.items.find((i) => i.id === id);
+              if (found) setEditing(found);
+            }}
           />
         ) : tab === 'month' ? (
           <MonthViewPanel
             view={monthView}
             cursor={cursor}
             selectedDay={selectedDay}
+            notes={view.notes}
             onPrev={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
             onNext={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
             onToday={() => {
@@ -165,6 +247,10 @@ export function App({ sdk }: { sdk: PiSDK }) {
               setSelectedDay(dayKey(d));
             }}
             onSelectDay={setSelectedDay}
+            onOpenDay={(d) => {
+              setDay(d);
+              setTab('day');
+            }}
             onToggle={(occ: MonthOccurrence) =>
               void act('item.toggle', { id: occ.itemId, occurrenceKey: occ.key })
             }

@@ -6,7 +6,7 @@
  * and therefore never drags the backend's Node dependencies into the browser
  * bundle.
  */
-import type { RunRecord, Trigger } from './types.js';
+import type { DayNote, RunRecord, Trigger } from './types.js';
 
 export type AgendaGroup = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later' | 'undated';
 
@@ -42,6 +42,12 @@ export interface Views {
   runs: RunRecord[];
   /** Recorded as missed or undelivered — awaiting a decision. */
   missed: RunRecord[];
+  /**
+   * Every day's free text, so the panel's search box can match it without a
+   * round trip per keystroke. Bounded by how much a person writes, which is
+   * small; a real index would be premature.
+   */
+  notes: Record<string, DayNote>;
   now: string;
   /** Items whose rule expansion hit its ceiling. Surfaced, never hidden. */
   truncated: string[];

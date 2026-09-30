@@ -8152,6 +8152,18 @@ function dayKey(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 __name(dayKey, "dayKey");
+function dayStart(day) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!m) return /* @__PURE__ */ new Date(NaN);
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0, 0);
+}
+__name(dayStart, "dayStart");
+function dayEnd(day) {
+  const d = dayStart(day);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+__name(dayEnd, "dayEnd");
 function startOfDay(date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -8470,6 +8482,49 @@ function formatSpan(minutes) {
 }
 __name(formatSpan, "formatSpan");
 
+// src/core/day.ts
+var MISSED_STATUSES = /* @__PURE__ */ new Set(["missed", "undelivered"]);
+function buildDayPage(items, runs, notes, completedAt, day) {
+  const start = dayStart(day);
+  const end = dayEnd(day);
+  const planned = [];
+  const done = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const item of items) {
+    const repeats = Boolean(item.rrule);
+    const occurrences = expandOccurrences(item, new Date(start.getTime() - 1), end);
+    for (const occ of occurrences) {
+      const entry = {
+        itemId: item.id,
+        title: item.title,
+        key: occ.key,
+        at: occ.at ? toLocalIso(occ.at) : void 0,
+        repeat: repeats
+      };
+      seen.add(`${item.id}|${occ.key}`);
+      if (item.completions.includes(occ.key)) done.push(entry);
+      else planned.push(entry);
+    }
+    if (!item.start) {
+      for (const key of item.completions) {
+        const at = completedAt[key];
+        if (!at || dayKey(new Date(at)) !== day) continue;
+        if (seen.has(`${item.id}|${key}`)) continue;
+        done.push({ itemId: item.id, title: item.title, key, repeat: false });
+      }
+    }
+  }
+  const missed = runs.filter(
+    (r) => MISSED_STATUSES.has(r.status) && dayKey(new Date(r.dueAt)) === day
+  );
+  const byTime = /* @__PURE__ */ __name((a, b) => (a.at ?? "") < (b.at ?? "") ? -1 : (a.at ?? "") > (b.at ?? "") ? 1 : 0, "byTime");
+  planned.sort(byTime);
+  done.sort(byTime);
+  const note = notes[day];
+  return { day, planned, done, missed, ...note ? { note } : {} };
+}
+__name(buildDayPage, "buildDayPage");
+
 // src/backend/index.ts
 var hostPost = /* @__PURE__ */ __name(() => {
 }, "hostPost");
@@ -8492,7 +8547,7 @@ var STORAGE_KEY = "tasks";
 var MAX_RUNS = 500;
 var MAX_TICK_MS = 3e4;
 var MIN_TICK_MS = 250;
-var state = { items: [], runs: [] };
+var state = { items: [], runs: [], notes: {}, completedAt: {} };
 var uiPort = null;
 var uiPortClosed = false;
 var uiPost = /* @__PURE__ */ __name((payload) => {
@@ -8503,11 +8558,16 @@ var uiPost = /* @__PURE__ */ __name((payload) => {
 }, "uiPost");
 async function load() {
   const saved = await call("storage.get", { key: STORAGE_KEY }).catch(() => void 0);
-  state = saved && typeof saved === "object" ? {
-    items: Array.isArray(saved.items) ? saved.items : [],
-    runs: Array.isArray(saved.runs) ? saved.runs : [],
-    lastTickAt: saved.lastTickAt
-  } : { items: [], runs: [] };
+  const s = saved && typeof saved === "object" ? saved : {};
+  state = {
+    items: Array.isArray(s.items) ? s.items : [],
+    runs: Array.isArray(s.runs) ? s.runs : [],
+    // Both are newer than the first release, so older stored state simply has
+    // them absent — defaulted here rather than migrated.
+    notes: s.notes && typeof s.notes === "object" ? s.notes : {},
+    completedAt: s.completedAt && typeof s.completedAt === "object" ? s.completedAt : {},
+    lastTickAt: s.lastTickAt
+  };
 }
 __name(load, "load");
 async function save() {
@@ -8561,11 +8621,16 @@ function buildView(now2, truncated = []) {
     items: state.items.map((i) => toViewItem(i, now2)),
     runs,
     missed: runs.filter((r) => r.status === "missed" || r.status === "undelivered"),
+    notes: state.notes,
     now: now2.toISOString(),
     truncated
   };
 }
 __name(buildView, "buildView");
+function dayPage(day) {
+  return buildDayPage(state.items, state.runs, state.notes, state.completedAt, day);
+}
+__name(dayPage, "dayPage");
 function render(truncated = []) {
   uiPost({ kind: "event", event: "ui.render", panelId: "items", data: buildView(/* @__PURE__ */ new Date(), truncated) });
   scheduleNextTick();
@@ -8740,6 +8805,16 @@ function saveItem(input) {
   return item;
 }
 __name(saveItem, "saveItem");
+function setCompletion(item, key, done, now2 = /* @__PURE__ */ new Date()) {
+  if (done) {
+    item.completions = Array.from(/* @__PURE__ */ new Set([...item.completions, key]));
+    state.completedAt[key] = toLocalIso(now2);
+  } else {
+    item.completions = item.completions.filter((k) => k !== key);
+    delete state.completedAt[key];
+  }
+}
+__name(setCompletion, "setCompletion");
 function findByTitle(title, preferOpen = true) {
   const needle = String(title ?? "").trim();
   if (!needle) return void 0;
@@ -8748,6 +8823,12 @@ function findByTitle(title, preferOpen = true) {
 }
 __name(findByTitle, "findByTitle");
 var text = /* @__PURE__ */ __name((t) => ({ content: [{ type: "text", text: t }] }), "text");
+var STATUS_CN = {
+  ok: "\u5DF2\u5B8C\u6210",
+  missed: "\u9519\u8FC7",
+  undelivered: "\u6CA1\u9001\u5230",
+  failed: "\u51FA\u9519"
+};
 function repeatSpec(value) {
   const spec = String(value ?? "").trim();
   if (!spec) return void 0;
@@ -8823,6 +8904,60 @@ async function onTool(msg) {
         }
       };
     }
+    case "day_read": {
+      const today2 = dayKey(/* @__PURE__ */ new Date());
+      const to = String(p.to ?? today2);
+      const from = String(p.from ?? (p.day ? p.day : dayKey(addDays(/* @__PURE__ */ new Date(), -6))));
+      const fromD = dayStart(from);
+      const toD = dayStart(to);
+      if (Number.isNaN(fromD.getTime()) || Number.isNaN(toD.getTime())) {
+        throw new Error("\u65E5\u671F\u8981\u5199\u6210 2026-09-30 \u8FD9\u6837");
+      }
+      const span = Math.round((toD.getTime() - fromD.getTime()) / 864e5);
+      if (span < 0) throw new Error("from \u6BD4 to \u8FD8\u665A");
+      if (span > 90) throw new Error("\u4E00\u6B21\u6700\u591A\u8BFB 90 \u5929\uFF0C\u8BF7\u7F29\u77ED\u8303\u56F4");
+      const lines = [];
+      let wrote = 0;
+      for (let i = 0; i <= span; i++) {
+        const day = dayKey(addDays(fromD, i));
+        const page = dayPage(day);
+        const note = page.note?.text?.trim();
+        const empty = page.planned.length === 0 && page.done.length === 0 && page.missed.length === 0 && !note;
+        if (empty) continue;
+        wrote++;
+        lines.push(`\u3010${day} ${weekdayLabel(dayStart(day))}\u3011`);
+        if (page.done.length) lines.push(`  \u5B8C\u6210\uFF1A${page.done.map((e) => e.title).join("\u3001")}`);
+        if (page.planned.length) lines.push(`  \u6CA1\u5B8C\u6210\uFF1A${page.planned.map((e) => e.title).join("\u3001")}`);
+        if (page.missed.length) {
+          lines.push(`  \u9519\u8FC7\u7684\u89E6\u53D1\uFF1A${page.missed.map((r) => `${r.itemTitle}\uFF08${STATUS_CN[r.status]}\uFF09`).join("\u3001")}`);
+        }
+        if (note) lines.push(`  \u7528\u6237\u5199\u7684\uFF1A${note.replace(/\n/g, "\n    ")}`);
+        lines.push("");
+      }
+      if (wrote === 0) return text(`${from} \u5230 ${to} \u4E4B\u95F4\u6CA1\u6709\u4EFB\u4F55\u8BB0\u5F55\u3002`);
+      return text(`\u4ECE ${from} \u5230 ${to} \u7684\u8BB0\u5F55\uFF1A
+
+${lines.join("\n")}`);
+    }
+    case "day_write": {
+      const day = String(p.day ?? dayKey(/* @__PURE__ */ new Date()));
+      if (Number.isNaN(dayStart(day).getTime())) throw new Error("\u65E5\u671F\u8981\u5199\u6210 2026-09-30 \u8FD9\u6837");
+      const body = String(p.text ?? "").trim();
+      if (!body) throw new Error("\u6CA1\u7ED9\u8981\u5199\u7684\u5185\u5BB9");
+      const mode = p.mode === "replace" ? "replace" : "append";
+      const existing = state.notes[day]?.text ?? "";
+      const next = mode === "replace" || !existing.trim() ? body : `${existing}
+
+${body}`;
+      state.notes[day] = { text: next, updatedAt: toLocalIso(/* @__PURE__ */ new Date()) };
+      await save();
+      render();
+      return text(
+        `\u5DF2\u5199\u5165 ${day} \u7684\u8BB0\u5F55${mode === "replace" && existing.trim() ? "\uFF08\u8986\u76D6\u4E86\u539F\u6765\u7684\u5185\u5BB9\uFF09" : ""}\u3002
+\u73B0\u5728\u8FD9\u4E00\u5929\u662F\uFF1A
+${next}`
+      );
+    }
     case "item_list": {
       const now2 = /* @__PURE__ */ new Date();
       const range = String(p.range ?? "week");
@@ -8870,8 +9005,7 @@ ${lines.join("\n")}`);
       }
       const updated = saveItem(input);
       if (p.done !== void 0) {
-        const key = currentOccurrenceKey(updated, /* @__PURE__ */ new Date());
-        updated.completions = p.done ? Array.from(/* @__PURE__ */ new Set([...updated.completions, key])) : updated.completions.filter((k) => k !== key);
+        setCompletion(updated, currentOccurrenceKey(updated, /* @__PURE__ */ new Date()), Boolean(p.done));
       }
       await save();
       render();
@@ -8897,6 +9031,33 @@ async function onUiRequest(method, params) {
   switch (method) {
     case "state.get":
       return buildView(/* @__PURE__ */ new Date());
+    case "day.get":
+      return dayPage(String(params?.day ?? dayKey(/* @__PURE__ */ new Date())));
+    /**
+     * Write the day's free text.
+     *
+     * The note is the user's own words, so the destructive shape is opt-in:
+     * callers pass `mode: 'replace'` explicitly, and anything else appends.
+     * Reaching for a text field and wiping what someone wrote about their day
+     * is not a failure mode worth leaving to a default.
+     */
+    case "day.note.set": {
+      const day = String(params?.day ?? dayKey(/* @__PURE__ */ new Date()));
+      const text2 = String(params?.text ?? "");
+      const mode = params?.mode === "replace" ? "replace" : "append";
+      const existing = state.notes[day]?.text ?? "";
+      const next = mode === "replace" || !existing.trim() ? text2 : `${existing}
+
+${text2}`;
+      if (next.trim()) {
+        state.notes[day] = { text: next, updatedAt: toLocalIso(/* @__PURE__ */ new Date()) };
+      } else {
+        delete state.notes[day];
+      }
+      await save();
+      render();
+      return { ok: true, day, text: next };
+    }
     /** Occurrences for the month grid. The panel cannot expand RRULEs itself. */
     case "month.get": {
       const year = Number(params?.year ?? (/* @__PURE__ */ new Date()).getFullYear());
@@ -8934,7 +9095,7 @@ async function onUiRequest(method, params) {
       const item = state.items.find((i) => i.id === String(params?.id));
       if (!item) throw new Error("\u6CA1\u6709\u8FD9\u6761\u4E8B\u9879");
       const key = String(params?.occurrenceKey ?? currentOccurrenceKey(item, /* @__PURE__ */ new Date()));
-      item.completions = item.completions.includes(key) ? item.completions.filter((k) => k !== key) : [...item.completions, key];
+      setCompletion(item, key, !item.completions.includes(key));
       await save();
       render();
       return { ok: true };

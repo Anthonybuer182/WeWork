@@ -7,9 +7,9 @@
  * answers without any decoding.
  */
 import { useMemo } from 'react';
-import type { RunRecord } from '../../core/types.js';
+import type { DayNote, RunRecord } from '../../core/types.js';
 import { GROUP_LABEL, GROUP_ORDER, type AgendaGroup, type MonthOccurrence, type MonthView, type ViewItem, type Views } from '../../core/view.js';
-import { dayKey, formatDay, formatTime, formatWhen, weekdayLabel } from '../../core/time.js';
+import { dayKey, dayStart, formatDay, formatTime, formatWhen, weekdayLabel } from '../../core/time.js';
 
 const emptyGroup = (): Record<AgendaGroup, ViewItem[]> => ({
   overdue: [], today: [], tomorrow: [], week: [], later: [], undated: [],
@@ -138,19 +138,23 @@ export function MonthViewPanel({
   view,
   cursor,
   selectedDay,
+  notes,
   onPrev,
   onNext,
   onToday,
   onSelectDay,
+  onOpenDay,
   onToggle,
 }: {
   view: MonthView | null;
   cursor: Date;
   selectedDay: string;
+  notes: Record<string, DayNote>;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
   onSelectDay: (day: string) => void;
+  onOpenDay: (day: string) => void;
   onToggle: (occ: MonthOccurrence) => void;
 }) {
   const todayKey = dayKey(new Date());
@@ -196,6 +200,7 @@ export function MonthViewPanel({
         {cells.map((d) => {
           const key = dayKey(d);
           const list = view?.byDay[key] ?? [];
+          const wrote = Boolean(notes[key]?.text?.trim());
           return (
             <button
               key={key}
@@ -203,6 +208,7 @@ export function MonthViewPanel({
               data-out={d.getMonth() !== cursor.getMonth()}
               data-today={key === todayKey}
               data-sel={key === selectedDay}
+              data-note={wrote}
               onClick={() => onSelectDay(key)}
             >
               <span>{d.getDate()}</span>
@@ -217,7 +223,11 @@ export function MonthViewPanel({
       </div>
 
       <div className="group-hd" style={{ paddingTop: 14 }}>
-        {formatDay(new Date(`${selectedDay}T00:00:00`))} {weekdayLabel(new Date(`${selectedDay}T00:00:00`))}
+        {formatDay(dayStart(selectedDay))} {weekdayLabel(dayStart(selectedDay))}
+        <span className="grow" />
+        <button className="btn tiny" onClick={() => onOpenDay(selectedDay)}>
+          {notes[selectedDay]?.text?.trim() ? '看这一天的记录' : '写这一天的记录'}
+        </button>
       </div>
       {dayItems.length === 0 ? (
         <div className="empty" style={{ padding: '18px 0' }}>

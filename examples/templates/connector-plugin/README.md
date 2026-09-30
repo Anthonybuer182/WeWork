@@ -36,7 +36,8 @@
 
 ```bash
 # 开发模式(改完即生效,无需打包)
-# 在 ~/.pi/agent/plugins.json 的 devPaths 里加入本目录的副本路径
+# 把本目录副本放进仓库 plugins/ 下,然后用 scripts/dev-plugin.mjs 启动应用:
+node scripts/dev-plugin.mjs
 
 # 打包上架(官方目录)
 zip -r com.yourco.connector-crm-0.1.0.zip manifest.json dist/
@@ -45,5 +46,5 @@ zip -r com.yourco.connector-crm-0.1.0.zip manifest.json dist/
 
 ## 参考
 
-- 完整示例:`examples/plugins/com.pi.erp-demo/`(订单查询,mock 数据)
-- 框架文档:仓库根目录设计文档的"连接器模式"章节
+- 真实例子:`plugins/com.pi.mail/`——面板 + 工具 + 私有存储 + 出站权限齐全,是仓库里最接近连接器的一个
+- 框架文档:`docs/plugin-dev-guide.md`

@@ -117,10 +117,38 @@ export interface RunRecord {
   detail?: string;
 }
 
+/**
+ * What the user wrote about a day.
+ *
+ * One block of free text per day, and nothing else — no mood, no tags, no
+ * rating. Those are the fields that turn a daily note into a form you stop
+ * filling in; the whole reason this exists is that writing two lines has to be
+ * effortless enough to survive a busy week.
+ */
+export interface DayNote {
+  text: string;
+  /** Last edit, local ISO. */
+  updatedAt: string;
+}
+
 /** The whole persisted state, as stored under one `storage` key. */
 export interface TasksState {
   items: Item[];
   runs: RunRecord[];
+  /** Free text per `YYYY-MM-DD` day. */
+  notes: Record<string, DayNote>;
+  /**
+   * When each completion happened, keyed by occurrence key.
+   *
+   * `completions` alone cannot answer "what did I finish today" for an item
+   * with no time: its occurrence key is the constant `'once'`, which carries no
+   * date at all. Without this, ticking off an undated to-do would leave no
+   * trace on any day, and the day page — whose entire job is "what did I
+   * actually do" — would quietly omit them.
+   *
+   * Kept separate from `completions` so existing stored data stays readable.
+   */
+  completedAt: Record<string, string>;
   /**
    * Upper bound of the last evaluation window. The trigger engine only ever
    * looks at `(lastTickAt, now]`, which is what makes a laptop that was asleep

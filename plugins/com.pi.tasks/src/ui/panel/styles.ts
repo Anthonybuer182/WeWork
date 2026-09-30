@@ -138,6 +138,11 @@ select { cursor: pointer; }
 .cell .dots { display: flex; gap: 2px; height: 5px; align-items: center; }
 .cell .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
 .cell .dot.done { background: var(--muted-foreground); }
+/* A day you wrote about is worth finding again even if nothing was planned. */
+.cell[data-note="true"]::after {
+  content: ''; position: absolute; bottom: 3px;
+  width: 13px; height: 1.5px; border-radius: 1px; background: var(--muted-foreground);
+}
 
 /* ── log ── */
 .log-row {
@@ -190,6 +195,22 @@ select { cursor: pointer; }
   border: 1px solid rgba(217,164,65,.3); border-radius: 6px;
   padding: 6px 9px; margin-bottom: 9px;
 }
+
+/* ── 回顾: one page per day ── */
+.day-col { margin-bottom: 14px; }
+.day-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .3px;
+  color: var(--muted-foreground); padding: 6px 2px;
+}
+.day-empty { font-size: 12.5px; color: var(--muted-foreground); padding: 2px 2px 8px; }
+.day-section { margin-bottom: 8px; }
+.day-sec-hd { font-size: 11.5px; padding: 3px 2px; color: var(--muted-foreground); }
+.day-sec-hd.done { color: #3fa663; }
+.day-sec-hd.miss { color: #d9a441; }
+.row .mark { width: 16px; text-align: center; color: #3fa663; flex-shrink: 0; margin-top: 2px; }
+.day-note { min-height: 150px; line-height: 1.7; }
+.save-tag { font-size: 11px; font-weight: 400; color: var(--muted-foreground); }
 
 /* ── confirm ── */
 .mask {

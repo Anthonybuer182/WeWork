@@ -17,8 +17,9 @@ import { test } from 'node:test';
 import { expandOccurrences, nextOccurrence, parseRepeat, buildRRule, describeRepeat, alignStartToRule } from '../src/core/recur.js';
 import { dueRuns, runKey, nextTriggerAt, nextFireAcrossItems, currentOccurrenceKey } from '../src/core/triggers.js';
 import { parseWhen, normalizeRelative } from '../src/core/parse-when.js';
-import { toLocalIso, dayKey, formatOffset } from '../src/core/time.js';
-import type { Item, Trigger } from '../src/core/types.js';
+import { toLocalIso, dayKey, dayStart, formatOffset } from '../src/core/time.js';
+import { buildDayPage, dayMark } from '../src/core/day.js';
+import type { Item, RunRecord, Trigger } from '../src/core/types.js';
 
 // ── fixtures ──
 
@@ -38,6 +39,20 @@ function notify(offsetMinutes: number, id = 'tr1'): Trigger {
 }
 
 const at = (y: number, mo: number, d: number, h = 0, mi = 0): Date => new Date(y, mo - 1, d, h, mi, 0, 0);
+
+function run(over: Partial<RunRecord> = {}): RunRecord {
+  return {
+    key: 'k',
+    itemId: 'i1',
+    itemTitle: 't',
+    occurrenceKey: 'once',
+    triggerId: 'tr1',
+    dueAt: toLocalIso(at(2026, 9, 30, 9, 0)),
+    action: 'notify',
+    status: 'missed',
+    ...over,
+  };
+}
 
 /**
  * A realistic tick: `(t - 30s, t + 30s]`, evaluated at its end.
@@ -406,6 +421,122 @@ test('every parse echoes what it understood', () => {
   assert.match(r.note, /明天|9月30日/);
   assert.match(r.note, /15:00/);
   assert.match(parseOk('2026-09-30', at(2026, 9, 29)).note, /全天/);
+});
+
+// ── the day page ──
+
+test('a day key is parsed as local midnight, never UTC', () => {
+  // `new Date('2026-09-30')` is UTC midnight, which would shift the whole day
+  // and silently move entries across the boundary. Same trap as the DTSTART bug.
+  const d = dayStart('2026-09-30');
+  assert.equal(d.getFullYear(), 2026);
+  assert.equal(d.getMonth(), 8);
+  assert.equal(d.getDate(), 30);
+  assert.equal(d.getHours(), 0);
+  assert.equal(dayKey(d), '2026-09-30');
+});
+
+test('a day page splits the day into planned and done', () => {
+  const items = [
+    item({ id: 'a', title: '交周报', start: toLocalIso(at(2026, 9, 30, 14, 0)) }),
+    item({ id: 'b', title: '评审', start: toLocalIso(at(2026, 9, 30, 10, 0)), completions: ['x'] }),
+  ];
+  // Mark b done by its real occurrence key.
+  const keyB = expandOccurrences(items[1]!, at(2026, 9, 1), at(2026, 10, 1))[0]!.key;
+  items[1]!.completions = [keyB];
+
+  const page = buildDayPage(items, [], {}, {}, '2026-09-30');
+  assert.deepEqual(page.planned.map((e) => e.title), ['交周报']);
+  assert.deepEqual(page.done.map((e) => e.title), ['评审']);
+});
+
+test('a day page shows nothing from the days either side', () => {
+  const items = [
+    item({ id: 'a', title: '昨天', start: toLocalIso(at(2026, 9, 29, 23, 59)) }),
+    item({ id: 'b', title: '今天', start: toLocalIso(at(2026, 9, 30, 12, 0)) }),
+    item({ id: 'c', title: '明天', start: toLocalIso(at(2026, 10, 1, 0, 1)) }),
+  ];
+  const page = buildDayPage(items, [], {}, {}, '2026-09-30');
+  assert.deepEqual(page.planned.map((e) => e.title), ['今天']);
+});
+
+test('an occurrence at exactly midnight belongs to that day, not the one before', () => {
+  // The half-open `(from, to]` used everywhere else would put a 00:00
+  // occurrence at the end of the previous day. The page steps back 1ms so it
+  // lands where a person expects.
+  const items = [item({ id: 'a', title: '零点', start: toLocalIso(at(2026, 9, 30, 0, 0)) })];
+  assert.deepEqual(buildDayPage(items, [], {}, {}, '2026-09-30').planned.map((e) => e.title), ['零点']);
+  assert.equal(buildDayPage(items, [], {}, {}, '2026-09-29').planned.length, 0);
+});
+
+test('a repeating item appears on every matching day', () => {
+  const items = [
+    item({ id: 'a', title: '站会', start: toLocalIso(at(2026, 9, 28, 9, 0)), rrule: 'FREQ=DAILY' }),
+  ];
+  for (const day of ['2026-09-28', '2026-09-29', '2026-09-30']) {
+    assert.deepEqual(
+      buildDayPage(items, [], {}, {}, day).planned.map((e) => e.title),
+      ['站会'],
+      `${day} should show the standup`,
+    );
+  }
+  assert.equal(buildDayPage(items, [], {}, {}, '2026-10-05').planned.length, 1);
+});
+
+test('an undated to-do finished today shows up on today', () => {
+  // Its occurrence key is the constant 'once', which carries no date at all —
+  // without `completedAt` the day page would silently omit every undated item
+  // the user ticked off, which is exactly what this view exists to show.
+  const items = [item({ id: 'a', title: '读书', completions: ['once'] })];
+  const completedAt = { once: toLocalIso(at(2026, 9, 30, 21, 30)) };
+
+  assert.deepEqual(
+    buildDayPage(items, [], {}, completedAt, '2026-09-30').done.map((e) => e.title),
+    ['读书'],
+  );
+  // And it stays off every other day.
+  assert.equal(buildDayPage(items, [], {}, completedAt, '2026-09-29').done.length, 0);
+  assert.equal(buildDayPage(items, [], {}, completedAt, '2026-10-01').done.length, 0);
+
+  // With no recorded timestamp it cannot be placed, and is dropped rather than
+  // guessed onto today.
+  assert.equal(buildDayPage(items, [], {}, {}, '2026-09-30').done.length, 0);
+});
+
+test('a day page lists the firings that were missed that day', () => {
+  const runs = [
+    run({ key: 'k1', itemTitle: '每日汇报', status: 'missed', dueAt: toLocalIso(at(2026, 9, 30, 9, 0)) }),
+    run({ key: 'k2', itemTitle: '别的日子', status: 'missed', dueAt: toLocalIso(at(2026, 9, 29, 9, 0)) }),
+    run({ key: 'k3', itemTitle: '成功了', status: 'ok', dueAt: toLocalIso(at(2026, 9, 30, 9, 0)) }),
+  ];
+  const page = buildDayPage([], runs, {}, {}, '2026-09-30');
+  assert.deepEqual(page.missed.map((r) => r.key), ['k1']);
+});
+
+test('a day page carries the note and marks the day', () => {
+  const notes = { '2026-09-30': { text: '今天还行', updatedAt: toLocalIso(at(2026, 9, 30, 22, 0)) } };
+  const page = buildDayPage([], [], notes, {}, '2026-09-30');
+  assert.equal(page.note?.text, '今天还行');
+
+  const mark = dayMark(page);
+  assert.equal(mark.hasNote, true, 'a day with writing must be findable again');
+  // Whitespace is not writing.
+  const blank = dayMark(buildDayPage([], [], { '2026-09-30': { text: '   ', updatedAt: '' } }, {}, '2026-09-30'));
+  assert.equal(blank.hasNote, false);
+});
+
+test('the day marker counts plans, completions and misses', () => {
+  const items = [
+    item({ id: 'a', title: 'A', start: toLocalIso(at(2026, 9, 30, 9, 0)) }),
+    item({ id: 'b', title: 'B', start: toLocalIso(at(2026, 9, 30, 11, 0)) }),
+  ];
+  const keyB = expandOccurrences(items[1]!, at(2026, 9, 1), at(2026, 10, 1))[0]!.key;
+  items[1]!.completions = [keyB];
+  const runs = [
+    run({ key: 'k1', itemTitle: 'X', status: 'undelivered', dueAt: toLocalIso(at(2026, 9, 30, 8, 0)) }),
+  ];
+  const mark = dayMark(buildDayPage(items, runs, {}, {}, '2026-09-30'));
+  assert.deepEqual(mark, { planCount: 1, doneCount: 1, hasNote: false, missedCount: 1 });
 });
 
 // ── small formatting ──

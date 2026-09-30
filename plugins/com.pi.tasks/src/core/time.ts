@@ -32,6 +32,27 @@ export function dayKey(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+/**
+ * Parse a `YYYY-MM-DD` day key back into local midnight.
+ *
+ * Hand-rolled rather than `new Date('2026-09-30')`, which the spec treats as
+ * **UTC** midnight — the same trap as `toISOString` and the `DTSTART` parsing
+ * bug, and it shifts the whole day by the offset. Every day boundary in this
+ * plugin goes through here.
+ */
+export function dayStart(day: string): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!m) return new Date(NaN);
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0, 0);
+}
+
+/** The last millisecond of a `YYYY-MM-DD` day, locally. */
+export function dayEnd(day: string): Date {
+  const d = dayStart(day);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
 export function startOfDay(date: Date): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);

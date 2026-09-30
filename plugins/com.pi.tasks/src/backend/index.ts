@@ -24,7 +24,7 @@ import {
   describeTrigger,
   type DueRun,
 } from '../core/triggers.js';
-import { dayKey, formatWhen, formatMonth, toLocalIso } from '../core/time.js';
+import { addDays, dayKey, dayStart, formatWhen, formatMonth, toLocalIso, weekdayLabel } from '../core/time.js';
 
 // ── host plumbing (control plane = process.parentPort) ──
 
@@ -76,7 +76,7 @@ const MAX_TICK_MS = 30_000;
 /** Floor, so a firing due "now" cannot spin the loop. */
 const MIN_TICK_MS = 250;
 
-let state: TasksState = { items: [], runs: [] };
+let state: TasksState = { items: [], runs: [], notes: {}, completedAt: {} };
 let uiPort: any = null;
 /** Set when the host's port closes — i.e. the window that owned it is gone. */
 let uiPortClosed = false;
@@ -91,14 +91,16 @@ const uiPost = (payload: unknown): void => {
 
 async function load(): Promise<void> {
   const saved = await call('storage.get', { key: STORAGE_KEY }).catch(() => undefined);
-  state =
-    saved && typeof saved === 'object'
-      ? {
-          items: Array.isArray((saved as TasksState).items) ? (saved as TasksState).items : [],
-          runs: Array.isArray((saved as TasksState).runs) ? (saved as TasksState).runs : [],
-          lastTickAt: (saved as TasksState).lastTickAt,
-        }
-      : { items: [], runs: [] };
+  const s = (saved && typeof saved === 'object' ? saved : {}) as Partial<TasksState>;
+  state = {
+    items: Array.isArray(s.items) ? s.items : [],
+    runs: Array.isArray(s.runs) ? s.runs : [],
+    // Both are newer than the first release, so older stored state simply has
+    // them absent — defaulted here rather than migrated.
+    notes: s.notes && typeof s.notes === 'object' ? s.notes : {},
+    completedAt: s.completedAt && typeof s.completedAt === 'object' ? s.completedAt : {},
+    lastTickAt: s.lastTickAt,
+  };
 }
 
 async function save(): Promise<void> {
@@ -113,6 +115,7 @@ async function save(): Promise<void> {
 // ── the view the panel renders ──
 
 import type { AgendaGroup, Views, ViewItem } from '../core/view.js';
+import { buildDayPage, type DayPage } from '../core/day.js';
 
 function groupOf(start: Date | undefined, now: Date): AgendaGroup {
   if (!start) return 'undated';
@@ -160,9 +163,15 @@ function buildView(now: Date, truncated: string[] = []): Views {
     items: state.items.map((i) => toViewItem(i, now)),
     runs,
     missed: runs.filter((r) => r.status === 'missed' || r.status === 'undelivered'),
+    notes: state.notes,
     now: now.toISOString(),
     truncated,
   };
+}
+
+/** Assemble one day's page — the auto half plus whatever the user wrote. */
+function dayPage(day: string): DayPage {
+  return buildDayPage(state.items, state.runs, state.notes, state.completedAt, day);
 }
 
 function render(truncated: string[] = []): void {
@@ -432,6 +441,23 @@ function saveItem(input: SaveInput): Item {
 
 // ── agent tools ──
 
+/**
+ * Mark an occurrence done or not done, and record *when*.
+ *
+ * The timestamp is the whole reason `completedAt` exists: it is what lets an
+ * item with no time appear on the day it was actually finished, since its
+ * occurrence key is the dateless constant `'once'`.
+ */
+function setCompletion(item: Item, key: string, done: boolean, now = new Date()): void {
+  if (done) {
+    item.completions = Array.from(new Set([...item.completions, key]));
+    state.completedAt[key] = toLocalIso(now);
+  } else {
+    item.completions = item.completions.filter((k) => k !== key);
+    delete state.completedAt[key];
+  }
+}
+
 /** Find an item by title substring, most recently created first. */
 function findByTitle(title: string, preferOpen = true): Item | undefined {
   const needle = String(title ?? '').trim();
@@ -443,6 +469,14 @@ function findByTitle(title: string, preferOpen = true): Item | undefined {
 }
 
 const text = (t: string) => ({ content: [{ type: 'text' as const, text: t }] });
+
+/** Run statuses as the agent should read them out. */
+const STATUS_CN: Record<RunStatus, string> = {
+  ok: '已完成',
+  missed: '错过',
+  undelivered: '没送到',
+  failed: '出错',
+};
 
 /**
  * Accepts either a picker word or a raw RRULE body.
@@ -534,6 +568,63 @@ async function onTool(msg: any): Promise<unknown> {
       };
     }
 
+    case 'day_read': {
+      // A range so that "整理一下这周" is one call rather than seven.
+      const today = dayKey(new Date());
+      const to = String(p.to ?? today);
+      const from = String(p.from ?? (p.day ? p.day : dayKey(addDays(new Date(), -6))));
+      const fromD = dayStart(from);
+      const toD = dayStart(to);
+      if (Number.isNaN(fromD.getTime()) || Number.isNaN(toD.getTime())) {
+        throw new Error('日期要写成 2026-09-30 这样');
+      }
+      const span = Math.round((toD.getTime() - fromD.getTime()) / 86_400_000);
+      if (span < 0) throw new Error('from 比 to 还晚');
+      if (span > 90) throw new Error('一次最多读 90 天，请缩短范围');
+
+      const lines: string[] = [];
+      let wrote = 0;
+      for (let i = 0; i <= span; i++) {
+        const day = dayKey(addDays(fromD, i));
+        const page = dayPage(day);
+        const note = page.note?.text?.trim();
+        const empty = page.planned.length === 0 && page.done.length === 0 && page.missed.length === 0 && !note;
+        if (empty) continue;
+        wrote++;
+
+        lines.push(`【${day} ${weekdayLabel(dayStart(day))}】`);
+        if (page.done.length) lines.push(`  完成：${page.done.map((e) => e.title).join('、')}`);
+        if (page.planned.length) lines.push(`  没完成：${page.planned.map((e) => e.title).join('、')}`);
+        if (page.missed.length) {
+          lines.push(`  错过的触发：${page.missed.map((r) => `${r.itemTitle}（${STATUS_CN[r.status]}）`).join('、')}`);
+        }
+        if (note) lines.push(`  用户写的：${note.replace(/\n/g, '\n    ')}`);
+        lines.push('');
+      }
+
+      if (wrote === 0) return text(`${from} 到 ${to} 之间没有任何记录。`);
+      return text(`从 ${from} 到 ${to} 的记录：\n\n${lines.join('\n')}`);
+    }
+
+    case 'day_write': {
+      const day = String(p.day ?? dayKey(new Date()));
+      if (Number.isNaN(dayStart(day).getTime())) throw new Error('日期要写成 2026-09-30 这样');
+      const body = String(p.text ?? '').trim();
+      if (!body) throw new Error('没给要写的内容');
+
+      const mode = p.mode === 'replace' ? 'replace' : 'append';
+      const existing = state.notes[day]?.text ?? '';
+      const next = mode === 'replace' || !existing.trim() ? body : `${existing}\n\n${body}`;
+      state.notes[day] = { text: next, updatedAt: toLocalIso(new Date()) };
+      await save();
+      render();
+
+      return text(
+        `已写入 ${day} 的记录${mode === 'replace' && existing.trim() ? '（覆盖了原来的内容）' : ''}。\n` +
+          `现在这一天是：\n${next}`,
+      );
+    }
+
     case 'item_list': {
       const now = new Date();
       const range = String(p.range ?? 'week');
@@ -588,10 +679,7 @@ async function onTool(msg: any): Promise<unknown> {
       const updated = saveItem(input);
 
       if (p.done !== undefined) {
-        const key = currentOccurrenceKey(updated, new Date());
-        updated.completions = p.done
-          ? Array.from(new Set([...updated.completions, key]))
-          : updated.completions.filter((k) => k !== key);
+        setCompletion(updated, currentOccurrenceKey(updated, new Date()), Boolean(p.done));
       }
       await save();
       render();
@@ -619,6 +707,33 @@ async function onUiRequest(method: string, params: any): Promise<unknown> {
   switch (method) {
     case 'state.get':
       return buildView(new Date());
+
+    case 'day.get':
+      return dayPage(String(params?.day ?? dayKey(new Date())));
+
+    /**
+     * Write the day's free text.
+     *
+     * The note is the user's own words, so the destructive shape is opt-in:
+     * callers pass `mode: 'replace'` explicitly, and anything else appends.
+     * Reaching for a text field and wiping what someone wrote about their day
+     * is not a failure mode worth leaving to a default.
+     */
+    case 'day.note.set': {
+      const day = String(params?.day ?? dayKey(new Date()));
+      const text = String(params?.text ?? '');
+      const mode = params?.mode === 'replace' ? 'replace' : 'append';
+      const existing = state.notes[day]?.text ?? '';
+      const next = mode === 'replace' || !existing.trim() ? text : `${existing}\n\n${text}`;
+      if (next.trim()) {
+        state.notes[day] = { text: next, updatedAt: toLocalIso(new Date()) };
+      } else {
+        delete state.notes[day];
+      }
+      await save();
+      render();
+      return { ok: true, day, text: next };
+    }
 
     /** Occurrences for the month grid. The panel cannot expand RRULEs itself. */
     case 'month.get': {
@@ -660,9 +775,7 @@ async function onUiRequest(method: string, params: any): Promise<unknown> {
       const item = state.items.find((i) => i.id === String(params?.id));
       if (!item) throw new Error('没有这条事项');
       const key = String(params?.occurrenceKey ?? currentOccurrenceKey(item, new Date()));
-      item.completions = item.completions.includes(key)
-        ? item.completions.filter((k) => k !== key)
-        : [...item.completions, key];
+      setCompletion(item, key, !item.completions.includes(key));
       await save();
       render();
       return { ok: true };

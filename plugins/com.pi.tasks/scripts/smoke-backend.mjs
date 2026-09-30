@@ -220,10 +220,63 @@ check('month.get expands recurring items into days', Object.keys(month.byDay ?? 
 await uiRequest('item.save', { title: '面板建的', start: '2026-10-01T10:00:00', allDay: false, triggers: [] });
 check('item.save writes through the panel path', store.tasks.items.some((i) => i.title === '面板建的'));
 
+// ── the daily note (回顾) ──
+
+const wrote = await callTool('day_write', { day: '2026-09-30', text: '今天写了第一句。' });
+check('day_write stores the day note', /今天写了第一句/.test(wrote.content?.[0]?.text ?? ''));
+
+const appended = await callTool('day_write', { day: '2026-09-30', text: '又补了一句。' });
+const afterAppend = appended.content?.[0]?.text ?? '';
+check(
+  'a second write APPENDS rather than clobbering the user’s words',
+  /今天写了第一句/.test(afterAppend) && /又补了一句/.test(afterAppend),
+  afterAppend,
+);
+
+const replaced = await callTool('day_write', { day: '2026-09-30', text: '全部重写。', mode: 'replace' });
+const afterReplace = replaced.content?.[0]?.text ?? '';
+check('mode=replace is honoured when explicitly asked for', /全部重写/.test(afterReplace) && !/第一句/.test(afterReplace), afterReplace);
+
+const badDay = await callTool('day_write', { day: '下周三', text: 'x' }).catch((e) => ({ error: e.message }));
+check('a malformed day is refused', /2026-09-30/.test(badDay.error ?? ''), badDay.error);
+
+const emptyText = await callTool('day_write', { text: '   ' }).catch((e) => ({ error: e.message }));
+check('an empty note is refused rather than silently clearing the day', Boolean(emptyText.error), JSON.stringify(emptyText));
+
+// An undated to-do completed today must show up on the day it was finished.
+const undated = await callTool('item_add', { title: '随手做完的小事' });
+await callTool('item_update', { title: '随手做完的小事', done: true });
+
+const today = await uiRequest('day.get', { day: new Date().toISOString().slice(0, 10) });
+check(
+  'an undated item completed today appears on today',
+  today.done.some((e) => e.title === '随手做完的小事'),
+  JSON.stringify(today.done),
+);
+check(
+  'the day page also lists what is still open',
+  Array.isArray(today.planned) && today.planned.length > 0,
+  JSON.stringify(today.planned),
+);
+
+const read = await callTool('day_read', { day: '2026-09-30' });
+check('day_read returns the note it was given', /全部重写/.test(read.content?.[0]?.text ?? ''));
+
+const readRange = await callTool('day_read', { from: '2026-09-28', to: '2026-09-30' });
+check('day_read accepts a range in one call', /2026-09-30/.test(readRange.content?.[0]?.text ?? ''));
+
+const readBad = await callTool('day_read', { from: '2026-09-30', to: '2026-09-01' }).catch((e) => ({ error: e.message }));
+check('a backwards range is refused', Boolean(readBad.error), JSON.stringify(readBad));
+
+const readHuge = await callTool('day_read', { from: '2020-01-01', to: '2026-09-30' }).catch((e) => ({ error: e.message }));
+check('an unbounded range is refused instead of dumping years of text', /90/.test(readHuge.error ?? ''), readHuge.error);
+
 // ── the persisted shape ──
 
 check('lastTickAt is persisted for the next boot to reconcile from', typeof store.tasks.lastTickAt === 'string');
 check('the storage shape is what the backend reads back', Array.isArray(store.tasks.items) && Array.isArray(store.tasks.runs));
+check('notes persist alongside the items', typeof store.tasks.notes === 'object' && Boolean(store.tasks.notes['2026-09-30']));
+check('completion timestamps persist', typeof store.tasks.completedAt === 'object');
 
 console.log(`\n${failures === 0 ? '✓ all checks passed' : `✗ ${failures} check(s) failed`}`);
 process.exit(failures ? 1 : 0);

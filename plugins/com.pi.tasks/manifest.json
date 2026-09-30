@@ -132,6 +132,57 @@
           ],
           "additionalProperties": false
         }
+      },
+      {
+        "name": "day_read",
+        "description": "Read what happened on a day (or a range of days): what was completed, what was planned but not done, which scheduled firings were missed, and anything the user wrote themselves. Use it before writing a summary, and whenever the user asks what they did or what they wrote.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "day": {
+              "type": "string",
+              "description": "A single day, YYYY-MM-DD. Defaults to today."
+            },
+            "from": {
+              "type": "string",
+              "description": "Start of a range, YYYY-MM-DD. Defaults to 6 days before `to`."
+            },
+            "to": {
+              "type": "string",
+              "description": "End of a range, YYYY-MM-DD. Defaults to today."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "day_write",
+        "description": "Write the user's own daily note — the free text shown on that day's page. Use it when the user asks you to write up or tidy their day (e.g. '把今天整理一下'). By default this APPENDS, so their own words are never lost; only pass mode='replace' when they explicitly ask you to rewrite the entry.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "day": {
+              "type": "string",
+              "description": "YYYY-MM-DD. Defaults to today."
+            },
+            "text": {
+              "type": "string",
+              "description": "What to write."
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "append",
+                "replace"
+              ],
+              "description": "Defaults to append. 'replace' discards whatever is already there — confirm with the user first."
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        }
       }
     ],
     "messageRenderers": [
