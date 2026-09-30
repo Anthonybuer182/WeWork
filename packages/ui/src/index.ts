@@ -51,6 +51,7 @@ export { ProviderSettings } from './components/settings';
 export { UsageBar } from './components/usage';
 export { ErrorBoundary, LoadingSpinner, EmptyState, ErrorState, ConfirmDialog } from './components/common';
 export { FileTree, FileTreeNode } from './components/file';
+export { ContextPanel } from './components/context';
 export { copyText } from './lib/quote-helpers';
 
 export { PluginPanelHost } from './components/plugins/plugin-panel';

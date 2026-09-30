@@ -15,6 +15,12 @@ export type PanelKind = 'iframe' | 'declarative' | 'liveview';
 /** Keep-alive policy for iframe/liveview panels when switched away. */
 export type PanelKeepAlive = 'always' | 'lru' | 'never';
 
+/** Which sidebar column a panel belongs to. */
+export type PanelRegion = 'left' | 'right';
+
+/** Where within its region's rail the panel sits. */
+export type PanelAnchor = 'top' | 'bottom';
+
 export interface PanelContribution {
   id: string;
   title?: string;
@@ -46,6 +52,22 @@ export interface PanelContribution {
   width?: number;
   /** Let the host size the iframe to its content height (SDK reports it). */
   autoHeight?: boolean;
+  /**
+   * Which sidebar column the panel lives in. Defaults to 'right'.
+   *
+   * The left column is the global-view column (all files, all sessions), so a
+   * panel belongs there when its subject is the workspace as a whole rather
+   * than the thing currently being worked on.
+   *
+   * Ignored for `kind: 'liveview'`, which is pinned right: every liveview
+   * panel shares one native view, and a hidden left-side slot reporting 0x0
+   * would blank the visible one.
+   */
+  region?: PanelRegion;
+  /** Position within its region's rail. Defaults to 'top'. */
+  anchor?: PanelAnchor;
+  /** Sort order among panels sharing a region and anchor. Defaults to 0. */
+  order?: number;
 }
 
 /**

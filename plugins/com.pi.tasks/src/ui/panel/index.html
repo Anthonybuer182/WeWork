@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>事项</title>
+<!--
+  The host injects pi-plugin://<id>/__pi_sdk.js as the first thing in <head> at
+  serve time, which is what provides window.piSDK. Nothing else is loaded from
+  the network; the bundle is relative to this document, which the host serves
+  from the same origin root.
+-->
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

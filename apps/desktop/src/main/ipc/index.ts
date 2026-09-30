@@ -9,6 +9,7 @@ import {
 } from '@pi/sdk-wrapper/adapters';
 import type { PluginDoc } from '@pi/sdk-wrapper/adapters';
 import type { WorkspaceService, SessionService, FileService, ConfigService, ChatService, SendMessageParams, FileSearchOptions } from '@pi/sdk-wrapper';
+import { setActiveWorkspace } from '@main/agent-tools';
 
 // Services are created during registerIpcHandlers() (called from app.whenReady)
 // to avoid module-load-time initialization in packaged builds.
@@ -53,12 +54,21 @@ export function registerIpcHandlers(
     pluginDocsProvider: options?.pluginDocsProvider,
   });
 
+  // The renderer owns "which workspace is on screen" — a view fact, not a
+  // session one — so main has no other way to learn it. Recorded here because
+  // host agent tools (and the context panel) default to the active workspace.
+  ipcMain.handle(
+    'pi:agent:set-active-workspace',
+    (_event, workspace: { id?: string; path?: string } | null) => {
+      setActiveWorkspace(workspace?.path ? { id: workspace.id ?? '', path: workspace.path } : null);
+    },
+  );
+
   // ── Standard request/response ──
   ipcMain.handle('pi:sdk:request', async (_event, request: SdkRequest) => {
     const { id, method, params } = request;
     try {
-      const result = await routeRequest(method, params);
-      return { id, result };
+      const result = await routeRequest(method, params);      return { id, result };
     } catch (error) {
       return {
         id,
@@ -167,6 +177,15 @@ async function handleChat(action: string, params: unknown): Promise<unknown> {
       return chatService.navigateTree(p.sessionId as string, p.entryId as string, p.options as any);
     case 'compact':
       return chatService.compact(p.sessionId as string, p.customInstructions as string | undefined);
+    // ── agent context (the host's context panel) ──
+    case 'getAgentContextConfig':
+      return chatService.getAgentContextConfig(p.workspacePath as string, p.workspaceId as string | undefined);
+    case 'reloadAgentContext':
+      return chatService.reloadAgentContext(p.workspacePath as string);
+    case 'writeContextFile':
+      return chatService.writeContextFile(p as unknown as Parameters<typeof chatService.writeContextFile>[0]);
+    case 'deleteContextFile':
+      return chatService.deleteContextFile(p as unknown as Parameters<typeof chatService.deleteContextFile>[0]);
     default: throw new Error(`Unknown chat action: ${action}`);
   }
 }

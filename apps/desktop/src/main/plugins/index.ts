@@ -18,6 +18,7 @@ import { PluginProcess, spawnBackend } from './plugin-process';
 import { registerPluginProtocolHandler } from './protocol';
 import { PluginMarketplace } from './marketplace';
 import type { BrowserManager } from '@main/browser/browser-manager';
+import type { AgentCustomTool } from '@main/agent-tools';
 
 export { registerPluginSchemePrivileges, PI_PLUGIN_SCHEME } from './protocol';
 export { PluginRegistry } from './registry';
@@ -37,17 +38,13 @@ export interface PluginDoc {
   location: string;
 }
 
-/** Agent tool definition shape expected by createAgentSession({ customTools }). */
-export interface AgentCustomTool {
-  name: string;
-  label: string;
-  description: string;
-  parameters: unknown;
-  execute: (toolCallId: string, params: Record<string, unknown>) => Promise<{
-    content: Array<{ type: 'text'; text: string } | { type: 'image'; data: string; mimeType?: string }>;
-    details: unknown;
-  }>;
-}
+/**
+ * Agent tool definition shape expected by createAgentSession({ customTools }).
+ *
+ * Defined in agent-tools.ts because the host contributes tools of its own now;
+ * re-exported here for the plugin code that already refers to it.
+ */
+export type { AgentCustomTool };
 
 /**
  * Facade wiring the plugin kernel together:
@@ -289,6 +286,11 @@ export class PluginSystem {
         tools.push({
           name: tool.name,
           label: tool.name,
+          // Carried on the tool itself so anything reporting on the tool set —
+          // the context panel's per-plugin schema cost, most directly — can
+          // attribute a tool to its plugin without re-deriving it from the
+          // registry.
+          pluginId,
           description: tool.description ?? `Plugin tool from ${pluginId}`,
           parameters: tool.inputSchema ?? { type: 'object', properties: {}, additionalProperties: false },
           execute: async (_toolCallId, params) => {

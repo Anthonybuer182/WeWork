@@ -1,0 +1,27 @@
+{
+  "name": "com.pi.tasks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "事项 — 待办 / 日程 / 定时任务。没有时间的是待办，有时间的是日程，有时间+重复+动作的是定时任务",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-backend.mjs && node scripts/build-panel.mjs",
+    "build:backend": "node scripts/build-backend.mjs",
+    "build:panel": "node scripts/build-panel.mjs",
+    "typecheck": "node scripts/typecheck.mjs",
+    "test": "node scripts/run-tests.mjs",
+    "test:backend": "node scripts/smoke-backend.mjs"
+  },
+  "dependencies": {
+    "chrono-node": "^2.10.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "rrule": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "^0.24.0"
+  }
+}

@@ -1,0 +1,10 @@
+# Plugin-local dependencies. This plugin is its own npm project, not a pnpm
+# workspace member (plugins/ is not in pnpm-workspace.yaml) — see its own
+# package-lock.json.
+node_modules/
+
+# esbuild output from scripts/run-tests.mjs
+tests/.build/
+
+# Panel build output. Reproducible with `npm run build:panel`.
+ui-dist/

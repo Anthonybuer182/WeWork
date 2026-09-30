@@ -1,4 +1,4 @@
-import type { Message, ContentBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming, ToolTiming, QueueState, StreamingBehavior } from '@pi/types';
+import type { Message, ContentBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming, ToolTiming, QueueState, StreamingBehavior, AgentContextConfig, AgentContextReloadResult } from '@pi/types';
 
 export interface SendMessageParams {
   sessionId: string;
@@ -94,4 +94,52 @@ export interface ChatService {
    * @param customInstructions - Optional custom instructions for the summary
    */
   compact(sessionId: string, customInstructions?: string): Promise<CompactResult>;
+  /**
+   * Read the agent's always-carried context configuration for a workspace —
+   * the standing instruction block that is sent on every request regardless of
+   * the conversation.
+   *
+   * Optional: only the main process calls this (through the plugin capability
+   * channel). The renderer-side proxy has no use for it.
+   */
+  /**
+   * Read the agent's always-carried context configuration for a workspace —
+   * the standing instruction block that is sent on every request regardless of
+   * the conversation.
+   */
+  getAgentContextConfig(workspacePath: string, workspaceId?: string): Promise<AgentContextConfig>;
+  /**
+   * Rebuild the live agent session's system prompt from disk.
+   *
+   * Context files and prompt files are read when a session is built, so an edit
+   * is otherwise invisible until the user starts a new session. This re-reads
+   * them and rebuilds the prompt in place, which makes an edit apply to the very
+   * next turn.
+   *
+   * Refuses while any session is streaming rather than tearing down work in
+   * flight; the caller reports that back so the user knows when it will apply.
+   */
+  reloadAgentContext(workspacePath: string): Promise<AgentContextReloadResult>;
+  /**
+   * Write one of the agent's context/prompt files and rebuild the prompt.
+   *
+   * Separate from `file.write` because it carries the mtime guard (an editor
+   * that read a file must not clobber a concurrent change) and because it
+   * rebuilds the live session afterwards — the two always go together.
+   */
+  writeContextFile(params: {
+    workspacePath: string;
+    path: string;
+    content: string;
+    expectedMtime?: number;
+  }): Promise<{ file: { path: string; size: number; mtime: number }; reload: AgentContextReloadResult }>;
+  /** Delete one of the agent's context/prompt files and rebuild the prompt. */
+  deleteContextFile(params: {
+    workspacePath: string;
+    path: string;
+    expectedMtime?: number;
+  }): Promise<{
+    deleted: { path: string; deleted: boolean; reason?: 'not-found' };
+    reload: AgentContextReloadResult;
+  }>;
 }

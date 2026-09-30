@@ -14,6 +14,7 @@ import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
 import { registerPluginIpcHandlers } from '@main/ipc/plugins';
 import { registerLiveViewIpcHandlers, LiveViewRegistry, BROWSER_LIVEVIEW_SLOT } from '@main/plugins/liveview';
 import { PluginWebViews } from '@main/plugins/plugin-webview';
+import { createHostAgentTools, type AgentCustomTool } from '@main/agent-tools';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -306,9 +307,16 @@ if (!gotLock) {
     pluginWebViews.installIpc();
     pluginWebViews.sync();
 
+    // Host-contributed tools are built after the chat service exists, but the
+    // provider is only *called* when a session is created — so the array is
+    // filled in below and read through this closure.
+    let hostTools: AgentCustomTool[] = [];
     const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {
-      customToolsProvider: () => pluginSystem.aggregateTools(),
+      customToolsProvider: () => [...hostTools, ...pluginSystem.aggregateTools()],
       pluginDocsProvider: () => pluginSystem.listPluginDocs(),
+    });
+    hostTools = createHostAgentTools({
+      readContextConfig: chatService.getAgentContextConfig.bind(chatService),
     });
     // Plugin tool/doc set changed at runtime → rebuild agent sessions, and
     // pick up panels of plugins that were just installed or enabled.

@@ -1,0 +1,145 @@
+{
+  "id": "com.pi.tasks",
+  "name": "事项",
+  "description": "官方插件:待办 / 日程 / 定时任务 —— 没有时间的是待办,有时间的是日程,有时间+重复+动作的是定时任务",
+  "version": "0.1.0",
+  "engines": {
+    "pi-desktop": ">=0.1.0"
+  },
+  "backend": "./dist/main.mjs",
+  "permissions": [
+    "storage",
+    "notify"
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "items",
+        "kind": "iframe",
+        "title": "事项",
+        "icon": "calendar",
+        "entry": "./ui-dist/panel/index.html",
+        "keepAlive": "lru"
+      }
+    ],
+    "tools": [
+      {
+        "name": "item_add",
+        "description": "Add an item to the user's planner. Use it whenever the user asks to remember, schedule or be reminded of something — a task, a meeting, a deadline. Pass `when` for anything with a time, `repeat` for anything recurring, `remindBefore` to notify ahead of time, and `onDue` when the agent itself should do something at that moment. An item with no `when` is a plain to-do with no time at all.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Short title of the thing to do"
+            },
+            "when": {
+              "type": "string",
+              "description": "When it happens. Prefer an explicit form like 2026-09-30 14:00 or 2026-09-30; free text such as 明天下午3点 or 后天 is also accepted and is echoed back for confirmation. Omit entirely for a plain to-do with no time."
+            },
+            "end": {
+              "type": "string",
+              "description": "Optional end time, same formats as `when`"
+            },
+            "note": {
+              "type": "string",
+              "description": "Optional details"
+            },
+            "repeat": {
+              "type": "string",
+              "description": "How it repeats: daily / weekly / monthly / yearly, or a raw RRULE body such as FREQ=WEEKLY;BYDAY=MO. Requires `when`."
+            },
+            "remindBefore": {
+              "type": "number",
+              "description": "Minutes before it starts to send a desktop notification, e.g. 15. Requires `when`."
+            },
+            "onDue": {
+              "type": "string",
+              "description": "A message to send to you (the agent) at that moment — e.g. '总结昨天的提交'. Requires `when`. The user must confirm this, so only set it when they asked for it."
+            }
+          },
+          "required": [
+            "title"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "item_list",
+        "description": "List the user's items with their times, repeat rules, completion state and next firing time.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "range": {
+              "type": "string",
+              "enum": [
+                "today",
+                "week",
+                "all"
+              ],
+              "description": "Which window to list. Defaults to week."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "item_update",
+        "description": "Change an existing item. Finds it by title substring. Only the fields you pass are changed.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Title (or part of it) of the item to change"
+            },
+            "when": {
+              "type": "string",
+              "description": "New time, same formats as in item_add. Pass an empty string to remove the time."
+            },
+            "note": {
+              "type": "string",
+              "description": "New note"
+            },
+            "repeat": {
+              "type": "string",
+              "description": "New repeat rule, or an empty string to stop repeating"
+            },
+            "done": {
+              "type": "boolean",
+              "description": "Mark the current occurrence done or not done"
+            }
+          },
+          "required": [
+            "title"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "item_remove",
+        "description": "Delete an item by title substring. Prefer marking it done unless the user asked to delete it.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Title (or part of it) of the item to delete"
+            }
+          },
+          "required": [
+            "title"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ],
+    "messageRenderers": [
+      {
+        "type": "item_add",
+        "kind": "declarative"
+      }
+    ]
+  },
+  "icon": "./assets/icon.svg"
+}

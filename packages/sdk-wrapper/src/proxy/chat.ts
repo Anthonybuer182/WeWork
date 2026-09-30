@@ -80,5 +80,28 @@ export function createProxyChatService(transport: Transport): ChatService {
     async compact(sessionId: string, customInstructions?: string) {
       return transport.request('chat.compact', { sessionId, customInstructions }) as Promise<CompactResult>;
     },
+
+    // ── agent context ──
+    // The context panel is a host UI, so it reaches these the same way any
+    // other host panel reaches its data: over the ordinary request transport.
+    async getAgentContextConfig(workspacePath: string, workspaceId?: string) {
+      return transport.request('chat.getAgentContextConfig', { workspacePath, workspaceId }) as ReturnType<
+        ChatService['getAgentContextConfig']
+      >;
+    },
+
+    async reloadAgentContext(workspacePath: string) {
+      return transport.request('chat.reloadAgentContext', { workspacePath }) as ReturnType<
+        ChatService['reloadAgentContext']
+      >;
+    },
+
+    async writeContextFile(params) {
+      return transport.request('chat.writeContextFile', params) as ReturnType<ChatService['writeContextFile']>;
+    },
+
+    async deleteContextFile(params) {
+      return transport.request('chat.deleteContextFile', params) as ReturnType<ChatService['deleteContextFile']>;
+    },
   };
 }

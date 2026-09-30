@@ -206,6 +206,8 @@ export type CapabilityMethod =
   | 'panel.open'
   | 'filesystem.read'
   | 'filesystem.write'
+  /** Remove a file. Same mtime conflict check as write. */
+  | 'filesystem.delete'
   /** Structured text extraction from docx / xlsx / pptx / pdf. */
   | 'office.read'
   | 'browser.navigate'

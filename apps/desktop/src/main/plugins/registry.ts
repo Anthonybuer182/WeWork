@@ -284,6 +284,9 @@ export class PluginRegistry {
         companionOf: p.companionOf,
         keepAlive: p.keepAlive,
         autoHeight: p.autoHeight,
+        region: p.region,
+        anchor: p.anchor,
+        order: p.order,
       })),
       commands: (plugin.manifest.contributes?.commands ?? []).map((c) => ({
         name: c.name,

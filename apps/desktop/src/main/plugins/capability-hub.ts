@@ -1,8 +1,9 @@
 import { app, BrowserWindow, dialog, Notification, net } from 'electron';
 import type { OpenDialogOptions, SaveDialogOptions } from 'electron';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import type { CapabilityMethod, PluginEvent, PluginPanelStatus } from '@pi/types';
+import { deleteFileWithMtimeGuard, writeFileWithMtimeGuard } from '@pi/sdk-wrapper/adapters';
 import type { PluginRegistry } from './registry';
 import type { BrowserManager } from '@main/browser/browser-manager';
 import { extractOfficeText } from './office-extract';
@@ -223,26 +224,26 @@ export class CapabilityHub {
         const path = String(params.path ?? '');
         if (!path) throw new Error('missing path');
         const expectedMtime = typeof params.expectedMtime === 'number' ? params.expectedMtime : undefined;
-        if (expectedMtime !== undefined && existsSync(path)) {
-          const actual = statSync(path).mtimeMs;
-          if (Math.abs(actual - expectedMtime) > 1) {
-            throw new Error(
-              `conflict: file changed on disk (mtime ${Math.round(actual)}) since read (expected ${Math.round(expectedMtime)}) — re-read before writing`,
-            );
-          }
-        }
         // Binary write: contentB64 (base64) — zip-based formats (docx/xlsx/
         // pptx) must not round-trip through utf-8 strings.
-        let bytes: Buffer;
-        if (typeof params.contentB64 === 'string') {
-          bytes = Buffer.from(params.contentB64, 'base64');
-        } else {
-          bytes = Buffer.from(String(params.content ?? ''), 'utf-8');
-        }
-        mkdirSync(dirname(path), { recursive: true });
-        writeFileSync(path, bytes);
-        return { path, size: bytes.length, mtime: statSync(path).mtimeMs };
+        const content =
+          typeof params.contentB64 === 'string'
+            ? Buffer.from(params.contentB64, 'base64')
+            : String(params.content ?? '');
+        return writeFileWithMtimeGuard(path, content, expectedMtime);
       },
+    });
+
+    // ── filesystem.delete (permission: filesystem) ──
+    // Same conflict check as write: refusing to delete a file that changed
+    // underneath the caller is the whole point of passing the expected mtime.
+    this.capabilities.set('filesystem.delete', {
+      permission: 'filesystem',
+      handler: ({ params }) =>
+        deleteFileWithMtimeGuard(
+          String(params.path ?? ''),
+          typeof params.expectedMtime === 'number' ? params.expectedMtime : undefined,
+        ),
     });
 
     // ── office.read (permission: filesystem) — text-level office extraction ──

@@ -14,3 +14,9 @@ export {
 
 export type { PluginDoc, RealChatServiceOptions } from './chat.js';
 export { formatPluginDocsForPrompt } from './chat.js';
+
+// Node-only helpers. Exported from the adapters entry rather than the package
+// root because they import `node:fs` — the root entry is what the renderer
+// bundles, so a filesystem module there would break the browser build.
+export { deleteFileWithMtimeGuard, writeFileWithMtimeGuard } from '../utils/safe-write.js';
+export type { DeleteResult, WriteResult } from '../utils/safe-write.js';

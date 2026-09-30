@@ -5,6 +5,7 @@ import { PluginCenter } from '@/components/plugins/plugin-center';
 import { FileTree } from '@/components/file/file-tree';
 import { SessionList } from '@/components/session/session-list';
 import { SearchView } from '@/components/search/search-view';
+import { ContextPanel } from '@/components/context/context-panel';
 import { PluginPanelHost, ensureRelayInstalled } from '@/components/plugins/plugin-panel';
 import { DeclarativePanelHost } from '@/components/plugins/declarative/declarative-panel';
 import { LiveViewSlot } from './live-view-slot';
@@ -20,6 +21,7 @@ const HOST_COMPONENTS: Record<string, ComponentType> = {
   'host:files': FileTree,
   'host:sessions': SessionList,
   'host:search': SearchView,
+  'host:context': ContextPanel,
 };
 
 /**

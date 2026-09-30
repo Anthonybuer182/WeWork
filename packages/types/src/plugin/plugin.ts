@@ -2,6 +2,8 @@
  * Plugin runtime state and renderer-facing info.
  */
 
+import type { PanelAnchor, PanelRegion } from './manifest.js';
+
 /** Where a plugin was discovered from. Higher priority overrides lower. */
 export type PluginSource = 'dev' | 'user' | 'builtin';
 
@@ -28,6 +30,12 @@ export interface PluginPanelInfo {
   companionOf?: string;
   keepAlive?: 'always' | 'lru' | 'never';
   autoHeight?: boolean;
+  /** Sidebar column. Defaults to 'right'; ignored for liveview panels. */
+  region?: PanelRegion;
+  /** Position within the region's rail. Defaults to 'top'. */
+  anchor?: PanelAnchor;
+  /** Sort order among panels sharing a region and anchor. Defaults to 0. */
+  order?: number;
 }
 
 export interface PluginCommandInfo {

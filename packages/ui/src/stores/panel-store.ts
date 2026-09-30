@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { PluginInfo, PluginPanelStatus } from '@pi/types';
+import type { PluginInfo, PluginPanelStatus, PanelRegion, PanelAnchor } from '@pi/types';
 
 export type PanelKind = 'host' | 'iframe' | 'declarative' | 'liveview';
 export type PanelKeepAlive = 'always' | 'lru' | 'never';
-/** Which sidebar column a panel belongs to. */
-export type PanelRegion = 'left' | 'right';
-/** Where within its region's rail the panel sits. */
-export type PanelAnchor = 'top' | 'bottom';
+// Region/anchor belong to the manifest contract (plugins declare them), so the
+// definitions live in @pi/types. Re-exported here because most call sites
+// import these from the store alongside PanelEntry.
+export type { PanelRegion, PanelAnchor };
 
 /** Unified panel entry — host panels and plugin panels share this shape. */
 export interface PanelEntry {
@@ -245,11 +245,15 @@ export const usePanelStore = create<PanelStoreState>()(
                 companionOf: panel.companionOf,
                 keepAlive: keepAliveFor(panel.kind, panel.keepAlive),
                 autoHeight: panel.autoHeight === true,
-                // Plugin panels are pinned to the right region. This is not
-                // merely a convention: the liveview mechanism has a single
-                // shared native BrowserView, so a hidden left-side liveview slot
-                // reporting 0x0 after the visible one would blank it silently.
-                region: 'right' as const,
+                // Liveview panels stay pinned right regardless of what they
+                // declare: every liveview shares a single native view, so a
+                // hidden left-side slot reporting 0x0 would blank the visible
+                // one silently. iframe/declarative panels each own their
+                // surface (per-slot WebContentsView / plain DOM), so they may
+                // sit in either column.
+                region: panel.kind === 'liveview' ? 'right' : (panel.region ?? 'right'),
+                anchor: panel.anchor,
+                order: panel.order,
               })),
           );
           const hostPanels = s.panels.filter((p) => p.source === 'host');

@@ -1,9 +1,11 @@
 import * as path from 'path';
+import { statSync, readFileSync } from 'node:fs';
 import type { ChatService, SendMessageParams, StreamChunk } from '../services/chat.js';
-import type { Message, AssistantMessage, ContentBlock, ToolResultBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming } from '@pi/types';
-import { createAgentSession, SessionManager, ModelRegistry, AuthStorage, DefaultResourceLoader, getAgentDir, SettingsManager } from '@earendil-works/pi-coding-agent';
+import type { Message, AssistantMessage, ContentBlock, ToolResultBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming, AgentContextConfig, AgentContextReloadResult, AgentToolInfo, AppendSegmentInfo, ContextFileInfo, ContextFileScope, PromptFileInfo } from '@pi/types';
+import { createAgentSession, SessionManager, ModelRegistry, AuthStorage, DefaultResourceLoader, getAgentDir, SettingsManager, formatSkillsForPrompt } from '@earendil-works/pi-coding-agent';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 import { extractThinkContent } from '../utils/think-parser.js';
+import { deleteFileWithMtimeGuard, writeFileWithMtimeGuard } from '../utils/safe-write.js';
 import { detectWrittenFiles } from '../utils/file-detection.js';
 import { migrateModelsConfig } from './config.js';
 
@@ -68,6 +70,48 @@ const escapeXml = (str: string): string =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 
+/**
+ * The host's own contribution to `appendSystemPrompt`, ahead of the plugin
+ * index. Named so the context reader can attribute each appended segment back
+ * to its origin instead of guessing from the text.
+ */
+export const HOST_VISION_PROMPT =
+  'You are equipped with vision capabilities. When users attach images or when the read tool loads image files, analyze the visual content directly. This includes: screenshots of code/errors, UI designs, architecture diagrams, charts, photos, and any other images the user shares. Describe what you see clearly and use it to provide better coding assistance.';
+
+/**
+ * The host's own contribution to `appendSystemPrompt`, in the order the SDK
+ * receives it.
+ *
+ * A single builder because two callers need the same list and must not drift:
+ * session creation, and the context reader that reports what is in the prompt.
+ * The list is supplied by *us*, not by the SDK's defaults — a bare
+ * `DefaultResourceLoader` returns an empty `getAppendSystemPrompt()`, which is
+ * exactly how the reader first reported these segments as costing nothing.
+ */
+export function buildHostAppendSystemPrompt(pluginDocs: string): string[] {
+  return [HOST_VISION_PROMPT, ...(pluginDocs ? [pluginDocs] : [])];
+}
+
+/**
+ * Build the loader's `appendSystemPromptOverride`.
+ *
+ * Deliberately NOT `appendSystemPrompt`: passing the array sets the loader's
+ * `appendSystemPromptSource`, and the loader only falls back to discovering
+ * `APPEND_SYSTEM.md` when that source is absent. So the direct form makes the
+ * user's own append file silently inert — it exists on disk, reads fine, and
+ * never reaches the prompt. The override form is handed whatever was
+ * discovered and returns the final list, so both survive.
+ *
+ * Host segments come first and the user's file after: the vision line and the
+ * plugin index are host metadata, while the append file is the user's own
+ * instruction and reads as the last thing added.
+ */
+export function buildAppendSystemPromptOverride(
+  pluginDocs: string,
+): (discovered: string[]) => string[] {
+  return (discovered) => [...buildHostAppendSystemPrompt(pluginDocs), ...discovered];
+}
+
 export interface RealChatServiceOptions {
   customToolsProvider?: () => unknown[];
   /** Enabled plugins' PLUGIN.md index. Read per session, so installs take effect without a restart. */
@@ -129,10 +173,7 @@ export function createRealChatService(
     const resourceLoader = new DefaultResourceLoader({
       cwd: workCwd,
       agentDir: getAgentDir(),
-      appendSystemPrompt: [
-        'You are equipped with vision capabilities. When users attach images or when the read tool loads image files, analyze the visual content directly. This includes: screenshots of code/errors, UI designs, architecture diagrams, charts, photos, and any other images the user shares. Describe what you see clearly and use it to provide better coding assistance.',
-        ...(pluginDocs ? [pluginDocs] : []),
-      ],
+      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocs),
       skillsOverride: selectedSkillIds
         ? (base) => {
             const enabledNames = new Set(
@@ -202,6 +243,363 @@ export function createRealChatService(
     return session;
   }
 
+  // ── Standing context (plugin capability: agent.context.config.read) ──
+
+  /**
+   * Approximate token count for a block of text.
+   *
+   * Deliberately crude: no API attributes real token cost to a prompt section,
+   * so every number derived here is an estimate and callers must present it as
+   * one. ~4 chars/token is the usual rule of thumb and is close enough for the
+   * question these numbers actually answer — who is eating the budget.
+   */
+  function estimateTextTokens(text: string): number {
+    return Math.ceil(text.length / 4);
+  }
+
+  function isInside(child: string, parent: string): boolean {
+    const rel = path.relative(parent, child);
+    return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+  }
+
+  function classifyContextFile(filePath: string, workspacePath: string): ContextFileScope {
+    if (isInside(filePath, getAgentDir())) return 'global';
+    if (isInside(filePath, workspacePath)) return 'workspace';
+    return 'ancestor';
+  }
+
+  /** Shape of the SDK's ToolInfo / AgentCustomTool, narrowed to what we report. */
+  type AnyTool = {
+    name?: unknown;
+    description?: unknown;
+    parameters?: unknown;
+    /** Present on plugin-contributed tools; absent on the SDK's own. */
+    pluginId?: unknown;
+  };
+
+  function toToolInfo(tool: AnyTool, fallbackSource: string): AgentToolInfo {
+    return {
+      name: String(tool.name ?? ''),
+      description: typeof tool.description === 'string' ? tool.description : undefined,
+      source: fallbackSource,
+      schemaBytes: JSON.stringify(tool.parameters ?? {}).length,
+    };
+  }
+
+  /**
+   * The SDK's built-in tool names for when no live session is available to ask.
+   * `getAllTools()` is authoritative but needs a session; this is its documented
+   * default set.
+   */
+  const DEFAULT_BUILTIN_TOOLS = ['read', 'bash', 'edit', 'write'];
+
+  /**
+   * The SDK's prompt-file discovery, mirrored.
+   *
+   * `discoverSystemPromptFile()` / `discoverAppendSystemPromptFile()` are
+   * private on the loader, so the rule is restated here: a file under
+   * `<cwd>/.pi/` shadows the global one under the agent dir, and only the
+   * winner is read. Reporting the loser too is the point — a shadowed global
+   * file looks like it should be in effect and silently is not.
+   */
+  const PROMPT_CONFIG_DIR = '.pi';
+
+  function discoverPromptPaths(cwd: string): {
+    system: { global: string; project: string };
+    append: { global: string; project: string };
+  } {
+    const agentDir = getAgentDir();
+    return {
+      system: {
+        global: path.join(agentDir, 'SYSTEM.md'),
+        project: path.join(cwd, PROMPT_CONFIG_DIR, 'SYSTEM.md'),
+      },
+      append: {
+        global: path.join(agentDir, 'APPEND_SYSTEM.md'),
+        project: path.join(cwd, PROMPT_CONFIG_DIR, 'APPEND_SYSTEM.md'),
+      },
+    };
+  }
+
+  function readPromptFile(kind: 'system' | 'append', scope: 'global' | 'project', filePath: string): PromptFileInfo {
+    try {
+      const content = readFileSync(filePath, 'utf-8');
+      const stat = statSync(filePath);
+      return {
+        kind,
+        scope,
+        path: filePath,
+        exists: true,
+        active: false,
+        content,
+        bytes: Buffer.byteLength(content, 'utf-8'),
+        chars: content.length,
+        mtimeMs: stat.mtimeMs,
+      };
+    } catch {
+      return {
+        kind,
+        scope,
+        path: filePath,
+        exists: false,
+        active: false,
+        content: null,
+        bytes: 0,
+        chars: 0,
+        mtimeMs: 0,
+      };
+    }
+  }
+
+  /** Both scopes for both kinds, with the winner of each pair marked active. */
+  function collectPromptFiles(cwd: string): PromptFileInfo[] {
+    const paths = discoverPromptPaths(cwd);
+    const out: PromptFileInfo[] = [];
+    for (const kind of ['system', 'append'] as const) {
+      const pair = [readPromptFile(kind, 'project', paths[kind].project), readPromptFile(kind, 'global', paths[kind].global)];
+      const winner = pair.find((f) => f.exists);
+      if (winner) winner.active = true;
+      out.push(...pair);
+    }
+    return out;
+  }
+
+  async function readAgentContextConfig(
+    workspacePath: string,
+    workspaceId?: string,
+  ): Promise<AgentContextConfig> {
+    const resolvedWorkspace = path.resolve(workspacePath);
+    // The appended segments are the host's own list, not an SDK default — a bare
+    // loader reports none. Built through the same helper session creation uses,
+    // so what this reports is what the model actually receives.
+    const pluginDocsBlock = formatPluginDocsForPrompt(options?.pluginDocsProvider?.() ?? []);
+    const hostSegments = buildHostAppendSystemPrompt(pluginDocsBlock);
+    const loader = new DefaultResourceLoader({
+      cwd: resolvedWorkspace,
+      agentDir: getAgentDir(),
+      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocsBlock),
+    });
+    await loader.reload();
+
+    // A live session for this workspace is the only source of the assembled
+    // prompt: the SDK's buildSystemPrompt is not exported, so the built-in base
+    // prompt cannot be reproduced without one.
+    let live: AgentSession | undefined;
+    for (const cached of activeSessions.values()) {
+      if (path.resolve(cached.cwd) === resolvedWorkspace) {
+        live = cached.session;
+        break;
+      }
+    }
+
+    // ── appended segments (host vision line + plugin index + the user's own
+    // APPEND_SYSTEM.md, in the order the override builds them) ──
+    const promptFiles = collectPromptFiles(resolvedWorkspace);
+    const appended: AppendSegmentInfo[] = loader.getAppendSystemPrompt().map((text) => {
+      const hostIndex = hostSegments.indexOf(text);
+      if (hostIndex === 0) return { label: '视觉能力说明', source: 'host' as const, text, chars: text.length };
+      if (hostIndex > 0) return { label: '插件索引', source: 'plugin-docs' as const, text, chars: text.length };
+      return { label: '追加提示词', source: 'user-append' as const, text, chars: text.length };
+    });
+
+    // ── context files (global AGENTS.md + every ancestor of the workspace) ──
+    const contextFiles: ContextFileInfo[] = loader.getAgentsFiles().agentsFiles.map((file) => {
+      let mtimeMs = 0;
+      try {
+        mtimeMs = statSync(file.path).mtimeMs;
+      } catch {
+        // Vanished between discovery and here. Left at 0 so a write from the
+        // panel is refused instead of silently recreating the file.
+      }
+      return {
+        path: file.path,
+        scope: classifyContextFile(file.path, resolvedWorkspace),
+        bytes: Buffer.byteLength(file.content, 'utf-8'),
+        chars: file.content.length,
+        content: file.content,
+        mtimeMs,
+      };
+    });
+
+    // ── skills ──
+    const skillList = loader.getSkills().skills;
+    const renderedSkills = formatSkillsForPrompt(skillList);
+    const skills = {
+      items: skillList.map((s) => ({
+        name: s.name,
+        description: s.description,
+        path: s.filePath,
+        chars: (s.description ?? '').length,
+      })),
+      rendered: renderedSkills,
+      chars: renderedSkills.length,
+    };
+
+    // ── tools ──
+    // The SDK's own tool list carries no notion of which plugin contributed a
+    // tool, so attribution comes from the aggregate: a name → plugin index built
+    // once and used on both paths. Without it every plugin tool would be
+    // reported as built-in, which is exactly the number this panel exists to
+    // break down.
+    const pluginTools = (options?.customToolsProvider?.() ?? []) as AnyTool[];
+    const pluginOf = new Map<string, string>();
+    for (const tool of pluginTools) {
+      if (typeof tool.pluginId === 'string') pluginOf.set(String(tool.name ?? ''), tool.pluginId);
+    }
+
+    const tools: AgentToolInfo[] = [];
+    if (live) {
+      for (const tool of live.getAllTools()) {
+        const name = String((tool as AnyTool).name ?? '');
+        tools.push(toToolInfo(tool as AnyTool, pluginOf.get(name) ?? 'builtin'));
+      }
+    } else {
+      for (const name of DEFAULT_BUILTIN_TOOLS) {
+        tools.push({ name, source: 'builtin', schemaBytes: 0 });
+      }
+      for (const tool of pluginTools) {
+        tools.push(toToolInfo(tool, typeof tool.pluginId === 'string' ? tool.pluginId : 'plugin'));
+      }
+    }
+
+    // ── the assembled prompt, when a live session can hand it over ──
+    const activeSystemFile = promptFiles.find((f) => f.kind === 'system' && f.active);
+    let assembled: AgentContextConfig['assembled'] = null;
+    // A SYSTEM.md is a file, so its text is readable with or without a session —
+    // which makes the base prompt knowable in exactly the case where the user
+    // replaced it. Only the SDK's own built-in text needs a session to reach.
+    let baseText: string | null = activeSystemFile?.content ?? null;
+    let baseNote = activeSystemFile
+      ? '由你的 SYSTEM.md 提供。'
+      : '尚未建立会话，读不到 SDK 内置的基础提示词正文。发一次消息后再打开本面板即可看到。';
+
+    if (live) {
+      const text = live.systemPrompt;
+      assembled = { text, chars: text.length, tokensEst: estimateTextTokens(text) };
+      // Anchor on the vision line: the append override places the host's segments
+      // immediately after the base prompt, so everything before it is the base —
+      // whether that is the SDK's built-in text or a SYSTEM.md replacing it.
+      const anchor = text.indexOf(HOST_VISION_PROMPT);
+      if (anchor > 0) {
+        baseText = text.slice(0, anchor).trimEnd();
+        baseNote = activeSystemFile
+          ? '由你的 SYSTEM.md 提供，已在当前会话中生效。'
+          : 'SDK 内置基础提示词。';
+      } else if (!activeSystemFile) {
+        baseText = null;
+        baseNote = '已读到完整系统提示词，但基础段无法与追加段可靠切分，请以上方完整内容为准。';
+      }
+    }
+
+    // ── plugin docs (what the appended index actually costs per plugin) ──
+    const pluginDocs = (options?.pluginDocsProvider?.() ?? []).map((doc) => ({
+      pluginId: doc.pluginId ?? '',
+      name: doc.name,
+      description: doc.description,
+      path: doc.location,
+      chars: doc.name.length + doc.description.length + doc.location.length,
+    }));
+
+    // ── totals ──
+    const sectionChars =
+      (baseText?.length ?? 0) +
+      appended.reduce((n, s) => n + s.chars, 0) +
+      contextFiles.reduce((n, f) => n + f.chars, 0) +
+      skills.chars +
+      tools.reduce((n, t) => n + t.schemaBytes, 0);
+    const chars = assembled?.chars ?? sectionChars;
+    const tokensEst = estimateTextTokens(
+      assembled?.text ??
+        [
+          ...appended.map((s) => s.text),
+          ...contextFiles.map((f) => f.content),
+          skills.rendered,
+        ].join('\n'),
+    );
+
+    const windowTokens = live?.model?.contextWindow;
+    return {
+      workspace: { id: workspaceId, path: resolvedWorkspace, name: path.basename(resolvedWorkspace) },
+      agentDir: getAgentDir(),
+      assembled,
+      promptFiles,
+      sections: {
+        base: {
+          text: baseText,
+          chars: baseText?.length ?? null,
+          note: baseNote,
+          overridden: activeSystemFile !== undefined,
+        },
+        appended,
+        contextFiles,
+        skills,
+        tools,
+      },
+      pluginDocs,
+      totals: {
+        chars,
+        tokensEst,
+        windowTokens,
+        share: windowTokens ? Math.min(1, tokensEst / windowTokens) : undefined,
+      },
+    };
+  }
+
+  /**
+   * Rebuild a live session's prompt from disk.
+   *
+   * Context files are read when a session is built, so an AGENTS.md edit is
+   * otherwise invisible until the user starts a new session. `session.reload()`
+   * re-reads the resource loader and rebuilds the base prompt from it, which
+   * makes the edit apply to the next turn.
+   *
+   * Refuses while anything is streaming: `reload()` resets global API providers
+   * and tears down the extension runtime, which is not something to do under a
+   * request that is already in flight. The caller surfaces the refusal instead
+   * of the edit silently appearing to do nothing.
+   */
+  async function reloadAgentContext(workspacePath: string): Promise<AgentContextReloadResult> {
+    const resolvedWorkspace = path.resolve(workspacePath);
+    let live: AgentSession | undefined;
+    for (const cached of activeSessions.values()) {
+      if (path.resolve(cached.cwd) === resolvedWorkspace) {
+        live = cached.session;
+        break;
+      }
+    }
+    // No session yet: the file is read when one is created, so the edit lands
+    // on its own without anything to rebuild.
+    if (!live) return { applied: false, reason: 'no-session' };
+
+    for (const cached of activeSessions.values()) {
+      if (cached.session.isStreaming) return { applied: false, reason: 'busy' };
+    }
+
+    await live.reload();
+    return { applied: true };
+  }
+
+  /**
+   * Rebuild after a write, without letting a rebuild failure masquerade as a
+   * failed write.
+   *
+   * By the time this runs the file is already on disk. If `reload()` throws, the
+   * edit happened and only *applying* it did not — reporting the whole operation
+   * as failed would send the user looking for a problem that isn't there, and
+   * likely re-editing a file that is already correct.
+   */
+  async function reloadAfterWrite(workspacePath: string): Promise<AgentContextReloadResult> {
+    try {
+      return await reloadAgentContext(workspacePath);
+    } catch (err) {
+      return {
+        applied: false,
+        reason: 'error',
+        message: err instanceof Error ? err.message : String(err),
+      };
+    }
+  }
+
   return {
     /** Tear down all cached sessions so the next prompt rebuilds them
      *  (used when the plugin tool/skill set changes at runtime). */
@@ -210,6 +608,25 @@ export function createRealChatService(
         try { cached.unsubscribe(); } catch { /* best-effort */ }
       }
       activeSessions.clear();
+    },
+
+    getAgentContextConfig(workspacePath: string, workspaceId?: string): Promise<AgentContextConfig> {
+      return readAgentContextConfig(workspacePath, workspaceId);
+    },
+
+    reloadAgentContext(workspacePath: string): Promise<AgentContextReloadResult> {
+      return reloadAgentContext(workspacePath);
+    },
+
+    async writeContextFile({ workspacePath, path: filePath, content, expectedMtime }) {
+      // Guard first: a refused write must not leave a half-applied reload.
+      const file = writeFileWithMtimeGuard(filePath, content, expectedMtime);
+      return { file, reload: await reloadAfterWrite(workspacePath) };
+    },
+
+    async deleteContextFile({ workspacePath, path: filePath, expectedMtime }) {
+      const deleted = deleteFileWithMtimeGuard(filePath, expectedMtime);
+      return { deleted, reload: await reloadAfterWrite(workspacePath) };
     },
 
     async sendMessage(params: SendMessageParams): Promise<Message> {

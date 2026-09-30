@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { createProxySDKClient, IPCTransport } from '@pi/sdk-wrapper';
 import {
   SDKProvider,
@@ -107,6 +107,31 @@ function AppContent() {
     }
   }, [plugins, setPluginPanels, setPluginCommands]);
 
+  // ── Tell main which workspace is on screen ──
+  // Which workspace is active is a view fact that only the renderer holds, and
+  // the plugin kernel needs it to resolve the default target of `agent.*`
+  // reads (which AGENTS.md chain the context plugin should show). Shares the
+  // workspaces query cache with the dropdown rather than re-fetching.
+  const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
+  const { data: workspaces } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: () => sdk.workspace.list(),
+  });
+  useEffect(() => {
+    const api = (
+      window as unknown as {
+        electronAPI?: { invoke: (channel: string, ...args: unknown[]) => Promise<unknown> };
+      }
+    ).electronAPI;
+    if (!api) return;
+    const ws = workspaces?.find((w) => w.id === activeWorkspaceId);
+    api
+      .invoke('pi:agent:set-active-workspace', ws ? { id: ws.id, path: ws.path } : null)
+      .catch(() => {
+        /* kernel may not be up yet; the next change re-sends */
+      });
+  }, [workspaces, activeWorkspaceId]);
+
   useEffect(() => {
     const bridge = getPluginBridge();
     if (!bridge) return;
@@ -121,8 +146,11 @@ function AppContent() {
         const target = panelId ?? usePanelStore.getState().panels.find((p) => p.source === event.pluginId)?.id;
         if (target) {
           openPanel(target, { focus: event.focus });
-          if (event.focus !== false) {
-            // Event-triggered open — surface the panel side too.
+          // Surface the panel's own side. Only the right column collapses to a
+          // rail, so only a right-region panel needs to be revealed — pulling
+          // it open for a left-region panel would be simply wrong.
+          const region = usePanelStore.getState().panels.find((p) => p.id === target)?.region;
+          if (event.focus !== false && region === 'right') {
             useUIStore.getState().setRightPanelOpen(true);
           }
         }
