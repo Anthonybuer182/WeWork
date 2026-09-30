@@ -18,7 +18,7 @@ import { TitleBar, LayoutToggles } from '@pi/ui';
 import { ThreeColumnLayout } from '@pi/ui';
 import { LeftSidebar } from '@pi/ui';
 import { CenterPanel } from '@pi/ui';
-import { PanelHost, SelectionService } from '@pi/ui';
+import { PanelHost } from '@pi/ui';
 import { WorkspaceDropdown } from '@pi/ui';
 import { WorkspaceCreateButton } from '@pi/ui';
 import { HOST_LEFT_PANELS } from '@pi/ui';
@@ -208,7 +208,6 @@ function AppContent() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <SelectionService />
       <AppShell>
         <TitleBar
           leading={<WorkspaceDropdown />}

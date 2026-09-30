@@ -406,26 +406,6 @@ export class PluginSystem {
     }
   }
 
-  /** Execute a selection (滑词) action in its plugin backend. */
-  async executeSelectionAction(
-    pluginId: string,
-    actionId: string,
-    text: string,
-    source: { kind: string; pluginId?: string; label?: string },
-  ): Promise<unknown> {
-    const proc = this.processes.get(pluginId);
-    if (!proc) {
-      throw new Error(`plugin "${pluginId}" has no backend`);
-    }
-    // Verify the action is actually contributed by this plugin.
-    const plugin = this.registry.get(pluginId);
-    const actions = plugin?.manifest.contributes?.selectionActions ?? [];
-    if (!actions.some((a) => a.id === actionId)) {
-      throw new Error(`plugin "${pluginId}" does not contribute selection action "${actionId}"`);
-    }
-    return proc.executeSelectionAction(actionId, text, source);
-  }
-
   // ── Marketplace / lifecycle management ──
 
   async catalog(force = false): Promise<MarketEntry[]> {

@@ -280,8 +280,6 @@ const pluginBridge = (() => {
     listTools: (): Promise<unknown[]> => ipcRenderer.invoke('pi:plugin:list-tools'),
     executeTool: (pluginId: string, name: string, params?: Record<string, unknown>): Promise<{ ok: boolean; content?: unknown[]; details?: unknown; error?: string }> =>
       ipcRenderer.invoke('pi:plugin:execute-tool', { pluginId, name, params }),
-    executeSelectionAction: (pluginId: string, actionId: string, text: string, source?: { kind: string; pluginId?: string; label?: string }): Promise<{ ok: boolean; result?: unknown; error?: string }> =>
-      ipcRenderer.invoke('pi:plugin:selection-action', { pluginId, actionId, text, source }),
     showContextMenu: (pos: { x: number; y: number }): Promise<{ ok: boolean }> =>
       ipcRenderer.invoke('pi:plugin:context-menu', pos),
     send: (pluginId: string, payload: unknown): void => {

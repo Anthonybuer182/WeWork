@@ -42,7 +42,6 @@ export interface PermissionMeta {
 export const PERMISSION_META: PermissionMeta[] = [
   { key: 'storage', label: '本地存储', description: '插件私有数据目录读写(plugins-data/<id>)' },
   { key: 'notify', label: '桌面通知', description: '发送系统通知' },
-  { key: 'selection', label: '选区访问', description: '注册滑词引用动作' },
   { key: 'clipboard', label: '剪贴板', description: '读写系统剪贴板' },
   { key: 'browser', label: '浏览器控制', description: '驱动宿主浏览器自动化能力' },
   { key: 'network', label: '网络访问', description: '出站网络请求(按域名限定)' },

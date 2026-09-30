@@ -2,7 +2,7 @@
   "name": "com.pi.knowledge",
   "version": "0.1.0",
   "private": true,
-  "description": "知识库 — 面板 + 3 个工具 + 滑词收藏 + 上下文注入",
+  "description": "知识库 — 面板 + 3 个工具 + 上下文注入",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-backend.mjs",

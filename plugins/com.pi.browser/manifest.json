@@ -3,7 +3,7 @@
   "name": "浏览器自动化",
   "description": "给 agent 的浏览器工具:打开网页、读当前页面、截图。界面部分由宿主自带(host:browser 面板),本插件不提供面板。",
   "version": "0.1.0",
-  "apiVersion": 2,
+  "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },

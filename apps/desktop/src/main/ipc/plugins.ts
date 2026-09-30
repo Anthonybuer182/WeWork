@@ -82,24 +82,6 @@ export function registerPluginIpcHandlers(system: PluginSystem): void {
     return system.rollback(pluginId);
   });
 
-  ipcMain.handle('pi:plugin:selection-action', async (_event, payload: {
-    pluginId?: string;
-    actionId?: string;
-    text?: string;
-    source?: { kind: string; pluginId?: string; label?: string };
-  }) => {
-    const { pluginId, actionId, text, source } = payload ?? {};
-    if (!pluginId || !actionId || typeof text !== 'string') {
-      return { ok: false, error: 'missing pluginId, actionId or text' };
-    }
-    try {
-      const result = await system.executeSelectionAction(pluginId, actionId, text, source ?? { kind: 'unknown' });
-      return { ok: true, result };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : String(err) };
-    }
-  });
-
   ipcMain.handle('pi:plugin:set-enabled', async (_event, payload: { pluginId?: string; enabled?: boolean }) => {
     const pluginId = payload?.pluginId;
     if (!pluginId || typeof payload.enabled !== 'boolean') {

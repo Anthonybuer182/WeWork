@@ -173,10 +173,11 @@ const bridge = {
 
   /**
    * Forward a wire frame to the HOST (the shell renderer), for directions the
-   * backend port does not carry: `selection` (滑词 menu) and `resize`.
+   * backend port does not carry — today that is just `contextmenu`: the native
+   * menu can only be popped by main, and a panel in a native view cannot reach
+   * the shell's DOM to ask for it.
    *
-   * Main relays it to the shell, whose existing handler treats it exactly as it
-   * treated a message from an iframe — so the shell side needs no special case.
+   * Main relays it to the shell.
    */
   sendHostFrame: (frame: unknown): void => {
     ipcRenderer.send('pi:plugin:view-frame', frame);

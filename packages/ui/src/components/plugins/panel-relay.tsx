@@ -4,13 +4,9 @@ import { getPluginBridge } from '@/stores/plugin-store';
  * The relay between native-view panels and the shell.
  *
  * A panel lives in its own `WebContentsView` — a top-level frame outside this
- * DOM — so it cannot post to the shell at all. Main forwards the two kinds of
+ * DOM — so it cannot post to the shell at all. Main forwards the one kind of
  * frame a panel sends *to the shell* (as opposed to to its own backend, which
- * goes over the panel's MessagePort):
- *
- *   - `selection`   — the user selected text in a panel; the shell's selection
- *                     menu picks it up.
- *   - `contextmenu` — the panel wants the native menu, which only main can pop.
+ * goes over the panel's MessagePort): `contextmenu`, which only main can pop.
  *
  * This module also pushes the shell's theme tokens to main, which fans them out
  * to every plugin view — the views are unreachable by `postMessage`, so the
@@ -25,7 +21,7 @@ import { getPluginBridge } from '@/stores/plugin-store';
 interface WireFrame {
   __piPlugin: true;
   pluginId: string;
-  direction: 'selection' | 'contextmenu';
+  direction: 'contextmenu';
   payload: unknown;
 }
 
@@ -61,9 +57,7 @@ function showPluginContextMenu(pluginId: string, payload?: { x?: number; y?: num
 
 function handleFrame(data: WireFrame | null): void {
   if (!data || data.__piPlugin !== true) return;
-  if (data.direction === 'selection') {
-    window.dispatchEvent(new CustomEvent('pi-plugin-selection', { detail: data.payload }));
-  } else if (data.direction === 'contextmenu') {
+  if (data.direction === 'contextmenu') {
     showPluginContextMenu(data.pluginId, data.payload as { x?: number; y?: number } | undefined);
   }
 }
@@ -74,7 +68,7 @@ let relayInstalled = false;
  * Install the relay. Idempotent, and called by every slot that hosts a panel —
  * it used to happen inside the deleted iframe host, so when panels moved to
  * native views nothing ran it any more, which silently broke both the theme
- * push and the selection frames.
+ * push and the context-menu frames.
  */
 function ensureRelayInstalled(): void {
   if (relayInstalled) return;

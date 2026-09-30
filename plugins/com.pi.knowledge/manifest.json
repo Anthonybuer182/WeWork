@@ -3,7 +3,7 @@
   "name": "知识库",
   "description": "官方插件:本地知识条目 + agent 检索工具(kb_save / kb_search / kb_list)",
   "version": "0.1.0",
-  "apiVersion": 2,
+  "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },
@@ -68,12 +68,6 @@
           "properties": {},
           "additionalProperties": false
         }
-      }
-    ],
-    "selectionActions": [
-      {
-        "id": "kb.save-selection",
-        "title": "存入知识库"
       }
     ],
     "contextProviders": [

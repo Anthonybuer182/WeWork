@@ -2,7 +2,7 @@
   "name": "com.pi.mail",
   "version": "0.1.0",
   "private": true,
-  "description": "邮件 — 草稿面板 + 3 个工具 + /mail 命令 + 滑词引用",
+  "description": "邮件 — 草稿面板 + 3 个工具 + /mail 命令",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-backend.mjs",

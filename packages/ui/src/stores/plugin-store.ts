@@ -16,7 +16,6 @@ interface PluginBridge {
   listAll: () => Promise<PluginInfo[]>;
   ensurePort: (pluginId: string) => Promise<{ ok: boolean; error?: string }>;
   executeCommand: (pluginId: string, name: string, args?: string) => Promise<{ ok: boolean; result?: unknown; error?: string }>;
-  executeSelectionAction: (pluginId: string, actionId: string, text: string, source?: { kind: string; pluginId?: string; label?: string }) => Promise<{ ok: boolean; result?: unknown; error?: string }>;
   market: PluginMarketBridge;
   collectContext: (message: string) => Promise<{ ok: boolean; sections: string[] }>;
   getSettings: (pluginId: string) => Promise<Record<string, unknown>>;
@@ -73,7 +72,6 @@ export interface PluginStoreState {
   loadPluginSettings: (pluginId: string) => Promise<Record<string, unknown>>;
   setPluginSetting: (pluginId: string, key: string, value: unknown) => Promise<boolean>;
   executePluginCommand: (pluginId: string, name: string, args?: string) => Promise<{ ok: boolean; result?: unknown; error?: string }>;
-  executeSelectionAction: (pluginId: string, actionId: string, text: string, source?: { kind: string; pluginId?: string; label?: string }) => Promise<{ ok: boolean; result?: unknown; error?: string }>;
   setPanelStatus: (status: PluginPanelStatus) => void;
 }
 
@@ -234,12 +232,6 @@ export const usePluginStore = create<PluginStoreState>()((set, get) => ({
     const bridge = getPluginBridge();
     if (!bridge) return { ok: false, error: 'no plugin bridge' };
     return bridge.executeCommand(pluginId, name, args);
-  },
-
-  executeSelectionAction: async (pluginId, actionId, text, source) => {
-    const bridge = getPluginBridge();
-    if (!bridge) return { ok: false, error: 'no plugin bridge' };
-    return bridge.executeSelectionAction(pluginId, actionId, text, source);
   },
 
   setPanelStatus: (status) =>

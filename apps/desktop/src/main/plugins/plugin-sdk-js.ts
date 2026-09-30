@@ -92,7 +92,7 @@ const PLUGIN_SDK_SOURCE = String.raw`
     }, '*');
   }
 
-  /** Host traffic (selection, resize). Not backend-related. */
+  /** Host traffic (the native context menu). Not backend-related. */
   function postToShell(direction, payload) {
     var frame = {
       __piPlugin: true,
@@ -235,19 +235,6 @@ const PLUGIN_SDK_SOURCE = String.raw`
         return;
       }
       postToShell('contextmenu', { x: event.clientX, y: event.clientY });
-    } catch (e) { /* best-effort */ }
-  });
-
-  // ── Selection reporting (滑词) ──────────────────────────────────────
-  // The host shows its selection menu with the plugin's contributed actions.
-  document.addEventListener('mouseup', function (event) {
-    try {
-      var sel = window.getSelection && window.getSelection();
-      var text = sel ? String(sel) : '';
-      if (!text || !text.trim()) return;
-      postToShell('selection', {
-        pluginId: PLUGIN_ID, text: text, x: event.clientX, y: event.clientY
-      });
     } catch (e) { /* best-effort */ }
   });
 })();

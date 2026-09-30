@@ -4,8 +4,7 @@
  * The quote feature (quoting a selection into the composer) has been
  * removed. What remains of it here is the *stripping* side: older sessions
  * on disk still contain the `--- Quoted Context ---` section the composer
- * used to append, and displaying it raw would be noise. `copyText` is a
- * plain clipboard helper used by the selection menu.
+ * used to append, and displaying it raw would be noise.
  */
 /**
  * Strip context sections the composer appends to the outgoing prompt — the
@@ -60,22 +59,4 @@ export function extractAppendedQuotes(content: string): { display: string; quote
     .replace(/\n*---\n\[相关上下文\][\s\S]*?\n---\s*/g, '')
     .replace(/\s+$/, '');
   return { display, quotes };
-}
-
-/**
- * Clipboard write that works without document focus (background windows,
- * automation) — prefers the main-process clipboard and falls back to the
- * async navigator API.
- */
-export async function copyText(text: string): Promise<void> {
-  const api = (window as unknown as {
-    electronAPI?: { invoke: (channel: string, ...args: unknown[]) => Promise<unknown> };
-  }).electronAPI;
-  if (api) {
-    try {
-      await api.invoke('pi:clipboard:write', text);
-      return;
-    } catch { /* fall through to navigator */ }
-  }
-  await navigator.clipboard.writeText(text);
 }

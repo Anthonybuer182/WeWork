@@ -1,7 +1,7 @@
 /**
  * com.pi.mail backend — draft panel + agent tools
  * (mail_create_draft / mail_list_drafts / mail_send_draft)
- * + /mail command + mail.quote-draft selection action.
+ * + /mail command.
  *
  * Drafts are local (demo mail — no SMTP connector in this revision).
  */
@@ -149,14 +149,6 @@ plugin({
       return { opened: PANEL };
     }
     throw new Error(`unknown command: ${name}`);
-  },
-
-  async onSelectionAction(actionId, text, ctx) {
-    if (actionId !== 'mail.quote-draft') throw new Error(`unknown action: ${actionId}`);
-    const draft = createDraft('', '引用内容', text.slice(0, 5000));
-    await save(ctx);
-    await ctx.openPanel(PANEL, { focus: false }).catch(() => {});
-    return { ok: true, draftId: draft.id, subject: draft.subject };
   },
 
   /** One panel, so the events are named for what happened. */

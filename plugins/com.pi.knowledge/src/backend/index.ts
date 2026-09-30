@@ -1,6 +1,6 @@
 /**
  * com.pi.knowledge backend — knowledge base panel + agent tools
- * (kb_save / kb_search / kb_list) + kb.save-selection selection action
+ * (kb_save / kb_search / kb_list)
  * + kb.auto context provider (auto-inject before each message send,
  * gated by the autoContext setting).
  *
@@ -124,14 +124,6 @@ plugin({
       default:
         throw new Error(`unknown tool: ${name}`);
     }
-  },
-
-  async onSelectionAction(actionId, text, ctx) {
-    if (actionId !== 'kb.save-selection') throw new Error(`unknown action: ${actionId}`);
-    const body = text.slice(0, 50_000);
-    const entry = addEntry(body.split('\n')[0].slice(0, 60) || '选中内容', body);
-    await persist(ctx);
-    return { ok: true, entryId: entry.id, title: entry.title };
   },
 
   async onContextRequest(providerId, message, ctx) {

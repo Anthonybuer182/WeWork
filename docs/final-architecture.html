@@ -339,7 +339,6 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
     ],
     <span class="k">"tools"</span>: [ ... ],            <span class="c">// agent 工具(MCP inputSchema)</span>
     <span class="k">"commands"</span>: [ ... ],          <span class="c">// 斜杠命令</span>
-    <span class="k">"selectionActions"</span>: [ ... ], <span class="c">// 滑词菜单动作</span>
     <span class="k">"contextProviders"</span>: [ ... ], <span class="c">// 发送前上下文注入</span>
     <span class="k">"settings"</span>: [ ... ],          <span class="c">// 插件中心自动设置表单</span>
     <span class="k">"messageRenderers"</span>: [ ... ], <span class="c">// 对话内卡片(UiNode 声明式)</span>
@@ -351,7 +350,7 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
   <div class="grid2">
     <div class="cell">
       <h4>standard(默认,主接口)</h4>
-      <p>写 HTML/CSS/JS 即可。宿主给独立沙箱源 + piSDK 全套:能力调用、后端消息、主题变量自动注入、选区自动进滑词、右键原生菜单、autoHeight。99% 的插件止步于此。</p>
+      <p>写 HTML/CSS/JS 即可。宿主给独立沙箱源 + piSDK 全套:能力调用、后端消息、主题变量自动注入、右键原生菜单。99% 的插件止步于此。选区归面板自己处理。</p>
     </div>
     <div class="cell">
       <h4>liveview(进阶,文档化)</h4>
@@ -399,7 +398,7 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
   <table>
     <tr><th>机制</th><th>状态</th><th>要点</th></tr>
     <tr><td>沙箱 iframe 独立源</td><td><span class="tag ok">实测隔离</span></td><td>每插件唯一 <code>pi-plugin://</code> origin + Origin-Agent-Cluster;插件死循环 5s,宿主响应 1–3ms;<code>site-per-process</code> 强制 <span class="tag todo">待加</span></td></tr>
-    <tr><td>滑词引用</td><td><span class="tag ok">已交付</span></td><td>左键选中松手即出菜单(引用到对话 / 复制 / 插件动作);iframe 经 SDK 上报;浏览器面板右键 context-menu 触发;菜单滚动跟随选区</td></tr>
+    <tr><td>滑词引用</td><td><span class="tag todo">已移除</span></td><td>宿主不再接管选区:面板自己给选区做 UI(文件查看器用 GenOffice 自带的「AI 修改」浮标接 <code>chat.send</code>)。一次选中弹两个菜单,是移除它的原因</td></tr>
     <tr><td>companion 面板</td><td><span class="tag ok">已交付</span></td><td><code>companionOf</code>:声明式控制条贴 liveview 同屏;一插件一 Rail 按钮</td></tr>
     <tr><td>hidden 面板</td><td><span class="tag ok">已交付</span></td><td>不上 Rail、panel.open 可达(文件查看器即此类)</td></tr>
     <tr><td>autoHeight</td><td><span class="tag ok">已交付</span></td><td>视口无关测量(可涨可缩),ResizeObserver 上报</td></tr>
@@ -438,7 +437,7 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
   <table>
     <tr><th>通道</th><th>机制</th></tr>
     <tr><td>工具贡献</td><td>面板加的待办 agent 能 list 到 —— 同一后端状态</td></tr>
-    <tr><td>滑词引用</td><td>选区 → composer 引用条(去重、hostname 标签)</td></tr>
+    <tr><td>选区内动作</td><td>面板自己实现(宿主不再提供滑词菜单);要送进对话就走 <code>chat.send</code></td></tr>
     <tr><td>上下文注入</td><td>contextProviders 发送前注入 [相关上下文](受插件设置开关控制)</td></tr>
     <tr><td>文件预览</td><td>filePreview 认领 → 文件树点击路由到插件面板</td></tr>
   </table>

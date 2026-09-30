@@ -36,7 +36,7 @@ mkdir com.example.hello && cd com.example.hello
   "id": "com.example.hello",
   "name": "Hello",
   "version": "0.1.0",
-  "apiVersion": 2,
+  "apiVersion": 3,
   "backend": "./dist/main.mjs",
   "contributes": {
     "tools": [{ "name": "hello", "description": "Say hello" }]
@@ -168,7 +168,7 @@ description: "查看和编辑 Office 文档（docx / pptx / xlsx / pdf）——�
 | `id` | ✅ | 反向 DNS 格式(`com.company.plugin`),也是目录名 |
 | `name` | ✅ | 显示名称 |
 | `version` | ✅ | 你自己的版本号,semver |
-| `apiVersion` | — | 你照哪一版协议写的。当前是 **2**。对不上会被标成 `incompatible` 并说明原因 |
+| `apiVersion` | — | 你照哪一版协议写的。当前是 **3**。对不上会被标成 `incompatible` 并说明原因 |
 | `description` | — | 一句话说明 |
 | `engines` | — | 宿主版本约束 `{ "pi-desktop": ">=0.1.0" }` |
 | `backend` | — | 后端入口(相对路径);省略则纯 UI 插件 |
@@ -257,12 +257,6 @@ MCP 格式的 `inputSchema`:
 { "commands": [{ "name": "/sync", "title": "同步数据" }] }
 ```
 
-#### selectionActions — 滑词动作
-
-```json
-{ "selectionActions": [{ "id": "save-to-kb", "title": "存入知识库" }] }
-```
-
 #### contextProviders — 上下文注入
 
 ```json
@@ -332,7 +326,6 @@ plugin({
 | `onEvent(panelId, event, data, ctx)` | 面板报了一件事 |
 | `onTool(name, params, ctx)` | agent 调了你的工具 |
 | `onCommand(name, args, ctx)` | 斜杠命令跑了 |
-| `onSelectionAction(actionId, text, ctx)` | 滑词动作被点了 |
 | `onContextRequest(providerId, message, ctx)` | 宿主发消息前要上下文,返回要注入的文字 |
 | `onHostEvent(event, data, ctx)` | 宿主推了个事件 |
 
@@ -429,7 +422,7 @@ node packages/plugin-sdk/tests/smoke.mjs
 cd plugins/com.pi.tasks && node scripts/smoke-backend.mjs
 ```
 
-五个插件合计 **128 项检查**(浏览器 9 / 知识库 16 / 邮件 20 / 事项 38 / 文件查看器 45),
+五个插件合计 **126 项检查**(浏览器 9 / 知识库 16 / 邮件 18 / 事项 38 / 文件查看器 45),
 加上 SDK 自己的 21 项契约测试。
 
 ## 面板开发(HTML + piSDK)
@@ -497,7 +490,9 @@ async onRequest(panelId, method, ctx) {
 主题自动注入:宿主推送 CSS 变量(`--background` / `--foreground` / `--card` 等 17 个),
 面板用 `var(--background)` 等引用即可自动适配明暗主题。
 
-**文字可选**:面板里的 DOM 文字可以直接选中 → 滑词菜单弹出 → 引用到对话/存知识库。
+**选区归你自己**:面板里的文字被选中,宿主不做任何事 —— 没有滑词菜单,也没有选区上报。
+想围绕选区做点什么(浮出一个按钮、送进对话),在你的面板里自己实现。宿主只提供
+`chat.send` 这条能力,怎么触发由你决定。
 
 ## 权限模型
 
@@ -505,7 +500,6 @@ async onRequest(panelId, method, ctx) {
 |------|------|
 | `storage` | 插件私有 KV(plugins-data/&lt;id&gt;/storage.json) |
 | `notify` | 系统通知 |
-| `selection` | 注册滑词动作 |
 | `clipboard` | 系统剪贴板 |
 | `browser` | 驱动宿主浏览器自动化 |
 | `network:&lt;host&gt;` | 出站网络(域名白名单) |

@@ -344,10 +344,6 @@ export class PluginRegistry {
         type: m.type,
         streaming: m.streaming,
       })),
-      selectionActions: (plugin.manifest.contributes?.selectionActions ?? []).map((a) => ({
-        id: a.id,
-        title: a.title,
-      })),
       contextProviders: (plugin.manifest.contributes?.contextProviders ?? []).map((c) => ({
         id: c.id,
         auto: c.auto,

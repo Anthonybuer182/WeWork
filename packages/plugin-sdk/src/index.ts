@@ -168,9 +168,6 @@ export interface PluginHandlers {
   /** A contributed slash command ran. */
   onCommand?(name: string, args: string | undefined, ctx: PluginContext): unknown | Promise<unknown>;
 
-  /** One of the plugin's selection (滑词) actions was invoked. */
-  onSelectionAction?(actionId: string, text: string, ctx: PluginContext): unknown | Promise<unknown>;
-
   /** The host wants context to inject before a message send. Return the text. */
   onContextRequest?(providerId: string, message: string, ctx: PluginContext): string | Promise<string>;
 
@@ -492,16 +489,6 @@ export function plugin(handlers: PluginHandlers): void {
           break;
         }
         Promise.resolve(handlers.onCommand(msg.name ?? '', msg.args, ctx))
-          .then((result) => post({ type: 'command-result', id: msg.id, result }))
-          .catch((err) => post({ type: 'command-result', id: msg.id, error: describe(err) }));
-        break;
-
-      case 'selection-action':
-        if (!handlers.onSelectionAction) {
-          post({ type: 'command-result', id: msg.id, error: `this plugin contributes no selection actions` });
-          break;
-        }
-        Promise.resolve(handlers.onSelectionAction(msg.actionId ?? '', msg.text ?? '', ctx))
           .then((result) => post({ type: 'command-result', id: msg.id, result }))
           .catch((err) => post({ type: 'command-result', id: msg.id, error: describe(err) }));
         break;

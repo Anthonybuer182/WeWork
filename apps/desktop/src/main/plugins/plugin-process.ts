@@ -224,20 +224,6 @@ export class PluginProcess {
     else pending.resolve({ content: msg.content, details: msg.details, card: msg.card });
   }
 
-  /** Execute a selection (滑词) action in the backend. */
-  executeSelectionAction(actionId: string, text: string, source: { kind: string; pluginId?: string; label?: string }): Promise<unknown> {
-    if (!this.child) return Promise.reject(new Error('backend not running'));
-    const id = 'sel-' + ++this.commandSeq;
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.commandPending.delete(id);
-        reject(new Error(`selection action ${actionId} timed out`));
-      }, COMMAND_TIMEOUT_MS);
-      this.commandPending.set(id, { resolve, reject, timer });
-      this.post({ type: 'selection-action', id, actionId, text, source });
-    });
-  }
-
   /** Collect context from the backend before a message send. */
   requestContext(providerId: string, message: string): Promise<string | undefined> {
     if (!this.child) return Promise.reject(new Error('backend not running'));

@@ -91,11 +91,6 @@ export interface ContextProviderContribution {
   description?: string;
 }
 
-export interface SelectionActionContribution {
-  id: string;
-  title: string;
-}
-
 export interface FilePreviewContribution {
   /** File extensions to handle, e.g. ["docx", "xlsx"]. */
   match: string[];
@@ -121,7 +116,6 @@ export interface PluginContributions {
   commands?: CommandContribution[];
   messageRenderers?: MessageRendererContribution[];
   contextProviders?: ContextProviderContribution[];
-  selectionActions?: SelectionActionContribution[];
   filePreview?: FilePreviewContribution[];
   skills?: SkillContribution[];
   settings?: SettingsContribution[];
@@ -133,14 +127,22 @@ export interface PluginContributions {
  *   "secrets:mail"       — read the "mail" namespace from the secrets vault
  *   "network:imap.*"     — outbound network to hosts matching the pattern
  *   "notify"             — desktop notifications
- *   "selection"          — register selection (滑词) actions
  *   "clipboard"          — clipboard access
  *   "browser"            — drive the host browser automation capability
  */
 export type PluginPermission = string;
 
-/** The protocol version this build of the host speaks. */
-export const PLUGIN_PROTOCOL_VERSION = 2;
+/**
+ * The protocol version this build of the host speaks.
+ *
+ * 3 — dropped `selectionActions` and the `selection` permission. The host's
+ *     selection menu (滑词菜单) is gone: text selection is the panel's own
+ *     business, and the one panel that had a selection UI of its own (the file
+ *     viewer, driven by GenOffice) was drawing two floating menus at once.
+ *     A manifest still declaring `selectionActions` is now rejected rather than
+ *     silently ignored — see the `apiVersion` note on PluginManifest.
+ */
+export const PLUGIN_PROTOCOL_VERSION = 3;
 
 export interface PluginManifest {
   /** Reverse-DNS style id, lowercase. Also the directory name. */

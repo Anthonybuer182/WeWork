@@ -52,10 +52,8 @@ export { UsageBar } from './components/usage';
 export { ErrorBoundary, LoadingSpinner, EmptyState, ErrorState, ConfirmDialog } from './components/common';
 export { FileTree, FileTreeNode } from './components/file';
 export { ContextPanel } from './components/context';
-export { copyText } from './lib/quote-helpers';
 
 export { PluginCenter } from './components/plugins/plugin-center';
-export { SelectionService } from './components/plugins/selection-service';
 export { DeclarativeRenderer } from './components/plugins/declarative/declarative-renderer';
 export type { UiEventContext } from './components/plugins/declarative/declarative-renderer';
 export { PanelHost, PanelRail } from './components/panels/panel-host';

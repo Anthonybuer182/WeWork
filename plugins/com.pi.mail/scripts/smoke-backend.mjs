@@ -3,8 +3,8 @@
  * Drive the built backend with a fake host — no Electron, no app.
  *
  * Runs `dist/main.mjs`, the artifact that actually ships. Covers the paths a
- * human clicking the panel would take (compose, save, send) plus the tools,
- * the /mail command and the selection action.
+ * human clicking the panel would take (compose, save, send) plus the tools and
+ * the /mail command.
  *
  * Usage: node scripts/smoke-backend.mjs
  */
@@ -190,16 +190,10 @@ check('sending an unknown draft errors', /未找到待发送的草稿/.test(miss
 const unknown = await callTool('mail_nope', {}).catch((e) => ({ error: e.message }));
 check('an unknown tool errors', /unknown tool/.test(unknown.error ?? ''), JSON.stringify(unknown));
 
-// ── command and selection action ──
+// ── command ──
 
 const cmd = await invoke({ type: 'command', name: '/mail' });
 check('the /mail command opens the panel', cmd.result?.opened === 'drafts', JSON.stringify(cmd.result));
-
-const before = store.drafts.length;
-const quoted = await invoke({ type: 'selection-action', actionId: 'mail.quote-draft', text: '一段选中文字' });
-check('the selection action creates a draft', quoted.result?.ok === true, JSON.stringify(quoted.result));
-await new Promise((r) => setTimeout(r, 60));
-check('the quoted draft was persisted', store.drafts.length === before + 1);
 
 const badCmd = await invoke({ type: 'command', name: '/nope' }).catch((e) => ({ error: e.message }));
 check('an unknown command errors', /unknown command/.test(badCmd.error ?? ''), JSON.stringify(badCmd));

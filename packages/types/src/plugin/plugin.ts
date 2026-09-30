@@ -55,12 +55,6 @@ export interface PluginMessageRendererInfo {
   streaming?: boolean;
 }
 
-/** Selection (滑词) action contribution. */
-export interface PluginSelectionActionInfo {
-  id: string;
-  title: string;
-}
-
 /** Context provider contribution: injects context before message sends. */
 export interface PluginContextProviderInfo {
   id: string;
@@ -99,7 +93,6 @@ export interface PluginInfo {
   commands: PluginCommandInfo[];
   tools: PluginToolInfo[];
   messageRenderers: PluginMessageRendererInfo[];
-  selectionActions: PluginSelectionActionInfo[];
   contextProviders: PluginContextProviderInfo[];
   settings: PluginSettingInfo[];
   error?: string;

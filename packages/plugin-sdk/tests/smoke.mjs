@@ -111,7 +111,7 @@ plugin({
 
 check('posts the ready handshake on import', toHost.some((m) => m.type === 'ready'));
 
-deliver({ type: 'init', pluginId: 'com.test.probe', apiVersion: 2, dataDir: '/tmp/x' });
+deliver({ type: 'init', pluginId: 'com.test.probe', apiVersion: 3, dataDir: '/tmp/x' });
 await new Promise((r) => setTimeout(r, 10));
 check(
   'onInit receives the plugin id and data dir',

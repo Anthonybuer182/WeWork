@@ -3,7 +3,7 @@
   "name": "邮件草稿",
   "description": "官方插件:邮件草稿管理面板 + agent 工具(mail_create_draft / mail_list_drafts)。这一版不会真的发信——没有 SMTP,也没有投递接口",
   "version": "0.1.0",
-  "apiVersion": 2,
+  "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },
@@ -87,12 +87,6 @@
       {
         "type": "mail_create_draft",
         "streaming": true
-      }
-    ],
-    "selectionActions": [
-      {
-        "id": "mail.quote-draft",
-        "title": "引用为邮件草稿"
       }
     ]
   },

@@ -38664,13 +38664,6 @@ function plugin(handlers) {
         }
         Promise.resolve(handlers.onCommand(msg.name ?? "", msg.args, ctx2)).then((result) => post({ type: "command-result", id: msg.id, result })).catch((err) => post({ type: "command-result", id: msg.id, error: describe(err) }));
         break;
-      case "selection-action":
-        if (!handlers.onSelectionAction) {
-          post({ type: "command-result", id: msg.id, error: `this plugin contributes no selection actions` });
-          break;
-        }
-        Promise.resolve(handlers.onSelectionAction(msg.actionId ?? "", msg.text ?? "", ctx2)).then((result) => post({ type: "command-result", id: msg.id, result })).catch((err) => post({ type: "command-result", id: msg.id, error: describe(err) }));
-        break;
       case "context-request":
         if (!handlers.onContextRequest) {
           post({ type: "context-result", id: msg.id, error: `this plugin contributes no context providers` });

@@ -21,6 +21,7 @@ function plugin(handlers) {
   let panelPort = null;
   let pluginId = "";
   let dataDir = "";
+  let booted = false;
   let seq = 0;
   const pending = /* @__PURE__ */ new Map();
   const mountWarned = /* @__PURE__ */ new Set();
@@ -85,6 +86,14 @@ function plugin(handlers) {
   async function runTool(msg) {
     const id = msg.id ?? "";
     const name = msg.name ?? "";
+    if (!booted) {
+      post({
+        type: "tool-result",
+        id,
+        error: `tool "${name}" arrived before the host sent init \u2014 no plugin id or data dir yet. If you are testing the backend directly, send { type: 'init', pluginId, dataDir } first.`
+      });
+      return;
+    }
     if (!handlers.onTool) {
       post({ type: "tool-result", id, error: `this plugin contributes no tools (asked for "${name}")` });
       return;
@@ -127,6 +136,16 @@ function plugin(handlers) {
           ok: false,
           panelId,
           error: `this plugin handles no panel requests (asked for "${method}")`
+        });
+        return;
+      }
+      if (!booted) {
+        panelPort?.postMessage({
+          kind: "response",
+          id,
+          ok: false,
+          panelId,
+          error: `request "${method}" arrived before the host sent init \u2014 no plugin id or data dir yet.`
         });
         return;
       }
@@ -197,6 +216,7 @@ function plugin(handlers) {
       case "init":
         pluginId = msg.pluginId ?? "";
         dataDir = msg.dataDir ?? "";
+        booted = true;
         Promise.resolve(handlers.onInit?.(ctx)).catch((err) => log("error", `onInit threw: ${describe(err)}`));
         break;
       case "call-result": {
@@ -219,13 +239,6 @@ function plugin(handlers) {
           break;
         }
         Promise.resolve(handlers.onCommand(msg.name ?? "", msg.args, ctx)).then((result) => post({ type: "command-result", id: msg.id, result })).catch((err) => post({ type: "command-result", id: msg.id, error: describe(err) }));
-        break;
-      case "selection-action":
-        if (!handlers.onSelectionAction) {
-          post({ type: "command-result", id: msg.id, error: `this plugin contributes no selection actions` });
-          break;
-        }
-        Promise.resolve(handlers.onSelectionAction(msg.actionId ?? "", msg.text ?? "", ctx)).then((result) => post({ type: "command-result", id: msg.id, result })).catch((err) => post({ type: "command-result", id: msg.id, error: describe(err) }));
         break;
       case "context-request":
         if (!handlers.onContextRequest) {
@@ -375,14 +388,6 @@ ${lines.join("\n")}`;
       return { opened: PANEL };
     }
     throw new Error(`unknown command: ${name}`);
-  },
-  async onSelectionAction(actionId, text, ctx) {
-    if (actionId !== "mail.quote-draft") throw new Error(`unknown action: ${actionId}`);
-    const draft = createDraft("", "\u5F15\u7528\u5185\u5BB9", text.slice(0, 5e3));
-    await save(ctx);
-    await ctx.openPanel(PANEL, { focus: false }).catch(() => {
-    });
-    return { ok: true, draftId: draft.id, subject: draft.subject };
   },
   /** One panel, so the events are named for what happened. */
   async onEvent(_panelId, event, data, ctx) {

@@ -3,7 +3,7 @@
   "name": "NAME 连接器",
   "description": "连接 <系统名> 的业务数据:面板 + agent 查询工具",
   "version": "0.1.0",
-  "apiVersion": 2,
+  "apiVersion": 3,
   "engines": { "pi-desktop": ">=0.1.0" },
   "backend": "./dist/main.mjs",
   "permissions": ["storage", "network:api.your-system.example", "secrets:NAME"],

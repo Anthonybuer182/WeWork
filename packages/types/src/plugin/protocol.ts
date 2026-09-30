@@ -118,15 +118,6 @@ export interface PluginContextResultMessage {
   error?: string;
 }
 
-/** Main → backend: a selection (滑词) action was invoked. */
-export interface PluginSelectionActionMessage {
-  type: 'selection-action';
-  id: string;
-  actionId: string;
-  text: string;
-  source: { kind: string; pluginId?: string; label?: string };
-}
-
 /** Main → backend: push event (e.g. "browser.urlChanged"). */
 export interface PluginHostEventMessage {
   type: 'host-event';
@@ -150,7 +141,6 @@ export type HostToPluginMessage =
   | CapabilityResultMessage
   | PluginCommandMessage
   | PluginToolCallMessage
-  | PluginSelectionActionMessage
   | PluginContextRequestMessage
   | PluginHostEventMessage
   | PluginShutdownMessage;
