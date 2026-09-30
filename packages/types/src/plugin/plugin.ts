@@ -12,25 +12,22 @@ export type PluginRuntimeState =
   | 'activating'   // backend UtilityProcess starting
   | 'active'       // backend ready (or no backend)
   | 'disabled'     // turned off by user via plugins.json
-  | 'incompatible' // engines check failed
+  | 'incompatible' // engines range or apiVersion check failed
   | 'error'        // failed to activate (crashed beyond restart budget)
   | 'crashed';     // backend exited, restart pending
 
 export interface PluginPanelInfo {
   id: string;
   title: string;
-  kind: 'iframe' | 'declarative' | 'liveview';
-  entry?: string;
+  /** Path to the panel's HTML page, relative to the plugin root. */
+  entry: string;
   icon?: string;
   /** Plugin-provided icon, absolute pi-plugin:// URL (vocabulary fallback). */
   iconUrl?: string;
   /** Not shown on the rail; still openable via panel.open. */
   hidden?: boolean;
-  /** Attached above this liveview panel (same plugin) as a companion card. */
-  companionOf?: string;
   keepAlive?: 'always' | 'lru' | 'never';
-  autoHeight?: boolean;
-  /** Sidebar column. Defaults to 'right'; ignored for liveview panels. */
+  /** Sidebar column. Defaults to 'right'. */
   region?: PanelRegion;
   /** Position within the region's rail. Defaults to 'top'. */
   anchor?: PanelAnchor;
@@ -54,7 +51,6 @@ export interface PluginToolInfo {
 export interface PluginMessageRendererInfo {
   /** Tool name whose result this renderer decorates (e.g. "mail_create_draft"). */
   type: string;
-  kind: 'declarative' | 'iframe';
   /** Render a live card from streaming tool args while the tool runs. */
   streaming?: boolean;
 }
@@ -92,6 +88,11 @@ export interface PluginInfo {
   source: PluginSource;
   state: PluginRuntimeState;
   permissions: string[];
+  /**
+   * The version a rollback would restore, when one is kept. Present only after
+   * an upgrade — it is what makes "回到上一版" offerable in the plugin center.
+   */
+  previousVersion?: string;
   /** Plugin brand icon, absolute pi-plugin:// URL (optional). */
   iconUrl?: string;
   panels: PluginPanelInfo[];

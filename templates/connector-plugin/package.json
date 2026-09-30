@@ -1,0 +1,18 @@
+{
+  "name": "connector-plugin-template",
+  "version": "0.1.0",
+  "private": true,
+  "description": "连接器插件脚手架 — 把 ERP/CRM/工单这类外部系统接进来的起点",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-backend.mjs",
+    "typecheck": "node scripts/typecheck.mjs"
+  },
+  "dependencies": {
+    "@pi/plugin-sdk": "file:../../packages/plugin-sdk"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "esbuild": "^0.24.0"
+  }
+}

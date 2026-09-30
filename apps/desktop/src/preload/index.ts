@@ -264,6 +264,8 @@ const pluginBridge = (() => {
         ipcRenderer.invoke('pi:plugin:market:install', { pluginId }),
       uninstall: (pluginId: string, keepData?: boolean): Promise<{ ok: boolean; error?: string }> =>
         ipcRenderer.invoke('pi:plugin:uninstall', { pluginId, keepData }),
+      rollback: (pluginId: string): Promise<{ ok: boolean; error?: string }> =>
+        ipcRenderer.invoke('pi:plugin:rollback', { pluginId }),
       setEnabled: (pluginId: string, enabled: boolean): Promise<{ ok: boolean; error?: string }> =>
         ipcRenderer.invoke('pi:plugin:set-enabled', { pluginId, enabled }),
     },

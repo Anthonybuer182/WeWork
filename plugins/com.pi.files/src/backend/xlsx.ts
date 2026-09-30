@@ -22,7 +22,10 @@ import {
   readBasicWorkbook,
 } from '@genoffice/xlsx-gateway/gateway/xlsx-gateway';
 import { normalizeOoxmlPartPrefix } from '@genoffice/xlsx-gateway/gateway/xlsx-namespace';
-import type { CellEdit, CellState, EntrySource } from '@genoffice/xlsx-gateway/gateway/xlsx-gateway';
+import type { CellEdit, EntrySource } from '@genoffice/xlsx-gateway/gateway/xlsx-gateway';
+// The gateway consumes `CellState` but does not re-export it — it is declared in
+// the domain types, so that is where it has to be read from.
+import type { CellState } from '@genoffice/xlsx-gateway/domain/workbook.types';
 
 /**
  * An `EntrySource` over an already-parsed archive.

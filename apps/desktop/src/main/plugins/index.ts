@@ -11,7 +11,8 @@ import type {
   PluginToolContent,
   UiNode,
 } from '@pi/types';
-import { PluginRegistry, HOST_API_VERSION } from './registry';
+import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
+import { PluginRegistry } from './registry';
 import { parseFrontmatter } from '@earendil-works/pi-coding-agent';
 import { CapabilityHub } from './capability-hub';
 import { PluginProcess, spawnBackend } from './plugin-process';
@@ -116,7 +117,7 @@ export class PluginSystem {
 
     console.log(
       `[plugins] kernel ready — ${this.registry.all().length} plugin(s) discovered, ` +
-      `${this.processes.size} backend(s) running, ${this.aggregateTools().length} agent tool(s) (api ${HOST_API_VERSION})`,
+      `${this.processes.size} backend(s) running, ${this.aggregateTools().length} agent tool(s) (api ${PLUGIN_PROTOCOL_VERSION})`,
     );
     this.onExtensionsChanged?.();
   }
@@ -321,8 +322,9 @@ export class PluginSystem {
     }
     const result = await proc.executeTool(name, params);
     // Agent-activity linkage: a tool that just ran means the plugin is doing
-    // visible work — surface its primary panel so the effect is shown
-    // (e.g. browser_navigate → the liveview preview opens automatically).
+    // visible work — surface its primary panel so the effect is shown. Plugins
+    // that contribute no panel (com.pi.browser: its view is the host's own
+    // `host:browser`) have nothing to open, and `openPanelForActivity` no-ops.
     this.openPanelForActivity(pluginId);
     return result;
   }
@@ -454,6 +456,38 @@ export class PluginSystem {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[plugins] install ${pluginId} failed:`, message);
+      this.emitEvent({ type: 'plugins-changed' });
+      return { ok: false, error: message, pluginId };
+    }
+  }
+
+  /**
+   * Put an upgraded plugin's previous version back.
+   *
+   * The escape hatch for an update that broke something: reinstalling would
+   * only fetch the same broken version again.
+   */
+  async rollback(pluginId: string): Promise<InstallResult> {
+    const plugin = this.registry.get(pluginId);
+    if (!plugin) return { ok: false, error: `"${pluginId}" is not installed` };
+
+    this.stopPlugin(pluginId);
+    try {
+      const { from, to } = this.marketplace.rollback(pluginId);
+      this.registry.scan();
+      this.refreshRuntimeStates();
+      await this.activateResolved(pluginId);
+      console.log(`[plugins] rolled ${pluginId} back: ${from} → ${to}`);
+      this.emitEvent({ type: 'plugins-changed' });
+      this.onExtensionsChanged?.();
+      return { ok: true, pluginId };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[plugins] rollback ${pluginId} failed:`, message);
+      // The swap may have got halfway; re-scan so the registry matches disk
+      // rather than whatever it believed a moment ago.
+      this.registry.scan();
+      this.refreshRuntimeStates();
       this.emitEvent({ type: 'plugins-changed' });
       return { ok: false, error: message, pluginId };
     }

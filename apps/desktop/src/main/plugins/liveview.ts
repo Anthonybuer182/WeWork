@@ -18,6 +18,11 @@ import { ipcMain } from 'electron';
  * Multiple slots are supported: each registers its own handler, and each owns
  * its own view, so slots never fight over bounds (which they would if they all
  * drove one shared view).
+ *
+ * Slots are not a plugin-facing concept. Plugin panels are hosted by
+ * `plugin-webview.ts` (one slot per panel, keyed `<pluginId>:<panelId>`); the
+ * host's own browser registers its view as `host:browser`. There is no
+ * plugin-visible manifest field for either — a plugin just provides a page.
  */
 export interface LiveViewBounds {
   x: number;
@@ -35,8 +40,8 @@ export interface LiveViewHandler {
   hide(): void;
 }
 
-/** The browser plugin's preview panel — the first registered liveview slot. */
-export const BROWSER_LIVEVIEW_SLOT = 'com.pi.browser:preview';
+/** Slot id of the host's embedded browser view. */
+export const HOST_BROWSER_SLOT = 'host:browser';
 
 export class LiveViewRegistry {
   private handlers = new Map<string, LiveViewHandler>();

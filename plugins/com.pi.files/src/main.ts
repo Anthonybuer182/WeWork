@@ -20,19 +20,13 @@ import { renderTextPreview } from './text-preview';
 const TEXT_EXTS = new Set(['txt', 'md', 'markdown', 'json', 'log', 'html', 'htm']);
 const MAX_TEXT_CHARS = 200_000;
 
-// ── 宿主消息协议(与 P9b/P10 一致)──
-
-function send(eventId: string, data?: unknown): void {
-  window.parent.postMessage(
-    {
-      __piPlugin: true,
-      pluginId: 'com.pi.files',
-      direction: 'ui',
-      payload: { kind: 'event', event: 'ui.event', panelId: 'viewer', data: { eventId, data } },
-    },
-    '*',
-  );
-}
+// ── 给后端的消息 ──
+//
+// 面板只需要说"发生了什么";"我是哪块面板"由宿主的 piSDK 盖在消息上,
+// 这里不用管,也写不错。
+const notify = (event: string, data?: unknown): void => {
+  window.piSDK?.emit(event, data);
+};
 
 // ── 状态栏与缩放 ──
 
@@ -125,7 +119,7 @@ async function saveDocxFile(): Promise<void> {
     const bytes = await saveDocx(docxState.parsed, saveBlocks, {});
     // 写回宿主(经后端 capability → filesystem.write)
     const b64 = arrayToBase64(bytes);
-    send('file-save', { path: docxState.path, contentB64: b64, expectedMtime: docxState.mtime > 0 ? docxState.mtime : undefined });
+    notify('files.save', { path: docxState.path, contentB64: b64, expectedMtime: docxState.mtime > 0 ? docxState.mtime : undefined });
     // 等 ack(后端回 ui.render saved)
     markDirty(false);
     if (btn) btn.textContent = '已保存 ✓';
@@ -732,7 +726,7 @@ function openSelBox(rect: DOMRect, selected: string): void {
   const submit = (): void => {
     const text = input.value.trim();
     if (!text) return;
-    send('chat-send', { text });
+    notify('files.chat', { text });
     closeSelBox();
   };
 

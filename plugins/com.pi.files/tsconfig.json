@@ -30,6 +30,16 @@
       // upstream. A bare specifier is the package index; a subpath is a file
       // inside it (`@genoffice/ui/Markdown` → packages/ui/src/Markdown.tsx).
       "@genoffice/ui/*": ["./vendor/genoffice/packages/ui/src/*"],
+
+      // The same rule `build-backend.mjs`'s genofficeResolver applies:
+      //   @genoffice/<pkg>/<sub> → packages/<pkg>/src/<sub>.ts
+      // A TypeScript path pattern takes a single `*`, so this cannot collapse
+      // into one generic `@genoffice/*/*` entry — every package imported by
+      // subpath needs its own line. xlsx-gateway is the only one (besides ui,
+      // above). Without it tsc reports "Cannot find module" while the bundler
+      // resolves it fine, so the build succeeds and the typecheck does not.
+      "@genoffice/xlsx-gateway/*": ["./vendor/genoffice/packages/xlsx-gateway/src/*"],
+
       "@genoffice/*": ["./vendor/genoffice/packages/*/src/index.ts"]
     }
   },

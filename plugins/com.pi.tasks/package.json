@@ -13,6 +13,7 @@
     "test:backend": "node scripts/smoke-backend.mjs"
   },
   "dependencies": {
+    "@pi/plugin-sdk": "file:../../packages/plugin-sdk",
     "chrono-node": "^2.10.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

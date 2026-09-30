@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NAME 连接器</title>
+<style>
+  :root {
+    --background: #0f1115; --foreground: #e6e9ef;
+    --card: #171a21; --border: #2a2f3a; --muted-foreground: #8b93a3;
+    --primary: #4f8cff; --primary-foreground: #fff;
+    --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 13px/1.6 var(--font-sans); background: var(--background); color: var(--foreground); padding: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  h2 { font-size: 13px; margin-bottom: 9px; }
+  .row { display: flex; gap: 7px; }
+  input { flex: 1; min-width: 0; font: inherit; color: var(--foreground); background: var(--background);
+          border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; outline: none; }
+  input:focus { border-color: var(--primary); }
+  button { font: inherit; background: var(--primary); color: var(--primary-foreground); border: 0;
+           border-radius: 6px; padding: 5px 13px; cursor: pointer; }
+  ul { list-style: none; margin-top: 10px; }
+  li { padding: 7px 8px; border-radius: 6px; display: flex; gap: 8px; align-items: baseline; }
+  li:hover { background: rgba(127,127,127,.12); }
+  li .desc { color: var(--muted-foreground); font-size: 12px; }
+  li .badge { margin-left: auto; font-size: 11px; color: var(--muted-foreground);
+              border: 1px solid var(--border); border-radius: 99px; padding: 1px 8px; }
+  .muted { color: var(--muted-foreground); font-size: 12px; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="hd">NAME 记录</h2>
+    <div class="row">
+      <input id="kw" placeholder="关键词（回车过滤）…" />
+      <button id="refresh">刷新</button>
+    </div>
+    <ul id="list"></ul>
+    <div class="muted" id="msg">加载中…</div>
+  </div>
+
+  <!-- 宿主会在 </head> 前注入 window.piSDK，你不用自己打包它。 -->
+  <script>
+    var hd = document.getElementById('hd');
+    var kw = document.getElementById('kw');
+    var listEl = document.getElementById('list');
+    var msgEl = document.getElementById('msg');
+
+    function render(s) {
+      hd.textContent = s.title || 'NAME 记录';
+      // 用户正在输入时不要抢他的字
+      if (document.activeElement !== kw && kw.value !== (s.keyword || '')) kw.value = s.keyword || '';
+      listEl.innerHTML = '';
+      var rows = s.rows || [];
+      rows.forEach(function (r) {
+        var li = document.createElement('li');
+        var label = document.createElement('span');
+        label.textContent = r.label;
+        li.appendChild(label);
+        if (r.description) {
+          var d = document.createElement('span');
+          d.className = 'desc';
+          d.textContent = r.description;
+          li.appendChild(d);
+        }
+        if (r.badge) {
+          var b = document.createElement('span');
+          b.className = 'badge';
+          b.textContent = r.badge;
+          li.appendChild(b);
+        }
+        listEl.appendChild(li);
+      });
+      if (s.error) { msgEl.textContent = '加载失败：' + s.error; msgEl.style.display = 'block'; }
+      else if (!rows.length) { msgEl.textContent = '没有记录'; msgEl.style.display = 'block'; }
+      else { msgEl.style.display = 'none'; }
+    }
+
+    kw.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') piSDK.emit('conn.filter', e.target.value.trim());
+    });
+    document.getElementById('refresh').addEventListener('click', function () {
+      piSDK.emit('conn.refresh');
+    });
+
+    // 后端推来的状态。单个面板，事件名自己起就行。
+    piSDK.onMessage(function (m) {
+      if (m && m.event === 'ui.render') render(m.data || {});
+    });
+  </script>
+</body>
+</html>

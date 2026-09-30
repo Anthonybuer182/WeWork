@@ -35,17 +35,8 @@
     <div class="empty" id="empty" style="display:none"></div>
   </div>
 
+  <!-- 宿主在 </head> 前注入 window.piSDK；不用自己打包，也不用写信封。 -->
   <script>
-    const PLUGIN_ID = 'com.pi.knowledge';
-    const PANEL_ID = 'kb';
-
-    function send(eventId, data) {
-      window.parent.postMessage({
-        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
-        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
-      }, '*');
-    }
-
     function render(s) {
       const all = s.total ?? 0;
       const shown = s.shown ?? [];
@@ -60,7 +51,8 @@
         li.innerHTML = `<div class="t"></div><div class="d"></div>`;
         li.querySelector('.t').textContent = e.title;
         li.querySelector('.d').textContent = (e.content ?? '').slice(0, 90);
-        li.addEventListener('click', () => send('kb-delete', { key: String(e.id) }));
+        li.title = '点击删除';
+        li.addEventListener('click', () => piSDK.emit('kb.delete', { key: String(e.id) }));
         list.appendChild(li);
       }
       const empty = document.getElementById('empty');
@@ -70,19 +62,17 @@
 
     document.getElementById('add').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && e.target.value.trim()) {
-        send('kb-add', e.target.value);
+        piSDK.emit('kb.add', e.target.value);
         e.target.value = '';
       }
     });
     document.getElementById('search').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') send('kb-search', e.target.value);
+      if (e.key === 'Enter') piSDK.emit('kb.search', e.target.value);
     });
 
-    window.addEventListener('message', (e) => {
-      const d = e.data;
-      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
-      const p = d.payload;
-      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    // 后端推来的状态
+    piSDK.onMessage((m) => {
+      if (m && m.event === 'ui.render') render(m.data ?? {});
     });
   </script>
 </body>

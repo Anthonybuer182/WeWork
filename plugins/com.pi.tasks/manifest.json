@@ -3,6 +3,7 @@
   "name": "事项",
   "description": "官方插件:待办 / 日程 / 定时任务 —— 没有时间的是待办,有时间的是日程,有时间+重复+动作的是定时任务",
   "version": "0.1.0",
+  "apiVersion": 2,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },
@@ -15,7 +16,6 @@
     "panels": [
       {
         "id": "items",
-        "kind": "iframe",
         "title": "事项",
         "icon": "calendar",
         "entry": "./ui-dist/panel/index.html",
@@ -187,8 +187,7 @@
     ],
     "messageRenderers": [
       {
-        "type": "item_add",
-        "kind": "declarative"
+        "type": "item_add"
       }
     ]
   },

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown, Puzzle } from 'lucide-react';
+import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown, Puzzle, Undo2 } from 'lucide-react';
 import type { MarketEntry, PluginInfo, PluginSettingInfo } from '@pi/types';
 import { describePermission } from '@pi/types';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -133,9 +133,19 @@ function PluginBrandIcon({ iconUrl, name }: { iconUrl?: string; name: string }) 
 function InstalledItem({ plugin }: { plugin: PluginInfo }) {
   const setPluginEnabled = usePluginStore((s) => s.setPluginEnabled);
   const uninstallPlugin = usePluginStore((s) => s.uninstallPlugin);
+  const installPlugin = usePluginStore((s) => s.installPlugin);
+  const rollbackPlugin = usePluginStore((s) => s.rollbackPlugin);
+  const catalog = usePluginStore((s) => s.catalog);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [keepData, setKeepData] = useState(true);
   const [busy, setBusy] = useState(false);
+
+  // Only a plugin that actually lives in the user's plugin root can be replaced
+  // or rolled back there — a dev or builtin copy would be shadowed by the very
+  // install these buttons perform, so offering them would do nothing visible.
+  const manageable = plugin.source === 'user';
+  const inMarket = catalog.some((e) => e.id === plugin.id);
+  const broken = plugin.state === 'error' || plugin.state === 'crashed';
 
   const stateBadge = () => {
     if (plugin.state === 'disabled') return <Badge variant="secondary">已禁用</Badge>;
@@ -167,6 +177,47 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
             {plugin.permissions.map((p) => (
               <Badge key={p} variant="outline" className="text-[10px] font-normal">{p}</Badge>
             ))}
+          </div>
+        ) : null}
+
+        {/*
+          The way out of a plugin that will not run.
+
+          `重装` re-fetches from the market — right for a corrupted copy, useless
+          when the published version itself is what broke. That case needs
+          `回到上一版`, which only exists after an upgrade; the label names the
+          version so it is clear what the button would do.
+        */}
+        {manageable && (broken || plugin.previousVersion) ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {broken && inMarket ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={busy}
+                onClick={() => {
+                  setBusy(true);
+                  void installPlugin(plugin.id).finally(() => setBusy(false));
+                }}
+              >
+                <RefreshCw className="mr-1 h-3 w-3" />重装
+              </Button>
+            ) : null}
+            {plugin.previousVersion ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={busy}
+                onClick={() => {
+                  setBusy(true);
+                  void rollbackPlugin(plugin.id).finally(() => setBusy(false));
+                }}
+              >
+                <Undo2 className="mr-1 h-3 w-3" />回到 v{plugin.previousVersion}
+              </Button>
+            ) : null}
           </div>
         ) : null}
         {plugin.settings?.length ? <PluginSettingsSection pluginId={plugin.id} settings={plugin.settings} /> : null}
@@ -231,10 +282,9 @@ function CatalogItem({ entry }: { entry: MarketEntry }) {
   const phase = installPhases[entry.id];
   const error = marketErrors[entry.id];
   const updatable = existing && existing.version !== entry.version;
-  const isNote = entry.id === 'com.pi.notes'; // test hooks
 
   return (
-    <div data-catalog-plugin={entry.id} data-testid-note={isNote ? 'true' : undefined} className="flex items-start gap-3 rounded-lg border p-3">
+    <div data-catalog-plugin={entry.id} className="flex items-start gap-3 rounded-lg border p-3">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">{entry.name}</span>

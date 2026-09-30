@@ -44,19 +44,10 @@
     <ul id="list"></ul>
     <div class="empty" id="empty" style="display:none">暂无草稿<br>agent 可用 mail_create_draft 工具撰写</div>
   </div>
-  <div class="hint">点击草稿通过发送接口投递(HTTP API 模式)</div>
+  <div class="hint">点击草稿标记为已发送——这一版不会真的发信,只打一个桌面通知</div>
 
+  <!-- 宿主在 </head> 前注入 window.piSDK；不用自己打包，也不用写信封。 -->
   <script>
-    const PLUGIN_ID = 'com.pi.mail';
-    const PANEL_ID = 'drafts';
-
-    function send(eventId, data) {
-      window.parent.postMessage({
-        __piPlugin: true, pluginId: PLUGIN_ID, direction: 'ui',
-        payload: { kind: 'event', event: 'ui.event', panelId: PANEL_ID, data: { eventId, data } },
-      }, '*');
-    }
-
     function render(s) {
       const c = s.composing ?? {};
       const drafts = s.drafts ?? [];
@@ -75,25 +66,24 @@
           `<span class="badge${d.sent ? ' ok' : ''}">${d.sent ? '已发送' : '草稿'}</span>`;
         li.querySelector('.subj').textContent = d.subject;
         li.querySelector('.to').textContent = `→ ${d.to}`;
-        li.addEventListener('click', () => send('draft-send', { key: String(d.id) }));
+        li.title = '点击发送';
+        li.addEventListener('click', () => piSDK.emit('mail.send', { key: String(d.id) }));
         list.appendChild(li);
       }
       document.getElementById('empty').style.display = drafts.length ? 'none' : 'block';
     }
 
-    const wire = (id, eventId) => {
+    const wire = (id, event) => {
       document.getElementById(id).addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') send(eventId, e.target.value);
+        if (e.key === 'Enter') piSDK.emit(event, e.target.value);
       });
     };
-    wire('to', 'draft-to'); wire('subject', 'draft-subject'); wire('body', 'draft-body');
-    document.getElementById('save').addEventListener('click', () => send('draft-save'));
+    wire('to', 'mail.to'); wire('subject', 'mail.subject'); wire('body', 'mail.body');
+    document.getElementById('save').addEventListener('click', () => piSDK.emit('mail.save'));
 
-    window.addEventListener('message', (e) => {
-      const d = e.data;
-      if (!d || d.__piPlugin !== true || d.direction !== 'backend') return;
-      const p = d.payload;
-      if (p && p.event === 'ui.render' && p.panelId === PANEL_ID) render(p.data ?? {});
+    // 后端推来的状态
+    piSDK.onMessage((m) => {
+      if (m && m.event === 'ui.render') render(m.data ?? {});
     });
   </script>
 </body>

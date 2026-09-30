@@ -1,14 +1,15 @@
 import { join } from 'path';
 import type { BrowserWindow } from 'electron';
 import { WebContentsView, ipcMain } from 'electron';
+import { panelUrl } from '@pi/types';
 import type { LiveViewRegistry } from './liveview';
 import type { PluginRegistry } from './registry';
 
 /**
  * Plugin web panels as native views.
  *
- * Every plugin panel that declares `kind: 'iframe'` and an `entry` is a web
- * page. This hosts those pages in a `WebContentsView` instead of an iframe, so
+ * Every plugin panel — a manifest panel with an `entry` — is a web page. This
+ * hosts those pages in a `WebContentsView` instead of an iframe, so
  * a panel gets a real top-level frame: correct IME, working print/alert/download
  * (an iframe sandbox blocks all three), its own renderer process, and no
  * dependence on the shell's DOM.
@@ -109,17 +110,17 @@ export class PluginWebViews {
       const pluginId = plugin.manifest.id;
 
       for (const panel of plugin.manifest.contributes?.panels ?? []) {
-        if (panel.kind !== 'iframe' || !panel.entry) continue;
+        if (!panel.entry) continue;
         const slotId = `${pluginId}:${panel.id}`;
         if (this.registered.has(slotId)) continue;
         this.registered.add(slotId);
 
         liveViews.register(slotId, {
           attach: () => {
-            this.ensureView(slotId, pluginId, panel.entry as string);
+            this.ensureView(slotId, pluginId, panel.id, panel.entry as string);
           },
           show: (bounds) => {
-            const view = this.ensureView(slotId, pluginId, panel.entry as string);
+            const view = this.ensureView(slotId, pluginId, panel.id, panel.entry as string);
             if (!view) return;
             const win = this.opts.getWindow();
             if (!win) return;
@@ -184,7 +185,7 @@ export class PluginWebViews {
    * panels costs nothing until a panel is actually shown, and so a panel that
    * is never opened never loads its page.
    */
-  private ensureView(slotId: string, pluginId: string, entry: string): WebContentsView | null {
+  private ensureView(slotId: string, pluginId: string, panelId: string, entry: string): WebContentsView | null {
     const existing = this.views.get(slotId);
     if (existing && !existing.webContents.isDestroyed()) return existing;
     if (existing) this.destroySlot(slotId); // dead webContents (crash) → rebuild
@@ -207,8 +208,10 @@ export class PluginWebViews {
     view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
 
     // The pi-plugin:// handler injects __pi_sdk.js into HTML responses, so the
-    // page gets the SDK exactly as it did inside an iframe.
-    const url = `pi-plugin://${pluginId}/${entry.replace(/^\/+/, '')}`;
+    // page gets the SDK exactly as it did inside an iframe. The panel id on the
+    // query string is how the handler learns which panel is loading — a
+    // pi-plugin:// request carries no caller identity of its own.
+    const url = panelUrl(pluginId, panelId, entry);
     view.webContents.loadURL(url).catch((err) => {
       console.error(`[plugin-view] load failed for ${slotId}:`, err?.message ?? err);
     });

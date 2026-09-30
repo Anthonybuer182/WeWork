@@ -1,0 +1,19 @@
+{
+  "name": "com.pi.mail",
+  "version": "0.1.0",
+  "private": true,
+  "description": "邮件 — 草稿面板 + 3 个工具 + /mail 命令 + 滑词引用",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-backend.mjs",
+    "typecheck": "node scripts/typecheck.mjs",
+    "test:backend": "node scripts/smoke-backend.mjs"
+  },
+  "dependencies": {
+    "@pi/plugin-sdk": "file:../../packages/plugin-sdk"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "esbuild": "^0.24.0"
+  }
+}

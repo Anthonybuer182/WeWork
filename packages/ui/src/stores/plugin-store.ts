@@ -6,6 +6,8 @@ export interface PluginMarketBridge {
   catalog: (force?: boolean) => Promise<{ ok: boolean; plugins: MarketEntry[]; error?: string; registryUrl?: string }>;
   install: (pluginId: string) => Promise<{ ok: boolean; error?: string }>;
   uninstall: (pluginId: string, keepData?: boolean) => Promise<{ ok: boolean; error?: string }>;
+  /** Put an upgraded plugin's previous version back. */
+  rollback: (pluginId: string) => Promise<{ ok: boolean; error?: string }>;
   setEnabled: (pluginId: string, enabled: boolean) => Promise<{ ok: boolean; error?: string }>;
 }
 
@@ -60,6 +62,11 @@ export interface PluginStoreState {
   loadCatalog: (force?: boolean) => Promise<void>;
   installPlugin: (pluginId: string) => Promise<boolean>;
   uninstallPlugin: (pluginId: string, keepData?: boolean) => Promise<boolean>;
+  /**
+   * Put an upgraded plugin's previous version back. Reusing `installPlugin` on
+   * a broken update would only fetch the same broken version again.
+   */
+  rollbackPlugin: (pluginId: string) => Promise<boolean>;
   setPluginEnabled: (pluginId: string, enabled: boolean) => Promise<boolean>;
   setInstallPhase: (pluginId: string, phase: InstallPhase | undefined) => void;
   collectPluginContext: (message: string) => Promise<string[]>;
@@ -165,6 +172,17 @@ export const usePluginStore = create<PluginStoreState>()((set, get) => ({
     }
     await get().loadPlugins();
     await get().loadCatalog(true);
+    return res.ok;
+  },
+
+  rollbackPlugin: async (pluginId) => {
+    const bridge = getPluginBridge();
+    if (!bridge) return false;
+    const res = await bridge.market.rollback(pluginId);
+    if (!res.ok && res.error) {
+      set((s) => ({ marketErrors: { ...s.marketErrors, [pluginId]: res.error } }));
+    }
+    await get().loadPlugins();
     return res.ok;
   },
 

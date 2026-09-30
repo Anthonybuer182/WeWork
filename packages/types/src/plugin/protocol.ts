@@ -14,13 +14,15 @@
 
 // ── Control plane (backend ↔ main, via process.parentPort) ──
 
-/** Plugin version of the host API this backend was built against. */
-export const PLUGIN_API_VERSION = '1.0.0';
-
 export interface PluginInitMessage {
   type: 'init';
   pluginId: string;
-  apiVersion: string;
+  /**
+   * The protocol version this host speaks. Announced so a backend can refuse
+   * to run against a host it does not understand; the manifest's `apiVersion`
+   * is the other half of the handshake (checked before the backend even spawns).
+   */
+  apiVersion: number;
   appVersion: string;
   /** Plugin-private data directory (plugins-data/<id>). */
   dataDir: string;
@@ -162,34 +164,47 @@ export type PluginToHostMessage =
   | PluginLogMessage;
 
 // ── Data plane (backend ↔ plugin UI, over the MessagePort pair) ──
+//
+// Every message names the panel it belongs to. The host relays these payloads
+// opaquely, so the panel id is what lets a plugin with more than one panel tell
+// its own messages apart — and it is stamped automatically by the SDK on both
+// sides, so a plugin author never writes it.
+//
+// A panel that sends without a panelId is a bug, not a variant: the backend
+// cannot know who is talking. See `plugin-sdk-js.ts` (panel side) and
+// `packages/plugin-sdk` (backend side).
 
-/** UI → backend request expecting a response. */
-export interface UiRequestMessage {
-  kind: 'request';
-  id: string;
-  method: string;
-  params?: Record<string, unknown>;
-  /** Panel the message originated from. */
-  panelId?: string;
+/**
+ * Query parameter carrying the panel id on a panel's `pi-plugin://` URL.
+ *
+ * The panel URL is the only channel that reaches BOTH containers (native view
+ * and iframe) and that the `pi-plugin://` handler can read — a scheme request
+ * carries no caller identity, so without this the host cannot tell two panels
+ * of the same plugin apart. Both URL builders must append it; the handler
+ * turns it into `window.__piPanelId` for the injected SDK.
+ */
+export const PANEL_QUERY_PARAM = '__panel';
+
+/**
+ * The URL a panel's page is served from.
+ *
+ * Both containers must build it through here. The query param is the only way
+ * the `pi-plugin://` handler can learn which panel it is serving — and a panel
+ * loaded without it gets no `__piPanelId`, so it cannot route its own messages
+ * and the backend cannot tell its panels apart.
+ */
+export function panelUrl(pluginId: string, panelId: string, entry: string): string {
+  const path = entry.replace(/^\/+/, '');
+  return `pi-plugin://${pluginId}/${path}?${PANEL_QUERY_PARAM}=${encodeURIComponent(panelId)}`;
 }
 
-/** Backend → UI response to a UiRequestMessage. */
-export interface UiResponseMessage {
-  kind: 'response';
-  id: string;
-  result?: unknown;
-  error?: string;
-}
-
-/** Fire-and-forget in both directions. */
-export interface UiEventMessage {
-  kind: 'event';
-  event: string;
-  data?: unknown;
-  panelId?: string;
-}
-
-export type PluginUiMessage = UiRequestMessage | UiResponseMessage | UiEventMessage;
+// The message shapes that travel over that port — `kind: 'request' | 'event'`
+// from the panel, `'response' | 'event'` back — live in the two places that
+// actually produce them, because nothing else needs them typed:
+//   panel side:  apps/desktop/src/main/plugins/plugin-sdk-js.ts
+//   backend side: packages/plugin-sdk/src/index.ts (`onPanelMessage`)
+// A plugin using the SDK never sees them; one that deliberately does not can
+// read them there.
 
 // ── Capability methods (host.* API surface) ──
 

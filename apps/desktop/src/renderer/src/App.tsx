@@ -38,16 +38,21 @@ const queryClient = new QueryClient({
 });
 
 /**
- * The host is the zeroth panel contributor: settings / plugin-center flow
- * through the same panel registry, rail and lifecycle as plugins. File
- * preview and the browser are plugin-owned — no host fallback panels.
+ * The host is the zeroth panel contributor: settings / plugin-center / the
+ * browser flow through the same panel registry, rail and lifecycle as plugins.
+ * File preview is plugin-owned — no host fallback panel.
  */
 const HOST_PANELS: PanelEntry[] = [
-  { id: 'host:plugins', title: '插件中心', icon: 'puzzle', kind: 'host', source: 'host', keepAlive: 'never', region: 'right' },
+  { id: 'host:plugins', title: '插件中心', icon: 'puzzle', source: 'host', keepAlive: 'never', region: 'right' },
+  // The embedded browser is the host's own resource — the agent's browser tools
+  // drive the very same WebContentsView this panel shows. It is a host panel
+  // rather than a plugin panel for that reason: nothing about it belongs to a
+  // plugin, and no plugin should be able to borrow a host-owned view.
+  { id: 'host:browser', title: '浏览器', icon: 'globe', source: 'host', keepAlive: 'never', region: 'right' },
   // Settings is a left-sidebar view pinned to the rail's bottom — the VS Code
   // gear position. It reads as configuration rather than navigation.
   // keepAlive 'always' so in-progress form edits survive switching views.
-  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host', source: 'host', keepAlive: 'always', region: 'left', anchor: 'bottom', order: 100 },
+  { id: 'host:settings', title: '设置', icon: 'settings', source: 'host', keepAlive: 'always', region: 'left', anchor: 'bottom', order: 100 },
   ...HOST_LEFT_PANELS,
 ];
 
@@ -189,13 +194,12 @@ function AppContent() {
   }, []);
 
   // Listen for "switch to Browser tab" signals from the main process.
-  // The browser preview is now contributed by the com.pi.browser plugin —
-  // open its liveview panel so the BrowserView has a slot to render into.
+  // The browser panel is a host panel: open it so its native view gets a slot.
   useEffect(() => {
     const api = (window as unknown as { electronAPI?: { browser?: { onSwitchToBrowserTab?: (cb: () => void) => void } } }).electronAPI?.browser;
     if (api?.onSwitchToBrowserTab) {
       api.onSwitchToBrowserTab(() => {
-        openPanel('plugin:com.pi.browser:preview', { focus: true });
+        openPanel('host:browser', { focus: true });
         useUIStore.getState().setRightPanelOpen(true);
       });
     }

@@ -5,9 +5,18 @@
  * substituted into `__PI_PLUGIN_ID__`. Provides `window.piSDK`:
  *
  *   piSDK.pluginId
- *   piSDK.request(method, params) → Promise<result>   (backend round-trip)
- *   piSDK.emit(event, data)                           (fire-and-forget)
- *   piSDK.onMessage(cb)                               (backend → UI events)
+ *   piSDK.panelId                                    (read-only; which panel)
+ *   piSDK.request(method, params) → Promise<result>  (backend round-trip)
+ *   piSDK.emit(event, data)                          (fire-and-forget)
+ *   piSDK.onMessage(cb)                              (backend → UI events)
+ *
+ * THE PANEL ID IS NOT THE AUTHOR'S PROBLEM. `panelId` rides on the panel URL
+ * (see panelUrl in @pi/types), the pi-plugin:// handler turns it into
+ * `window.__piPanelId`, and this script stamps it onto every outbound message.
+ * A plugin with one panel can ignore it entirely; a plugin with several gets
+ * routing for free, which is the point — the previous convention required the
+ * author to place it by hand, in the right nesting level, and getting it wrong
+ * failed silently on both ends.
  *
  * TWO CONTAINERS, ONE SDK. A panel may be hosted either as an iframe inside the
  * shell renderer (the web build, and panels on hosts without native views) or
@@ -42,6 +51,27 @@ const PLUGIN_SDK_SOURCE = String.raw`
   'use strict';
 
   var PLUGIN_ID = '__PI_PLUGIN_ID__';
+
+  // Which panel this page is. The host writes it into the HTML it serves (see
+  // protocol.ts injectSdk) because a pi-plugin:// request carries no caller
+  // identity — without it a plugin with several panels could not tell its own
+  // messages apart, and the backend could not route a reply back to the right
+  // one. Stamped onto every outbound message, so a plugin author never
+  // writes it.
+  var PANEL_ID = window.__piPanelId || '';
+
+  if (!PANEL_ID) {
+    // Only reachable if the page was opened outside the host (a file:// or
+    // direct pi-plugin:// load). Say so loudly: every message this page sends
+    // arrives at the backend with no panel to attribute it to.
+    console.error('[pi-sdk] no panel id on this page. It was not served as a ' +
+      'plugin panel, so the backend cannot tell where its messages come from. ' +
+      'Open the panel through the app instead.');
+  }
+
+  /** How long a piSDK.request waits before giving up. */
+  var REQUEST_TIMEOUT_MS = 30000;
+
   var seq = 0;
   var pending = new Map();
   var handlers = [];
@@ -92,8 +122,13 @@ const PLUGIN_SDK_SOURCE = String.raw`
       var entry = pending.get(payload.id);
       if (entry) {
         pending.delete(payload.id);
-        if (payload.error) entry.reject(new Error(payload.error));
-        else entry.resolve(payload.result);
+        // ok is the authority. An error field alone is still honoured, so a
+        // backend written against the older shape keeps working.
+        if (payload.ok === false || payload.error) {
+          entry.reject(new Error(payload.error || 'request failed'));
+        } else {
+          entry.resolve(payload.result);
+        }
       }
       return;
     }
@@ -155,13 +190,31 @@ const PLUGIN_SDK_SOURCE = String.raw`
   function request(method, params) {
     return new Promise(function (resolve, reject) {
       var id = 'ui-' + (++seq);
-      pending.set(id, { resolve: resolve, reject: reject });
-      postToHost({ kind: 'request', id: id, method: method, params: params || {} });
+      // Without this a backend that never answers leaves the promise pending
+      // forever, and the panel just sits there. Silence is the failure mode
+      // this SDK exists to remove.
+      var timer = setTimeout(function () {
+        if (pending.delete(id)) {
+          reject(new Error('piSDK.request timed out after ' + REQUEST_TIMEOUT_MS +
+            'ms: ' + method + ' — did the backend handle this method?'));
+        }
+      }, REQUEST_TIMEOUT_MS);
+      pending.set(id, {
+        resolve: function (v) { clearTimeout(timer); resolve(v); },
+        reject: function (e) { clearTimeout(timer); reject(e); }
+      });
+      postToHost({
+        kind: 'request', id: id, panelId: PANEL_ID,
+        method: method, params: params || {}
+      });
     });
   }
 
   function emit(event, data) {
-    postToHost({ kind: 'event', id: 'ev-' + (++seq), event: event, data: data });
+    postToHost({
+      kind: 'event', id: 'ev-' + (++seq), panelId: PANEL_ID,
+      event: event, data: data
+    });
   }
 
   window.piSDK = {
@@ -172,37 +225,6 @@ const PLUGIN_SDK_SOURCE = String.raw`
       if (handlers.indexOf(cb) < 0) handlers.push(cb);
     }
   };
-
-  // ── Content-height reporting (autoHeight panels only) ──────────────
-  // A native view fills the rectangle the host gives it, so there is nothing
-  // to report: the panel cannot change its own height.
-  if (!IN_VIEW) {
-    (function () {
-      var lastHeight = -1;
-      var report = function () {
-        // Viewport-independent measurement: the root element's scrollHeight is
-        // pinned to the iframe viewport, so a grown panel could never shrink
-        // back. Measure the root's layout box instead, plus body metrics.
-        var rootBox = document.documentElement.getBoundingClientRect().height || 0;
-        var h = Math.ceil(Math.max(
-          document.body.scrollHeight,
-          document.body.offsetHeight || 0,
-          rootBox
-        ));
-        if (h > 0 && Math.abs(h - lastHeight) >= 2) {
-          lastHeight = h;
-          postToShell('resize', { height: h });
-        }
-      };
-      if (typeof ResizeObserver !== 'undefined') {
-        var ro = new ResizeObserver(function () { setTimeout(report, 30); });
-        ro.observe(document.documentElement);
-        ro.observe(document.body);
-      }
-      window.addEventListener('load', function () { setTimeout(report, 100); });
-      setTimeout(report, 300);
-    })();
-  }
 
   // ── Context menu ───────────────────────────────────────────────────
   // A native view can pop main's menu directly; an iframe has to ask the shell.

@@ -6,13 +6,10 @@
  *
  *   <root>/manifest.json
  *   <root>/dist/main.js        (backend entry, UtilityProcess)
- *   <root>/ui/                 (iframe panel assets)
+ *   <root>/ui/                 (panel assets)
  */
 
-/** Panel content rendering tier. */
-export type PanelKind = 'iframe' | 'declarative' | 'liveview';
-
-/** Keep-alive policy for iframe/liveview panels when switched away. */
+/** Keep-alive policy for a panel when it is switched away from. */
 export type PanelKeepAlive = 'always' | 'lru' | 'never';
 
 /** Which sidebar column a panel belongs to. */
@@ -22,46 +19,37 @@ export type PanelRegion = 'left' | 'right';
 export type PanelAnchor = 'top' | 'bottom';
 
 export interface PanelContribution {
+  /** Unique within the plugin; also the `panelId` in the panel↔backend protocol. */
   id: string;
   title?: string;
-  /** Icon name from the host's built-in vocabulary (fallback: Puzzle). */
-  icon?: string;
   /**
-   * Plugin-provided icon file, path relative to the plugin root (e.g.
-   * './ui/assets/panel.svg'). Served from the plugin's own pi-plugin://
-   * origin; takes precedence over the vocabulary `icon`. SVGs render via
-   * <img> so they can never execute scripts in the host.
+   * Panel icon. Two forms, told apart by the leading `./` or `/`:
+   *   "./assets/main.svg"  → a file in the plugin, served from its own origin
+   *   "calendar"           → a name from the host's built-in icon vocabulary
+   * A file wins over the plugin's own brand icon; a vocabulary name falls back
+   * to it.
    */
-  iconPath?: string;
+  icon?: string;
   /**
    * Omit the panel from the rail — it stays openable via panel.open
    * (events/tools). Use for auxiliary panels that belong to a primary one.
    */
   hidden?: boolean;
   /**
-   * Render this declarative panel as a companion card attached above a
-   * liveview panel of the same plugin (e.g. a control bar over the live
-   * view). The companion is not listed on the rail itself.
+   * Path to the panel's HTML page, relative to the plugin root.
+   *
+   * Required. This is what a panel IS: a web page. There is no `kind` field —
+   * the host decides how to host the page (a native view on desktop), and a
+   * plugin never needs to know or care.
    */
-  companionOf?: string;
-  kind: PanelKind;
-  /** Path relative to the plugin root (required for `iframe` panels). */
-  entry?: string;
+  entry: string;
   keepAlive?: PanelKeepAlive;
-  /** Default panel width in px when opened in the right sidebar. */
-  width?: number;
-  /** Let the host size the iframe to its content height (SDK reports it). */
-  autoHeight?: boolean;
   /**
    * Which sidebar column the panel lives in. Defaults to 'right'.
    *
    * The left column is the global-view column (all files, all sessions), so a
    * panel belongs there when its subject is the workspace as a whole rather
    * than the thing currently being worked on.
-   *
-   * Ignored for `kind: 'liveview'`, which is pinned right: every liveview
-   * panel shares one native view, and a hidden left-side slot reporting 0x0
-   * would blank the visible one.
    */
   region?: PanelRegion;
   /** Position within its region's rail. Defaults to 'top'. */
@@ -80,8 +68,6 @@ export interface ToolContribution {
   description?: string;
   /** JSON Schema for the tool parameters. */
   inputSchema?: Record<string, unknown>;
-  /** Path to a skill markdown doc that teaches the agent how to use this tool. */
-  skillPath?: string;
 }
 
 export interface CommandContribution {
@@ -94,7 +80,6 @@ export interface CommandContribution {
 export interface MessageRendererContribution {
   /** Keyed by message/tool block type, e.g. "mail:draft". */
   type: string;
-  kind: 'declarative' | 'iframe';
   /** Render a live card from streaming tool args while the tool runs. */
   streaming?: boolean;
 }
@@ -109,7 +94,6 @@ export interface ContextProviderContribution {
 export interface SelectionActionContribution {
   id: string;
   title: string;
-  icon?: string;
 }
 
 export interface FilePreviewContribution {
@@ -155,19 +139,25 @@ export interface PluginContributions {
  */
 export type PluginPermission = string;
 
+/** The protocol version this build of the host speaks. */
+export const PLUGIN_PROTOCOL_VERSION = 2;
+
 export interface PluginManifest {
   /** Reverse-DNS style id, lowercase. Also the directory name. */
   id: string;
   name: string;
   description?: string;
   version: string;
-  author?: string;
+  /**
+   * The plugin protocol version this plugin was written against.
+   * A mismatch puts the plugin in the `incompatible` state with a clear reason
+   * rather than letting it half-work. See PLUGIN_PROTOCOL_VERSION.
+   */
+  apiVersion?: number;
   /** Host version compatibility, semver range. e.g. { "pi-desktop": "^1.0.0" } */
   engines?: Record<string, string>;
   /** Backend entry relative to the plugin root. Omit for UI-only plugins. */
   backend?: string;
-  /** UI assets root relative to the plugin root. Omit for headless plugins. */
-  ui?: string;
   /**
    * Plugin icon file, path relative to the plugin root — the plugin's brand
    * mark, shown in the plugin center's installed list (and marketplace).

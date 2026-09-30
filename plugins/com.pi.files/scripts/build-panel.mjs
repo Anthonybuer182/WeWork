@@ -27,7 +27,7 @@
  *     it independent of where the CSS ends up — `/` is the plugin origin root
  *     under pi-plugin://.
  *
- * Run from the plugin root:  node scripts/build-docx.mjs
+ * Run from the plugin root:  node scripts/build-panel.mjs
  */
 import { build } from 'esbuild';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';

@@ -76,6 +76,12 @@ export function registerPluginIpcHandlers(system: PluginSystem): void {
     return system.uninstall(pluginId, { keepData: payload.keepData !== false });
   });
 
+  ipcMain.handle('pi:plugin:rollback', async (_event, payload: { pluginId?: string }) => {
+    const pluginId = payload?.pluginId;
+    if (!pluginId) return { ok: false, error: 'missing pluginId' };
+    return system.rollback(pluginId);
+  });
+
   ipcMain.handle('pi:plugin:selection-action', async (_event, payload: {
     pluginId?: string;
     actionId?: string;

@@ -4,13 +4,11 @@ import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import type { PluginManifest, PluginRuntimeState, PluginSource, PluginInfo } from '@pi/types';
+import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { satisfiesVersion } from './semver';
 
 /** Host app id used in `engines` negotiation. */
 export const HOST_ENGINE_KEY = 'pi-desktop';
-
-/** Host API contract version, bumped on breaking capability changes. */
-export const HOST_API_VERSION = '1.0.0';
 
 const PLUGIN_ID_RE = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
 
@@ -25,6 +23,13 @@ export interface ResolvedPlugin {
 
 /** Shape of ~/.pi/agent/plugins/_state.json */
 export interface PluginsStateFile {
+  /**
+   * Marketplace index URL — an `https://…` address or an absolute file path.
+   * Setting this is how a packaged app talks to a registry other than the
+   * official one; without it the env var would be the only override, and an
+   * installed app cannot be given one.
+   */
+  registry?: string;
   plugins?: Record<string, { enabled?: boolean }>;
 }
 
@@ -55,9 +60,13 @@ export class PluginRegistry {
     return this.appVersionValue;
   }
 
-  /** Marketplace index override (environment variable for dev; undefined → default). */
+  /**
+   * Marketplace index URL. The environment variable wins, so a dev session can
+   * point at a throwaway registry without touching the on-disk state; the
+   * `_state.json` value is what a normal install uses.
+   */
   get registryUrl(): string | undefined {
-    return process.env.PI_PLUGIN_REGISTRY;
+    return process.env.PI_PLUGIN_REGISTRY ?? this.stateFile.registry;
   }
 
   get pluginsRoot(): string {
@@ -70,6 +79,27 @@ export class PluginRegistry {
 
   getDataDir(pluginId: string): string {
     return join(this.pluginsDataRoot, pluginId);
+  }
+
+  /**
+   * Where the version a plugin was upgraded FROM is kept.
+   *
+   * A dot-directory, so `collectFrom` skips it — it holds a plugin the scanner
+   * must not load, because the live copy at `<root>/plugins/<id>` is the one
+   * that runs until a rollback swaps them.
+   */
+  getPreviousDir(pluginId: string): string {
+    return join(this.pluginsRoot, '.previous', pluginId);
+  }
+
+  /** The version a rollback would restore, or undefined when there is none. */
+  getPreviousVersion(pluginId: string): string | undefined {
+    try {
+      const raw = readFileSync(join(this.getPreviousDir(pluginId), 'manifest.json'), 'utf-8');
+      return (JSON.parse(raw) as PluginManifest).version;
+    } catch {
+      return undefined;
+    }
   }
 
   private get stateFilePath(): string {
@@ -166,6 +196,17 @@ export class PluginRegistry {
         plugin.state = 'incompatible';
         plugin.error = `requires ${HOST_ENGINE_KEY} ${range}, host is ${this.appVersion}`;
       }
+      // Protocol negotiation. A plugin written against a different protocol
+      // version cannot be trusted to half-work, so it is parked in
+      // `incompatible` with a reason a plugin author can act on — rather than
+      // loading and failing quietly somewhere deep in a panel.
+      const declared = candidate.manifest.apiVersion;
+      if (plugin.state !== 'incompatible' && declared !== undefined && declared !== PLUGIN_PROTOCOL_VERSION) {
+        plugin.state = 'incompatible';
+        plugin.error =
+          `declares apiVersion ${declared}, host speaks ${PLUGIN_PROTOCOL_VERSION}. ` +
+          `See docs/plugin-dev-guide.md.`;
+      }
       this.plugins.set(id, plugin);
     }
 
@@ -208,17 +249,18 @@ export class PluginRegistry {
       return null;
     }
 
-    // Panel validation: iframe panels must declare an entry path.
+    // Panel validation. A panel IS a web page: id names it and entry points at
+    // it. There is no `kind` — the host decides how to host the page.
     for (const panel of manifest.contributes?.panels ?? []) {
       if (!panel.id) {
         console.warn(`[plugins] Panel without id in ${dir}`);
         return null;
       }
-      if (panel.kind === 'iframe' && !panel.entry) {
-        console.warn(`[plugins] Panel "${panel.id}" is kind "iframe" but has no entry in ${dir}`);
+      if (!panel.entry) {
+        console.warn(`[plugins] Panel "${panel.id}" has no entry in ${dir}`);
         return null;
       }
-      if (panel.entry) panel.entry = panel.entry.replace(/^\/+/, '');
+      panel.entry = panel.entry.replace(/^\/+/, '');
     }
 
     // Backend entry must exist when declared.
@@ -253,37 +295,38 @@ export class PluginRegistry {
   }
 
   toInfo(plugin: ResolvedPlugin): PluginInfo {
-    // Plugin-provided icon files are served from the plugin's own
-    // pi-plugin:// origin (unique per plugin, cross-origin with the host).
-    const pluginIconUrl = plugin.manifest.icon
-      ? `pi-plugin://${plugin.manifest.id}/${plugin.manifest.icon.replace(/^\.?\//, '')}`
-      : undefined;
+    const { id } = plugin.manifest;
+    // An icon is either a file inside the plugin ("./assets/x.svg", served from
+    // the plugin's own pi-plugin:// origin) or a name from the host's icon
+    // vocabulary ("calendar"). One field, told apart by the leading "./" or "/".
+    const iconFileUrl = (value: string | undefined): string | undefined =>
+      value && /^\.?[./]/.test(value)
+        ? `pi-plugin://${id}/${value.replace(/^\.?\//, '')}`
+        : undefined;
+
+    const pluginIconUrl = iconFileUrl(plugin.manifest.icon);
     return {
-      id: plugin.manifest.id,
+      id,
       name: plugin.manifest.name,
       description: plugin.manifest.description,
       version: plugin.manifest.version,
       source: plugin.source,
       state: plugin.state,
       permissions: plugin.manifest.permissions ?? [],
+      previousVersion: this.getPreviousVersion(id),
       iconUrl: pluginIconUrl,
       panels: (plugin.manifest.contributes?.panels ?? []).map((p) => ({
         id: p.id,
         title: p.title ?? p.id,
-        kind: p.kind,
         entry: p.entry,
-        icon: p.icon,
-        // Explicit declarations win over the plugin brand: panel iconPath >
+        // A vocabulary name only survives when the panel did not name a file;
+        // otherwise the renderer would draw the name over the file icon.
+        icon: iconFileUrl(p.icon) ? undefined : p.icon,
+        // Explicit declarations win over the plugin brand: panel icon file >
         // panel vocabulary name > inherited plugin icon > Puzzle.
-        iconUrl: p.iconPath
-          ? `pi-plugin://${plugin.manifest.id}/${p.iconPath.replace(/^\.?\//, '')}`
-          : p.icon
-            ? undefined
-            : pluginIconUrl,
+        iconUrl: iconFileUrl(p.icon) ?? (p.icon ? undefined : pluginIconUrl),
         hidden: p.hidden === true,
-        companionOf: p.companionOf,
         keepAlive: p.keepAlive,
-        autoHeight: p.autoHeight,
         region: p.region,
         anchor: p.anchor,
         order: p.order,
@@ -299,7 +342,6 @@ export class PluginRegistry {
       })),
       messageRenderers: (plugin.manifest.contributes?.messageRenderers ?? []).map((m) => ({
         type: m.type,
-        kind: m.kind,
         streaming: m.streaming,
       })),
       selectionActions: (plugin.manifest.contributes?.selectionActions ?? []).map((a) => ({

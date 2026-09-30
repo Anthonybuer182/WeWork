@@ -9,48 +9,97 @@ Pi 的插件系统把「work agent」的能力拆成可弹性装卸的单元。�
 - **manifest.json** — 唯一的声明入口:身份、权限、贡献点
 - **PLUGIN.md**(推荐)— 这个插件是什么、怎么用;agent 靠它学会调用你
 - **后端脚本**(可选)— Node.js 子进程,承载工具逻辑与状态
-- **UI 面板**(可选)— 标准 HTML 页面,经沙箱 iframe 渲染在右侧栏
+- **UI 面板**(可选)— 标准 HTML 页面,由宿主装进窗口在右侧栏显示
 
 宿主提供:面板基础设施、能力枢纽(权限门控)、市场分发、与 agent 的双向集成。
 
-**宿主只保留两个内置面板**(模型设置、插件中心)和内核。其余一切 —— 浏览器自动化、文件中心、待办、邮件、日历、知识库、ERP —— 都是插件。
+**宿主自带的面板**:设置、插件中心、文件、会话、搜索、上下文、浏览器。
+其余一切 —— 待办事项、邮件、知识库、文件查看器、浏览器自动化工具 —— 都是插件。
+
+> 「浏览器」和「文件查看器」值得分清:前者是**宿主自带的面板**(那块视图是宿主自己的浏览器,
+> agent 的浏览器工具驱动的就是它),后者是**插件**(页面和引擎都由插件提供)。
 
 ## 快速开始
 
+一个最小插件:没有面板,只有一个工具。做完你就能看到它出现在插件中心。
+
+### 1 · 建目录
+
 ```bash
-# 1. 创建插件目录
-mkdir my-plugin && cd my-plugin
-
-# 2. 最小 manifest
-cat > manifest.json << 'EOF'
-{
-  "id": "com.example.my-plugin",
-  "name": "My Plugin",
-  "version": "0.1.0",
-  "contributes": {
-    "tools": [{ "name": "hello", "description": "Say hello" }]
-  },
-  "backend": "./dist/main.mjs"
-}
-EOF
-
-# 3. 最小后端
-mkdir dist
-cat > dist/main.mjs << 'EOF'
-process.parentPort.on('message', (event) => {
-  const msg = event.data || {};
-  if (msg.type === 'tool-call' && msg.name === 'hello') {
-    process.parentPort.postMessage({
-      type: 'tool-result', id: msg.id,
-      content: [{ type: 'text', text: 'Hello!' }],
-    });
-  }
-});
-process.parentPort.postMessage({ type: 'ready' });
-EOF
+mkdir com.example.hello && cd com.example.hello
 ```
 
-把插件目录加入 `~/.pi/agent/plugins.json` 的 `devPaths` 数组,重启应用即可。
+### 2 · `manifest.json`
+
+```json
+{
+  "id": "com.example.hello",
+  "name": "Hello",
+  "version": "0.1.0",
+  "apiVersion": 2,
+  "backend": "./dist/main.mjs",
+  "contributes": {
+    "tools": [{ "name": "hello", "description": "Say hello" }]
+  }
+}
+```
+
+`id` 用反向域名,同时也是目录名。
+
+### 3 · 后端
+
+```bash
+npm init -y
+npm install @pi/plugin-sdk
+npm install -D esbuild
+```
+
+> SDK 目前还没发到 npm。在那之前,用路径依赖指向仓库里的
+> `packages/plugin-sdk`(`"@pi/plugin-sdk": "file:…/packages/plugin-sdk"`)。
+
+```ts
+// src/backend/index.ts
+import { plugin } from '@pi/plugin-sdk';
+
+plugin({
+  async onTool(name) {
+    if (name === 'hello') return 'Hello!';
+    throw new Error(`unknown tool: ${name}`);
+  },
+});
+```
+
+打包:
+
+```bash
+npx esbuild src/backend/index.ts --bundle --platform=node --format=esm \
+  --target=node20 --outfile=dist/main.mjs
+```
+
+**必须 bundle。** 宿主只 fork `dist/main.mjs` 这一个文件 —— SDK 要打进去,
+不然运行时报找不到模块。
+
+### 4 · 装上去
+
+```bash
+mkdir -p ~/.pi/agent/plugins/com.example.hello
+cp -r manifest.json dist ~/.pi/agent/plugins/com.example.hello/
+```
+
+重启应用,插件中心里就有它了。对 agent 说「跟我说声 hello」,它会调 `hello` 工具。
+
+> 分发给别人走插件市场(见「市场上架」),不是让人手动拷目录。
+
+### 加一个面板?
+
+在 `manifest.json` 的 `contributes` 里加:
+
+```json
+"panels": [{ "id": "main", "title": "Hello", "entry": "./ui/index.html" }]
+```
+
+再写一个 `ui/index.html` —— 它就是一个普通网页,宿主注入的 `window.piSDK` 用来跟后端说话。
+见「面板开发」。
 
 ## PLUGIN.md — 让 agent 会用你的插件
 
@@ -118,7 +167,9 @@ description: "查看和编辑 Office 文档（docx / pptx / xlsx / pdf）——�
 |------|------|------|
 | `id` | ✅ | 反向 DNS 格式(`com.company.plugin`),也是目录名 |
 | `name` | ✅ | 显示名称 |
-| `version` | ✅ | semver |
+| `version` | ✅ | 你自己的版本号,semver |
+| `apiVersion` | — | 你照哪一版协议写的。当前是 **2**。对不上会被标成 `incompatible` 并说明原因 |
+| `description` | — | 一句话说明 |
 | `engines` | — | 宿主版本约束 `{ "pi-desktop": ">=0.1.0" }` |
 | `backend` | — | 后端入口(相对路径);省略则纯 UI 插件 |
 | `permissions` | — | 权限声明数组 |
@@ -129,9 +180,11 @@ description: "查看和编辑 Office 文档（docx / pptx / xlsx / pdf）——�
 
 #### panels — 面板
 
+**面板就是一张网页。** 你在 `entry` 里指明它在哪,剩下的宿主负责。
+
 面板默认落在**右侧栏**。想在左侧栏出现,用 `region` 声明 —— 左侧是「全局视角」那一列
-(全部文件、全部会话、agent 的常驻配置),右侧是「当前对象」那一列(会话日志、文件预览、
-浏览器实时画面)。放哪边取决于面板讲的是工作区整体还是你正在看的那一个东西。
+(全部文件、全部会话、agent 的常驻配置),右侧是「当前对象」那一列(会话日志、文件预览)。
+放哪边取决于面板讲的是工作区整体还是你正在看的那一个东西。
 
 ```json
 {
@@ -139,44 +192,41 @@ description: "查看和编辑 Office 文档（docx / pptx / xlsx / pdf）——�
     {
       "id": "main",
       "title": "面板标题",
-      "kind": "iframe",
       "entry": "./ui/index.html",
-      "iconPath": "./assets/icon.svg",
+      "icon": "./assets/icon.svg",
       "keepAlive": "lru",
-      "hidden": false,
-      "companionOf": null,
-      "autoHeight": false,
       "region": "right",
       "anchor": "top",
       "order": 0
     },
     {
-      "id": "web",
-      "kind": "liveview",
-      "title": "内嵌网页"
+      "id": "overview",
+      "title": "全局视图",
+      "entry": "./ui/overview.html",
+      "icon": "calendar",
+      "region": "left",
+      "keepAlive": "always"
     }
   ]
 }
 ```
 
-**面板类型(kind)**:
+一个插件可以有多个面板 —— 它们各自在图标栏里有一个按钮。多面板的时候,后端要靠
+`panelId` 分辨消息是哪个面板发来的(见「UI 通信」一节)。
 
-| kind | 说明 | 适用 |
-|------|------|------|
-| `iframe` | 标准 HTML 面板(沙箱独立源,piSDK 全套) | 绝大多数场景 |
-| `liveview` | 原生视图挂载点(宿主管理 WebContentsView) | 嵌第三方网页、重 GPU |
-| `declarative` | 仅消息卡片(UiNode 声明式,内部用) | 不建议对外使用 |
+> **没有「面板类型」这个字段。** 你不需要声明面板长什么样、宿主怎么装它 ——
+> 那是宿主的事,而且会变(桌面端用原生视图,不是为了好看,是因为 iframe 里输入法会错位、
+> 打印和下载都不行)。你的面板在任何宿主上都是同一张网页,同一套 `piSDK`。
 
 **面板属性**:
 
 | 属性 | 说明 |
 |------|------|
-| `iconPath` | 插件自带图标(优先于 `icon` 词汇表名) |
-| `keepAlive` | `always` / `lru`(默认)/ `never` — 切走时 iframe 保活策略 |
-| `hidden` | `true` 不上 Rail,仅 panel.open 可达 |
-| `companionOf` | 声明为本 liveview 面板的伴随卡片(贴在其上方) |
-| `autoHeight` | `true` = 宿主按内容自适应 iframe 高度 |
-| `region` | `left` / `right`(默认)。**`liveview` 强制留在右侧**:所有 liveview 共用一个原生视图,隐藏的左侧槽报 0×0 会把可见的那个刷白 |
+| `entry` | ✅ 面板的 HTML 页面,相对插件根目录 |
+| `icon` | 图标。写 `./assets/x.svg` 就是自带文件,写 `calendar` 就是用系统图标名。**不写就继承插件品牌图标** |
+| `keepAlive` | `always` / `lru`(默认)/ `never` — 切走时面板保活策略 |
+| `hidden` | `true` 不上图标栏,仅 `panel.open` 可达 |
+| `region` | `left` / `right`(默认) |
 | `anchor` | `top`(默认)/ `bottom` — 在所属栏图标列里的位置 |
 | `order` | 同一 region + anchor 内的排序,默认 0 |
 
@@ -228,7 +278,7 @@ MCP 格式的 `inputSchema`:
 #### messageRenderers — 对话内卡片
 
 ```json
-{ "messageRenderers": [{ "type": "mail:draft", "kind": "declarative" }] }
+{ "messageRenderers": [{ "type": "mail:draft" }] }
 ```
 
 #### filePreview — 文件树路由
@@ -245,87 +295,209 @@ MCP 格式的 `inputSchema`:
 
 ## 后端开发
 
-后端是 Node.js UtilityProcess 子进程。消息协议:
+后端是一个 Node 进程。宿主负责把它拉起来、给它一个私有目录、把面板和它的消息接上。
 
-### 接收(parentPort.on('message'))
+**这些管道 SDK 全包了,你不要手写。**
 
-| type | 说明 |
+### 最小后端
+
+```ts
+import { plugin } from '@pi/plugin-sdk';
+
+plugin({
+  async onTool(name, params, ctx) {
+    if (name === 'note_add') {
+      await ctx.call('storage.set', { key: 'note', value: params.text });
+      return '记下了。';
+    }
+    throw new Error(`unknown tool: ${name}`);
+  },
+
+  async onPanelMounted(panelId, params, ctx) {
+    // 面板的第一次绘制放这里
+    ctx.send(panelId, 'ui.render', { note: await ctx.call('storage.get', { key: 'note' }) });
+  },
+});
+```
+
+`plugin(...)` 在**模块顶层调用一次**。宿主 fork 的就是这个文件,所以"导入即启动"。
+
+### 能实现哪些回调
+
+| 回调 | 什么时候被调 |
 |------|------|
-| `init` | 初始化(启动后立即) |
-| `tool-call` | agent 调用工具;必须回 `tool-result` |
-| `ui-port` | MessagePort 转移;此后可与面板 UI 点对点通信 |
-| `call-result` | 能力调用的回复 |
-| `host-event` | 宿主推送(如 browser.urlChanged) |
+| `onInit(ctx)` | 后端起来了。**此时面板还没开**,别在这儿画界面 |
+| `onPanelMounted(panelId, params, ctx)` | 某个面板加载完了 —— 第一次绘制放这儿 |
+| `onRequest(panelId, method, params, ctx)` | 面板在等一个答复 |
+| `onEvent(panelId, event, data, ctx)` | 面板报了一件事 |
+| `onTool(name, params, ctx)` | agent 调了你的工具 |
+| `onCommand(name, args, ctx)` | 斜杠命令跑了 |
+| `onSelectionAction(actionId, text, ctx)` | 滑词动作被点了 |
+| `onContextRequest(providerId, message, ctx)` | 宿主发消息前要上下文,返回要注入的文字 |
+| `onHostEvent(event, data, ctx)` | 宿主推了个事件 |
 
-### 发送(parentPort.postMessage)
+一个都不实现也行 —— 那就是一个没有后端的插件(把 manifest 里的 `backend` 去掉)。
 
-| type | 说明 |
-|------|------|
-| `ready` | 必须在启动后 10s 内发,否则后端被终止 |
-| `tool-result` | 回复 tool-call |
-| `call` | 调用 host.* 能力(异步,回 call-result) |
+### `ctx` 里有什么
 
-### 能力调用(CapabilityHub)
+| | |
+|---|---|
+| `ctx.pluginId` | 插件 id |
+| `ctx.dataDir` | 这个插件的私有目录(启动前就建好了) |
+| `ctx.call(method, params)` | 调宿主能力,返回 Promise |
+| `ctx.send(panelId, event, data)` | 往某个面板推事件 |
+| `ctx.openPanel(panelId, { focus })` | 打开自己的面板 |
+| `ctx.setBadge(panelId, n)` | 面板图标上的角标,传 `null` 清掉 |
+| `ctx.log.info / warn / error(msg)` | 写进应用日志,前缀是你的插件 id |
+
+### 能力(`ctx.call`)
 
 ```js
-function call(method, params) {
-  return new Promise((resolve, reject) => {
-    const id = 'c' + (++seq);
-    pending.set(id, { resolve, reject });
-    post({ type: 'call', id, method, params });
-    setTimeout(() => reject(new Error('timeout')), 30_000);
-  });
-}
+await ctx.call('filesystem.read', { path: '/workspace/data.json' });
+await ctx.call('filesystem.write', { path, content, expectedMtime });
+await ctx.call('browser.navigate', { url });
+await ctx.call('network.fetch', { url, method: 'GET' });
+await ctx.call('notify.show', { title, body });
+await ctx.call('storage.set', { key, value });
+await ctx.call('panel.open', { panelId, focus: true });
 
-// 使用
-await call('filesystem.read', { path: '/workspace/data.json' });
-await call('filesystem.write', { path, content, expectedMtime });
-await call('browser.navigate', { url });
-await call('network.fetch', { url, method: 'GET' });
-await call('notify.show', { title, body });
-await call('storage.set', { key, value });
-await call('panel.open', { panelId, focus: true });
-
-// 要让用户选文件,只能用宿主对话框:插件拿不到路径,只能拿到用户选中的结果。
-// 这两个能力不需要权限——用户亲手选就是授权。
-await call('dialog.openFile', { filters: [{ name: 'Word', extensions: ['docx'] }] });
+// 让用户选文件只能用宿主对话框:插件拿不到路径,只能拿到用户选中的结果。
+// 这两个不需要权限——用户亲手选就是授权。
+await ctx.call('dialog.openFile', { filters: [{ name: 'Word', extensions: ['docx'] }] });
 // → { canceled, path, paths }
-await call('dialog.saveFile', { defaultName: '未命名.docx' });
+await ctx.call('dialog.saveFile', { defaultName: '未命名.docx' });
 // → { canceled, path }
 ```
 
-### UI 通信(MessagePort 点对点)
+### 写错了会怎样
 
-`ui-port` 到达后,通过 `state.uiPort.postMessage` 与面板 UI 双向通信:
+**这一节是整个 SDK 存在的理由。下面每一条,以前全都是静默的** —— 界面上"点了没反应",
+日志里什么都没有,只能靠猜:
+
+| 你写了什么 | 会发生什么 |
+|---|---|
+| `onRequest` 忘了 `return` | 面板收到 `ok:false`,说明哪个方法没返回东西 |
+| handler 抛异常 | 面板收到 `ok:false`,带着异常信息 |
+| `onTool` 忘了 `return` | agent 收到报错,说明这个工具没返回任何东西 |
+| 面板发了个你没处理的事件 | 后端日志一条 `warn`,带事件名 |
+| 面板的消息没带 panel id | 后端日志一条 `warn` |
+| 实现了 `onEvent` 但没实现 `onPanelMounted` | 面板首次挂载时 `warn` 一条,提醒你别忘了画 |
+| `ctx.call` 一直不回 | 30 秒后 reject,带方法名 |
+| 面板的 `piSDK.request` 一直不回 | 30 秒后 reject,带方法名 |
+
+日志前缀是 `[plugin:你的插件id]`,和应用日志混在一起 —— 直接搜插件 id 就能找到。
+
+### 底层协议(一般不用看)
+
+SDK 底下是两套通道。**只有你不打算用 SDK 的时候才需要知道这些**(比如给一个已经很复杂的
+既有后端做适配):
+
+- **控制面** —— `process.parentPort`。生命周期、能力调用、工具、命令都走这儿,都要过 main
+  进程,所以权限在这边判。
+- **数据面** —— 一个 `MessagePort`,面板和你的后端点对点。**宿主只转发,不看内容。**
+
+启动后 10 秒内必须发 `ready`,否则宿主会把后端杀掉。
+
+控制面的消息类型在 `packages/types/src/plugin/protocol.ts`;数据面那几条在
+`packages/plugin-sdk/src/index.ts` 的 `onPanelMessage` 里(面板侧的另一半在
+`apps/desktop/src/main/plugins/plugin-sdk-js.ts`)。
+
+> 内置的五个插件全都用 SDK。上面这段是给你**不打算用 SDK** 时看的 ——
+> 比如给一个已经很复杂的既有后端做适配,那种情况下你要自己接这两套通道。
+
+### 自测
+
+后端可以不启动应用就验 —— 拿一个假宿主驱动打包好的 `dist/main.mjs`:
 
 ```js
-// 后端 → UI(渲染状态)
-uiPort.postMessage({ kind: 'event', event: 'ui.render', panelId, data: state });
-
-// UI → 后端(面板操作)
-// 后端 onUiMessage 收 { kind: 'event', event: 'ui.event', data: { eventId } }
+process.parentPort = fakePort;                 // 必须在 import 之前
+await import('./dist/main.mjs');               // SDK 在导入时接管
 ```
+
+> 顺序不能反。SDK 在 `plugin(...)` 被调用的那一刻就要宿主端口,拿不到会直接抛错。
+> 而且后端在 `onInit` 里读一次存储 —— 种子数据也要在 import 之前放好。
+
+`@pi/plugin-sdk` 自己的契约测试(21 项,覆盖每一条报错路径)是个现成的样板:
+
+```bash
+node packages/plugin-sdk/tests/smoke.mjs
+```
+
+内置插件各有一个 `scripts/smoke-backend.mjs`,跑法:
+
+```bash
+cd plugins/com.pi.tasks && node scripts/smoke-backend.mjs
+```
+
+五个插件合计 **128 项检查**(浏览器 9 / 知识库 16 / 邮件 20 / 事项 38 / 文件查看器 45),
+加上 SDK 自己的 21 项契约测试。
 
 ## 面板开发(HTML + piSDK)
 
-面板是标准 HTML 页面,由宿主注入 piSDK:
+面板就是一个普通 HTML 页面。宿主在页面加载前注入 `window.piSDK` ——
+**不用打包、不用手写消息、不用知道宿主怎么把它装进窗口。**
 
-```html
-<script>
-  // 能力调用(经权限门)
-  const result = await piSDK.request('storage.get', { key: 'x' });
+```js
+// ① 问后端要数据(后端实现 onRequest)
+const view = await piSDK.request('state.get');
 
-  // 后端消息(后端 → UI 方向)
-  piSDK.onMessage((msg) => { ... });
+// ② 告诉后端用户干了什么(后端实现 onEvent)
+piSDK.emit('note.add', { text });
 
-  // 后端事件(与后端 state.uiPort 双向)
-</script>
+// ③ 收后端推来的东西
+piSDK.onMessage((msg) => {
+  if (msg.event === 'ui.render') render(msg.data);
+});
 ```
+
+**面板 id 不用你管。** 宿主加载页面时把"你是哪块面板"注进去,`piSDK` 自动盖在每条
+发出的消息上。所以一个插件有多块面板时,后端天然分得清是谁在说话 ——
+以前这件事要作者自己把 id 放在正确的嵌套层里,放错了**两端都不报错**。
+
+### ⚠️ 唯一要记的一条:面板不能直接调宿主能力
+
+面板只能跟**你自己这个插件的后端**说话。中间那根管子宿主只负责转发,**完全不看内容**。
+
+所以下面这行是错的 —— 宿主不会拦下来帮你转成能力调用:
+
+```js
+// ❌ 这不叫「读插件存储」,除非你的后端自己实现了一个叫 storage.get 的方法
+await piSDK.request('storage.get', { key: 'x' });
+```
+
+正确做法是**后端**去调,面板只跟后端说话:
+
+```js
+// 面板
+const note = await piSDK.request('note.get');
+
+// 后端
+async onRequest(panelId, method, ctx) {
+  if (method === 'note.get') return ctx.call('storage.get', { key: 'note' });
+}
+```
+
+宿主能力(`storage.*` / `notify.show` / `network.fetch` …)统统走**后端**的 `ctx.call()`,
+因为那些调用要过 main 进程的权限门。面板里没有权限门。
+
+### 三条对应关系
+
+| 面板这头 | 后端那头 |
+|---|---|
+| `await piSDK.request('m', p)` | `onRequest(panelId, 'm', p, ctx)` |
+| `piSDK.emit('e', d)` | `onEvent(panelId, 'e', d, ctx)` |
+| `piSDK.onMessage(cb)` | `ctx.send(panelId, 'e', d)` |
+
+**对不上会报错,不会静默:**
+
+- 面板请求后端却没回应 → 30 秒后 reject,并告诉你卡在哪个方法上
+- 后端收到没处理过的事件 → 日志一条警告,带事件名
+- 面板打开后一直空白 → 后端日志会提醒你可能是没实现 `onPanelMounted`
 
 主题自动注入:宿主推送 CSS 变量(`--background` / `--foreground` / `--card` 等 17 个),
 面板用 `var(--background)` 等引用即可自动适配明暗主题。
 
-**文字可选**:iframe 内的 DOM 文字可直接选中 → 滑词菜单弹出 → 引用到对话/存知识库。
+**文字可选**:面板里的 DOM 文字可以直接选中 → 滑词菜单弹出 → 引用到对话/存知识库。
 
 ## 权限模型
 
@@ -412,8 +584,21 @@ composer 在 shell 窗口里,不在插件面板里。
 
 ## 市场上架
 
+**前四步不用手写** —— 仓库里的 `scripts/build-market.mjs` 全干了：
+
+```bash
+node scripts/build-market.mjs          # 打包 + 算 sha256 + 写 index.json
+node scripts/build-market.mjs --out ./dist-market
+```
+
+它只打**运行时该带的**（`manifest` / `dist/` / `ui-dist/` / `assets/` / `PLUGIN.md`），
+跳过 `src/ tests/ scripts/ vendor/ node_modules/` —— 对文件查看器来说这是 60 MB 和 900 MB 的差别。
+打完把 `market-dist/` 传到哪儿都行，然后把 `_state.json` 的 `registry` 指过去。
+
+想自己实现一遍，是这四步：
+
 1. 打包插件目录为 zip
-2. 计算 sha256
+2. 计算 sha256（**索引里必须有，缺了会拒绝安装**）
 3. 发布到注册表 index.json:
 
 ```json
@@ -431,11 +616,25 @@ composer 在 shell 窗口里,不在插件面板里。
 
 4. 宿主安装流:fetch index → 下载 zip → sha256 校验 → engines 协商 → 原子解压 → 授权确认 → 激活
 
+### 做一个「连接器」插件
+
+把外部业务系统（ERP / CRM / 工单）接进来，仓库里有个现成的脚手架：
+**`templates/connector-plugin/`**。复制、把 `NAME` 全局替换成你的系统标识、改三处就好：
+
+| 改哪 | 改什么 |
+|---|---|
+| `src/backend/index.ts` → `fetchRecords()` | 换成对你系统的 HTTP API 调用 |
+| `src/backend/index.ts` → `toListItems()` | 把 API 记录映射成面板行 |
+| `manifest.json` | id / 名称 / 权限 |
+
+它和内置插件走**同一套** SDK 和同一套构建方式（`node scripts/build-backend.mjs`），
+照着写不会踩旧坑。
+
 ## 图标规范
 
 - 插件品牌图标:自带 SVG(单色,CSS mask 渲染随主题变色)
 - 上架必须带品牌图标
-- 面板图标:可声明 `iconPath`(专属)或 `icon`(词汇表名)
+- 面板图标:一个 `icon` 字段。写路径(`./assets/x.svg`)就是自带文件,写名字(`calendar`)就用系统图标
 - 词汇表:puzzle / gear / globe / mail / calendar / todo / knowledge / erp / chat / eye / note / users / money / clock / sliders / layout
 
 ## 最佳实践
@@ -446,6 +645,6 @@ composer 在 shell 窗口里,不在插件面板里。
    `description` 写「什么时候用」而不是「这是什么」
 4. **品牌图标必带** — 上架审核要求;单色 SVG,CSS mask 渲染
 5. **权限最小化** — 只声明实际需要的权限
-6. **面包屑导航** — 多面板用 `hidden` + `companionOf` 组织,一插件一 Rail 按钮
+6. **一插件一 Rail 按钮** — 次要面板用 `hidden`,由主面板里的人自己打开
 7. **错误处理** — capability 调用可能失败(权限/网络/文件),catch 并在面板中显示;
    工具返回值里把「不支持、别重试」说清楚,agent 才不会在那儿反复试错

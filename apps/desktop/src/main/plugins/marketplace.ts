@@ -2,7 +2,7 @@ import { net } from 'electron';
 import AdmZip from 'adm-zip';
 import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import type { MarketEntry, MarketIndex, PluginManifest } from '@pi/types';
 import type { PluginRegistry } from './registry';
 import { satisfiesVersion } from './semver';
@@ -78,11 +78,15 @@ export class PluginMarketplace {
     const zipBytes = await this.fetchBytes(entry.url);
 
     onPhase?.('verifying');
-    if (entry.sha256) {
-      const actual = createHash('sha256').update(zipBytes).digest('hex');
-      if (actual !== entry.sha256.toLowerCase()) {
-        throw new Error(`integrity check failed for ${entry.id} (sha256 mismatch)`);
-      }
+    // Always. A missing digest used to skip the check silently, so an index
+    // that forgot one installed unverified bytes while the phase said
+    // "verifying" — worse than no check, because it looked like one.
+    if (!entry.sha256) {
+      throw new Error(`catalog entry ${entry.id} has no sha256 — refusing to install unverified bytes`);
+    }
+    const actual = createHash('sha256').update(zipBytes).digest('hex');
+    if (actual !== entry.sha256.toLowerCase()) {
+      throw new Error(`integrity check failed for ${entry.id} (sha256 mismatch)`);
     }
 
     onPhase?.('installing');
@@ -137,19 +141,71 @@ export class PluginMarketplace {
 
   /** Atomically move a staged dir into the user plugins root. */
   commitInstall(stagedDir: string, pluginId: string): string {
+    // Always the USER root, never `registry.getRoot()`: under PI_DEV_PLUGINS
+    // that resolves to the repo's copy, and the install would land in the
+    // working tree instead of the user's plugin directory.
     const target = join(this.registry.pluginsRoot, pluginId);
     mkdirSync(this.registry.pluginsRoot, { recursive: true });
 
     // Replace-in-place: move old aside, move new in, drop old.
     const stagingRoot = join(this.registry.pluginsRoot, '.staging');
-    const backup = join(stagingRoot, `${pluginId}-replaced-${Date.now()}`);
+    const scrapped = join(stagingRoot, `${pluginId}-replaced-${Date.now()}`);
+    let moveOldTo = scrapped;
+
     if (existsSync(target)) {
-      renameSync(target, backup);
+      const outgoing = this.readVersion(target);
+      const incoming = this.readVersion(stagedDir);
+      // Keep the outgoing copy ONLY when the version actually changed. A
+      // same-version reinstall is the escape hatch for a corrupted copy, and
+      // letting it overwrite `.previous` would destroy the one good version
+      // the user still had.
+      if (outgoing && incoming && outgoing !== incoming) {
+        moveOldTo = this.registry.getPreviousDir(pluginId);
+        mkdirSync(dirname(moveOldTo), { recursive: true });
+        rmSync(moveOldTo, { recursive: true, force: true });
+      }
+      renameSync(target, moveOldTo);
     }
+
     renameSync(stagedDir, target);
-    if (existsSync(backup)) {
-      rmSync(backup, { recursive: true, force: true });
+    if (moveOldTo === scrapped && existsSync(scrapped)) {
+      rmSync(scrapped, { recursive: true, force: true });
     }
     return target;
+  }
+
+  private readVersion(dir: string): string | null {
+    try {
+      const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf-8')) as PluginManifest;
+      return manifest.version ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Put the kept previous version back, and keep the one it replaces — so this
+   * is a swap, not a one-way door. The UI labels the action with the target
+   * version, which makes pressing it twice read as what it is: a toggle.
+   */
+  rollback(pluginId: string): { from: string; to: string } {
+    const target = join(this.registry.pluginsRoot, pluginId);
+    const previous = this.registry.getPreviousDir(pluginId);
+    if (!existsSync(previous)) {
+      throw new Error(`"${pluginId}" has no previous version to return to`);
+    }
+
+    const from = this.readVersion(target) ?? '?';
+    const to = this.readVersion(previous) ?? '?';
+
+    const stagingRoot = join(this.registry.pluginsRoot, '.staging');
+    mkdirSync(stagingRoot, { recursive: true });
+    const aside = join(stagingRoot, `${pluginId}-rolled-${Date.now()}`);
+
+    if (existsSync(target)) renameSync(target, aside);
+    renameSync(previous, target);
+    if (existsSync(aside)) renameSync(aside, previous);
+
+    return { from, to };
   }
 }

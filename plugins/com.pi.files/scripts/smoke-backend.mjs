@@ -3,9 +3,10 @@
  * Drive the built plugin backend in plain Node — no Electron.
  *
  * The backend's transport is `process.parentPort`, so the whole tool surface
- * can be exercised by handing `main()` a stand-in port. That makes this the
- * cheapest real coverage in the project: it runs the same `dist/main.mjs` the
- * app ships, against the same vendored engines, in about a second.
+ * can be exercised by installing a stand-in port before the module loads —
+ * the SDK takes it at import time. That makes this the cheapest real coverage
+ * in the project: it runs the same `dist/main.mjs` the app ships, against the
+ * same vendored engines, in about a second.
  *
  * It catches a failure mode that is otherwise invisible — a tool registered in
  * the backend but missing from the manifest (or vice versa) looks fine from
@@ -90,9 +91,18 @@ function waitFor(pred, what, timeoutMs = 20_000) {
 
 console.log('backend smoke\n');
 
+// The SDK takes the host port at import time and throws without one, so the
+// fake has to be in place *before* the module loads — there is no `main()` to
+// call any more.
+process.parentPort = fakePort;
+// Kept as a binding: the module also re-exports the pptx engine, so the test
+// can build a real deck with exactly the code the backend ships.
 const backend = await import(pathToFileURL(BACKEND).href);
-backend.main(fakePort);
 await waitFor((m) => m.type === 'ready', 'the ready handshake');
+
+// The host always sends this before anything else; the SDK hands the plugin id
+// and data dir to onInit, and refuses handler calls until it has.
+hostSend({ type: 'init', pluginId: 'com.pi.files', apiVersion: 2, dataDir: join(tmpdir(), 'pi-files-smoke-data') });
 
 async function callTool(name, params) {
   const id = `t${Math.random().toString(36).slice(2, 8)}`;
@@ -299,6 +309,50 @@ console.log(`  fixture: ${deckPath} (${original.length} bytes)\n`);
     /viewer/i.test(wrong.error ?? '') && /other\.docx|smoke\.docx/.test(wrong.error ?? ''),
     wrong.error,
   );
+}
+
+// ── xlsx: the third engine, end to end ─────────────────────────────────
+//
+// Until now this file had no runtime coverage at all — it typechecked and
+// nothing else — which is how its imports drifted out of sync with what the
+// gateway actually exports. Reading and editing a real workbook is the check
+// that would have caught it.
+{
+  const XLSX = await import('xlsx');
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([
+    ['姓名', '分数'],
+    ['甲', 90],
+    ['乙', 85],
+  ]), 'Sheet1');
+  const xlsxPath = join(dir, 'smoke.xlsx');
+  writeFileSync(xlsxPath, XLSX.write(book, { type: 'buffer', bookType: 'xlsx' }));
+
+  const read = await callTool('office_read', { path: xlsxPath });
+  const readText = read.content?.[0]?.text ?? '';
+  check('office_read reads a real workbook', /Sheet1/.test(readText), readText);
+  check('office_read reports cell addresses, which is what an edit targets', /A1=姓名/.test(readText), readText);
+
+  const dry = await callTool('office_edit', {
+    path: xlsxPath,
+    dryRun: true,
+    ops: [{ sheet: 'Sheet1', cell: 'B2', value: 100 }],
+  });
+  check('an xlsx dry run validates', dry.details?.dryRun === true, dry.content?.[0]?.text);
+  check('an xlsx dry run wrote nothing', !written.has(xlsxPath));
+
+  const applied = await callTool('office_edit', {
+    path: xlsxPath,
+    ops: [{ sheet: 'Sheet1', cell: 'B2', value: 100 }],
+  });
+  check('an xlsx edit applies', applied.details?.applied === true, applied.content?.[0]?.text);
+  check('the xlsx write went through the host capability', written.has(xlsxPath));
+
+  // The fake host keeps writes in memory; put it on disk so the re-read goes
+  // through the same parse path the viewer would use.
+  writeFileSync(xlsxPath, written.get(xlsxPath));
+  const reread = await callTool('office_read', { path: xlsxPath });
+  check('the xlsx edit survives a re-read', /B2=100/.test(reread.content?.[0]?.text ?? ''), reread.content?.[0]?.text);
 }
 
 rmSync(dir, { recursive: true, force: true });

@@ -43,7 +43,7 @@ const HOST_PANELS: PanelEntry[] = [
   // Settings is a left-sidebar view pinned to the rail's bottom — the VS Code
   // gear position. It reads as configuration rather than navigation.
   // keepAlive 'always' so in-progress form edits survive switching views.
-  { id: 'host:settings', title: '设置', icon: 'settings', kind: 'host', source: 'host', keepAlive: 'always', region: 'left', anchor: 'bottom', order: 100 },
+  { id: 'host:settings', title: '设置', icon: 'settings', source: 'host', keepAlive: 'always', region: 'left', anchor: 'bottom', order: 100 },
   ...HOST_LEFT_PANELS,
 ];
 

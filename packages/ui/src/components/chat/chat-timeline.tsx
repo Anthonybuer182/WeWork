@@ -105,6 +105,33 @@ function makeStreamingMessage(
 // Component
 // ----------------------------------------------------------------
 
+/**
+ * The stream-error banner.
+ *
+ * Rendered by BOTH branches below, and that is the whole point. It used to sit
+ * only in the populated branch, so a send that failed into an empty session
+ * showed nothing at all: the failure emptied the timeline, the empty branch
+ * returned early, and the banner went with it. "The model account is out of
+ * credit" then looked exactly like "the send button does nothing".
+ */
+function StreamErrorBanner({ error, onRetry }: { error: string; onRetry: () => void }) {
+  return (
+    <div className="flex items-center gap-3 mx-4 mt-3 px-4 py-3 rounded-lg border border-destructive/30 bg-destructive/10 text-sm">
+      <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+      <span className="text-destructive flex-1">{error}</span>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 gap-1.5 text-xs border-destructive/30 hover:bg-destructive/10"
+        onClick={onRetry}
+      >
+        <RefreshCw className="h-3 w-3" />
+        Retry
+      </Button>
+    </div>
+  );
+}
+
 export function ChatTimeline() {
   const sdk = useSDK();
   const queryClient = useQueryClient();
@@ -293,15 +320,20 @@ export function ChatTimeline() {
   // ----- Empty session guidance -----
   if (messages.length === 0 && !isStreaming) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-        <div className="rounded-full bg-muted p-4">
-          <MessageSquare className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <div className="text-center">
-          <h3 className="text-lg font-medium">Start a conversation</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Send a message below to begin coding with the AI assistant.
-          </p>
+      <div className="flex flex-1 flex-col">
+        {/* A send that failed before anything landed leaves an empty timeline —
+            and this branch is where that failure has to be visible. */}
+        {streamError && <StreamErrorBanner error={streamError} onRetry={handleRetry} />}
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
+          <div className="rounded-full bg-muted p-4">
+            <MessageSquare className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div className="text-center">
+            <h3 className="text-lg font-medium">Start a conversation</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Send a message below to begin coding with the AI assistant.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -309,22 +341,7 @@ export function ChatTimeline() {
 
   return (
     <div className="flex flex-col flex-1 relative">
-      {/* Stream error banner */}
-      {streamError && (
-        <div className="flex items-center gap-3 mx-4 mt-3 px-4 py-3 rounded-lg border border-destructive/30 bg-destructive/10 text-sm">
-          <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-          <span className="text-destructive flex-1">{streamError}</span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 gap-1.5 text-xs border-destructive/30 hover:bg-destructive/10"
-            onClick={handleRetry}
-          >
-            <RefreshCw className="h-3 w-3" />
-            Retry
-          </Button>
-        </div>
-      )}
+      {streamError && <StreamErrorBanner error={streamError} onRetry={handleRetry} />}
 
       <div className="flex-1">
         <Virtuoso

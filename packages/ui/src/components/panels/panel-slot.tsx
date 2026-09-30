@@ -6,8 +6,8 @@ import { FileTree } from '@/components/file/file-tree';
 import { SessionList } from '@/components/session/session-list';
 import { SearchView } from '@/components/search/search-view';
 import { ContextPanel } from '@/components/context/context-panel';
-import { PluginPanelHost, ensureRelayInstalled } from '@/components/plugins/plugin-panel';
-import { DeclarativePanelHost } from '@/components/plugins/declarative/declarative-panel';
+import { BrowserPanel } from '@/components/browser/browser-panel';
+import { ensureRelayInstalled } from '@/components/plugins/panel-relay';
 import { LiveViewSlot } from './live-view-slot';
 
 /**
@@ -22,15 +22,19 @@ const HOST_COMPONENTS: Record<string, ComponentType> = {
   'host:sessions': SessionList,
   'host:search': SearchView,
   'host:context': ContextPanel,
+  'host:browser': BrowserPanel,
 };
 
 /**
  * Whether this host can put a panel in a native WebContentsView.
  *
- * Plugin web panels are hosted natively on desktop. A native view is a real
- * top-level frame, which is what gives a panel correct IME and working
- * print / alert / download — an iframe sandbox blocks all three. The web build
- * has no such host, and does not show plugin panels at all.
+ * Every shipped build can: desktop always exposes `electronAPI`, and the web
+ * build never registers plugin panels at all (`setPluginPanels` is called only
+ * by the desktop renderer). A native view is a real top-level frame, which is
+ * what gives a panel correct IME and working print / alert / download.
+ *
+ * Kept as a guard rather than assumed, because the failure it prevents — a
+ * blank rectangle with no explanation — is the one this whole area is prone to.
  */
 function hasNativeViewHost(): boolean {
   if (typeof window === 'undefined') return false;
@@ -43,10 +47,8 @@ function hasNativeViewHost(): boolean {
  * `{ file }` for the viewer) and hands them to the slot, which forwards them to
  * the backend as the `panel.mounted` event the backend renders from.
  *
- * It also installs the relay. That used to happen inside `PluginPanelHost`, so
- * when panels moved to native views nothing ran it any more — which silently
- * broke both the theme push and the `onRelay` subscription that carries a
- * panel's selection frames back to the shell.
+ * It also installs the relay — the theme push and the `onRelay` subscription
+ * that carries a panel's selection frames back to the shell.
  */
 function PluginWebViewPanel({ pluginId, panelId }: { pluginId: string; panelId: string }) {
   const params = usePanelStore((s) => s.params[`plugin:${pluginId}:${panelId}`]);
@@ -57,58 +59,30 @@ function PluginWebViewPanel({ pluginId, panelId }: { pluginId: string; panelId: 
 }
 
 function PanelBody({ panel }: { panel: PanelEntry }) {
-  const allPanels = usePanelStore((s) => s.panels);
-  if (panel.kind === 'host') {
+  // Host panel: a React component the shell owns.
+  if (panel.source === 'host') {
     const Host = HOST_COMPONENTS[panel.id];
     return Host ? <Host /> : null;
   }
-  if (panel.kind === 'iframe' && panel.pluginId && panel.panelId && panel.entry) {
-    if (hasNativeViewHost()) {
-      return <PluginWebViewPanel pluginId={panel.pluginId} panelId={panel.panelId} />;
-    }
-    return <PluginPanelHost pluginId={panel.pluginId} panelId={panel.panelId} entry={panel.entry} autoHeight={panel.autoHeight} />;
-  }
-  if (panel.kind === 'declarative' && panel.pluginId && panel.panelId) {
-    return <DeclarativePanelHost pluginId={panel.pluginId} panelId={panel.panelId} />;
-  }
-  if (panel.kind === 'liveview' && panel.pluginId && panel.panelId) {
-    // Companion card (e.g. a control bar) renders above the live view —
-    // one rail button, controls and live feed on the same screen. The
-    // companion itself may be an iframe or declarative panel.
-    const companion = allPanels.find(
-      (p) => p.companionOf === panel.panelId && p.source === panel.source,
-    );
-    if (companion) {
-      const companionBody =
-        companion.kind === 'iframe' && companion.pluginId && companion.panelId && companion.entry ? (
-          <PluginPanelHost pluginId={companion.pluginId} panelId={companion.panelId} entry={companion.entry} />
-        ) : companion.kind === 'declarative' && companion.pluginId && companion.panelId ? (
-          <DeclarativePanelHost pluginId={companion.pluginId} panelId={companion.panelId} />
-        ) : null;
+  // Plugin panel: a web page the host hosts, in a WebContentsView.
+  if (panel.pluginId && panel.panelId && panel.entry) {
+    if (!hasNativeViewHost()) {
+      // No shipped build reaches this. Saying so beats the alternative — an
+      // empty rectangle that looks like a plugin that failed to load.
       return (
-        <div className="flex h-full w-full flex-col">
-          <div
-            className="shrink-0 border-b bg-background"
-            // iframe companions are fixed-height toolbars (their HTML is
-            // written to fit); declarative companions size to content.
-            style={companion.kind === 'iframe' ? { height: 44 } : undefined}
-          >
-            {companionBody}
-          </div>
-          <div className="min-h-0 flex-1">
-            <LiveViewSlot pluginId={panel.pluginId} panelId={panel.panelId} />
-          </div>
+        <div className="flex h-full items-center justify-center p-4 text-center text-xs text-muted-foreground">
+          插件面板需要桌面端
         </div>
       );
     }
-    return <LiveViewSlot pluginId={panel.pluginId} panelId={panel.panelId} />;
+    return <PluginWebViewPanel pluginId={panel.pluginId} panelId={panel.panelId} />;
   }
   return null;
 }
 
 /**
  * Single-panel slot: the active panel is visible; keep-alive panels stay
- * mounted hidden (iframe state preserved, BrowserView alive), everything
+ * mounted hidden (the view stays alive), everything
  * else unmounts.
  */
 export function PanelSlot({ region = 'right' }: { region?: PanelRegion }) {

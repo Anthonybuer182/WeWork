@@ -39,9 +39,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// ../../node_modules/.pnpm/process-nextick-args@2.0.1/node_modules/process-nextick-args/index.js
+// node_modules/process-nextick-args/index.js
 var require_process_nextick_args = __commonJS({
-  "../../node_modules/.pnpm/process-nextick-args@2.0.1/node_modules/process-nextick-args/index.js"(exports2, module) {
+  "node_modules/process-nextick-args/index.js"(exports2, module) {
     "use strict";
     if (typeof process === "undefined" || !process.version || process.version.indexOf("v0.") === 0 || process.version.indexOf("v1.") === 0 && process.version.indexOf("v1.8.") !== 0) {
       module.exports = { nextTick };
@@ -85,9 +85,9 @@ var require_process_nextick_args = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/isarray@1.0.0/node_modules/isarray/index.js
+// node_modules/isarray/index.js
 var require_isarray = __commonJS({
-  "../../node_modules/.pnpm/isarray@1.0.0/node_modules/isarray/index.js"(exports2, module) {
+  "node_modules/isarray/index.js"(exports2, module) {
     var toString = {}.toString;
     module.exports = Array.isArray || function(arr) {
       return toString.call(arr) == "[object Array]";
@@ -95,16 +95,16 @@ var require_isarray = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/stream.js
+// node_modules/readable-stream/lib/internal/streams/stream.js
 var require_stream = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/stream.js"(exports2, module) {
+  "node_modules/readable-stream/lib/internal/streams/stream.js"(exports2, module) {
     module.exports = __require("stream");
   }
 });
 
-// ../../node_modules/.pnpm/safe-buffer@5.1.2/node_modules/safe-buffer/index.js
+// node_modules/safe-buffer/index.js
 var require_safe_buffer = __commonJS({
-  "../../node_modules/.pnpm/safe-buffer@5.1.2/node_modules/safe-buffer/index.js"(exports2, module) {
+  "node_modules/safe-buffer/index.js"(exports2, module) {
     var buffer = __require("buffer");
     var Buffer2 = buffer.Buffer;
     function copyProps(src, dst) {
@@ -161,9 +161,9 @@ var require_safe_buffer = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/core-util-is@1.0.3/node_modules/core-util-is/lib/util.js
+// node_modules/core-util-is/lib/util.js
 var require_util = __commonJS({
-  "../../node_modules/.pnpm/core-util-is@1.0.3/node_modules/core-util-is/lib/util.js"(exports2) {
+  "node_modules/core-util-is/lib/util.js"(exports2) {
     function isArray(arg) {
       if (Array.isArray) {
         return Array.isArray(arg);
@@ -246,9 +246,9 @@ var require_util = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits_browser.js
+// node_modules/inherits/inherits_browser.js
 var require_inherits_browser = __commonJS({
-  "../../node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits_browser.js"(exports2, module) {
+  "node_modules/inherits/inherits_browser.js"(exports2, module) {
     if (typeof Object.create === "function") {
       module.exports = /* @__PURE__ */ __name(function inherits(ctor, superCtor) {
         if (superCtor) {
@@ -278,9 +278,9 @@ var require_inherits_browser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits.js
+// node_modules/inherits/inherits.js
 var require_inherits = __commonJS({
-  "../../node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits.js"(exports2, module) {
+  "node_modules/inherits/inherits.js"(exports2, module) {
     try {
       util = __require("util");
       if (typeof util.inherits !== "function") throw "";
@@ -292,9 +292,9 @@ var require_inherits = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/BufferList.js
+// node_modules/readable-stream/lib/internal/streams/BufferList.js
 var require_BufferList = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/BufferList.js"(exports2, module) {
+  "node_modules/readable-stream/lib/internal/streams/BufferList.js"(exports2, module) {
     "use strict";
     function _classCallCheck(instance, Constructor) {
       if (!(instance instanceof Constructor)) {
@@ -373,9 +373,9 @@ var require_BufferList = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/destroy.js
+// node_modules/readable-stream/lib/internal/streams/destroy.js
 var require_destroy = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/internal/streams/destroy.js"(exports2, module) {
+  "node_modules/readable-stream/lib/internal/streams/destroy.js"(exports2, module) {
     "use strict";
     var pna = require_process_nextick_args();
     function destroy(err, cb) {
@@ -445,16 +445,16 @@ var require_destroy = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/util-deprecate@1.0.2/node_modules/util-deprecate/node.js
+// node_modules/util-deprecate/node.js
 var require_node = __commonJS({
-  "../../node_modules/.pnpm/util-deprecate@1.0.2/node_modules/util-deprecate/node.js"(exports2, module) {
+  "node_modules/util-deprecate/node.js"(exports2, module) {
     module.exports = __require("util").deprecate;
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_writable.js
+// node_modules/readable-stream/lib/_stream_writable.js
 var require_stream_writable = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_writable.js"(exports2, module) {
+  "node_modules/readable-stream/lib/_stream_writable.js"(exports2, module) {
     "use strict";
     var pna = require_process_nextick_args();
     module.exports = Writable;
@@ -915,9 +915,9 @@ var require_stream_writable = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_duplex.js
+// node_modules/readable-stream/lib/_stream_duplex.js
 var require_stream_duplex = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_duplex.js"(exports2, module) {
+  "node_modules/readable-stream/lib/_stream_duplex.js"(exports2, module) {
     "use strict";
     var pna = require_process_nextick_args();
     var objectKeys = Object.keys || function(obj) {
@@ -995,9 +995,9 @@ var require_stream_duplex = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/string_decoder@1.1.1/node_modules/string_decoder/lib/string_decoder.js
+// node_modules/string_decoder/lib/string_decoder.js
 var require_string_decoder = __commonJS({
-  "../../node_modules/.pnpm/string_decoder@1.1.1/node_modules/string_decoder/lib/string_decoder.js"(exports2) {
+  "node_modules/string_decoder/lib/string_decoder.js"(exports2) {
     "use strict";
     var Buffer2 = require_safe_buffer().Buffer;
     var isEncoding = Buffer2.isEncoding || function(encoding) {
@@ -1248,9 +1248,9 @@ var require_string_decoder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_readable.js
+// node_modules/readable-stream/lib/_stream_readable.js
 var require_stream_readable = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_readable.js"(exports2, module) {
+  "node_modules/readable-stream/lib/_stream_readable.js"(exports2, module) {
     "use strict";
     var pna = require_process_nextick_args();
     module.exports = Readable;
@@ -1970,9 +1970,9 @@ var require_stream_readable = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_transform.js
+// node_modules/readable-stream/lib/_stream_transform.js
 var require_stream_transform = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_transform.js"(exports2, module) {
+  "node_modules/readable-stream/lib/_stream_transform.js"(exports2, module) {
     "use strict";
     module.exports = Transform;
     var Duplex = require_stream_duplex();
@@ -2074,9 +2074,9 @@ var require_stream_transform = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_passthrough.js
+// node_modules/readable-stream/lib/_stream_passthrough.js
 var require_stream_passthrough = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/lib/_stream_passthrough.js"(exports2, module) {
+  "node_modules/readable-stream/lib/_stream_passthrough.js"(exports2, module) {
     "use strict";
     module.exports = PassThrough;
     var Transform = require_stream_transform();
@@ -2094,9 +2094,9 @@ var require_stream_passthrough = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/readable.js
+// node_modules/readable-stream/readable.js
 var require_readable = __commonJS({
-  "../../node_modules/.pnpm/readable-stream@2.3.8/node_modules/readable-stream/readable.js"(exports2, module) {
+  "node_modules/readable-stream/readable.js"(exports2, module) {
     var Stream = __require("stream");
     if (process.env.READABLE_STREAM === "disable" && Stream) {
       module.exports = Stream;
@@ -2119,9 +2119,9 @@ var require_readable = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/support.js
+// node_modules/jszip/lib/support.js
 var require_support = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/support.js"(exports2) {
+  "node_modules/jszip/lib/support.js"(exports2) {
     "use strict";
     exports2.base64 = true;
     exports2.array = true;
@@ -2159,9 +2159,9 @@ var require_support = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/base64.js
+// node_modules/jszip/lib/base64.js
 var require_base64 = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/base64.js"(exports2) {
+  "node_modules/jszip/lib/base64.js"(exports2) {
     "use strict";
     var utils = require_utils();
     var support = require_support();
@@ -2236,9 +2236,9 @@ var require_base64 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejsUtils.js
+// node_modules/jszip/lib/nodejsUtils.js
 var require_nodejsUtils = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejsUtils.js"(exports2, module) {
+  "node_modules/jszip/lib/nodejsUtils.js"(exports2, module) {
     "use strict";
     module.exports = {
       /**
@@ -2292,9 +2292,9 @@ var require_nodejsUtils = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/immediate@3.0.6/node_modules/immediate/lib/index.js
+// node_modules/immediate/lib/index.js
 var require_lib = __commonJS({
-  "../../node_modules/.pnpm/immediate@3.0.6/node_modules/immediate/lib/index.js"(exports2, module) {
+  "node_modules/immediate/lib/index.js"(exports2, module) {
     "use strict";
     var Mutation = global.MutationObserver || global.WebKitMutationObserver;
     var scheduleDrain;
@@ -2368,9 +2368,9 @@ var require_lib = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lie@3.3.0/node_modules/lie/lib/index.js
+// node_modules/lie/lib/index.js
 var require_lib2 = __commonJS({
-  "../../node_modules/.pnpm/lie@3.3.0/node_modules/lie/lib/index.js"(exports2, module) {
+  "node_modules/lie/lib/index.js"(exports2, module) {
     "use strict";
     var immediate = require_lib();
     function INTERNAL() {
@@ -2659,9 +2659,9 @@ var require_lib2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/external.js
+// node_modules/jszip/lib/external.js
 var require_external = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/external.js"(exports2, module) {
+  "node_modules/jszip/lib/external.js"(exports2, module) {
     "use strict";
     var ES6Promise = null;
     if (typeof Promise !== "undefined") {
@@ -2675,9 +2675,9 @@ var require_external = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/setimmediate@1.0.5/node_modules/setimmediate/setImmediate.js
+// node_modules/setimmediate/setImmediate.js
 var require_setImmediate = __commonJS({
-  "../../node_modules/.pnpm/setimmediate@1.0.5/node_modules/setimmediate/setImmediate.js"(exports2) {
+  "node_modules/setimmediate/setImmediate.js"(exports2) {
     (function(global2, undefined2) {
       "use strict";
       if (global2.setImmediate) {
@@ -2833,9 +2833,9 @@ var require_setImmediate = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/utils.js
+// node_modules/jszip/lib/utils.js
 var require_utils = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/utils.js"(exports2) {
+  "node_modules/jszip/lib/utils.js"(exports2) {
     "use strict";
     var support = require_support();
     var base64 = require_base64();
@@ -3163,9 +3163,9 @@ var require_utils = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/GenericWorker.js
+// node_modules/jszip/lib/stream/GenericWorker.js
 var require_GenericWorker = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/GenericWorker.js"(exports2, module) {
+  "node_modules/jszip/lib/stream/GenericWorker.js"(exports2, module) {
     "use strict";
     function GenericWorker(name) {
       this.name = name || "default";
@@ -3391,9 +3391,9 @@ var require_GenericWorker = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/utf8.js
+// node_modules/jszip/lib/utf8.js
 var require_utf8 = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/utf8.js"(exports2) {
+  "node_modules/jszip/lib/utf8.js"(exports2) {
     "use strict";
     var utils = require_utils();
     var support = require_support();
@@ -3583,9 +3583,9 @@ var require_utf8 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/ConvertWorker.js
+// node_modules/jszip/lib/stream/ConvertWorker.js
 var require_ConvertWorker = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/ConvertWorker.js"(exports2, module) {
+  "node_modules/jszip/lib/stream/ConvertWorker.js"(exports2, module) {
     "use strict";
     var GenericWorker = require_GenericWorker();
     var utils = require_utils();
@@ -3605,9 +3605,9 @@ var require_ConvertWorker = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejs/NodejsStreamOutputAdapter.js
+// node_modules/jszip/lib/nodejs/NodejsStreamOutputAdapter.js
 var require_NodejsStreamOutputAdapter = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejs/NodejsStreamOutputAdapter.js"(exports2, module) {
+  "node_modules/jszip/lib/nodejs/NodejsStreamOutputAdapter.js"(exports2, module) {
     "use strict";
     var Readable = require_readable().Readable;
     var utils = require_utils();
@@ -3637,9 +3637,9 @@ var require_NodejsStreamOutputAdapter = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/StreamHelper.js
+// node_modules/jszip/lib/stream/StreamHelper.js
 var require_StreamHelper = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/StreamHelper.js"(exports2, module) {
+  "node_modules/jszip/lib/stream/StreamHelper.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var ConvertWorker = require_ConvertWorker();
@@ -3801,9 +3801,9 @@ var require_StreamHelper = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/defaults.js
+// node_modules/jszip/lib/defaults.js
 var require_defaults = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/defaults.js"(exports2) {
+  "node_modules/jszip/lib/defaults.js"(exports2) {
     "use strict";
     exports2.base64 = false;
     exports2.binary = false;
@@ -3818,9 +3818,9 @@ var require_defaults = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/DataWorker.js
+// node_modules/jszip/lib/stream/DataWorker.js
 var require_DataWorker = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/DataWorker.js"(exports2, module) {
+  "node_modules/jszip/lib/stream/DataWorker.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var GenericWorker = require_GenericWorker();
@@ -3907,9 +3907,9 @@ var require_DataWorker = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/crc32.js
+// node_modules/jszip/lib/crc32.js
 var require_crc32 = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/crc32.js"(exports2, module) {
+  "node_modules/jszip/lib/crc32.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     function makeTable() {
@@ -3957,9 +3957,9 @@ var require_crc32 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/Crc32Probe.js
+// node_modules/jszip/lib/stream/Crc32Probe.js
 var require_Crc32Probe = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/Crc32Probe.js"(exports2, module) {
+  "node_modules/jszip/lib/stream/Crc32Probe.js"(exports2, module) {
     "use strict";
     var GenericWorker = require_GenericWorker();
     var crc322 = require_crc32();
@@ -3978,9 +3978,9 @@ var require_Crc32Probe = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/DataLengthProbe.js
+// node_modules/jszip/lib/stream/DataLengthProbe.js
 var require_DataLengthProbe = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/stream/DataLengthProbe.js"(exports2, module) {
+  "node_modules/jszip/lib/stream/DataLengthProbe.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var GenericWorker = require_GenericWorker();
@@ -4002,9 +4002,9 @@ var require_DataLengthProbe = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/compressedObject.js
+// node_modules/jszip/lib/compressedObject.js
 var require_compressedObject = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/compressedObject.js"(exports2, module) {
+  "node_modules/jszip/lib/compressedObject.js"(exports2, module) {
     "use strict";
     var external = require_external();
     var DataWorker = require_DataWorker();
@@ -4048,9 +4048,9 @@ var require_compressedObject = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipObject.js
+// node_modules/jszip/lib/zipObject.js
 var require_zipObject = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipObject.js"(exports2, module) {
+  "node_modules/jszip/lib/zipObject.js"(exports2, module) {
     "use strict";
     var StreamHelper = require_StreamHelper();
     var DataWorker = require_DataWorker();
@@ -4165,9 +4165,9 @@ var require_zipObject = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/utils/common.js
+// node_modules/pako/lib/utils/common.js
 var require_common = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/utils/common.js"(exports2) {
+  "node_modules/pako/lib/utils/common.js"(exports2) {
     "use strict";
     var TYPED_OK = typeof Uint8Array !== "undefined" && typeof Uint16Array !== "undefined" && typeof Int32Array !== "undefined";
     function _has(obj, key) {
@@ -4257,9 +4257,9 @@ var require_common = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/trees.js
+// node_modules/pako/lib/zlib/trees.js
 var require_trees = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/trees.js"(exports2) {
+  "node_modules/pako/lib/zlib/trees.js"(exports2) {
     "use strict";
     var utils = require_common();
     var Z_FIXED = 4;
@@ -4928,9 +4928,9 @@ var require_trees = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/adler32.js
+// node_modules/pako/lib/zlib/adler32.js
 var require_adler32 = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/adler32.js"(exports2, module) {
+  "node_modules/pako/lib/zlib/adler32.js"(exports2, module) {
     "use strict";
     function adler32(adler, buf, len, pos) {
       var s1 = adler & 65535 | 0, s2 = adler >>> 16 & 65535 | 0, n = 0;
@@ -4951,9 +4951,9 @@ var require_adler32 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/crc32.js
+// node_modules/pako/lib/zlib/crc32.js
 var require_crc322 = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/crc32.js"(exports2, module) {
+  "node_modules/pako/lib/zlib/crc32.js"(exports2, module) {
     "use strict";
     function makeTable() {
       var c, table = [];
@@ -4981,9 +4981,9 @@ var require_crc322 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/messages.js
+// node_modules/pako/lib/zlib/messages.js
 var require_messages = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/messages.js"(exports2, module) {
+  "node_modules/pako/lib/zlib/messages.js"(exports2, module) {
     "use strict";
     module.exports = {
       2: "need dictionary",
@@ -5008,9 +5008,9 @@ var require_messages = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/deflate.js
+// node_modules/pako/lib/zlib/deflate.js
 var require_deflate = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/deflate.js"(exports2) {
+  "node_modules/pako/lib/zlib/deflate.js"(exports2) {
     "use strict";
     var utils = require_common();
     var trees = require_trees();
@@ -6083,9 +6083,9 @@ var require_deflate = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/utils/strings.js
+// node_modules/pako/lib/utils/strings.js
 var require_strings = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/utils/strings.js"(exports2) {
+  "node_modules/pako/lib/utils/strings.js"(exports2) {
     "use strict";
     var utils = require_common();
     var STR_APPLY_OK = true;
@@ -6226,9 +6226,9 @@ var require_strings = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/zstream.js
+// node_modules/pako/lib/zlib/zstream.js
 var require_zstream = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/zstream.js"(exports2, module) {
+  "node_modules/pako/lib/zlib/zstream.js"(exports2, module) {
     "use strict";
     function ZStream() {
       this.input = null;
@@ -6249,9 +6249,9 @@ var require_zstream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/deflate.js
+// node_modules/pako/lib/deflate.js
 var require_deflate2 = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/deflate.js"(exports2) {
+  "node_modules/pako/lib/deflate.js"(exports2) {
     "use strict";
     var zlib_deflate = require_deflate();
     var utils = require_common();
@@ -6414,9 +6414,9 @@ var require_deflate2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inffast.js
+// node_modules/pako/lib/zlib/inffast.js
 var require_inffast = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inffast.js"(exports2, module) {
+  "node_modules/pako/lib/zlib/inffast.js"(exports2, module) {
     "use strict";
     var BAD = 30;
     var TYPE = 12;
@@ -6643,9 +6643,9 @@ var require_inffast = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inftrees.js
+// node_modules/pako/lib/zlib/inftrees.js
 var require_inftrees = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inftrees.js"(exports2, module) {
+  "node_modules/pako/lib/zlib/inftrees.js"(exports2, module) {
     "use strict";
     var utils = require_common();
     var MAXBITS = 15;
@@ -6959,9 +6959,9 @@ var require_inftrees = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inflate.js
+// node_modules/pako/lib/zlib/inflate.js
 var require_inflate = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/inflate.js"(exports2) {
+  "node_modules/pako/lib/zlib/inflate.js"(exports2) {
     "use strict";
     var utils = require_common();
     var adler32 = require_adler32();
@@ -6998,7 +6998,7 @@ var require_inflate = __commonJS({
     var STORED = 14;
     var COPY_ = 15;
     var COPY = 16;
-    var TABLE = 17;
+    var TABLE2 = 17;
     var LENLENS = 18;
     var CODELENS = 19;
     var LEN_ = 20;
@@ -7595,7 +7595,7 @@ var require_inflate = __commonJS({
                   }
                   break;
                 case 2:
-                  state.mode = TABLE;
+                  state.mode = TABLE2;
                   break;
                 case 3:
                   strm.msg = "invalid block type";
@@ -7653,7 +7653,7 @@ var require_inflate = __commonJS({
               }
               state.mode = TYPE;
               break;
-            case TABLE:
+            case TABLE2:
               while (bits < 14) {
                 if (have === 0) {
                   break inf_leave;
@@ -8211,9 +8211,9 @@ var require_inflate = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/constants.js
+// node_modules/pako/lib/zlib/constants.js
 var require_constants = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/constants.js"(exports2, module) {
+  "node_modules/pako/lib/zlib/constants.js"(exports2, module) {
     "use strict";
     module.exports = {
       /* Allowed flush values; see deflate() and inflate() below for details */
@@ -8258,9 +8258,9 @@ var require_constants = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/gzheader.js
+// node_modules/pako/lib/zlib/gzheader.js
 var require_gzheader = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/zlib/gzheader.js"(exports2, module) {
+  "node_modules/pako/lib/zlib/gzheader.js"(exports2, module) {
     "use strict";
     function GZheader() {
       this.text = 0;
@@ -8279,9 +8279,9 @@ var require_gzheader = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/inflate.js
+// node_modules/pako/lib/inflate.js
 var require_inflate2 = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/lib/inflate.js"(exports2) {
+  "node_modules/pako/lib/inflate.js"(exports2) {
     "use strict";
     var zlib_inflate = require_inflate();
     var utils = require_common();
@@ -8456,9 +8456,9 @@ var require_inflate2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/index.js
+// node_modules/pako/index.js
 var require_pako = __commonJS({
-  "../../node_modules/.pnpm/pako@1.0.11/node_modules/pako/index.js"(exports2, module) {
+  "node_modules/pako/index.js"(exports2, module) {
     "use strict";
     var assign = require_common().assign;
     var deflate = require_deflate2();
@@ -8470,9 +8470,9 @@ var require_pako = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/flate.js
+// node_modules/jszip/lib/flate.js
 var require_flate = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/flate.js"(exports2) {
+  "node_modules/jszip/lib/flate.js"(exports2) {
     "use strict";
     var USE_TYPEDARRAY = typeof Uint8Array !== "undefined" && typeof Uint16Array !== "undefined" && typeof Uint32Array !== "undefined";
     var pako = require_pako();
@@ -8530,9 +8530,9 @@ var require_flate = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/compressions.js
+// node_modules/jszip/lib/compressions.js
 var require_compressions = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/compressions.js"(exports2) {
+  "node_modules/jszip/lib/compressions.js"(exports2) {
     "use strict";
     var GenericWorker = require_GenericWorker();
     exports2.STORE = {
@@ -8548,9 +8548,9 @@ var require_compressions = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/signature.js
+// node_modules/jszip/lib/signature.js
 var require_signature = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/signature.js"(exports2) {
+  "node_modules/jszip/lib/signature.js"(exports2) {
     "use strict";
     exports2.LOCAL_FILE_HEADER = "PK";
     exports2.CENTRAL_FILE_HEADER = "PK";
@@ -8561,9 +8561,9 @@ var require_signature = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/generate/ZipFileWorker.js
+// node_modules/jszip/lib/generate/ZipFileWorker.js
 var require_ZipFileWorker = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/generate/ZipFileWorker.js"(exports2, module) {
+  "node_modules/jszip/lib/generate/ZipFileWorker.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var GenericWorker = require_GenericWorker();
@@ -8846,9 +8846,9 @@ var require_ZipFileWorker = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/generate/index.js
+// node_modules/jszip/lib/generate/index.js
 var require_generate = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/generate/index.js"(exports2) {
+  "node_modules/jszip/lib/generate/index.js"(exports2) {
     "use strict";
     var compressions = require_compressions();
     var ZipFileWorker = require_ZipFileWorker();
@@ -8887,9 +8887,9 @@ var require_generate = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejs/NodejsStreamInputAdapter.js
+// node_modules/jszip/lib/nodejs/NodejsStreamInputAdapter.js
 var require_NodejsStreamInputAdapter = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/nodejs/NodejsStreamInputAdapter.js"(exports2, module) {
+  "node_modules/jszip/lib/nodejs/NodejsStreamInputAdapter.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var GenericWorker = require_GenericWorker();
@@ -8947,9 +8947,9 @@ var require_NodejsStreamInputAdapter = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/object.js
+// node_modules/jszip/lib/object.js
 var require_object = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/object.js"(exports2, module) {
+  "node_modules/jszip/lib/object.js"(exports2, module) {
     "use strict";
     var utf8 = require_utf8();
     var utils = require_utils();
@@ -9221,9 +9221,9 @@ var require_object = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/DataReader.js
+// node_modules/jszip/lib/reader/DataReader.js
 var require_DataReader = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/DataReader.js"(exports2, module) {
+  "node_modules/jszip/lib/reader/DataReader.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     function DataReader(data) {
@@ -9344,9 +9344,9 @@ var require_DataReader = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/ArrayReader.js
+// node_modules/jszip/lib/reader/ArrayReader.js
 var require_ArrayReader = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/ArrayReader.js"(exports2, module) {
+  "node_modules/jszip/lib/reader/ArrayReader.js"(exports2, module) {
     "use strict";
     var DataReader = require_DataReader();
     var utils = require_utils();
@@ -9387,9 +9387,9 @@ var require_ArrayReader = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/StringReader.js
+// node_modules/jszip/lib/reader/StringReader.js
 var require_StringReader = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/StringReader.js"(exports2, module) {
+  "node_modules/jszip/lib/reader/StringReader.js"(exports2, module) {
     "use strict";
     var DataReader = require_DataReader();
     var utils = require_utils();
@@ -9418,9 +9418,9 @@ var require_StringReader = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/Uint8ArrayReader.js
+// node_modules/jszip/lib/reader/Uint8ArrayReader.js
 var require_Uint8ArrayReader = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/Uint8ArrayReader.js"(exports2, module) {
+  "node_modules/jszip/lib/reader/Uint8ArrayReader.js"(exports2, module) {
     "use strict";
     var ArrayReader = require_ArrayReader();
     var utils = require_utils();
@@ -9442,9 +9442,9 @@ var require_Uint8ArrayReader = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/NodeBufferReader.js
+// node_modules/jszip/lib/reader/NodeBufferReader.js
 var require_NodeBufferReader = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/NodeBufferReader.js"(exports2, module) {
+  "node_modules/jszip/lib/reader/NodeBufferReader.js"(exports2, module) {
     "use strict";
     var Uint8ArrayReader = require_Uint8ArrayReader();
     var utils = require_utils();
@@ -9463,9 +9463,9 @@ var require_NodeBufferReader = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/readerFor.js
+// node_modules/jszip/lib/reader/readerFor.js
 var require_readerFor = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/reader/readerFor.js"(exports2, module) {
+  "node_modules/jszip/lib/reader/readerFor.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var support = require_support();
@@ -9490,9 +9490,9 @@ var require_readerFor = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipEntry.js
+// node_modules/jszip/lib/zipEntry.js
 var require_zipEntry = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipEntry.js"(exports2, module) {
+  "node_modules/jszip/lib/zipEntry.js"(exports2, module) {
     "use strict";
     var readerFor = require_readerFor();
     var utils = require_utils();
@@ -9709,9 +9709,9 @@ var require_zipEntry = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipEntries.js
+// node_modules/jszip/lib/zipEntries.js
 var require_zipEntries = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/zipEntries.js"(exports2, module) {
+  "node_modules/jszip/lib/zipEntries.js"(exports2, module) {
     "use strict";
     var readerFor = require_readerFor();
     var utils = require_utils();
@@ -9908,9 +9908,9 @@ var require_zipEntries = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/load.js
+// node_modules/jszip/lib/load.js
 var require_load = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/load.js"(exports2, module) {
+  "node_modules/jszip/lib/load.js"(exports2, module) {
     "use strict";
     var utils = require_utils();
     var external = require_external();
@@ -9988,9 +9988,9 @@ var require_load = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/index.js
+// node_modules/jszip/lib/index.js
 var require_lib3 = __commonJS({
-  "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/lib/index.js"(exports2, module) {
+  "node_modules/jszip/lib/index.js"(exports2, module) {
     "use strict";
     function JSZip6() {
       if (!(this instanceof JSZip6)) {
@@ -10026,7 +10026,7 @@ var require_lib3 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/tslib@1.14.1/node_modules/tslib/tslib.es6.js
+// node_modules/tslib/tslib.es6.js
 var tslib_es6_exports = {};
 __export(tslib_es6_exports, {
   __assign: () => __assign,
@@ -10347,7 +10347,7 @@ function __classPrivateFieldSet(receiver, privateMap, value) {
 }
 var extendStatics, __assign;
 var init_tslib_es6 = __esm({
-  "../../node_modules/.pnpm/tslib@1.14.1/node_modules/tslib/tslib.es6.js"() {
+  "node_modules/tslib/tslib.es6.js"() {
     extendStatics = /* @__PURE__ */ __name(function(d, b) {
       extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
         d2.__proto__ = b2;
@@ -10391,9 +10391,9 @@ var init_tslib_es6 = __esm({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/base64.js
+// node_modules/pdf-lib/cjs/utils/base64.js
 var require_base642 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/base64.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/base64.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.decodeFromBase64DataUri = exports2.decodeFromBase64 = exports2.encodeToBase64 = void 0;
@@ -10460,9 +10460,9 @@ var require_base642 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/strings.js
+// node_modules/pdf-lib/cjs/utils/strings.js
 var require_strings2 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/strings.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/strings.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.findLastMatch = exports2.parseDate = exports2.breakTextIntoLines = exports2.charSplit = exports2.charAtIndex = exports2.mergeLines = exports2.lineSplit = exports2.isNewlineChar = exports2.newlineChars = exports2.escapedNewlineChars = exports2.cleanText = exports2.escapeRegExp = exports2.addRandomSuffix = exports2.copyStringIntoBuffer = exports2.padStart = exports2.charFromHexCode = exports2.charFromCode = exports2.toHexString = exports2.toHexStringOfMinLength = exports2.toCodePoint = exports2.toCharCode = void 0;
@@ -10507,40 +10507,40 @@ var require_strings2 = __commonJS({
     exports2.escapeRegExp = function(str) {
       return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     };
-    exports2.cleanText = function(text) {
-      return text.replace(/\t|\u0085|\u2028|\u2029/g, "    ").replace(/[\b\v]/g, "");
+    exports2.cleanText = function(text2) {
+      return text2.replace(/\t|\u0085|\u2028|\u2029/g, "    ").replace(/[\b\v]/g, "");
     };
     exports2.escapedNewlineChars = ["\\n", "\\f", "\\r", "\\u000B"];
     exports2.newlineChars = ["\n", "\f", "\r", "\v"];
-    exports2.isNewlineChar = function(text) {
-      return /^[\n\f\r\u000B]$/.test(text);
+    exports2.isNewlineChar = function(text2) {
+      return /^[\n\f\r\u000B]$/.test(text2);
     };
-    exports2.lineSplit = function(text) {
-      return text.split(/[\n\f\r\u000B]/);
+    exports2.lineSplit = function(text2) {
+      return text2.split(/[\n\f\r\u000B]/);
     };
-    exports2.mergeLines = function(text) {
-      return text.replace(/[\n\f\r\u000B]/g, " ");
+    exports2.mergeLines = function(text2) {
+      return text2.replace(/[\n\f\r\u000B]/g, " ");
     };
-    exports2.charAtIndex = function(text, index2) {
-      var cuFirst = text.charCodeAt(index2);
+    exports2.charAtIndex = function(text2, index2) {
+      var cuFirst = text2.charCodeAt(index2);
       var cuSecond;
       var nextIndex = index2 + 1;
       var length = 1;
       if (
         // Check if it's the start of a surrogate pair.
         cuFirst >= 55296 && cuFirst <= 56319 && // high surrogate
-        text.length > nextIndex
+        text2.length > nextIndex
       ) {
-        cuSecond = text.charCodeAt(nextIndex);
+        cuSecond = text2.charCodeAt(nextIndex);
         if (cuSecond >= 56320 && cuSecond <= 57343)
           length = 2;
       }
-      return [text.slice(index2, index2 + length), length];
+      return [text2.slice(index2, index2 + length), length];
     };
-    exports2.charSplit = function(text) {
+    exports2.charSplit = function(text2) {
       var chars = [];
-      for (var idx = 0, len = text.length; idx < len; ) {
-        var _a = exports2.charAtIndex(text, idx), c = _a[0], cLen = _a[1];
+      for (var idx = 0, len = text2.length; idx < len; ) {
+        var _a = exports2.charAtIndex(text2, idx), c = _a[0], cLen = _a[1];
         chars.push(c);
         idx += cLen;
       }
@@ -10559,9 +10559,9 @@ var require_strings2 = __commonJS({
       var breakRules = escapedRules.join("|");
       return new RegExp("(" + newlineCharUnion + ")|((.*?)(" + breakRules + "))", "gm");
     }, "buildWordBreakRegex");
-    exports2.breakTextIntoLines = function(text, wordBreaks, maxWidth, computeWidthOfText) {
+    exports2.breakTextIntoLines = function(text2, wordBreaks, maxWidth, computeWidthOfText) {
       var regex = buildWordBreakRegex(wordBreaks);
-      var words = exports2.cleanText(text).match(regex);
+      var words = exports2.cleanText(text2).match(regex);
       var currLine = "";
       var currWidth = 0;
       var lines = [];
@@ -10612,9 +10612,9 @@ var require_strings2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/arrays.js
+// node_modules/pdf-lib/cjs/utils/arrays.js
 var require_arrays = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/arrays.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/arrays.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.toUint8Array = exports2.canBeConvertedToUint8Array = exports2.pluckIndices = exports2.range = exports2.sum = exports2.reverseArray = exports2.sortedUniq = exports2.byAscendingId = exports2.arrayAsString = exports2.mergeUint8Arrays = exports2.mergeIntoTypedArray = exports2.typedArrayFor = exports2.last = void 0;
@@ -10742,9 +10742,9 @@ var require_arrays = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/async.js
+// node_modules/pdf-lib/cjs/utils/async.js
 var require_async = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/async.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/async.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.waitForTick = void 0;
@@ -10758,9 +10758,9 @@ var require_async = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/unicode.js
+// node_modules/pdf-lib/cjs/utils/unicode.js
 var require_unicode = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/unicode.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/unicode.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.hasUtf16BOM = exports2.utf16Decode = exports2.lowSurrogate = exports2.highSurrogate = exports2.hasSurrogates = exports2.isWithinBMP = exports2.utf16Encode = exports2.utf8Encode = void 0;
@@ -10900,9 +10900,9 @@ var require_unicode = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/numbers.js
+// node_modules/pdf-lib/cjs/utils/numbers.js
 var require_numbers = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/numbers.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/numbers.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.bytesFor = exports2.sizeInBytes = exports2.numberToString = void 0;
@@ -10942,9 +10942,9 @@ var require_numbers = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/errors.js
+// node_modules/pdf-lib/cjs/utils/errors.js
 var require_errors = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/errors.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/errors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.error = void 0;
@@ -10954,9 +10954,9 @@ var require_errors = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/utils.js
+// node_modules/@pdf-lib/standard-fonts/lib/utils.js
 var require_utils2 = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/utils.js"(exports2) {
+  "node_modules/@pdf-lib/standard-fonts/lib/utils.js"(exports2) {
     "use strict";
     var __importDefault2 = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -11016,107 +11016,107 @@ var require_utils2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-Bold.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Courier-Bold.compressed.json
 var require_Courier_Bold_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-Bold.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Courier-Bold.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-BoldOblique.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Courier-BoldOblique.compressed.json
 var require_Courier_BoldOblique_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-BoldOblique.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Courier-BoldOblique.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-Oblique.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Courier-Oblique.compressed.json
 var require_Courier_Oblique_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier-Oblique.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Courier-Oblique.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Courier.compressed.json
 var require_Courier_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Courier.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Courier.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Bold.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Bold.compressed.json
 var require_Helvetica_Bold_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Bold.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Bold.compressed.json"(exports2, module) {
     module.exports = "eJyNnVtzG0eyrf8KA0/7RMhzJJK6+U2+zMX2mJYsEuJMzANEtihsgYQMEITaO/Z/P41CV+bKlaug86JQf6uArsrKXNVX8H8m3y9vb7u7+8m3k4t/btazm+7o5PmTZy+PTl88eXk6eTT56/Lu/tfZbTc0+Hu3eOju51ezb75bLq532maxYO2oarPb+aJndRCm3fzm425/Y8N/3M8W86tXdzeLoeXjYXv91/mX7vq3+f3Vx8m396tN92jy/cfZanZ1361+73af/PHLfXd33V2/Wd7O7sY+fvfd8svk239/8+T540ffHB+/ePTk8eOTRy+fHf/n0eR8aLxazO+635br+f18eTf59ptBBuHtx/nVp7tuvZ58+3TgF91qXZpNHj8+/svjx4+Hnfy6HAawG8z3y8/9ajeGo/+6+j9HT16+ePpo9+/z8u/L3b8vH5d/nx+9ul6+745+79f33e366B93V8vV5+Vqdt9d/+Xo6NVicfRm9z3rozfduls9DNTDOF8fzY7uV7Pr7na2+nS0/HD0y/xued9/7r4ZGi2OXv3taHZ3/X+Xq6P58AXrzfv1/Ho+W8279V+Gzv447Op6fnfz+9XHrsxA6cnv98NHZqvrqg4Nv599/vs4Ic+fvHg0eVe3np4cP5q8Wl/tAr0axR862/7m+PHzR5Pf76//Pp18+2QnDv+/2P3/9PF+vv7Z3a/mV0NA//0/k+m7ybfHz4dGvw5dWX+eDXH830d7fHJyssfdl6vF7Nb46fPTPf9jsxzi9X5hytOnz/bK3eb2/W6ibu6ydr1cLGYr4y+GiSn8c7e62qV7FZ4fH++F2e0grYf4mGQdLj0oM557/Xm26u4W3YeWRB+r3Zitd9+4/uQdfzEO9/Nis85duBqqdJZ38bH//LG7y82HocyXYiTrxWz9MQfrz261zHR512V4vxUt7z+uOtH2w3KzEnT+INqu518E7B46MbddiKmnw/xOpNXVcrG8y3jd3c6jZDOw2NlAot0fm9ki45tVN5SzD/PZkyc1abp1sZqqvHz+dJx7kX2vMvouo+8z+sH3/Oz5Hv2YO/NX/2BNhb/l7/p7Tph/5DD/lD/4c97jL156NeT/zB/8NffrLA/ot9zqdf6uN/mDv+d+vc0fPM8fvPBZOx0neppbvcvoMu/xXzn53g+L2afuPtiGhfz9oMU65c9FT7FUnK2v5vOr+epqc5tnbbOz7fWw/nR5j8XfQmfsY7M8nve51VVudZ1bieL8kD94k9HH3OV5Rv+d9/gpt/IStiXhNu/xLqNlRp9F1WerFxa4zpG4z9+1yR98yJWwza2Ek/aOdsc9xfRzV3f5FRPh+MXjmpWrRvtD2Xg/X1w3l/rr5VaYe1idPWL35TjNk+NJrbgPuwND9Fkfs1o7PiyWq7ng667xLVeb1bCMX3kAj0+wbNbzcuCaoluPWnRZ3Wzmg3K7vNdHDju5fPFX5Bh6S5wPc8HE8dNwKCcPB65nNzedSNs9x0MxOuDYzV236kTtD8dCs5vV7DOY2tOaWcNJRCd80MP7frY+EOHD6kofK9gERH04KRg/Pxxizz+v52shDWO9/7jchGPFtOyH5PaZW80eRD3Mrjb36tClePmHRfcla43Kup1drdThzvtVp3Z8vbyfXYWKc2k+zCQGwJQV1qF3trseQqqOUTd3N7PV5nYx24jdLG+Gw8xP4utmOA6Yl9uQsy688sOek+cjW66uPwzHeeHA0I9Q4iLrByCR+x7OYA/Pntoebgen2yxwF7ayzMRie70r+vVaLGCLuGNfeSK3I5KlGNRQn8Mp8ZD34hziH2lK3QliBvryH/PGlyY5qf51cfb86Cj3oC4X1/OHOSS0fyT2zA+YRXF4txsfOj/0ob4Rg3U596IygaHmr/T9hVJx3J6IGdWDfyb2zmeCPuBnAWknfs4weASchBxXJ1YDfX7yvIrjVQ+xK3IdXztjHvgodVx+VR3w8mjlaDRVP9KXw7FTqda3RWOFcCarhAzRw1yzJ/rha9z76ct66rn8s7u7EZn7Ju7Cz+LUID05DhbJocx9xQuJHc02xnrFY/Xznxw5i+rbj8uVGNUZ7d3DQFVgJ3pU8Kd1EaOwWTXRDjxienErFzjWm3KUsxL9jSnoUWzxaKtmgrebxf3886IX/WqU/9s4QEuk4Xjrfj5bXM8/fMhz1bet4de4H09YkSxeGwfT7MCq05auGuO9a9lgK2N+jQHyxZDqHy+/DUcMeA3OToFWy0/dHZ4ImTmuupv5Oh76eonGyYblONdFPdRYb4aqDucjHmw6hrTCbERm2Ur1fzU+8C+q8NOX9di1XOmK18Eszj/ef8zw+6YBLpRv2VjuGybTNVfHlvCqdfhwICtjgP18uVUavG9zhdaMtJae1jK6bu0517Ht++BhCa+Y9bigW9wLA78PJu2euF0ecMTUNfu6240YSWMNX8rjTK8FPvixq0/xCOfFySn4+JDAqyGR1/n7fud8Pa2Tv2gsJD8fXH9/iRPnpxJ2X0eZYrIFt4wYJuetGv8ldtviMETt42wBS0Mt8t2pSaxwnwu1BJgvx8MmT7WvTGCjFLrWgG6imeKAxmlVs6rPRn6XB4iWwbLnlhDXg010KmMbS/731AlbuMhtTs3Or+dXymh/iF8EB2aHDnd/pcNa625j3t4czuuD+3rV+M5XTZOOpwM2A/F73IgPHFD+2Fruad9+iVie3dkBWTwSsG87WAo0QeaXB/e0WN7s5vtuKcK9bJvpJq9jNYOGr2pU8s3Bye1gJfeYN9L3Tq7jdnHnLh80u+e3lrsfN7u7kf95NPm5W939NpuvdveQ/z15tbtbPXn0zenj/zwat/buEdC+nxGNpo7wb8PWU9/au0pAODAUzsL3nOUu4NIbuE1VoPv6Dyg4T1DGkAW2vzoU0L5wEL0OW2+HrZe+VWOGKIzehfMQi/M6ekBh9MBh9EDr6AHR6EGx0QMb6zqwYidILoatF7Y1Hbae2dblsPXkiW/WISGDvgPeDJsnvlU/CCjEAjh8H9AaC0AUC1AsFsAsFsDGWDh5CJmwDVoft/KI+tzzsRGWpiEqDuNUpM65UqsC5WqIata4LNyqnuXv5hI2rurYxFzMJlFFG9dlbTLXtglU4Mapyit/nRHUuyEqeueq8qt6niPKHmBcGYGJ2Q1MIkswrn3BZDYHE9ghTIg2UTF4RUVgGBWhaxhj6zBB+EfVwEQMUd0ZV3ZiYrsy2ViMa3cxmS3GBPYZE6LZVPyQE3KbW/UCNQIhXGg0A3QhQ1TfxsmFnLMLVQVcyBC5kHHpQlU9y9/NLmRcuZCJ2YVMIhcyrl3IZHYhE8iFjJMLVf46I3AhQ+RCzpULVfU8R5RdyLhyIROzC5lELmRcu5DJ7EImsAuZEF2oYnChisCFKkIXMsYuZIJwoaqBCxmi4jOuXMjEdmWyCxnXLmQyu5AJ7EImRBeq+CEn5Da36gVqBEK4EIYGrShyqvQokimRyM4UZLCnyMmjoiiNKjQ5a+yPLSuKyrdii2xeUScHi6K2sdiGvSyqZGhRJFcL4usGB3+LnEyOROV0ocl5Y17Y86KojC+2yO4XdbLAKGofjG3YDKPKjhjVaItBA28MHAwycHTJKLBVRlX4ZWgAphk5GUYUlX3GFl/xFTbSKGo3jW3YUqPKvhrVaK5Be2jUxbbRvm/xQ/ETrusEPRcpGRVK5LdBYrcFEbwWKTktStJnocGZ3A97LErKYVHP/ooquStK2luxBTsrauSrKJGrgvRaUnBUpOSnQVJuCg3OZezZSVFSPop6dlFUyUNR0g6KLdg/UWP3RC16JyjgnEDBN4GiayJmz0RNOCbI4JdIqdpRUl6J+kEvYJ9ESbsktmCPRI0dErXoj6A8yAzfyra9pu1ICVccR4+WaIhMxTiZoXN2wqqADRoiDzQuDbCqZ/m72fqMK98zMZueSeR4xrXdmcxeZwIZnXFyucpfZwT+ZojMzblytqqe54iypxlXhmZidjOTyMqMax8zmU3MBHYwE6J9VQzeVREYV0XoWsbYskwQflU1MCtDVH/GlU2Z2K5MNijj2p1MZmsygX3JhGhKFT/khNzmVr1AjUAIF6p9RRtyRhXuAhkRCOxEJoEVOSMvckGakcln4vvZjlxQfuRqNiTXyJFc0JbkOnuSK2RKLpArmfBaMPAlZ2RMIChnMvlcxJe9yQVlTq5md3KN7MkF7U+us0G5wg7lSrQo4+BRxsCkjKFLOWSbckX4lIlgVM6oQF1QVuXqgfpls3JBu5XrbFeusF+5Eg3L+IPI1a1o1yvWiolwrdoxdC1nZAQukGuBwK5lEriWM3ItF6RrmXwmvp9dywXlWq5m13KNXMsF7Vqus2u5Qq7lArmWCa8FA9dyRq4FgnItk89FfNm1XFCu5Wp2LdfItVzQruU6u5Yr7FquRNcyDq5lDFzLGLqWQ3YtV4RrmQiu5Ywq1AXlWq4eqF92LRe0a7nOruUKu5Yr0bWMP4hc3Yp2vWKtmAjXWo2/6OG7q4RMoGLyK8PsVqMAXlUJOVXF0qdG8Sx9L3tUxcqhqpb9qSrkThVrb6oqO1Pl5EsVkyuN+HUi4EiVkB8ZVm40iucphuxEFSsfqlp2oaqQB1WsHaiq7D+Vs/tUHr1npOA8IwHfGQm6TkXsOZULxxkl8JtKqLIqVl5TtWbNsc9UrF2mquwxlbPDVB79ZaQPKeu2qU2fiR69cJUx19FWDFHhGidjcc7OUhWwFkPkLcaluVT1LH8324tx5S8mZoMxiRzGuLYYk9ljTCCTMU4uU/nrjMBnDJHROFdOU9XzHFH2GuPKbEzMbmMS2Y1x7Tcms+GYwI5jQrScisFzKgLTqQhdxxjbjgnCd6oGxmOIas+4sh4T25XJ5mNcu4/JbD8msP+YEA2o4oeckNvcqheoEYjsQt8N9FXcip8tqDoGIBHSwvUeYiALoiAVRvEpLISmkFq+jnbV9cS3LJ0che4CxwRzWrsLiKYcFBsIMBsIsHEge/LDGPdT34pu+gPGHZDw1h8o7kCjo/4Q4g7Mugts7C6QaJs/jCXvW9OwtSv0575VRwcIuux0/3tsdXJ3ZPzJNUOj/2L4DFEMjVMgjatomphDahLF1TgH1wSOsAkxzIYp1pVfZDTNCEJviOJvPE9ClWgmKk7TUV4IjNNREU9H5TwdlcvpqKKYjirxdFSepqMKaTqqQNNRMU/HyC8ymmaE01ERT0flYjpGiadjxDQdfx1n4oVv1V0BqvEHFEIPHDoEtAYckMUamIUZ2BhhIDW4jnbjPPatOgJAdQSAwgiAwwiA1hEAshEAsxEAG0cApI7AUZ2tJ48N2UyN7Kdxqo59Kw70J5wqQGKgP9FUAY0D/SlMFTAa6E8wVUDiQH+CgTqxcTraxK08zE1jTBs5pk0eEx+SgSJGuxGj3YTR/jzZn/Kc+FY8LipIHAQVng6CCo0HQQXJA8mi0OFRYfV8BlA8Ftqhctzy1LbsWMhRPYFBFA6PnOPhEVB7TTRgO2py5MdGzvzYyNhyNwLfskg7ipF2jpF2apF2xJF2xSPtzCLtyCJtaBPivsn5oc47fp6oU46fJ+ls42eR1aCI/ODTi58nfGaxI70tUGUrLtEFpYU2vIsf6oIECgGpKhrUJAeGGlCMSNXhokYcOZKpyEileosqJD8JVIWkUkGyKmqTmuQy5Qa5YqkFFS+pXMckc0lHGaqbBCp0UlXNU5Nc/tSAnIBUbQrUiP2BZLIKUsk1orppJRJ7CalfLyThMNTgYCE1fIcaHS6k5EYkR2OKIngUCWRXpCbn+mWC1/DKVrx8t0fiyt1O2B3ej5eddptTO0bdbZULWce+aSUODOvScfwFzUE6jZLgfo3nl0m6vPPLRF3Z+SW/o+qIgnDwHVVTMRz4BueLiDAw+Q1OFkSIqtaKU9BbYp8DwWFrv/X4S8wriCAJFEdWVTRjG4xpVCCyUcD4ksJRJlnEOrZoRVy0Otykb4WS56BdwGOD0V5xDgxR9J2ruFcVI14ZxLoijLIxjq8JIrJVa8U06C2xz4HgCBpPsRuO08oJ5lPfirccCop3gwoSNyAKT/ceCo23HQqiWwqF0d2EwsKNhELqeunorZn5Gc45ojDdLlyE75mGrXdhy6/QnE3SxZmzibous6P13Nd3aee+I6oWA9NgiObCOE2IcTUrJuapMYnmxzhPkgk8UybE6TJMc4brDoWBZ6+x7pB6kb97mtG7jGBa00LEPE9wlWiWK+apDi9TwXxHTpMeRZr5KKrpjy1yDkSdEiGKnA1R5ZSIasyLqFFypPc6VfQ4TQ6916maXDT2N23wdw0O+aNfb5RizqSgUzoFjXMKXkSBjEJK+YQSZRNKKpdQz5mEKuURSpxFqHEOoRYzCBXKH3qHLceJc6f9DltucCH3M5X0naSQMerVLiHlbAGVcgUUzpT6pgCkiSHKEeOUIMZVdpiYU8MkygvjnBQmcEaYENPBMOUCvuxDYeAsaLzsQ+pF/u5pRu8ygmlP78YwzxNeJZrtinmq47k5zjgrNPEs0/yzrNKA2+Rs4BaUFCxzbrDOKcJ6zBRWKWFIftuMKadPklUWUaOL5n6nTeVdU4EMY4USjeWcb9SC0o5Uzj57uh/yzhllnAuUay6oLHM155drlFkucE65wtnkSswj55RB4UUejghnTetFHpYvxPdPBXsnGORFft8lCTkXTKMsMM7zX083YfoN0ewbp8k3rubexDz1JtHMG+eJN4Hn3YQ47YZp1vEaBIWB57xxDYLUi/zd04zeZQTTnS5KMM+TXSWa64p5qutTYzDVhmiqjdNUG1dTbWKeapNoqo3zVJvAU21CnGrDNNX44CeFgae68eAnqRf5u6cZvcsIpjo9J8k8T3WVaKorpqn+bZzl8cmE33CGkdXZRUZP1rkQHq1z7M/WOYNH6BzCM3QO7SE6R3UGgflzMmUrXjErKD7RWJC4q1J4uq5WaLx/UhDdDymMboIUFu58FBLvKv4G8zZeTdyh2KDLg7L7iIj0oDo5qHCbEHAeayfG2omxLkOK2f0+QOKRr8LTrZxC44NeBcmHw4tCT38VFh8JLyg+2/UbVscY/dcTfMS0bMVHTAsSj5gWnh4xLTQ+YlqQfMS0KPSIaWH0iGlh4RHT155GPow6tD15M9nfzYet+GxOQeLZnMLTszmFxmdzCpLP5hSFns0prE4RoPjY0ZvRn2GrZj6i4MounMetPN7zxnjP5XjP83h5IkER4z2nZ5HewEQ68WXkzQQfMnwzrhSuXcal+Q2tDyOtVzFh9g1RSIyruJiYg2MSRci4DpPJHCsTKEGMU5bgdWhGlC+N69CkngvUiJXMIRPbseJsMn44VimvTODkMiFmWL7UbghyDa+rUyvOOnVdfZTqg8SQeoYonMZVOE3M4TSJwmlch9NkDqcJlHrGKfUqfysQpZ5zlXpVPReoESuZeia2Y8WpZ/xwrFLqmcCpZ0JMPXy0nTIEUg8fbadWnHrq0fYqpefYjqXAoT3wHJtuIsKsn2PTaiPkjefYtMypqp9jk+rbpsDJe+h5B9nmvCkcjLlO6tjkazFPCR7V/5+Y52SPckr5KFPipwdBZJZiEaTnQOQnUkE0nwLZNximu5z9vfSt+g2A6hkToDApwGEPQGv4AVk4gVkMgY2BA1Lz15G/oPoWSxiQONV4S8UKNJ5qvBVlCQqdarzFAgQUTzV2aHeO98K34rsaBcV3NQoS72oUnt7VKDS+q1EQvatRGL2rUVh4V6OQ+K7GDl0tFzTyeu7qbXafeOZbdZSAqrEgwlECh1EihVNXwHXwgGzwwGzwzj72nz925Zzr2NgyjGqZZ2vZmJqlnJplnho+nQVFTJqdzgLKM2Sns45WcSsPZBW93IV1dzvPU74JpbjJ9rFpeMVGesUmewU/kgqKcJGNcJFNcpFtmPA+buUk7XPm4buILwlRENK7iMxVhNS7iCxRrPK7iCxwbPhdRMbktXj8fkqIXFcfv7OY/TcdvzPXTpyP31kgT07H78TBxQxRrRgnnzauHMHEbAsmkTcYZxswgQ3chOjihsko/LXPhQodmXrFXa4Ftnfj5PHOhdGb2K45Zfmmke8bZ/M3gVeAKqRloArLHAxeEIwfygGxNJjUyIHGImFyK0V4uTDeSAVeOCpfCdQYul5HqioWkyrBimKo4ahybTGx7Zy8yhjXS43JLWNNi44J2li3Odt6gRrlpFajcKCPa1IUOI5R5fUpqjLWsYmIeGzAcY9qCm+UU5CjTKGOIq9k6XLAqRR4VTtwOUA3ESucvhyg1cZq17gcoGVe+fTlAKmi7UeBiz6qvCJGVXpibCKcMTZgf4xqssEop/UyyrRqRpENM6jsaCTGdTS+SNeq5bSmRpVXVlLV+hqbfM1L5FobW/CKG9W07kY5rb5BzmtwfMmuFc60Hkf16xmo1ubY4GAGttbp2OhwmqY1O6oHEzGt30FdNYWDYWus6KGNWtdDA1zdo3BwbdIrfWzytdUnrfpRbaz9sdHhJSofB0T50BK1bdVA3xQOWkM+Sjif4BM953g8ACg+x3OeVn7g6XriOa7xgOiZnfOwmgMLT+qc47rtqNroiRH6IZR6PRnH2nj1xjmN+tCrNy7m8TdevXHOkWi9euNCjEnj1RvjFJ30ysrIG6+sEKdgHXplhUQVtq+8skI6BfDgKyukcigPvLJCGgVVvr2hIsjhlW9vBEqhbb+9ESQV1oNvbwSVQnrg7Y2gcTibb28EhUIpXm3IseIw5lcbHFEAG682OFeha7/a4BIFrfVqgwscLv1qg2MKFL8SQKHgEDVfCUgKBezwKwFJVuH76isBqQUF8yuvBCSdQ3vwlYCkUqAbz8LruHLYxbPwwCjUrWfhQVDhPfAsPGgU0uaz8KBwGBvPwgOn0KVHxzkqHC77iW0IlzMKlwsULhdUuFzN4XKNwuUCh8sVDpcrMVzOKVwmULiMc7jGXw6GYFVCoaqYAlWxClPVcpCqQiGqmANUOYen8hicSik0I6bAjJTCcjGG5IVvxdOVCwwFIHG2d0EhABrP6y7C0IHRNYQLGDKQeJK2Q/6zzGUrzlxB8SzLhbO4FVOhIDHfhae5LjTOc0Hy94KLQrNfWD0/BRSnd4d20/rMt+IpS0E1BIDEdYvC0ylNofH6Q0F00aEwutJQ2DhjQOoIHMXT2YtJekR7h+Kguzw5dqUGkZ6vTs5XuBADOE9jJyarozLdMbu44tm5u6Dy0rfiKXlB4jy88HTyXWg84y5InmYXhc6tC6s5Biheyr2Y5Ke2dyxfiNjRTZjZTc7GTSP1NjL1Njn1+DICKCIpNyIpNyEpp6PrwVbs9RRdD5AYyJRcD2gcyDS4HjDq7hRcD0isoekEH7iboncBEo95Tcm7gMYHuqbCu0ChR7em6F2A4oNx09G7Tn0r3gyYoncBEjcFpuRdQOPl/2nwLmD0q7VT8C4g8Vr+FLzrCRC8Cj0drWv/I2VTtC5A9nYJoPwLbVOyLqT4donj+BNt02BdwPztEmNmXT7UZUi4ZS6SZaMilrIilrki2LpAEbVi1gUoFwZdqJ2Sc/m87Zzr1MZvzgUoJp5zTDynlniO+GaTK56SzjwlndWUNNKHeupz3fepvi9Hwxt/qekSHQ+ZvZEGLL6IAwK+iQPYXsUB5m/cAPRXbgDWd24A2RtpznbW99y34ot8l8n6gKd3+y7R+gDRxIFigwFW8xJQ7bajmS2wl2h9gOLN4stkfcDTscElWh8gOgK4DNYHLFxHv0Trc1RL6CmQW/xl5svR+174VjyfuETvQ5TPJy7J+5CC9wGOpxmXwfuA0WnG5Wh0MARzOmTq1cxL8jrE9GrmpXA7lPitzUv0O2T0hublJP8Y9iVZns/XJjbaiIFuWgPd6IFuxEDZ91BSA3XnQxhfT7206/RgBukmRBLY0/RtiKQKd0s3IpKQfC7fikgKOV66GcECeF96x4y5ckH1jhlL5Ietd8xYZmdM75gxJ4+sHIzSELmlcbJM48o3TczmaRI5qHG2URPYS02IhmqYXNVvMoVS5XtPXANgc4bIaY2T3ToXnmtiNl6XsvuaRhZsnH3YBDbjKizFoJMtmyAty1ThW6axeZnQcDDTk42ZwqZtAjt3upPIgvDwKm1E8+TmJhyMj/J101rxaTm86c34ZK83hQyfbvlVJ1T3/JTGzt+866caCP9X9/2UllYBeedPibQWqHt/QoMVASktCiipdQH1vDSgSqsDSnqBwBa8RqBGywRKtFKABIsFUlovUKIlAyW1aqCeFw5Uae1AiZcP1HgFQS0uIqjQOhJuBgfHELeJRYGBaSOlNQUlWlaCJFYW1PPiEtS8vqBMSwxKvMqgxgsNaEsdkrTcoCYdFRsIU0WZfRW1hrVik+SuKPIChBqvQepRAaGJlQjUjf5QWo9Q+1oA1aqE8oEAttYmbHIogHmFQjEuUkM5TfxXQsqW/66PoXj/yYXd3yTc/5WH3dY2bPl1nrIVr/MUlK7zVNfDHhmibhmXfasqdLCibUZ97gH313ju9Ngx7LQh6rRx2emqQqcr2mbU5x5wp43nTodnlaDnkVP3oyjHEJrAQALfNnjf6B+PK4p5cJDuMDSkNDCU5LCgAQwK6FbSXvaJh4NSHkx9zAdGYoiGYVyOoaowgIq2GfW5B9xv47nT9tgH9NoZddsF2W+ToePGtoL1oh/cdxdy5+0hDOi8M+q8C7Lz4c/Tjx0Nf56eWS/6wZ2Xf55+1MYHJaDrlVDHK5bdhr96PXYQ/up1JH3aN3dX/NXrUam/QAe9NUTdNS77i38kd+we/pFcQn3uAfdZ/ZHcvfR+oAvbc9ny4wRDqpdF8IObijbhq+nv4b1PxxrAZd/o7+G9FwcUoNCN0Pfh8AFY+LWK92OkfauPW3kMOY5XA/VA7LY+Be2T+gGRqzH4sBX3dZWDD0K8xXs1dtx70MeZvKKOj7QeC3zMCIZgSPamqguBaETGD38RjQ2PbaiTPEp1bDNK9uJrRjBUQ7KHVV0IREM1fviLaKj4viR1koeq3pes0nBat1jMaLAGcbgOdT9NX0jIg3bla1/HAzelV11Og3clD39/cjRZf55d7T5yOtJywp3/bM1xlhta/MLh9GxybTstW1f7v10LyE38Ovj3dR2ob9kIHeHQ9nTcA+7YEO298of86W1GvUDUI+OpW7uKG4O03zleSj028hA+sA1bX8JWH7diR1J97yldpx87whd2jyN+yJ/fZvQlo14g6qb0or1EPz4w9pVfTz+O+CF/fpvRl4x6gaiv0kxGSbwmUjus3hI5FtpD4+u2Df6lwfsW5+G0zqpGPV+IG0ckrsEcJ+VBftFW0i+S9prSKBonU1X1a3M8CFB4FCA96O/aavxF476BeSio5bHQayHjOPitkOOIH/Lntxl9yagXiPqrzgdHiV8PGDub3g44Jv4gvmIr2BfBesWoy/I0cNT4Gf2xz+kR/WPiD+IrtoJ9EaxXjPosz/722ocJXiSvpItb8aigoHotHFH+AePC05HDnuKflHUcf9e4IPr14sLo14t3bGlHOWUrHjIVJE6KCk8nGoXGk6KC5ElRUeikqLB46FVQfDr0wyRcgq6IDp1OohDozX6unvjGOGwg40whgTgA9jAg9GkCOsYGSA0AoDpHjvykXVxeaF5aqO1gpEbicA3HMTvOAzctjd6VFAKTYhwMUzCMU0TyZeCbxmXgm4OXgSOEMOkfgdBiDNmBn4DQLVL42j8AoRvEUDZ+/kGrFNao3rTCxCEmVQW6/knNY9+KNsN/SHNPP43utHfcT+hOgKJ9Ok+W/QndCRDfA3LFHdSZXVVyZHfK9ij/SoYWaCyHfiVDN8kjbPxKhlb1uFu/kqFlikbjVzL26iKszouwBi/y6ruQ6+4inwct8knPonHSs2if9MQrAvj1+QchtEC7av8gxNig/v2XbUa9QPT16u/P7qXbCV7pLFux2goSi3rhqQoLjYt6QXJRLwot6oXRlc7CwpXO2wn+2d1bHDEg6N2e3k3qTWXbikddd2mwwNMh1t0k3DA2JP9GxN0k3h42RkdZdxO8GVzJ7uD11LbcHsU9FH335C4+4RURBaH1fFcUczjE012R68CoZ7uiwCHKT3YFDMHKt5LvUrUzz7HD37t7Qohip3/vjsUcu/R7d8x17PLv3bHAsePfuyMMscNLLhQIjp265FKl9JtCT6TAcTzwm0K6iYip/k0hrTbi2/hNIS2nWMvfFJIixj0tITKUaQ6aS8jYoN47gzkwRNE3ruJuYo64SRRr4zrKJnN8TeDImhBjivcbTyPqcyA4gu2bi8sJ3llbhnV4t+V/uGkZdrXMe1nqHaB3EYJd4UXck9iqzx/kPbcdbpmucCoOHUlXOE9E+77xPdyvrzw3Aoeu2DV5uRIpdEs++xEodengsx9LvGpHCLqCV+1OYqs+f5B70H6Kg47FsRekQGdIgT6R0je/jXvIcu5ouF7IDDoXrheeULtefJa7cuCxkXrWgX3IB9OGoAd4fE0f5P2r4+tRQksiBLuvCHafjWvZMK5l27g+T/D84DN+FlA6K6gXzFp3GKPeEuM9RvoqU1+4uug+3Ncv3f//m9NnptYPXscPGa73DIXmN3wjjnGMmrrpG1vEa49BC3ERY1jFsBiuHVJavRostdBZ0WI3t88ErjtUWvzFUtLqTWuthu6oFnnyq+SFMgRp96wHbsUJK6j2EpF1DuB4/f2ZkeugW/o4urF6KFt2KcsRXb8ywV569y9bxq08EHXlvPBU1IXGk+yC5El2Uegku7CYvQXFK+c7ZFfOPWx/hAbrMO51NJcVZhEimx+EjVje11s5ZSO0cv5QL0yu9oYHG+GC7Cra3QjtdrsPzRBNlHFKO+ece3Qvv0ay4uvcklPRnqn2uBiipDQuo2lPSFF6Vr4UqDF+ma0m5pQ1ifLWuE5ekzmDTaA0Nk65zM9O8DT8kZuuc+A4v41TkjvnTHfl0AR5bhtRiQ8nDZTJfSaxDsS5wKjY8xweEUOUDMapGJxzMfBfqngW8XVuycVQORSDISoG4zLW6Y9H0A6WAjXGL4tB/e0IlqgYWn87gmUuhvS3I5hTMaS/HUHT8Eduus6B42IwTsXgnIvBlUMT5PluRBUDXMGiTO4zicUgLl9VJVxUwZKIAidGVLk8SE1FEnUqlSBetz6Vyibfr3uqBC6hg/frVJtUTukGlxYORlAXWPMGl27AxXbwBpdulApP3+DSKhdhUFMpBvWP1sfWrWlIxRlVLlFSU6GS/vU0gLqMXJYuXwqV1de3OBVz6zroXo/Xi2qYEOUHEj0gATbuAcJLjXQKPG6Vv905vuhnyJ/1IU63yIN6YadQlUwT2f0JyvHM3JAlB3G8EBClevY+npa/yOKo7PN3mMOJO1rZigVeUDUbQKLQC0/VXWgs6YKoRAuj+4mFhfuJhcT6fADrfWFk518nvhVvOj4kpwKebkY+oCcBIiMCxX9xzVm1HEB1HI7op8u2MLRTI27N2+zH24YJb6XzbrPdbpseuxXGus1uus0WusWh7Qeyu4Ls9x3KVry1UVB8rm6P8o2OwtM9jj1Nz9UVHO96FER3NAqjmxn9WCsnvhXzqsdaASRSradaARpTrQ+1Asx/ws/ZWCtAYo71qVb6MA99noc+z0PfmIdezkOv56HP89CLeegb81CK4KltWRE4ikXgHIvAqRWBIy4CV7wInFkROLIiMET1XRdEzCpDlFrGKb+MqyQzMWeaSZRuxjnnTODEMyFmn2FKQb7MQqGAdDBEGWmc0tK5yE0Tc4K6lLPUNEpV45yvJnDShms3TyOi9G1cuyExJ3K+dkNcp7S4dkMCJXe+dhM5pzncpINMR0rJjhLlO0oq5VHPWY8qJT5KnPuocfqjFisAFSqC/C6IiBWkG1KqBpSoIIIkagL1XBZBzZWBMhUHSlwfqHGJgAZVgpQKBSVVK6jnckGVKgYlXTTYgusGNSodlKh6xGtAY1L8OYHnmP+EHAASnlj+k2ccMJ9n/UnzCzQ8hfwnziag+Lzxn+DjTGKn2cUTzt0XHp6UNBB2cMY0pOTfI68nm10mcVyG47gc53GZlsblShqXSXFchmlcxmlc+JJUp2kcX5DiGKOUxxn0NNaopvEGOY45SDTuoMHY//O//w/7Vd1G";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-BoldOblique.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Helvetica-BoldOblique.compressed.json
 var require_Helvetica_BoldOblique_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-BoldOblique.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Helvetica-BoldOblique.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Oblique.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Oblique.compressed.json
 var require_Helvetica_Oblique_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Oblique.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Helvetica-Oblique.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Helvetica.compressed.json
 var require_Helvetica_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Helvetica.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Helvetica.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Bold.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Times-Bold.compressed.json
 var require_Times_Bold_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Bold.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Times-Bold.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-BoldItalic.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Times-BoldItalic.compressed.json
 var require_Times_BoldItalic_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-BoldItalic.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Times-BoldItalic.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Italic.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Times-Italic.compressed.json
 var require_Times_Italic_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Italic.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Times-Italic.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Roman.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Times-Roman.compressed.json
 var require_Times_Roman_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Times-Roman.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Times-Roman.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Symbol.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/Symbol.compressed.json
 var require_Symbol_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Symbol.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Symbol.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/ZapfDingbats.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/ZapfDingbats.compressed.json
 var require_ZapfDingbats_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/ZapfDingbats.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/ZapfDingbats.compressed.json"(exports2, module) {
     module.exports = "eJxtmNtu20YQhl+F4FULyMGeD7pz3AY1ChtG7NpFA18w1NomIlECSRcxgrx7SVk7+wOdG8H5OJydf2Z2d5gf9cV+t0v9VK/r+6vXsXlOlbHe28paq229qj/t++m62aXZ4J/m8PRb1z9/baZxefK63Z6eXN5dVMvTCh83u277xr/6kLrnl2XNq7TpXnczuZyabdee98/b2VzM/x4/dd/T5qab2pd6PQ2vaVVfvDRD005puE3Lu7eH1HbN9hTjx4/77/X6y5lcnUmjVzHIVVDicVX/1W/SsO36dLMfu6nb9/X6TAoBD+5euvZbn8axXtuZ36dhPJrVQqgPQoh5hev91LWLkIv94W1Ygq9+aX+tZAx2tfz64284/sblN/rqfLP/mqrbt3FKu7G67Nv9cNgPzZQ2H6rz7bb6vLgZq89pTMO/M/xfEqturJpqSM/d7GJIm2oamk3aNcO3av80O5xh3yyKmm1193ZIT02bqovTKjP+MAf++7zsZvZ3276kYyWWXB0z99S18/PbafPHQ71W4fjn/fxnFO+ZvkrT0LVzTr78qB/+nk38bHM9exgP8zr1z9U7jt6840YW5uSJKcZOCaBBnKgm5mU8MVNYyMwWFvO7Ukagkmgg6sDWQ5yFFqjzUrLEaQ3BEmiwNsMSaZS0vgWfOkPHWQowNeTUc0kumnxZvsgPxlGai6VTGUqAVCTQ6QkWnc77DKEiLktSUBJKqHIQZ86d8gCpHYoiEzMsb1ubYy8vW50DChB5ZhGqrijD0EqUIeiaEHIfCg5Kpuu0ApiToaGPSY0uaQsyr65L2oKi1yFt1PLaQ3lzfXTgXodGoJYzglndSLDMPg1sTPJpQJHJigw0QrGERqD9YhyTOgONQDUyuF1zaxuokc/BW2ztXCMrGZ9WMW1oQZHIXWNBkSCfRZEL5BMUiZw6CzVSFCfUSGZFNjIldoKDkonTKQiJIGzWmFd3BizJJ9SINoLDriOfUCOZS+zg+KGD1qGiLNMLxtJD1/ns00ON6EzyUCM6vbxhoBKaqbG3DFQCNiL1iHccBPV0DHhQH/JW8EW90dkyFKGywCJU0WkVSvSGeiSUODWFFD0HYdPQVoiRgfPMA+/nnRgiAyNYSjpWNQcNSMrtFCUH4ZIRpSCWocFCSuhCEY6hoUClc0WC52BJlCYYLQdhN+hygRRRlo5BKRRLS6oihSqh+ZzzRGG1Mo4Iz1LoP0qsxDGFzk0JE42ji0jCPejomJKCuwil4m5CiRMEUMVSzVLDUstSx1Juc0oVWMpqY295qVltmtWmWW2a1aZZbZrVplltmtWmWW2G1WZYbYbVZlhthtVmWG2G1WZYbYbVZlhtltVmWW2W1WZZbZbVZlltltVmWW2W1QYjQCh7E2aAQHeGhCFgPoNoy8KNb2wxBhmGKBxoUZXlLGsLI6AsftEDHV0wIURVbANLcTKlGGBIKPOAxCmhePCKUwFzAmpDFRQvjA9R06Hq8TONvshgKDCuRAZTXigUxjxNFfKRo3CLhnIJBMFRvMZpqpNBMlQJzGT5WFQMVQI/AikPMIhEU1aDjqJvQwmjSHB05cC9jbYwc5UtAHNLhDw41ha+lEqF4JaH3gmB61SYcqInxTDmQK8v08vjqv4zDf1N0w3Lf4A8/vwPpfK11w==";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Font.js
+// node_modules/@pdf-lib/standard-fonts/lib/Font.js
 var require_Font = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Font.js"(exports2) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Font.js"(exports2) {
     "use strict";
     var __importDefault2 = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -11211,16 +11211,16 @@ var require_Font = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/all-encodings.compressed.json
+// node_modules/@pdf-lib/standard-fonts/lib/all-encodings.compressed.json
 var require_all_encodings_compressed = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/all-encodings.compressed.json"(exports2, module) {
+  "node_modules/@pdf-lib/standard-fonts/lib/all-encodings.compressed.json"(exports2, module) {
     module.exports = "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";
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Encoding.js
+// node_modules/@pdf-lib/standard-fonts/lib/Encoding.js
 var require_Encoding = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/Encoding.js"(exports2) {
+  "node_modules/@pdf-lib/standard-fonts/lib/Encoding.js"(exports2) {
     "use strict";
     var __importDefault2 = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -11266,9 +11266,9 @@ var require_Encoding = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/index.js
+// node_modules/@pdf-lib/standard-fonts/lib/index.js
 var require_lib4 = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+standard-fonts@1.0.0/node_modules/@pdf-lib/standard-fonts/lib/index.js"(exports2) {
+  "node_modules/@pdf-lib/standard-fonts/lib/index.js"(exports2) {
     "use strict";
     function __export2(m) {
       for (var p in m) if (!exports2.hasOwnProperty(p)) exports2[p] = m[p];
@@ -11280,9 +11280,9 @@ var require_lib4 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/objects.js
+// node_modules/pdf-lib/cjs/utils/objects.js
 var require_objects = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/objects.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/objects.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.rectanglesAreEqual = exports2.isStandardFont = exports2.StandardFontValues = exports2.values = void 0;
@@ -11302,9 +11302,9 @@ var require_objects = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/validators.js
+// node_modules/pdf-lib/cjs/utils/validators.js
 var require_validators = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/validators.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/validators.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.assertPositive = exports2.assertInteger = exports2.assertMultiple = exports2.assertRangeOrUndefined = exports2.assertRange = exports2.assertEachIs = exports2.assertOrUndefined = exports2.assertIs = exports2.createTypeErrorMsg = exports2.isType = exports2.getType = exports2.assertIsSubset = exports2.assertIsOneOfOrUndefined = exports2.assertIsOneOf = exports2.createValueErrorMsg = exports2.singleQuote = exports2.backtick = void 0;
@@ -11487,9 +11487,9 @@ var require_validators = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/pdfDocEncoding.js
+// node_modules/pdf-lib/cjs/utils/pdfDocEncoding.js
 var require_pdfDocEncoding = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/pdfDocEncoding.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/pdfDocEncoding.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.pdfDocEncodingDecode = void 0;
@@ -11553,9 +11553,9 @@ var require_pdfDocEncoding = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/Cache.js
+// node_modules/pdf-lib/cjs/utils/Cache.js
 var require_Cache = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/Cache.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/Cache.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var Cache = (
@@ -11587,9 +11587,9 @@ var require_Cache = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/index.js
+// node_modules/pdf-lib/cjs/utils/index.js
 var require_utils3 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -11610,9 +11610,9 @@ var require_utils3 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/errors.js
+// node_modules/pdf-lib/cjs/core/errors.js
 var require_errors2 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/errors.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/errors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.MissingKeywordError = exports2.MissingPDFHeaderError = exports2.StalledParserError = exports2.UnbalancedParenthesisError = exports2.PDFStreamParsingError = exports2.PDFInvalidObjectParsingError = exports2.PDFObjectParsingError = exports2.NextByteAssertionError = exports2.PDFParsingError = exports2.NumberParsingError = exports2.MissingTfOperatorError = exports2.MissingDAEntryError = exports2.MultiSelectValueError = exports2.InvalidAcroFieldValueError = exports2.IndexOutOfBoundsError = exports2.CorruptPageTreeError = exports2.InvalidTargetIndexError = exports2.InvalidPDFDateStringError = exports2.PDFArrayIsNotRectangleError = exports2.PageEmbeddingMismatchedContextError = exports2.UnrecognizedStreamTypeError = exports2.MissingPageContentsEmbeddingError = exports2.MissingCatalogError = exports2.ReparseError = exports2.UnsupportedEncodingError = exports2.UnexpectedObjectTypeError = exports2.PrivateConstructorError = exports2.MethodNotImplementedError = void 0;
@@ -12048,9 +12048,9 @@ var require_errors2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/CharCodes.js
+// node_modules/pdf-lib/cjs/core/syntax/CharCodes.js
 var require_CharCodes = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/CharCodes.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/syntax/CharCodes.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var CharCodes;
@@ -12118,9 +12118,9 @@ var require_CharCodes = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFHeader.js
+// node_modules/pdf-lib/cjs/core/document/PDFHeader.js
 var require_PDFHeader = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFHeader.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/document/PDFHeader.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12169,9 +12169,9 @@ var require_PDFHeader = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFObject.js
+// node_modules/pdf-lib/cjs/core/objects/PDFObject.js
 var require_PDFObject = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFObject.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFObject.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var errors_1 = require_errors2();
@@ -12200,9 +12200,9 @@ var require_PDFObject = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFNumber.js
+// node_modules/pdf-lib/cjs/core/objects/PDFNumber.js
 var require_PDFNumber = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFNumber.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFNumber.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12248,9 +12248,9 @@ var require_PDFNumber = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFArray.js
+// node_modules/pdf-lib/cjs/core/objects/PDFArray.js
 var require_PDFArray = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFArray.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFArray.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12376,9 +12376,9 @@ var require_PDFArray = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFBool.js
+// node_modules/pdf-lib/cjs/core/objects/PDFBool.js
 var require_PDFBool = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFBool.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFBool.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12436,9 +12436,9 @@ var require_PDFBool = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Delimiters.js
+// node_modules/pdf-lib/cjs/core/syntax/Delimiters.js
 var require_Delimiters = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Delimiters.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/syntax/Delimiters.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.IsDelimiter = void 0;
@@ -12458,9 +12458,9 @@ var require_Delimiters = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Whitespace.js
+// node_modules/pdf-lib/cjs/core/syntax/Whitespace.js
 var require_Whitespace = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Whitespace.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/syntax/Whitespace.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.IsWhitespace = void 0;
@@ -12476,9 +12476,9 @@ var require_Whitespace = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Irregular.js
+// node_modules/pdf-lib/cjs/core/syntax/Irregular.js
 var require_Irregular = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Irregular.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/syntax/Irregular.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.IsIrregular = void 0;
@@ -12496,9 +12496,9 @@ var require_Irregular = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFName.js
+// node_modules/pdf-lib/cjs/core/objects/PDFName.js
 var require_PDFName = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFName.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFName.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12632,9 +12632,9 @@ var require_PDFName = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFNull.js
+// node_modules/pdf-lib/cjs/core/objects/PDFNull.js
 var require_PDFNull = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFNull.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFNull.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12674,9 +12674,9 @@ var require_PDFNull = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFDict.js
+// node_modules/pdf-lib/cjs/core/objects/PDFDict.js
 var require_PDFDict = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFDict.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFDict.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12819,9 +12819,9 @@ var require_PDFDict = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFStream.js
+// node_modules/pdf-lib/cjs/core/objects/PDFStream.js
 var require_PDFStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12903,9 +12903,9 @@ var require_PDFStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFRawStream.js
+// node_modules/pdf-lib/cjs/core/objects/PDFRawStream.js
 var require_PDFRawStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFRawStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFRawStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -12946,9 +12946,9 @@ var require_PDFRawStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFRef.js
+// node_modules/pdf-lib/cjs/core/objects/PDFRef.js
 var require_PDFRef = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFRef.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFRef.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13004,9 +13004,9 @@ var require_PDFRef = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/operators/PDFOperator.js
+// node_modules/pdf-lib/cjs/core/operators/PDFOperator.js
 var require_PDFOperator = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/operators/PDFOperator.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/operators/PDFOperator.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13070,9 +13070,9 @@ var require_PDFOperator = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/operators/PDFOperatorNames.js
+// node_modules/pdf-lib/cjs/core/operators/PDFOperatorNames.js
 var require_PDFOperatorNames = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/operators/PDFOperatorNames.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/operators/PDFOperatorNames.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var PDFOperatorNames;
@@ -13155,9 +13155,9 @@ var require_PDFOperatorNames = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFFlateStream.js
+// node_modules/pdf-lib/cjs/core/structures/PDFFlateStream.js
 var require_PDFFlateStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFFlateStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/structures/PDFFlateStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13199,9 +13199,9 @@ var require_PDFFlateStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFContentStream.js
+// node_modules/pdf-lib/cjs/core/structures/PDFContentStream.js
 var require_PDFContentStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFContentStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/structures/PDFContentStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13272,9 +13272,9 @@ var require_PDFContentStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/rng.js
+// node_modules/pdf-lib/cjs/utils/rng.js
 var require_rng = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/rng.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/rng.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.SimpleRNG = void 0;
@@ -13299,9 +13299,9 @@ var require_rng = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/PDFContext.js
+// node_modules/pdf-lib/cjs/core/PDFContext.js
 var require_PDFContext = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/PDFContext.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/PDFContext.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13499,9 +13499,9 @@ var require_PDFContext = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFPageLeaf.js
+// node_modules/pdf-lib/cjs/core/structures/PDFPageLeaf.js
 var require_PDFPageLeaf = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFPageLeaf.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/structures/PDFPageLeaf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13714,9 +13714,9 @@ var require_PDFPageLeaf = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/PDFObjectCopier.js
+// node_modules/pdf-lib/cjs/core/PDFObjectCopier.js
 var require_PDFObjectCopier = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/PDFObjectCopier.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/PDFObjectCopier.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13812,9 +13812,9 @@ var require_PDFObjectCopier = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFCrossRefSection.js
+// node_modules/pdf-lib/cjs/core/document/PDFCrossRefSection.js
 var require_PDFCrossRefSection = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFCrossRefSection.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/document/PDFCrossRefSection.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13942,9 +13942,9 @@ var require_PDFCrossRefSection = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFTrailer.js
+// node_modules/pdf-lib/cjs/core/document/PDFTrailer.js
 var require_PDFTrailer = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFTrailer.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/document/PDFTrailer.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -13994,9 +13994,9 @@ var require_PDFTrailer = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFTrailerDict.js
+// node_modules/pdf-lib/cjs/core/document/PDFTrailerDict.js
 var require_PDFTrailerDict = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/document/PDFTrailerDict.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/document/PDFTrailerDict.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14037,9 +14037,9 @@ var require_PDFTrailerDict = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js
+// node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js
 var require_PDFObjectStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14124,9 +14124,9 @@ var require_PDFObjectStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/writers/PDFWriter.js
+// node_modules/pdf-lib/cjs/core/writers/PDFWriter.js
 var require_PDFWriter = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/writers/PDFWriter.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/writers/PDFWriter.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14278,9 +14278,9 @@ var require_PDFWriter = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFInvalidObject.js
+// node_modules/pdf-lib/cjs/core/objects/PDFInvalidObject.js
 var require_PDFInvalidObject = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFInvalidObject.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFInvalidObject.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14321,9 +14321,9 @@ var require_PDFInvalidObject = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFCrossRefStream.js
+// node_modules/pdf-lib/cjs/core/structures/PDFCrossRefStream.js
 var require_PDFCrossRefStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFCrossRefStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/structures/PDFCrossRefStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.EntryType = void 0;
@@ -14514,9 +14514,9 @@ var require_PDFCrossRefStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/writers/PDFStreamWriter.js
+// node_modules/pdf-lib/cjs/core/writers/PDFStreamWriter.js
 var require_PDFStreamWriter = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/writers/PDFStreamWriter.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/writers/PDFStreamWriter.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14638,9 +14638,9 @@ var require_PDFStreamWriter = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFHexString.js
+// node_modules/pdf-lib/cjs/core/objects/PDFHexString.js
 var require_PDFHexString = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFHexString.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFHexString.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14679,10 +14679,10 @@ var require_PDFHexString = __commonJS({
           return utils_1.pdfDocEncodingDecode(bytes);
         };
         PDFHexString3.prototype.decodeDate = function() {
-          var text = this.decodeText();
-          var date = utils_1.parseDate(text);
+          var text2 = this.decodeText();
+          var date = utils_1.parseDate(text2);
           if (!date)
-            throw new errors_1.InvalidPDFDateStringError(text);
+            throw new errors_1.InvalidPDFDateStringError(text2);
           return date;
         };
         PDFHexString3.prototype.asString = function() {
@@ -14721,9 +14721,9 @@ var require_PDFHexString = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js
+// node_modules/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js
 var require_StandardFontEmbedder = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14740,16 +14740,16 @@ var require_StandardFontEmbedder = __commonJS({
           this.customName = customName;
         }
         __name(StandardFontEmbedder2, "StandardFontEmbedder");
-        StandardFontEmbedder2.prototype.encodeText = function(text) {
-          var glyphs = this.encodeTextAsGlyphs(text);
+        StandardFontEmbedder2.prototype.encodeText = function(text2) {
+          var glyphs = this.encodeTextAsGlyphs(text2);
           var hexCodes = new Array(glyphs.length);
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             hexCodes[idx] = utils_1.toHexString(glyphs[idx].code);
           }
           return PDFHexString_1.default.of(hexCodes.join(""));
         };
-        StandardFontEmbedder2.prototype.widthOfTextAtSize = function(text, size) {
-          var glyphs = this.encodeTextAsGlyphs(text);
+        StandardFontEmbedder2.prototype.widthOfTextAtSize = function(text2, size) {
+          var glyphs = this.encodeTextAsGlyphs(text2);
           var totalWidth = 0;
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             var left = glyphs[idx].name;
@@ -14796,8 +14796,8 @@ var require_StandardFontEmbedder = __commonJS({
         StandardFontEmbedder2.prototype.widthOfGlyph = function(glyphName) {
           return this.font.getWidthOfGlyph(glyphName) || 250;
         };
-        StandardFontEmbedder2.prototype.encodeTextAsGlyphs = function(text) {
-          var codePoints = Array.from(text);
+        StandardFontEmbedder2.prototype.encodeTextAsGlyphs = function(text2) {
+          var codePoints = Array.from(text2);
           var glyphs = new Array(codePoints.length);
           for (var idx = 0, len = codePoints.length; idx < len; idx++) {
             var codePoint = utils_1.toCodePoint(codePoints[idx]);
@@ -14815,9 +14815,9 @@ var require_StandardFontEmbedder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CMap.js
+// node_modules/pdf-lib/cjs/core/embedders/CMap.js
 var require_CMap = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CMap.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/CMap.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createCmap = void 0;
@@ -14864,9 +14864,9 @@ var require_CMap = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/FontFlags.js
+// node_modules/pdf-lib/cjs/core/embedders/FontFlags.js
 var require_FontFlags = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/FontFlags.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/FontFlags.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.deriveFontFlags = void 0;
@@ -14909,9 +14909,9 @@ var require_FontFlags = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFString.js
+// node_modules/pdf-lib/cjs/core/objects/PDFString.js
 var require_PDFString = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/objects/PDFString.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/objects/PDFString.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -14988,10 +14988,10 @@ var require_PDFString = __commonJS({
           return utils_1.pdfDocEncodingDecode(bytes);
         };
         PDFString3.prototype.decodeDate = function() {
-          var text = this.decodeText();
-          var date = utils_1.parseDate(text);
+          var text2 = this.decodeText();
+          var date = utils_1.parseDate(text2);
           if (!date)
-            throw new errors_1.InvalidPDFDateStringError(text);
+            throw new errors_1.InvalidPDFDateStringError(text2);
           return date;
         };
         PDFString3.prototype.asString = function() {
@@ -15031,9 +15031,9 @@ var require_PDFString = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CustomFontEmbedder.js
+// node_modules/pdf-lib/cjs/core/embedders/CustomFontEmbedder.js
 var require_CustomFontEmbedder = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CustomFontEmbedder.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/CustomFontEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -15081,16 +15081,16 @@ var require_CustomFontEmbedder = __commonJS({
             });
           });
         };
-        CustomFontEmbedder2.prototype.encodeText = function(text) {
-          var glyphs = this.font.layout(text, this.fontFeatures).glyphs;
+        CustomFontEmbedder2.prototype.encodeText = function(text2) {
+          var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
           var hexCodes = new Array(glyphs.length);
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             hexCodes[idx] = utils_1.toHexStringOfMinLength(glyphs[idx].id, 4);
           }
           return PDFHexString_1.default.of(hexCodes.join(""));
         };
-        CustomFontEmbedder2.prototype.widthOfTextAtSize = function(text, size) {
-          var glyphs = this.font.layout(text, this.fontFeatures).glyphs;
+        CustomFontEmbedder2.prototype.widthOfTextAtSize = function(text2, size) {
+          var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
           var totalWidth = 0;
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             totalWidth += glyphs[idx].advanceWidth * this.scale;
@@ -15275,9 +15275,9 @@ var require_CustomFontEmbedder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CustomFontSubsetEmbedder.js
+// node_modules/pdf-lib/cjs/core/embedders/CustomFontSubsetEmbedder.js
 var require_CustomFontSubsetEmbedder = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/CustomFontSubsetEmbedder.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/CustomFontSubsetEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -15313,8 +15313,8 @@ var require_CustomFontSubsetEmbedder = __commonJS({
             });
           });
         };
-        CustomFontSubsetEmbedder2.prototype.encodeText = function(text) {
-          var glyphs = this.font.layout(text, this.fontFeatures).glyphs;
+        CustomFontSubsetEmbedder2.prototype.encodeText = function(text2) {
+          var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
           var hexCodes = new Array(glyphs.length);
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             var glyph = glyphs[idx];
@@ -15352,9 +15352,9 @@ var require_CustomFontSubsetEmbedder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/FileEmbedder.js
+// node_modules/pdf-lib/cjs/core/embedders/FileEmbedder.js
 var require_FileEmbedder = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/FileEmbedder.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/FileEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.AFRelationship = void 0;
@@ -15433,9 +15433,9 @@ var require_FileEmbedder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/JpegEmbedder.js
+// node_modules/pdf-lib/cjs/core/embedders/JpegEmbedder.js
 var require_JpegEmbedder = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/JpegEmbedder.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/JpegEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -15553,9 +15553,9 @@ var require_JpegEmbedder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/@pdf-lib+upng@1.0.1/node_modules/@pdf-lib/upng/cjs/UPNG.js
+// node_modules/@pdf-lib/upng/cjs/UPNG.js
 var require_UPNG = __commonJS({
-  "../../node_modules/.pnpm/@pdf-lib+upng@1.0.1/node_modules/@pdf-lib/upng/cjs/UPNG.js"(exports2) {
+  "node_modules/@pdf-lib/upng/cjs/UPNG.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", {
       value: true
@@ -15770,8 +15770,8 @@ var require_UPNG = __commonJS({
           if (out.tabs[type] == null) out.tabs[type] = {};
           var nz = bin.nextZero(data, offset);
           var keyw = bin.readASCII(data, offset, nz - offset);
-          var text = bin.readASCII(data, nz + 1, offset + len - nz - 1);
-          out.tabs[type][keyw] = text;
+          var text2 = bin.readASCII(data, nz + 1, offset + len - nz - 1);
+          out.tabs[type][keyw] = text2;
         } else if (type == "iTXt") {
           if (out.tabs[type] == null) out.tabs[type] = {};
           var nz = 0, off = offset;
@@ -15786,8 +15786,8 @@ var require_UPNG = __commonJS({
           nz = bin.nextZero(data, off);
           var tkeyw = bin.readUTF8(data, off, nz - off);
           off = nz + 1;
-          var text = bin.readUTF8(data, off, len - (off - offset));
-          out.tabs[type][keyw] = text;
+          var text2 = bin.readUTF8(data, off, len - (off - offset));
+          out.tabs[type][keyw] = text2;
         } else if (type == "PLTE") {
           out.tabs[type] = bin.readBytes(data, offset, len);
         } else if (type == "hIST") {
@@ -17025,9 +17025,9 @@ var require_UPNG = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/png.js
+// node_modules/pdf-lib/cjs/utils/png.js
 var require_png = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/utils/png.js"(exports2) {
+  "node_modules/pdf-lib/cjs/utils/png.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.PNG = exports2.PngType = void 0;
@@ -17101,9 +17101,9 @@ var require_png = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/PngEmbedder.js
+// node_modules/pdf-lib/cjs/core/embedders/PngEmbedder.js
 var require_PngEmbedder = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/PngEmbedder.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/PngEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -17176,9 +17176,9 @@ var require_PngEmbedder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/Stream.js
+// node_modules/pdf-lib/cjs/core/streams/Stream.js
 var require_Stream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/Stream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/streams/Stream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var Stream = (
@@ -17284,9 +17284,9 @@ var require_Stream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/DecodeStream.js
+// node_modules/pdf-lib/cjs/core/streams/DecodeStream.js
 var require_DecodeStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/DecodeStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/streams/DecodeStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -17432,9 +17432,9 @@ var require_DecodeStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/Ascii85Stream.js
+// node_modules/pdf-lib/cjs/core/streams/Ascii85Stream.js
 var require_Ascii85Stream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/Ascii85Stream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/streams/Ascii85Stream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -17516,9 +17516,9 @@ var require_Ascii85Stream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/AsciiHexStream.js
+// node_modules/pdf-lib/cjs/core/streams/AsciiHexStream.js
 var require_AsciiHexStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/AsciiHexStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/streams/AsciiHexStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -17582,9 +17582,9 @@ var require_AsciiHexStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/FlateStream.js
+// node_modules/pdf-lib/cjs/core/streams/FlateStream.js
 var require_FlateStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/FlateStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/streams/FlateStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -18470,9 +18470,9 @@ var require_FlateStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/LZWStream.js
+// node_modules/pdf-lib/cjs/core/streams/LZWStream.js
 var require_LZWStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/LZWStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/streams/LZWStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -18602,9 +18602,9 @@ var require_LZWStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/RunLengthStream.js
+// node_modules/pdf-lib/cjs/core/streams/RunLengthStream.js
 var require_RunLengthStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/RunLengthStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/streams/RunLengthStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -18653,9 +18653,9 @@ var require_RunLengthStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/decode.js
+// node_modules/pdf-lib/cjs/core/streams/decode.js
 var require_decode = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/streams/decode.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/streams/decode.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.decodePDFRawStream = void 0;
@@ -18715,9 +18715,9 @@ var require_decode = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/PDFPageEmbedder.js
+// node_modules/pdf-lib/cjs/core/embedders/PDFPageEmbedder.js
 var require_PDFPageEmbedder = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/PDFPageEmbedder.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/PDFPageEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -18811,9 +18811,9 @@ var require_PDFPageEmbedder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/interactive/ViewerPreferences.js
+// node_modules/pdf-lib/cjs/core/interactive/ViewerPreferences.js
 var require_ViewerPreferences = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/interactive/ViewerPreferences.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/interactive/ViewerPreferences.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Duplex = exports2.PrintScaling = exports2.ReadingDirection = exports2.NonFullScreenPageMode = void 0;
@@ -19059,9 +19059,9 @@ var require_ViewerPreferences = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroField.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroField.js
 var require_PDFAcroField = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroField.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroField.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19207,9 +19207,9 @@ var require_PDFAcroField = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/BorderStyle.js
+// node_modules/pdf-lib/cjs/core/annotation/BorderStyle.js
 var require_BorderStyle = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/BorderStyle.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/annotation/BorderStyle.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19246,9 +19246,9 @@ var require_BorderStyle = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/PDFAnnotation.js
+// node_modules/pdf-lib/cjs/core/annotation/PDFAnnotation.js
 var require_PDFAnnotation = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/PDFAnnotation.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/annotation/PDFAnnotation.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19376,9 +19376,9 @@ var require_PDFAnnotation = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/AppearanceCharacteristics.js
+// node_modules/pdf-lib/cjs/core/annotation/AppearanceCharacteristics.js
 var require_AppearanceCharacteristics = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/AppearanceCharacteristics.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/annotation/AppearanceCharacteristics.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19506,9 +19506,9 @@ var require_AppearanceCharacteristics = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/PDFWidgetAnnotation.js
+// node_modules/pdf-lib/cjs/core/annotation/PDFWidgetAnnotation.js
 var require_PDFWidgetAnnotation = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/PDFWidgetAnnotation.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/annotation/PDFWidgetAnnotation.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19625,9 +19625,9 @@ var require_PDFWidgetAnnotation = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroTerminal.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroTerminal.js
 var require_PDFAcroTerminal = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroTerminal.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroTerminal.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19694,9 +19694,9 @@ var require_PDFAcroTerminal = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroButton.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroButton.js
 var require_PDFAcroButton = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroButton.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroButton.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19793,9 +19793,9 @@ var require_PDFAcroButton = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroCheckBox.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroCheckBox.js
 var require_PDFAcroCheckBox = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroCheckBox.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroCheckBox.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -19852,9 +19852,9 @@ var require_PDFAcroCheckBox = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/flags.js
+// node_modules/pdf-lib/cjs/core/acroform/flags.js
 var require_flags = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/flags.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/flags.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.AcroChoiceFlags = exports2.AcroTextFlags = exports2.AcroButtonFlags = exports2.AcroFieldFlags = void 0;
@@ -19896,9 +19896,9 @@ var require_flags = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroChoice.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroChoice.js
 var require_PDFAcroChoice = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroChoice.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroChoice.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20028,9 +20028,9 @@ var require_PDFAcroChoice = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroComboBox.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroComboBox.js
 var require_PDFAcroComboBox = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroComboBox.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroComboBox.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20063,9 +20063,9 @@ var require_PDFAcroComboBox = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroNonTerminal.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroNonTerminal.js
 var require_PDFAcroNonTerminal = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroNonTerminal.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroNonTerminal.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20106,9 +20106,9 @@ var require_PDFAcroNonTerminal = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroSignature.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroSignature.js
 var require_PDFAcroSignature = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroSignature.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroSignature.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20131,9 +20131,9 @@ var require_PDFAcroSignature = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroText.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroText.js
 var require_PDFAcroText = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroText.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroText.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20209,9 +20209,9 @@ var require_PDFAcroText = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroPushButton.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroPushButton.js
 var require_PDFAcroPushButton = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroPushButton.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroPushButton.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20244,9 +20244,9 @@ var require_PDFAcroPushButton = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroRadioButton.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroRadioButton.js
 var require_PDFAcroRadioButton = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroRadioButton.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroRadioButton.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20310,9 +20310,9 @@ var require_PDFAcroRadioButton = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroListBox.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroListBox.js
 var require_PDFAcroListBox = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroListBox.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroListBox.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20343,9 +20343,9 @@ var require_PDFAcroListBox = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/utils.js
+// node_modules/pdf-lib/cjs/core/acroform/utils.js
 var require_utils4 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/utils.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/utils.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createPDFAcroField = exports2.createPDFAcroFields = void 0;
@@ -20453,9 +20453,9 @@ var require_utils4 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroForm.js
+// node_modules/pdf-lib/cjs/core/acroform/PDFAcroForm.js
 var require_PDFAcroForm = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/PDFAcroForm.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/PDFAcroForm.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20542,9 +20542,9 @@ var require_PDFAcroForm = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/index.js
+// node_modules/pdf-lib/cjs/core/acroform/index.js
 var require_acroform = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/acroform/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/acroform/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20605,9 +20605,9 @@ var require_acroform = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js
+// node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js
 var require_PDFCatalog = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20686,9 +20686,9 @@ var require_PDFCatalog = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFPageTree.js
+// node_modules/pdf-lib/cjs/core/structures/PDFPageTree.js
 var require_PDFPageTree = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/structures/PDFPageTree.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/structures/PDFPageTree.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20842,9 +20842,9 @@ var require_PDFPageTree = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Numeric.js
+// node_modules/pdf-lib/cjs/core/syntax/Numeric.js
 var require_Numeric = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Numeric.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/syntax/Numeric.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.IsNumeric = exports2.IsNumericPrefix = exports2.IsDigit = void 0;
@@ -20874,9 +20874,9 @@ var require_Numeric = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/BaseParser.js
+// node_modules/pdf-lib/cjs/core/parser/BaseParser.js
 var require_BaseParser = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/BaseParser.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/parser/BaseParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -20990,9 +20990,9 @@ var require_BaseParser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/ByteStream.js
+// node_modules/pdf-lib/cjs/core/parser/ByteStream.js
 var require_ByteStream = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/ByteStream.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/parser/ByteStream.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21063,9 +21063,9 @@ var require_ByteStream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Keywords.js
+// node_modules/pdf-lib/cjs/core/syntax/Keywords.js
 var require_Keywords = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/syntax/Keywords.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/syntax/Keywords.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Keywords = void 0;
@@ -21154,9 +21154,9 @@ var require_Keywords = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js
+// node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js
 var require_PDFObjectParser = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21375,9 +21375,9 @@ var require_PDFObjectParser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFObjectStreamParser.js
+// node_modules/pdf-lib/cjs/core/parser/PDFObjectStreamParser.js
 var require_PDFObjectStreamParser = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFObjectStreamParser.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/parser/PDFObjectStreamParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21462,9 +21462,9 @@ var require_PDFObjectStreamParser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFXRefStreamParser.js
+// node_modules/pdf-lib/cjs/core/parser/PDFXRefStreamParser.js
 var require_PDFXRefStreamParser = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFXRefStreamParser.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/parser/PDFXRefStreamParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21557,9 +21557,9 @@ var require_PDFXRefStreamParser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFParser.js
+// node_modules/pdf-lib/cjs/core/parser/PDFParser.js
 var require_PDFParser = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/parser/PDFParser.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/parser/PDFParser.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21899,9 +21899,9 @@ var require_PDFParser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/flags.js
+// node_modules/pdf-lib/cjs/core/annotation/flags.js
 var require_flags2 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/flags.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/annotation/flags.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.AnnotationFlags = void 0;
@@ -21924,9 +21924,9 @@ var require_flags2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/index.js
+// node_modules/pdf-lib/cjs/core/annotation/index.js
 var require_annotation = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/annotation/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/annotation/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -21946,9 +21946,9 @@ var require_annotation = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/index.js
+// node_modules/pdf-lib/cjs/core/index.js
 var require_core = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -22149,9 +22149,9 @@ var require_core = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/objects.js
+// node_modules/pdf-lib/cjs/api/objects.js
 var require_objects2 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/objects.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/objects.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.asNumber = exports2.asPDFNumber = exports2.asPDFName = void 0;
@@ -22168,9 +22168,9 @@ var require_objects2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/rotations.js
+// node_modules/pdf-lib/cjs/api/rotations.js
 var require_rotations = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/rotations.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/rotations.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.rotateRectangle = exports2.adjustDimsForRotation = exports2.reduceRotation = exports2.toDegrees = exports2.toRadians = exports2.radiansToDegrees = exports2.degreesToRadians = exports2.degrees = exports2.radians = exports2.RotationTypes = void 0;
@@ -22248,9 +22248,9 @@ var require_rotations = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/operators.js
+// node_modules/pdf-lib/cjs/api/operators.js
 var require_operators = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/operators.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/operators.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.endMarkedContent = exports2.beginMarkedContent = exports2.setStrokingCmykColor = exports2.setFillingCmykColor = exports2.setStrokingRgbColor = exports2.setFillingRgbColor = exports2.setStrokingGrayscaleColor = exports2.setFillingGrayscaleColor = exports2.drawObject = exports2.rotateAndSkewTextDegreesAndTranslate = exports2.rotateAndSkewTextRadiansAndTranslate = exports2.setTextMatrix = exports2.setTextRenderingMode = exports2.TextRenderingMode = exports2.setTextRise = exports2.setLineHeight = exports2.setCharacterSqueeze = exports2.setWordSpacing = exports2.setCharacterSpacing = exports2.setFontAndSize = exports2.endText = exports2.beginText = exports2.showText = exports2.moveText = exports2.nextLine = exports2.endPath = exports2.fillAndStroke = exports2.fill = exports2.stroke = exports2.square = exports2.rectangle = exports2.lineTo = exports2.moveTo = exports2.closePath = exports2.appendQuadraticCurve = exports2.appendBezierCurve = exports2.setLineWidth = exports2.popGraphicsState = exports2.pushGraphicsState = exports2.setGraphicsState = exports2.setLineJoin = exports2.LineJoinStyle = exports2.setLineCap = exports2.LineCapStyle = exports2.restoreDashPattern = exports2.setDashPattern = exports2.skewDegrees = exports2.skewRadians = exports2.rotateDegrees = exports2.rotateRadians = exports2.scale = exports2.translate = exports2.concatTransformationMatrix = exports2.clipEvenOdd = exports2.clip = void 0;
@@ -22389,8 +22389,8 @@ var require_operators = __commonJS({
     exports2.moveText = function(x, y) {
       return core_1.PDFOperator.of(core_1.PDFOperatorNames.MoveText, [objects_1.asPDFNumber(x), objects_1.asPDFNumber(y)]);
     };
-    exports2.showText = function(text) {
-      return core_1.PDFOperator.of(core_1.PDFOperatorNames.ShowText, [text]);
+    exports2.showText = function(text2) {
+      return core_1.PDFOperator.of(core_1.PDFOperatorNames.ShowText, [text2]);
     };
     exports2.beginText = function() {
       return core_1.PDFOperator.of(core_1.PDFOperatorNames.BeginText);
@@ -22494,9 +22494,9 @@ var require_operators = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/colors.js
+// node_modules/pdf-lib/cjs/api/colors.js
 var require_colors = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/colors.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/colors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.colorToComponents = exports2.componentsToColor = exports2.setStrokingColor = exports2.setFillingColor = exports2.cmyk = exports2.rgb = exports2.grayscale = exports2.ColorTypes = void 0;
@@ -22546,9 +22546,9 @@ var require_colors = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/svgPath.js
+// node_modules/pdf-lib/cjs/api/svgPath.js
 var require_svgPath = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/svgPath.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/svgPath.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.svgPathToOperators = void 0;
@@ -22908,9 +22908,9 @@ var require_svgPath = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/operations.js
+// node_modules/pdf-lib/cjs/api/operations.js
 var require_operations = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/operations.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/operations.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.drawOptionList = exports2.drawTextField = exports2.drawTextLines = exports2.drawButton = exports2.drawRadioButton = exports2.drawCheckBox = exports2.rotateInPlace = exports2.drawCheckMark = exports2.drawSvgPath = exports2.drawEllipse = exports2.drawEllipsePath = exports2.drawRectangle = exports2.drawLine = exports2.drawPage = exports2.drawImage = exports2.drawLinesOfText = exports2.drawText = void 0;
@@ -23360,9 +23360,9 @@ var require_operations = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/errors.js
+// node_modules/pdf-lib/cjs/api/errors.js
 var require_errors3 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/errors.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/errors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.InvalidMaxLengthError = exports2.ExceededMaxLengthError = exports2.CombedTextLayoutError = exports2.RichTextFieldReadError = exports2.FieldExistsAsNonTerminalError = exports2.InvalidFieldNamePartError = exports2.FieldAlreadyExistsError = exports2.MissingOnValueCheckError = exports2.UnexpectedFieldTypeError = exports2.NoSuchFieldError = exports2.RemovePageFromEmptyDocumentError = exports2.ForeignPageError = exports2.FontkitNotRegisteredError = exports2.EncryptedPDFError = void 0;
@@ -23583,9 +23583,9 @@ var require_errors3 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/alignment.js
+// node_modules/pdf-lib/cjs/api/text/alignment.js
 var require_alignment = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/alignment.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/text/alignment.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.TextAlignment = void 0;
@@ -23598,9 +23598,9 @@ var require_alignment = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/layout.js
+// node_modules/pdf-lib/cjs/api/text/layout.js
 var require_layout = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/layout.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/text/layout.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.layoutSinglelineText = exports2.layoutCombedText = exports2.layoutMultilineText = void 0;
@@ -23689,9 +23689,9 @@ var require_layout = __commonJS({
         remainder: void 0
       };
     }, "splitOutLines");
-    exports2.layoutMultilineText = function(text, _a) {
+    exports2.layoutMultilineText = function(text2, _a) {
       var alignment = _a.alignment, fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds;
-      var lines = utils_1.lineSplit(utils_1.cleanText(text));
+      var lines = utils_1.lineSplit(utils_1.cleanText(text2));
       if (fontSize === void 0 || fontSize === 0) {
         fontSize = computeFontSize(lines, font, bounds, true);
       }
@@ -23733,9 +23733,9 @@ var require_layout = __commonJS({
         }
       };
     };
-    exports2.layoutCombedText = function(text, _a) {
+    exports2.layoutCombedText = function(text2, _a) {
       var fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds, cellCount = _a.cellCount;
-      var line2 = utils_1.mergeLines(utils_1.cleanText(text));
+      var line2 = utils_1.mergeLines(utils_1.cleanText(text2));
       if (line2.length > cellCount) {
         throw new errors_1.CombedTextLayoutError(line2.length, cellCount);
       }
@@ -23781,9 +23781,9 @@ var require_layout = __commonJS({
         }
       };
     };
-    exports2.layoutSinglelineText = function(text, _a) {
+    exports2.layoutSinglelineText = function(text2, _a) {
       var alignment = _a.alignment, fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds;
-      var line2 = utils_1.mergeLines(utils_1.cleanText(text));
+      var line2 = utils_1.mergeLines(utils_1.cleanText(text2));
       if (fontSize === void 0 || fontSize === 0) {
         fontSize = computeFontSize([line2], font, bounds);
       }
@@ -23801,9 +23801,9 @@ var require_layout = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/appearances.js
+// node_modules/pdf-lib/cjs/api/form/appearances.js
 var require_appearances = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/appearances.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/appearances.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.defaultOptionListAppearanceProvider = exports2.defaultDropdownAppearanceProvider = exports2.defaultTextFieldAppearanceProvider = exports2.defaultButtonAppearanceProvider = exports2.defaultRadioGroupAppearanceProvider = exports2.defaultCheckBoxAppearanceProvider = exports2.normalizeAppearance = void 0;
@@ -24009,7 +24009,7 @@ var require_appearances = __commonJS({
       var rectangle = widget.getRectangle();
       var ap = widget.getAppearanceCharacteristics();
       var bs = widget.getBorderStyle();
-      var text = (_a = textField.getText()) !== null && _a !== void 0 ? _a : "";
+      var text2 = (_a = textField.getText()) !== null && _a !== void 0 ? _a : "";
       var borderWidth = (_b = bs === null || bs === void 0 ? void 0 : bs.getWidth()) !== null && _b !== void 0 ? _b : 0;
       var rotation = rotations_1.reduceRotation(ap === null || ap === void 0 ? void 0 : ap.getRotation());
       var _e = rotations_1.adjustDimsForRotation(rectangle, rotation), width = _e.width, height = _e.height;
@@ -24027,7 +24027,7 @@ var require_appearances = __commonJS({
         height: height - (borderWidth + padding) * 2
       };
       if (textField.isMultiline()) {
-        var layout = layout_1.layoutMultilineText(text, {
+        var layout = layout_1.layoutMultilineText(text2, {
           alignment: textField.getAlignment(),
           fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
           font,
@@ -24036,7 +24036,7 @@ var require_appearances = __commonJS({
         textLines = layout.lines;
         fontSize = layout.fontSize;
       } else if (textField.isCombed()) {
-        var layout = layout_1.layoutCombedText(text, {
+        var layout = layout_1.layoutCombedText(text2, {
           fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
           font,
           bounds,
@@ -24045,7 +24045,7 @@ var require_appearances = __commonJS({
         textLines = layout.cells;
         fontSize = layout.fontSize;
       } else {
-        var layout = layout_1.layoutSinglelineText(text, {
+        var layout = layout_1.layoutSinglelineText(text2, {
           alignment: textField.getAlignment(),
           fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
           font,
@@ -24085,7 +24085,7 @@ var require_appearances = __commonJS({
       var rectangle = widget.getRectangle();
       var ap = widget.getAppearanceCharacteristics();
       var bs = widget.getBorderStyle();
-      var text = (_a = dropdown.getSelected()[0]) !== null && _a !== void 0 ? _a : "";
+      var text2 = (_a = dropdown.getSelected()[0]) !== null && _a !== void 0 ? _a : "";
       var borderWidth = (_b = bs === null || bs === void 0 ? void 0 : bs.getWidth()) !== null && _b !== void 0 ? _b : 0;
       var rotation = rotations_1.reduceRotation(ap === null || ap === void 0 ? void 0 : ap.getRotation());
       var _d = rotations_1.adjustDimsForRotation(rectangle, rotation), width = _d.width, height = _d.height;
@@ -24100,7 +24100,7 @@ var require_appearances = __commonJS({
         width: width - (borderWidth + padding) * 2,
         height: height - (borderWidth + padding) * 2
       };
-      var _e = layout_1.layoutSinglelineText(text, {
+      var _e = layout_1.layoutSinglelineText(text2, {
         alignment: alignment_1.TextAlignment.Left,
         fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
         font,
@@ -24148,11 +24148,11 @@ var require_appearances = __commonJS({
       var selected = optionList.getSelected();
       if (optionList.isSorted())
         options.sort();
-      var text = "";
+      var text2 = "";
       for (var idx = 0, len = options.length; idx < len; idx++) {
-        text += options[idx];
+        text2 += options[idx];
         if (idx < len - 1)
-          text += "\n";
+          text2 += "\n";
       }
       var padding = 1;
       var bounds = {
@@ -24161,7 +24161,7 @@ var require_appearances = __commonJS({
         width: width - (borderWidth + padding) * 2,
         height: height - (borderWidth + padding) * 2
       };
-      var _d = layout_1.layoutMultilineText(text, {
+      var _d = layout_1.layoutMultilineText(text2, {
         alignment: alignment_1.TextAlignment.Left,
         fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
         font,
@@ -24201,9 +24201,9 @@ var require_appearances = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFEmbeddedPage.js
+// node_modules/pdf-lib/cjs/api/PDFEmbeddedPage.js
 var require_PDFEmbeddedPage = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFEmbeddedPage.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFEmbeddedPage.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24262,9 +24262,9 @@ var require_PDFEmbeddedPage = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFFont.js
+// node_modules/pdf-lib/cjs/api/PDFFont.js
 var require_PDFFont = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFFont.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFFont.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24288,15 +24288,15 @@ var require_PDFFont = __commonJS({
           this.embedder = embedder;
         }
         __name(PDFFont2, "PDFFont");
-        PDFFont2.prototype.encodeText = function(text) {
-          utils_1.assertIs(text, "text", ["string"]);
+        PDFFont2.prototype.encodeText = function(text2) {
+          utils_1.assertIs(text2, "text", ["string"]);
           this.modified = true;
-          return this.embedder.encodeText(text);
+          return this.embedder.encodeText(text2);
         };
-        PDFFont2.prototype.widthOfTextAtSize = function(text, size) {
-          utils_1.assertIs(text, "text", ["string"]);
+        PDFFont2.prototype.widthOfTextAtSize = function(text2, size) {
+          utils_1.assertIs(text2, "text", ["string"]);
           utils_1.assertIs(size, "size", ["number"]);
-          return this.embedder.widthOfTextAtSize(text, size);
+          return this.embedder.widthOfTextAtSize(text2, size);
         };
         PDFFont2.prototype.heightAtSize = function(size, options) {
           var _a;
@@ -24347,9 +24347,9 @@ var require_PDFFont = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFImage.js
+// node_modules/pdf-lib/cjs/api/PDFImage.js
 var require_PDFImage = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFImage.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFImage.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24425,9 +24425,9 @@ var require_PDFImage = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/image/alignment.js
+// node_modules/pdf-lib/cjs/api/image/alignment.js
 var require_alignment2 = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/image/alignment.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/image/alignment.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ImageAlignment = void 0;
@@ -24440,9 +24440,9 @@ var require_alignment2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/image/index.js
+// node_modules/pdf-lib/cjs/api/image/index.js
 var require_image = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/image/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/image/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24450,9 +24450,9 @@ var require_image = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFField.js
+// node_modules/pdf-lib/cjs/api/form/PDFField.js
 var require_PDFField = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFField.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFField.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.assertFieldAppearanceOptions = void 0;
@@ -24679,9 +24679,9 @@ var require_PDFField = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFCheckBox.js
+// node_modules/pdf-lib/cjs/api/form/PDFCheckBox.js
 var require_PDFCheckBox = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFCheckBox.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFCheckBox.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -24797,9 +24797,9 @@ var require_PDFCheckBox = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFDropdown.js
+// node_modules/pdf-lib/cjs/api/form/PDFDropdown.js
 var require_PDFDropdown = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFDropdown.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFDropdown.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25016,9 +25016,9 @@ var require_PDFDropdown = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFOptionList.js
+// node_modules/pdf-lib/cjs/api/form/PDFOptionList.js
 var require_PDFOptionList = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFOptionList.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFOptionList.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25213,9 +25213,9 @@ var require_PDFOptionList = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFRadioGroup.js
+// node_modules/pdf-lib/cjs/api/form/PDFRadioGroup.js
 var require_PDFRadioGroup = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFRadioGroup.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFRadioGroup.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25379,9 +25379,9 @@ var require_PDFRadioGroup = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFSignature.js
+// node_modules/pdf-lib/cjs/api/form/PDFSignature.js
 var require_PDFSignature = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFSignature.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFSignature.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25414,9 +25414,9 @@ var require_PDFSignature = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFTextField.js
+// node_modules/pdf-lib/cjs/api/form/PDFTextField.js
 var require_PDFTextField = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFTextField.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFTextField.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25449,16 +25449,16 @@ var require_PDFTextField = __commonJS({
           }
           return value === null || value === void 0 ? void 0 : value.decodeText();
         };
-        PDFTextField2.prototype.setText = function(text) {
-          utils_1.assertOrUndefined(text, "text", ["string"]);
+        PDFTextField2.prototype.setText = function(text2) {
+          utils_1.assertOrUndefined(text2, "text", ["string"]);
           var maxLength = this.getMaxLength();
-          if (maxLength !== void 0 && text && text.length > maxLength) {
-            throw new errors_1.ExceededMaxLengthError(text.length, maxLength, this.getName());
+          if (maxLength !== void 0 && text2 && text2.length > maxLength) {
+            throw new errors_1.ExceededMaxLengthError(text2.length, maxLength, this.getName());
           }
           this.markAsDirty();
           this.disableRichFormatting();
-          if (text) {
-            this.acroField.setValue(core_1.PDFHexString.fromText(text));
+          if (text2) {
+            this.acroField.setValue(core_1.PDFHexString.fromText(text2));
           } else {
             this.acroField.removeValue();
           }
@@ -25481,9 +25481,9 @@ var require_PDFTextField = __commonJS({
           if (maxLength === void 0) {
             this.acroField.removeMaxLength();
           } else {
-            var text = this.getText();
-            if (text && text.length > maxLength) {
-              throw new errors_1.InvalidMaxLengthError(text.length, maxLength, this.getName());
+            var text2 = this.getText();
+            if (text2 && text2.length > maxLength) {
+              throw new errors_1.InvalidMaxLengthError(text2.length, maxLength, this.getName());
             }
             this.acroField.setMaxLength(maxLength);
           }
@@ -25657,9 +25657,9 @@ var require_PDFTextField = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/StandardFonts.js
+// node_modules/pdf-lib/cjs/api/StandardFonts.js
 var require_StandardFonts = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/StandardFonts.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/StandardFonts.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.StandardFonts = void 0;
@@ -25683,9 +25683,9 @@ var require_StandardFonts = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFForm.js
+// node_modules/pdf-lib/cjs/api/form/PDFForm.js
 var require_PDFForm = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFForm.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFForm.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -25852,10 +25852,10 @@ var require_PDFForm = __commonJS({
           utils_1.assertIs(name, "name", ["string"]);
           var nameParts = splitFieldName(name);
           var parent = this.findOrCreateNonTerminals(nameParts.nonTerminal);
-          var text = core_1.PDFAcroText.create(this.doc.context);
-          text.setPartialName(nameParts.terminal);
-          addFieldToParent(parent, [text, text.ref], nameParts.terminal);
-          return PDFTextField_1.default.of(text, text.ref, this.doc);
+          var text2 = core_1.PDFAcroText.create(this.doc.context);
+          text2.setPartialName(nameParts.terminal);
+          addFieldToParent(parent, [text2, text2.ref], nameParts.terminal);
+          return PDFTextField_1.default.of(text2, text2.ref, this.doc);
         };
         PDFForm2.prototype.flatten = function(options) {
           if (options === void 0) {
@@ -26063,9 +26063,9 @@ var require_PDFForm = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/sizes.js
+// node_modules/pdf-lib/cjs/api/sizes.js
 var require_sizes = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/sizes.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/sizes.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.PageSizes = void 0;
@@ -26124,9 +26124,9 @@ var require_sizes = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFDocumentOptions.js
+// node_modules/pdf-lib/cjs/api/PDFDocumentOptions.js
 var require_PDFDocumentOptions = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFDocumentOptions.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFDocumentOptions.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ParseSpeeds = void 0;
@@ -26140,9 +26140,9 @@ var require_PDFDocumentOptions = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFEmbeddedFile.js
+// node_modules/pdf-lib/cjs/api/PDFEmbeddedFile.js
 var require_PDFEmbeddedFile = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFEmbeddedFile.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFEmbeddedFile.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -26207,9 +26207,9 @@ var require_PDFEmbeddedFile = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFJavaScript.js
+// node_modules/pdf-lib/cjs/api/PDFJavaScript.js
 var require_PDFJavaScript = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFJavaScript.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFJavaScript.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -26270,9 +26270,9 @@ var require_PDFJavaScript = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/JavaScriptEmbedder.js
+// node_modules/pdf-lib/cjs/core/embedders/JavaScriptEmbedder.js
 var require_JavaScriptEmbedder = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/core/embedders/JavaScriptEmbedder.js"(exports2) {
+  "node_modules/pdf-lib/cjs/core/embedders/JavaScriptEmbedder.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -26317,9 +26317,9 @@ var require_JavaScriptEmbedder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFDocument.js
+// node_modules/pdf-lib/cjs/api/PDFDocument.js
 var require_PDFDocument = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFDocument.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFDocument.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27026,9 +27026,9 @@ var require_PDFDocument = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFPageOptions.js
+// node_modules/pdf-lib/cjs/api/PDFPageOptions.js
 var require_PDFPageOptions = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFPageOptions.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFPageOptions.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.BlendMode = void 0;
@@ -27050,9 +27050,9 @@ var require_PDFPageOptions = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFPage.js
+// node_modules/pdf-lib/cjs/api/PDFPage.js
 var require_PDFPage = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/PDFPage.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/PDFPage.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27305,12 +27305,12 @@ var require_PDFPage = __commonJS({
           var contentStream = this.getContentStream();
           contentStream.push.apply(contentStream, operator);
         };
-        PDFPage2.prototype.drawText = function(text, options) {
+        PDFPage2.prototype.drawText = function(text2, options) {
           var _a, _b, _c, _d, _e, _f, _g;
           if (options === void 0) {
             options = {};
           }
-          utils_1.assertIs(text, "text", ["string"]);
+          utils_1.assertIs(text2, "text", ["string"]);
           utils_1.assertOrUndefined(options.color, "options.color", [[Object, "Color"]]);
           utils_1.assertRangeOrUndefined(options.opacity, "opacity.opacity", 0, 1);
           utils_1.assertOrUndefined(options.font, "options.font", [[PDFFont_1.default, "PDFFont"]]);
@@ -27330,7 +27330,7 @@ var require_PDFPage = __commonJS({
           var textWidth = /* @__PURE__ */ __name(function(t) {
             return newFont.widthOfTextAtSize(t, fontSize);
           }, "textWidth");
-          var lines = options.maxWidth === void 0 ? utils_1.lineSplit(utils_1.cleanText(text)) : utils_1.breakTextIntoLines(text, wordBreaks, options.maxWidth, textWidth);
+          var lines = options.maxWidth === void 0 ? utils_1.lineSplit(utils_1.cleanText(text2)) : utils_1.breakTextIntoLines(text2, wordBreaks, options.maxWidth, textWidth);
           var encodedLines = new Array(lines.length);
           for (var idx = 0, len = lines.length; idx < len; idx++) {
             encodedLines[idx] = newFont.encodeText(lines[idx]);
@@ -27722,9 +27722,9 @@ var require_PDFPage = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFButton.js
+// node_modules/pdf-lib/cjs/api/form/PDFButton.js
 var require_PDFButton = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/PDFButton.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/PDFButton.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27767,9 +27767,9 @@ var require_PDFButton = __commonJS({
           this.acroField.setFontSize(fontSize);
           this.markAsDirty();
         };
-        PDFButton2.prototype.addToPage = function(text, page, options) {
+        PDFButton2.prototype.addToPage = function(text2, page, options) {
           var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-          utils_1.assertOrUndefined(text, "text", ["string"]);
+          utils_1.assertOrUndefined(text2, "text", ["string"]);
           utils_1.assertOrUndefined(page, "page", [[PDFPage_1.default, "PDFPage"]]);
           PDFField_1.assertFieldAppearanceOptions(options);
           var widget = this.createWidget({
@@ -27782,7 +27782,7 @@ var require_PDFButton = __commonJS({
             borderColor: options === null || options === void 0 ? void 0 : options.borderColor,
             borderWidth: (_j = options === null || options === void 0 ? void 0 : options.borderWidth) !== null && _j !== void 0 ? _j : 0,
             rotate: (_k = options === null || options === void 0 ? void 0 : options.rotate) !== null && _k !== void 0 ? _k : rotations_1.degrees(0),
-            caption: text,
+            caption: text2,
             hidden: options === null || options === void 0 ? void 0 : options.hidden,
             page: page.ref
           });
@@ -27833,9 +27833,9 @@ var require_PDFButton = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/index.js
+// node_modules/pdf-lib/cjs/api/form/index.js
 var require_form = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/form/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/form/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27879,9 +27879,9 @@ var require_form = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/index.js
+// node_modules/pdf-lib/cjs/api/text/index.js
 var require_text = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/text/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/text/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27890,9 +27890,9 @@ var require_text = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/index.js
+// node_modules/pdf-lib/cjs/api/index.js
 var require_api = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/api/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/api/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -27936,17 +27936,17 @@ var require_api = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/types/index.js
+// node_modules/pdf-lib/cjs/types/index.js
 var require_types = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/types/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/types/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
   }
 });
 
-// ../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/index.js
+// node_modules/pdf-lib/cjs/index.js
 var require_cjs = __commonJS({
-  "../../node_modules/.pnpm/pdf-lib@1.17.1/node_modules/pdf-lib/cjs/index.js"(exports2) {
+  "node_modules/pdf-lib/cjs/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
@@ -28037,8 +28037,8 @@ function glyphId(font, sub, cp) {
   }
   return 0;
 }
-function fontCoversText(font, text) {
-  const chars = [...text.replace(/[\r\n]/g, "")];
+function fontCoversText(font, text2) {
+  const chars = [...text2.replace(/[\r\n]/g, "")];
   if (chars.length === 0) return true;
   try {
     const sub = cmapSubtable(font);
@@ -28359,7 +28359,7 @@ function faceAdvances(face) {
   faceCache.set(key, parsed2);
   return parsed2;
 }
-function advanceWidths(family, text, sizePt, style = {}) {
+function advanceWidths(family, text2, sizePt, style = {}) {
   const candidates = getFontIndex().byFamily.get(norm(family));
   if (!candidates?.length) return null;
   const want = styleTokensOf(style);
@@ -28368,7 +28368,7 @@ function advanceWidths(family, text, sizePt, style = {}) {
   if (!parsed2) return null;
   const scale = sizePt * 20 / parsed2.unitsPerEm;
   const out = [];
-  for (const ch of text) {
+  for (const ch of text2) {
     const cp = ch.codePointAt(0);
     const glyph = glyphOf(parsed2, cp);
     if (glyph === 0 && cp !== 0) {
@@ -28501,8 +28501,8 @@ function mapsCodepoint(cmap, sub, cp) {
   }
   return false;
 }
-function findFontCovering(text) {
-  const cps = [...new Set([...text.replace(/[\r\n]/g, "")].map((c) => c.codePointAt(0)))];
+function findFontCovering(text2) {
+  const cps = [...new Set([...text2.replace(/[\r\n]/g, "")].map((c) => c.codePointAt(0)))];
   if (cps.length === 0) return null;
   const index2 = getFontIndex();
   const seen = /* @__PURE__ */ new Set();
@@ -28746,8 +28746,8 @@ function loadHb() {
   })();
   return hbPromise;
 }
-function subsetTtf(font, text) {
-  const run = chain.then(() => subsetTtfInner(font, text));
+function subsetTtf(font, text2) {
+  const run = chain.then(() => subsetTtfInner(font, text2));
   chain = run.catch(() => void 0);
   return run;
 }
@@ -28853,7 +28853,7 @@ function identityCffCharset(font) {
   }
   return out;
 }
-async function subsetTtfInner(font, text) {
+async function subsetTtfInner(font, text2) {
   const hb = await loadHb();
   const input = hb.hb_subset_input_create_or_fail();
   if (!input) throw new Error("hb_subset_input_create_or_fail failed");
@@ -28869,7 +28869,7 @@ async function subsetTtfInner(font, text) {
     hb.hb_set_clear(features);
     hb.hb_set_invert(features);
     const unicodes = hb.hb_subset_input_unicode_set(input);
-    for (const ch of text) hb.hb_set_add(unicodes, ch.codePointAt(0));
+    for (const ch of text2) hb.hb_set_add(unicodes, ch.codePointAt(0));
     subset = hb.hb_subset_or_fail(face, input);
     if (!subset) throw new Error("hb_subset_or_fail failed (corrupt font?)");
     result = hb.hb_face_reference_blob(subset);
@@ -29299,7 +29299,7 @@ var init_x_layers = __esm({
   }
 });
 
-// ../../node_modules/.pnpm/@embedpdf+pdfium@2.15.1/node_modules/@embedpdf/pdfium/dist/index.js
+// node_modules/@embedpdf/pdfium/dist/index.js
 var dist_exports = {};
 __export(dist_exports, {
   DEFAULT_PDFIUM_WASM_URL: () => DEFAULT_PDFIUM_WASM_URL,
@@ -29323,7 +29323,7 @@ async function init(moduleOverrides) {
 }
 var createPdfium, functions, DEFAULT_PDFIUM_WASM_URL;
 var init_dist = __esm({
-  "../../node_modules/.pnpm/@embedpdf+pdfium@2.15.1/node_modules/@embedpdf/pdfium/dist/index.js"() {
+  "node_modules/@embedpdf/pdfium/dist/index.js"() {
     createPdfium = (() => {
       var _scriptName = import.meta.url;
       return async function(moduleArg = {}) {
@@ -29493,9 +29493,9 @@ var init_dist = __esm({
         }
         var wasmMemory;
         var ABORT = false;
-        function assert(condition, text) {
+        function assert(condition, text2) {
           if (!condition) {
-            abort("Assertion failed" + (text ? ": " + text : ""));
+            abort("Assertion failed" + (text2 ? ": " + text2 : ""));
           }
         }
         __name(assert, "assert");
@@ -29950,12 +29950,12 @@ var init_dist = __esm({
         __name(setValue, "setValue");
         var stackRestore = /* @__PURE__ */ __name((val) => __emscripten_stack_restore(val), "stackRestore");
         var stackSave = /* @__PURE__ */ __name(() => _emscripten_stack_get_current(), "stackSave");
-        var warnOnce = /* @__PURE__ */ __name((text) => {
+        var warnOnce = /* @__PURE__ */ __name((text2) => {
           warnOnce.shown ||= {};
-          if (!warnOnce.shown[text]) {
-            warnOnce.shown[text] = 1;
-            if (ENVIRONMENT_IS_NODE) text = "warning: " + text;
-            err(text);
+          if (!warnOnce.shown[text2]) {
+            warnOnce.shown[text2] = 1;
+            if (ENVIRONMENT_IS_NODE) text2 = "warning: " + text2;
+            err(text2);
           }
         }, "warnOnce");
         var UTF8Decoder = typeof TextDecoder != "undefined" ? new TextDecoder() : void 0;
@@ -30727,10 +30727,10 @@ var init_dist = __esm({
         var FS_handledByPreloadPlugin = /* @__PURE__ */ __name((byteArray, fullname, finish, onerror) => {
           if (typeof Browser != "undefined") Browser.init();
           var handled = false;
-          preloadPlugins.forEach((plugin) => {
+          preloadPlugins.forEach((plugin2) => {
             if (handled) return;
-            if (plugin["canHandle"](fullname)) {
-              plugin["handle"](byteArray, fullname, finish, onerror);
+            if (plugin2["canHandle"](fullname)) {
+              plugin2["handle"](byteArray, fullname, finish, onerror);
               handled = true;
             }
           });
@@ -35126,8 +35126,8 @@ function loadEditFont(id, style = "regular") {
 function listEditFonts() {
   return Object.keys(EDIT_FONT_PATHS).filter((id) => loadEditFont(id) !== null);
 }
-function canDrawText(text, font, bold = false, italic = false) {
-  const drawn = text.replace(/\n/g, "");
+function canDrawText(text2, font, bold = false, italic = false) {
+  const drawn = text2.replace(/\n/g, "");
   if (font) {
     const style = bold && italic ? "bolditalic" : bold ? "bold" : italic ? "italic" : "regular";
     for (const s of style === "regular" ? ["regular"] : [style, "regular"]) {
@@ -35301,18 +35301,18 @@ function collectTextObjects(m, page, textPage) {
     const obj = m._FPDFPage_GetObject(page, i);
     if (m._FPDFPageObj_GetType(obj) !== FPDF_PAGEOBJ_TEXT) continue;
     const len = m._FPDFTextObj_GetText(obj, textPage, 0, 0);
-    let text = "";
+    let text2 = "";
     if (len > 2) {
       const buf = m._malloc(len);
       m._FPDFTextObj_GetText(obj, textPage, buf, len);
-      text = Buffer.from(m.HEAPU8.buffer, buf, len - 2).toString("utf16le");
+      text2 = Buffer.from(m.HEAPU8.buffer, buf, len - 2).toString("utf16le");
       m._free(buf);
     }
     if (!m._FPDFPageObj_GetBounds(obj, bl, bb, br, bt)) continue;
     out.push({
       obj,
       index: i,
-      text,
+      text: text2,
       font: m._FPDFTextObj_GetFont(obj),
       bounds: [m.HEAPF32[bl >> 2], m.HEAPF32[bb >> 2], m.HEAPF32[br >> 2], m.HEAPF32[bt >> 2]]
     });
@@ -35709,11 +35709,11 @@ function matchCharColors(m, matches, targetText) {
   }
   return any ? out : null;
 }
-function overlayStyles(baseColors, over2, text) {
+function overlayStyles(baseColors, over2, text2) {
   if (!baseColors && !over2) return null;
-  const out = new Array(text.length).fill(null);
+  const out = new Array(text2.length).fill(null);
   const colorOnly = /* @__PURE__ */ new Map();
-  for (let k = 0; k < text.length; k++) {
+  for (let k = 0; k < text2.length; k++) {
     const b = baseColors?.[k] ?? null;
     const o = over2?.[k] ?? null;
     if (o) {
@@ -35725,7 +35725,7 @@ function overlayStyles(baseColors, over2, text) {
     }
   }
   for (let k = 1; k < out.length; k++) {
-    if (out[k] === null && text[k] !== "\n" && /\s/.test(text[k])) out[k] = out[k - 1];
+    if (out[k] === null && text2[k] !== "\n" && /\s/.test(text2[k])) out[k] = out[k - 1];
   }
   return out.some((s) => s !== null) ? out : null;
 }
@@ -35920,12 +35920,12 @@ async function rebuildRun(m, doc, page, edit, matches, newText, textPage) {
     let font = 0;
     let fontSynth = false;
     let anyCff = false;
-    const loadFont = /* @__PURE__ */ __name(async (styleEdit, text) => {
+    const loadFont = /* @__PURE__ */ __name(async (styleEdit, text2) => {
       const { bytes: fontBytes, syntheticBold } = await resolveRebuildFont(
         m,
         anchor.font,
         styleEdit,
-        text.trim() ? text : "x"
+        text2.trim() ? text2 : "x"
       );
       const fontPtr = m._malloc(fontBytes.length);
       m.HEAPU8.set(fontBytes, fontPtr);
@@ -35941,9 +35941,9 @@ async function rebuildRun(m, doc, page, edit, matches, newText, textPage) {
       anyCff = anyCff || !isTruetype(fontBytes);
       return { font: f, synth: syntheticBold };
     }, "loadFont");
-    const loadRebuild = /* @__PURE__ */ __name(async (text) => {
+    const loadRebuild = /* @__PURE__ */ __name(async (text2) => {
       ;
-      ({ font, synth: fontSynth } = await loadFont(edit, text));
+      ({ font, synth: fontSynth } = await loadFont(edit, text2));
     }, "loadRebuild");
     const inherited = readStroke(m, anchor.obj);
     await loadRebuild(keeps ? redrawOnly() : newText);
@@ -35970,13 +35970,13 @@ async function rebuildRun(m, doc, page, edit, matches, newText, textPage) {
         if (e) e.text += newText[k];
         else byFace.set(fk, { style: s, text: newText[k] });
       }
-      for (const [fk, { style, text }] of byFace) {
+      for (const [fk, { style, text: text2 }] of byFace) {
         const face = faceOf(style);
         styleFonts.set(
           fk,
           await loadFont(
             { ...edit, newFont: face.font, newBold: face.bold, newItalic: face.italic },
-            text
+            text2
           )
         );
       }
@@ -35990,9 +35990,9 @@ async function rebuildRun(m, doc, page, edit, matches, newText, textPage) {
     const moves = [];
     const segAnchors = [];
     let lastKeptObj = 0;
-    const makeSeg = /* @__PURE__ */ __name((text, x, y, style) => {
+    const makeSeg = /* @__PURE__ */ __name((text2, x, y, style) => {
       const newObj = m._FPDFPageObj_CreateTextObj(doc, fontFor(style), sizeOf(style));
-      const textPtr = utf16Ptr(m, text);
+      const textPtr = utf16Ptr(m, text2);
       const ok = m._FPDFText_SetText(newObj, textPtr);
       m._free(textPtr);
       if (!ok) {
@@ -36246,8 +36246,8 @@ function applyTextInserts(bytes, inserts) {
         let applied = 0;
         try {
           for (const { input, editIndex } of pageInserts) {
-            const text = input.text.trim();
-            if (!text) {
+            const text2 = input.text.trim();
+            if (!text2) {
               skipped.push({ editIndex, pageIndex, reason: "empty inserted text" });
               continue;
             }
@@ -37842,8 +37842,8 @@ function findNoteAnnotRef(pdfDoc, page, target) {
     }
     if (rect.length !== 4 || !noteRectsClose(rect, target.rect)) continue;
     const contents = dict.lookup(import_pdf_lib2.PDFName.of("Contents"));
-    const text = contents instanceof import_pdf_lib2.PDFString || contents instanceof import_pdf_lib2.PDFHexString ? contents.decodeText() : "";
-    if (text !== target.contents) continue;
+    const text2 = contents instanceof import_pdf_lib2.PDFString || contents instanceof import_pdf_lib2.PDFHexString ? contents.decodeText() : "";
+    if (text2 !== target.contents) continue;
     if (ref.objectNumber === target.objNum) return ref;
     matches.push(ref);
   }
@@ -38425,6 +38425,290 @@ var init_save_pdf = __esm({
   }
 });
 
+// ../../packages/plugin-sdk/dist/index.js
+var CALL_TIMEOUT_MS = 3e4;
+var PROBE_TIMEOUT_MS = 1500;
+function hostPort() {
+  const globals = globalThis;
+  return globals.process?.parentPort ?? null;
+}
+__name(hostPort, "hostPort");
+function describe(err) {
+  return err instanceof Error ? err.message : String(err);
+}
+__name(describe, "describe");
+function plugin(handlers) {
+  const host = hostPort();
+  if (!host) {
+    throw new Error("pi plugin SDK: no host port. A plugin backend must be started by the host (it is forked as a child process); running it directly cannot work.");
+  }
+  let panelPort = null;
+  let pluginId = "";
+  let dataDir = "";
+  let booted = false;
+  let seq = 0;
+  const pending = /* @__PURE__ */ new Map();
+  const mountWarned = /* @__PURE__ */ new Set();
+  let portClosed = false;
+  let probeSeq = 0;
+  const pendingProbes = /* @__PURE__ */ new Map();
+  const post = /* @__PURE__ */ __name((message2) => host.postMessage(message2), "post");
+  const log = /* @__PURE__ */ __name((level, message2) => post({ type: "log", level, message: message2 }), "log");
+  const ctx2 = {
+    get pluginId() {
+      return pluginId;
+    },
+    get dataDir() {
+      return dataDir;
+    },
+    call(method, params = {}, options) {
+      return new Promise((resolve, reject) => {
+        const id = "c" + ++seq;
+        pending.set(id, { resolve, reject });
+        post({ type: "call", id, method, params });
+        setTimeout(() => {
+          if (pending.delete(id))
+            reject(new Error(`capability timeout: ${method}`));
+        }, options?.timeoutMs ?? CALL_TIMEOUT_MS);
+      });
+    },
+    send(panelId, event, data) {
+      if (!panelPort || portClosed)
+        return false;
+      panelPort.postMessage({ kind: "event", event, panelId, data });
+      return true;
+    },
+    panelAlive(panelId, timeoutMs = PROBE_TIMEOUT_MS) {
+      if (!panelPort || portClosed)
+        return Promise.resolve(false);
+      const id = "probe-" + ++probeSeq;
+      return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          pendingProbes.delete(id);
+          resolve(false);
+        }, timeoutMs);
+        pendingProbes.set(id, () => {
+          clearTimeout(timer);
+          resolve(true);
+        });
+        panelPort.postMessage({ kind: "event", event: "pi.probe", panelId, data: { id } });
+      });
+    },
+    async openPanel(panelId, options) {
+      return ctx2.call("panel.open", { panelId, focus: options?.focus !== false });
+    },
+    async setBadge(panelId, badge) {
+      await ctx2.call("panel.setStatus", { panelId, badge: badge ?? "" }).catch(() => {
+      });
+    },
+    log: {
+      info: /* @__PURE__ */ __name((m) => log("info", m), "info"),
+      warn: /* @__PURE__ */ __name((m) => log("warn", m), "warn"),
+      error: /* @__PURE__ */ __name((m) => log("error", m), "error")
+    }
+  };
+  async function runTool2(msg) {
+    const id = msg.id ?? "";
+    const name = msg.name ?? "";
+    if (!booted) {
+      post({
+        type: "tool-result",
+        id,
+        error: `tool "${name}" arrived before the host sent init \u2014 no plugin id or data dir yet. If you are testing the backend directly, send { type: 'init', pluginId, dataDir } first.`
+      });
+      return;
+    }
+    if (!handlers.onTool) {
+      post({ type: "tool-result", id, error: `this plugin contributes no tools (asked for "${name}")` });
+      return;
+    }
+    try {
+      const result = await handlers.onTool(name, msg.params ?? {}, ctx2);
+      if (result === void 0 || result === null) {
+        post({
+          type: "tool-result",
+          id,
+          error: `tool "${name}" returned nothing. Return a string, or an object with content/details/card.`
+        });
+        return;
+      }
+      if (typeof result === "string") {
+        post({ type: "tool-result", id, content: [{ type: "text", text: result }] });
+        return;
+      }
+      post({ type: "tool-result", id, ...result });
+    } catch (err) {
+      post({ type: "tool-result", id, error: describe(err) });
+    }
+  }
+  __name(runTool2, "runTool");
+  async function onPanelMessage(raw) {
+    const msg = raw;
+    if (!msg || typeof msg !== "object")
+      return;
+    if (msg.kind === "request") {
+      const id = String(msg.id ?? "");
+      const method = String(msg.method ?? "");
+      const panelId = msg.panelId ?? "";
+      if (!panelId) {
+        log("warn", `panel request "${method}" arrived with no panel id \u2014 cannot attribute it.`);
+      }
+      if (!handlers.onRequest) {
+        panelPort?.postMessage({
+          kind: "response",
+          id,
+          ok: false,
+          panelId,
+          error: `this plugin handles no panel requests (asked for "${method}")`
+        });
+        return;
+      }
+      if (!booted) {
+        panelPort?.postMessage({
+          kind: "response",
+          id,
+          ok: false,
+          panelId,
+          error: `request "${method}" arrived before the host sent init \u2014 no plugin id or data dir yet.`
+        });
+        return;
+      }
+      try {
+        const result = await handlers.onRequest(panelId, method, msg.params ?? {}, ctx2);
+        if (result === void 0) {
+          panelPort?.postMessage({
+            kind: "response",
+            id,
+            ok: false,
+            panelId,
+            error: `onRequest handled "${method}" without returning anything. Return the answer (a value, or true), or rethrow for a method you do not handle.`
+          });
+          return;
+        }
+        panelPort?.postMessage({ kind: "response", id, ok: true, panelId, result });
+      } catch (err) {
+        panelPort?.postMessage({ kind: "response", id, ok: false, panelId, error: describe(err) });
+      }
+      return;
+    }
+    if (msg.kind === "event") {
+      const event = String(msg.event ?? "");
+      const panelId = msg.panelId ?? "";
+      if (event === "pi.probe.reply") {
+        const probeId = String(msg.data?.id ?? "");
+        const resolve = pendingProbes.get(probeId);
+        if (resolve) {
+          pendingProbes.delete(probeId);
+          resolve();
+        }
+        return;
+      }
+      if (!panelId)
+        log("warn", `panel event "${event}" arrived with no panel id.`);
+      if (event === "panel.mounted") {
+        if (!handlers.onPanelMounted) {
+          if (!mountWarned.has(panelId)) {
+            mountWarned.add(panelId);
+            log("warn", `panel "${panelId}" mounted but nothing was drawn: this plugin has no onPanelMounted handler. Add one and push the panel's first state from there.`);
+          }
+          return;
+        }
+        try {
+          await handlers.onPanelMounted(panelId, msg.data?.params, ctx2);
+        } catch (err) {
+          log("error", `onPanelMounted for "${panelId}" threw: ${describe(err)}`);
+        }
+        return;
+      }
+      if (!handlers.onEvent) {
+        log("warn", `panel event "${event}" ignored: this plugin handles no events.`);
+        return;
+      }
+      try {
+        await handlers.onEvent(panelId, event, msg.data, ctx2);
+      } catch (err) {
+        log("error", `panel event "${event}" handler threw: ${describe(err)}`);
+      }
+      return;
+    }
+    log("warn", `unrecognised panel message (kind=${String(msg.kind)}) \u2014 ignored`);
+  }
+  __name(onPanelMessage, "onPanelMessage");
+  host.on("message", (event) => {
+    const msg = event.data ?? {};
+    switch (msg.type) {
+      case "init":
+        pluginId = msg.pluginId ?? "";
+        dataDir = msg.dataDir ?? "";
+        booted = true;
+        Promise.resolve(handlers.onInit?.(ctx2)).catch((err) => log("error", `onInit threw: ${describe(err)}`));
+        break;
+      case "call-result": {
+        const entry = pending.get(msg.id ?? "");
+        if (entry) {
+          pending.delete(msg.id ?? "");
+          if (msg.error)
+            entry.reject(new Error(msg.error));
+          else
+            entry.resolve(msg.result);
+        }
+        break;
+      }
+      case "tool-call":
+        void runTool2(msg);
+        break;
+      case "command":
+        if (!handlers.onCommand) {
+          post({ type: "command-result", id: msg.id, error: `this plugin contributes no commands` });
+          break;
+        }
+        Promise.resolve(handlers.onCommand(msg.name ?? "", msg.args, ctx2)).then((result) => post({ type: "command-result", id: msg.id, result })).catch((err) => post({ type: "command-result", id: msg.id, error: describe(err) }));
+        break;
+      case "selection-action":
+        if (!handlers.onSelectionAction) {
+          post({ type: "command-result", id: msg.id, error: `this plugin contributes no selection actions` });
+          break;
+        }
+        Promise.resolve(handlers.onSelectionAction(msg.actionId ?? "", msg.text ?? "", ctx2)).then((result) => post({ type: "command-result", id: msg.id, result })).catch((err) => post({ type: "command-result", id: msg.id, error: describe(err) }));
+        break;
+      case "context-request":
+        if (!handlers.onContextRequest) {
+          post({ type: "context-result", id: msg.id, error: `this plugin contributes no context providers` });
+          break;
+        }
+        Promise.resolve(handlers.onContextRequest(msg.providerId ?? "", msg.message ?? "", ctx2)).then((text2) => post({ type: "context-result", id: msg.id, text: text2 ?? "" })).catch((err) => post({ type: "context-result", id: msg.id, error: describe(err) }));
+        break;
+      case "host-event":
+        try {
+          handlers.onHostEvent?.(msg.event ?? "", msg.data, ctx2);
+        } catch (err) {
+          log("error", `host event "${String(msg.event)}" handler threw: ${describe(err)}`);
+        }
+        break;
+      case "ui-port": {
+        const port = event.ports?.[0];
+        if (!port)
+          break;
+        panelPort = port;
+        portClosed = false;
+        try {
+          port.on("close", () => {
+            portClosed = true;
+          });
+        } catch {
+        }
+        port.on("message", (e) => void onPanelMessage(e.data));
+        port.start?.();
+        break;
+      }
+      default:
+        break;
+    }
+  });
+  post({ type: "ready" });
+}
+__name(plugin, "plugin");
+
 // src/backend/index.ts
 import { mkdir, readFile as readFile2, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -38437,7 +38721,7 @@ var import_jszip3 = __toESM(require_lib3());
 var import_jszip = __toESM(require_lib3(), 1);
 import { createHash } from "node:crypto";
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/util.js
+// node_modules/fast-xml-parser/src/util.js
 var nameStartChar = ":A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
 var nameChar = nameStartChar + "\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
 var nameRegexp = "[" + nameStartChar + "][" + nameChar + "]*";
@@ -38480,7 +38764,7 @@ var DANGEROUS_PROPERTY_NAMES = [
 ];
 var criticalProperties = ["__proto__", "constructor", "prototype"];
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/validator.js
+// node_modules/fast-xml-parser/src/validator.js
 var defaultOptions = {
   allowBooleanAttributes: false,
   //A tag can have attributes without any value
@@ -38707,9 +38991,56 @@ function readAttributeStr(xmlData, i) {
   };
 }
 __name(readAttributeStr, "readAttributeStr");
-var validAttrStrRegxp = new RegExp(`(\\s*)([^\\s=]+)(\\s*=)?(\\s*(['"])(([\\s\\S])*?)\\5)?`, "g");
+function scanAttributeTokens(attrStr) {
+  const tokens = [];
+  const len = attrStr.length;
+  let i = 0;
+  while (i < len) {
+    const tokenStart = i;
+    while (i < len && isWhiteSpace(attrStr[i])) i++;
+    if (i >= len) break;
+    if (attrStr[i] === "=") {
+      i = tokenStart + 1;
+      continue;
+    }
+    const leadingWs = attrStr.slice(tokenStart, i);
+    const nameStart = i;
+    while (i < len && !isWhiteSpace(attrStr[i]) && attrStr[i] !== "=") i++;
+    const name = attrStr.slice(nameStart, i);
+    let equalsGroup;
+    let j = i;
+    while (j < len && isWhiteSpace(attrStr[j])) j++;
+    if (j < len && attrStr[j] === "=") {
+      equalsGroup = attrStr.slice(i, j + 1);
+      i = j + 1;
+    }
+    let quoteChar;
+    let value;
+    let k = i;
+    while (k < len && isWhiteSpace(attrStr[k])) k++;
+    if (k < len && (attrStr[k] === '"' || attrStr[k] === "'")) {
+      const valueStart = k + 1;
+      const closeIdx = attrStr.indexOf(attrStr[k], valueStart);
+      if (closeIdx !== -1) {
+        quoteChar = attrStr[k];
+        value = attrStr.slice(valueStart, closeIdx);
+        i = closeIdx + 1;
+      }
+    }
+    const token = { startIndex: tokenStart };
+    token[1] = leadingWs;
+    token[2] = name;
+    token[3] = equalsGroup;
+    token[4] = quoteChar !== void 0 ? true : void 0;
+    token[5] = quoteChar;
+    token[6] = value;
+    tokens.push(token);
+  }
+  return tokens;
+}
+__name(scanAttributeTokens, "scanAttributeTokens");
 function validateAttributeString(attrStr, options) {
-  const matches = getAllMatches(attrStr, validAttrStrRegxp);
+  const matches = scanAttributeTokens(attrStr);
   const attrNames = {};
   for (let i = 0; i < matches.length; i++) {
     if (matches[i][1].length === 0) {
@@ -38799,941 +39130,7 @@ function getPositionFromMatch(match) {
 }
 __name(getPositionFromMatch, "getPositionFromMatch");
 
-// ../../node_modules/.pnpm/@nodable+entities@2.1.1/node_modules/@nodable/entities/src/entities.js
-var BASIC_LATIN = {
-  amp: "&",
-  AMP: "&",
-  lt: "<",
-  LT: "<",
-  gt: ">",
-  GT: ">",
-  quot: '"',
-  QUOT: '"',
-  apos: "'",
-  lsquo: "\u2018",
-  rsquo: "\u2019",
-  ldquo: "\u201C",
-  rdquo: "\u201D",
-  lsquor: "\u201A",
-  rsquor: "\u2019",
-  ldquor: "\u201E",
-  bdquo: "\u201E",
-  comma: ",",
-  period: ".",
-  colon: ":",
-  semi: ";",
-  excl: "!",
-  quest: "?",
-  num: "#",
-  dollar: "$",
-  percent: "%",
-  ast: "*",
-  commat: "@",
-  lowbar: "_",
-  verbar: "|",
-  vert: "|",
-  sol: "/",
-  bsol: "\\",
-  lbrace: "{",
-  rbrace: "}",
-  lbrack: "[",
-  rbrack: "]",
-  lpar: "(",
-  rpar: ")",
-  nbsp: "\xA0",
-  iexcl: "\xA1",
-  cent: "\xA2",
-  pound: "\xA3",
-  curren: "\xA4",
-  yen: "\xA5",
-  brvbar: "\xA6",
-  sect: "\xA7",
-  uml: "\xA8",
-  copy: "\xA9",
-  COPY: "\xA9",
-  ordf: "\xAA",
-  laquo: "\xAB",
-  not: "\xAC",
-  shy: "\xAD",
-  reg: "\xAE",
-  REG: "\xAE",
-  macr: "\xAF",
-  deg: "\xB0",
-  plusmn: "\xB1",
-  sup2: "\xB2",
-  sup3: "\xB3",
-  acute: "\xB4",
-  micro: "\xB5",
-  para: "\xB6",
-  middot: "\xB7",
-  cedil: "\xB8",
-  sup1: "\xB9",
-  ordm: "\xBA",
-  raquo: "\xBB",
-  frac14: "\xBC",
-  frac12: "\xBD",
-  half: "\xBD",
-  frac34: "\xBE",
-  iquest: "\xBF",
-  times: "\xD7",
-  div: "\xF7",
-  divide: "\xF7"
-};
-var LATIN_ACCENTS = {
-  Agrave: "\xC0",
-  agrave: "\xE0",
-  Aacute: "\xC1",
-  aacute: "\xE1",
-  Acirc: "\xC2",
-  acirc: "\xE2",
-  Atilde: "\xC3",
-  atilde: "\xE3",
-  Auml: "\xC4",
-  auml: "\xE4",
-  Aring: "\xC5",
-  aring: "\xE5",
-  AElig: "\xC6",
-  aelig: "\xE6",
-  Ccedil: "\xC7",
-  ccedil: "\xE7",
-  Egrave: "\xC8",
-  egrave: "\xE8",
-  Eacute: "\xC9",
-  eacute: "\xE9",
-  Ecirc: "\xCA",
-  ecirc: "\xEA",
-  Euml: "\xCB",
-  euml: "\xEB",
-  Igrave: "\xCC",
-  igrave: "\xEC",
-  Iacute: "\xCD",
-  iacute: "\xED",
-  Icirc: "\xCE",
-  icirc: "\xEE",
-  Iuml: "\xCF",
-  iuml: "\xEF",
-  ETH: "\xD0",
-  eth: "\xF0",
-  Ntilde: "\xD1",
-  ntilde: "\xF1",
-  Ograve: "\xD2",
-  ograve: "\xF2",
-  Oacute: "\xD3",
-  oacute: "\xF3",
-  Ocirc: "\xD4",
-  ocirc: "\xF4",
-  Otilde: "\xD5",
-  otilde: "\xF5",
-  Ouml: "\xD6",
-  ouml: "\xF6",
-  Oslash: "\xD8",
-  oslash: "\xF8",
-  Ugrave: "\xD9",
-  ugrave: "\xF9",
-  Uacute: "\xDA",
-  uacute: "\xFA",
-  Ucirc: "\xDB",
-  ucirc: "\xFB",
-  Uuml: "\xDC",
-  uuml: "\xFC",
-  Yacute: "\xDD",
-  yacute: "\xFD",
-  THORN: "\xDE",
-  thorn: "\xFE",
-  szlig: "\xDF",
-  yuml: "\xFF",
-  Yuml: "\u0178"
-};
-var LATIN_EXTENDED = {
-  Amacr: "\u0100",
-  amacr: "\u0101",
-  Abreve: "\u0102",
-  abreve: "\u0103",
-  Aogon: "\u0104",
-  aogon: "\u0105",
-  Cacute: "\u0106",
-  cacute: "\u0107",
-  Ccirc: "\u0108",
-  ccirc: "\u0109",
-  Cdot: "\u010A",
-  cdot: "\u010B",
-  Ccaron: "\u010C",
-  ccaron: "\u010D",
-  Dcaron: "\u010E",
-  dcaron: "\u010F",
-  Dstrok: "\u0110",
-  dstrok: "\u0111",
-  Emacr: "\u0112",
-  emacr: "\u0113",
-  Ecaron: "\u011A",
-  ecaron: "\u011B",
-  Edot: "\u0116",
-  edot: "\u0117",
-  Eogon: "\u0118",
-  eogon: "\u0119",
-  Gcirc: "\u011C",
-  gcirc: "\u011D",
-  Gbreve: "\u011E",
-  gbreve: "\u011F",
-  Gdot: "\u0120",
-  gdot: "\u0121",
-  Gcedil: "\u0122",
-  Hcirc: "\u0124",
-  hcirc: "\u0125",
-  Hstrok: "\u0126",
-  hstrok: "\u0127",
-  Itilde: "\u0128",
-  itilde: "\u0129",
-  Imacr: "\u012A",
-  imacr: "\u012B",
-  Iogon: "\u012E",
-  iogon: "\u012F",
-  Idot: "\u0130",
-  IJlig: "\u0132",
-  ijlig: "\u0133",
-  Jcirc: "\u0134",
-  jcirc: "\u0135",
-  Kcedil: "\u0136",
-  kcedil: "\u0137",
-  kgreen: "\u0138",
-  Lacute: "\u0139",
-  lacute: "\u013A",
-  Lcedil: "\u013B",
-  lcedil: "\u013C",
-  Lcaron: "\u013D",
-  lcaron: "\u013E",
-  Lmidot: "\u013F",
-  lmidot: "\u0140",
-  Lstrok: "\u0141",
-  lstrok: "\u0142",
-  Nacute: "\u0143",
-  nacute: "\u0144",
-  Ncaron: "\u0147",
-  ncaron: "\u0148",
-  Ncedil: "\u0145",
-  ncedil: "\u0146",
-  ENG: "\u014A",
-  eng: "\u014B",
-  Omacr: "\u014C",
-  omacr: "\u014D",
-  Odblac: "\u0150",
-  odblac: "\u0151",
-  OElig: "\u0152",
-  oelig: "\u0153",
-  Racute: "\u0154",
-  racute: "\u0155",
-  Rcaron: "\u0158",
-  rcaron: "\u0159",
-  Rcedil: "\u0156",
-  rcedil: "\u0157",
-  Sacute: "\u015A",
-  sacute: "\u015B",
-  Scirc: "\u015C",
-  scirc: "\u015D",
-  Scedil: "\u015E",
-  scedil: "\u015F",
-  Scaron: "\u0160",
-  scaron: "\u0161",
-  Tcedil: "\u0162",
-  tcedil: "\u0163",
-  Tcaron: "\u0164",
-  tcaron: "\u0165",
-  Tstrok: "\u0166",
-  tstrok: "\u0167",
-  Utilde: "\u0168",
-  utilde: "\u0169",
-  Umacr: "\u016A",
-  umacr: "\u016B",
-  Ubreve: "\u016C",
-  ubreve: "\u016D",
-  Uring: "\u016E",
-  uring: "\u016F",
-  Udblac: "\u0170",
-  udblac: "\u0171",
-  Uogon: "\u0172",
-  uogon: "\u0173",
-  Wcirc: "\u0174",
-  wcirc: "\u0175",
-  Ycirc: "\u0176",
-  ycirc: "\u0177",
-  Zacute: "\u0179",
-  zacute: "\u017A",
-  Zdot: "\u017B",
-  zdot: "\u017C",
-  Zcaron: "\u017D",
-  zcaron: "\u017E"
-};
-var GREEK = {
-  Alpha: "\u0391",
-  alpha: "\u03B1",
-  Beta: "\u0392",
-  beta: "\u03B2",
-  Gamma: "\u0393",
-  gamma: "\u03B3",
-  Delta: "\u0394",
-  delta: "\u03B4",
-  Epsilon: "\u0395",
-  epsilon: "\u03B5",
-  epsiv: "\u03F5",
-  varepsilon: "\u03F5",
-  Zeta: "\u0396",
-  zeta: "\u03B6",
-  Eta: "\u0397",
-  eta: "\u03B7",
-  Theta: "\u0398",
-  theta: "\u03B8",
-  thetasym: "\u03D1",
-  vartheta: "\u03D1",
-  Iota: "\u0399",
-  iota: "\u03B9",
-  Kappa: "\u039A",
-  kappa: "\u03BA",
-  kappav: "\u03F0",
-  varkappa: "\u03F0",
-  Lambda: "\u039B",
-  lambda: "\u03BB",
-  Mu: "\u039C",
-  mu: "\u03BC",
-  Nu: "\u039D",
-  nu: "\u03BD",
-  Xi: "\u039E",
-  xi: "\u03BE",
-  Omicron: "\u039F",
-  omicron: "\u03BF",
-  Pi: "\u03A0",
-  pi: "\u03C0",
-  piv: "\u03D6",
-  varpi: "\u03D6",
-  Rho: "\u03A1",
-  rho: "\u03C1",
-  rhov: "\u03F1",
-  varrho: "\u03F1",
-  Sigma: "\u03A3",
-  sigma: "\u03C3",
-  sigmaf: "\u03C2",
-  sigmav: "\u03C2",
-  varsigma: "\u03C2",
-  Tau: "\u03A4",
-  tau: "\u03C4",
-  Upsilon: "\u03A5",
-  upsilon: "\u03C5",
-  upsi: "\u03C5",
-  Upsi: "\u03D2",
-  upsih: "\u03D2",
-  Phi: "\u03A6",
-  phi: "\u03C6",
-  phiv: "\u03D5",
-  varphi: "\u03D5",
-  Chi: "\u03A7",
-  chi: "\u03C7",
-  Psi: "\u03A8",
-  psi: "\u03C8",
-  Omega: "\u03A9",
-  omega: "\u03C9",
-  ohm: "\u03A9",
-  Gammad: "\u03DC",
-  gammad: "\u03DD",
-  digamma: "\u03DD"
-};
-var CYRILLIC = {
-  Afr: "\u{1D504}",
-  afr: "\u{1D51E}",
-  Acy: "\u0410",
-  acy: "\u0430",
-  Bcy: "\u0411",
-  bcy: "\u0431",
-  Vcy: "\u0412",
-  vcy: "\u0432",
-  Gcy: "\u0413",
-  gcy: "\u0433",
-  Dcy: "\u0414",
-  dcy: "\u0434",
-  IEcy: "\u0415",
-  iecy: "\u0435",
-  IOcy: "\u0401",
-  iocy: "\u0451",
-  ZHcy: "\u0416",
-  zhcy: "\u0436",
-  Zcy: "\u0417",
-  zcy: "\u0437",
-  Icy: "\u0418",
-  icy: "\u0438",
-  Jcy: "\u0419",
-  jcy: "\u0439",
-  Kcy: "\u041A",
-  kcy: "\u043A",
-  Lcy: "\u041B",
-  lcy: "\u043B",
-  Mcy: "\u041C",
-  mcy: "\u043C",
-  Ncy: "\u041D",
-  ncy: "\u043D",
-  Ocy: "\u041E",
-  ocy: "\u043E",
-  Pcy: "\u041F",
-  pcy: "\u043F",
-  Rcy: "\u0420",
-  rcy: "\u0440",
-  Scy: "\u0421",
-  scy: "\u0441",
-  Tcy: "\u0422",
-  tcy: "\u0442",
-  Ucy: "\u0423",
-  ucy: "\u0443",
-  Fcy: "\u0424",
-  fcy: "\u0444",
-  KHcy: "\u0425",
-  khcy: "\u0445",
-  TScy: "\u0426",
-  tscy: "\u0446",
-  CHcy: "\u0427",
-  chcy: "\u0447",
-  SHcy: "\u0428",
-  shcy: "\u0448",
-  SHCHcy: "\u0429",
-  shchcy: "\u0449",
-  HARDcy: "\u042A",
-  hardcy: "\u044A",
-  Ycy: "\u042B",
-  ycy: "\u044B",
-  SOFTcy: "\u042C",
-  softcy: "\u044C",
-  Ecy: "\u042D",
-  ecy: "\u044D",
-  YUcy: "\u042E",
-  yucy: "\u044E",
-  YAcy: "\u042F",
-  yacy: "\u044F",
-  DJcy: "\u0402",
-  djcy: "\u0452",
-  GJcy: "\u0403",
-  gjcy: "\u0453",
-  Jukcy: "\u0404",
-  jukcy: "\u0454",
-  DScy: "\u0405",
-  dscy: "\u0455",
-  Iukcy: "\u0406",
-  iukcy: "\u0456",
-  YIcy: "\u0407",
-  yicy: "\u0457",
-  Jsercy: "\u0408",
-  jsercy: "\u0458",
-  LJcy: "\u0409",
-  ljcy: "\u0459",
-  NJcy: "\u040A",
-  njcy: "\u045A",
-  TSHcy: "\u040B",
-  tshcy: "\u045B",
-  KJcy: "\u040C",
-  kjcy: "\u045C",
-  Ubrcy: "\u040E",
-  ubrcy: "\u045E",
-  DZcy: "\u040F",
-  dzcy: "\u045F"
-};
-var MATH = {
-  plus: "+",
-  pm: "\xB1",
-  times: "\xD7",
-  div: "\xF7",
-  divide: "\xF7",
-  sdot: "\u22C5",
-  star: "\u2606",
-  starf: "\u2605",
-  bigstar: "\u2605",
-  lowast: "\u2217",
-  ast: "*",
-  midast: "*",
-  compfn: "\u2218",
-  smallcircle: "\u2218",
-  bullet: "\u2022",
-  bull: "\u2022",
-  nbsp: "\xA0",
-  hellip: "\u2026",
-  mldr: "\u2026",
-  prime: "\u2032",
-  Prime: "\u2033",
-  tprime: "\u2034",
-  bprime: "\u2035",
-  backprime: "\u2035",
-  minus: "\u2212",
-  minusd: "\u2238",
-  dotminus: "\u2238",
-  plusdo: "\u2214",
-  dotplus: "\u2214",
-  plusmn: "\xB1",
-  minusplus: "\u2213",
-  mnplus: "\u2213",
-  mp: "\u2213",
-  setminus: "\u2216",
-  smallsetminus: "\u2216",
-  Backslash: "\u2216",
-  setmn: "\u2216",
-  ssetmn: "\u2216",
-  lowbar: "_",
-  verbar: "|",
-  vert: "|",
-  VerticalLine: "|",
-  colon: ":",
-  Colon: "\u2237",
-  Proportion: "\u2237",
-  ratio: "\u2236",
-  equals: "=",
-  ne: "\u2260",
-  nequiv: "\u2262",
-  equiv: "\u2261",
-  Congruent: "\u2261",
-  sim: "\u223C",
-  thicksim: "\u223C",
-  thksim: "\u223C",
-  sime: "\u2243",
-  simeq: "\u2243",
-  TildeEqual: "\u2243",
-  asymp: "\u2248",
-  approx: "\u2248",
-  thickapprox: "\u2248",
-  thkap: "\u2248",
-  TildeTilde: "\u2248",
-  ncong: "\u2247",
-  cong: "\u2245",
-  TildeFullEqual: "\u2245",
-  asympeq: "\u224D",
-  CupCap: "\u224D",
-  bump: "\u224E",
-  Bumpeq: "\u224E",
-  HumpDownHump: "\u224E",
-  bumpe: "\u224F",
-  bumpeq: "\u224F",
-  HumpEqual: "\u224F",
-  le: "\u2264",
-  LessEqual: "\u2264",
-  ge: "\u2265",
-  GreaterEqual: "\u2265",
-  lesseqgtr: "\u22DA",
-  lesseqqgtr: "\u2A8B",
-  greater: ">",
-  less: "<"
-};
-var MATH_ADVANCED = {
-  alefsym: "\u2135",
-  aleph: "\u2135",
-  beth: "\u2136",
-  gimel: "\u2137",
-  daleth: "\u2138",
-  forall: "\u2200",
-  ForAll: "\u2200",
-  part: "\u2202",
-  PartialD: "\u2202",
-  exist: "\u2203",
-  Exists: "\u2203",
-  nexist: "\u2204",
-  nexists: "\u2204",
-  empty: "\u2205",
-  emptyset: "\u2205",
-  emptyv: "\u2205",
-  varnothing: "\u2205",
-  nabla: "\u2207",
-  Del: "\u2207",
-  isin: "\u2208",
-  isinv: "\u2208",
-  in: "\u2208",
-  Element: "\u2208",
-  notin: "\u2209",
-  notinva: "\u2209",
-  ni: "\u220B",
-  niv: "\u220B",
-  SuchThat: "\u220B",
-  ReverseElement: "\u220B",
-  notni: "\u220C",
-  notniva: "\u220C",
-  prod: "\u220F",
-  Product: "\u220F",
-  coprod: "\u2210",
-  Coproduct: "\u2210",
-  sum: "\u2211",
-  Sum: "\u2211",
-  minus: "\u2212",
-  mp: "\u2213",
-  plusdo: "\u2214",
-  dotplus: "\u2214",
-  setminus: "\u2216",
-  lowast: "\u2217",
-  radic: "\u221A",
-  Sqrt: "\u221A",
-  prop: "\u221D",
-  propto: "\u221D",
-  Proportional: "\u221D",
-  varpropto: "\u221D",
-  infin: "\u221E",
-  infintie: "\u29DD",
-  ang: "\u2220",
-  angle: "\u2220",
-  angmsd: "\u2221",
-  measuredangle: "\u2221",
-  angsph: "\u2222",
-  mid: "\u2223",
-  VerticalBar: "\u2223",
-  nmid: "\u2224",
-  nsmid: "\u2224",
-  npar: "\u2226",
-  parallel: "\u2225",
-  spar: "\u2225",
-  nparallel: "\u2226",
-  nspar: "\u2226",
-  and: "\u2227",
-  wedge: "\u2227",
-  or: "\u2228",
-  vee: "\u2228",
-  cap: "\u2229",
-  cup: "\u222A",
-  int: "\u222B",
-  Integral: "\u222B",
-  conint: "\u222E",
-  ContourIntegral: "\u222E",
-  Conint: "\u222F",
-  DoubleContourIntegral: "\u222F",
-  Cconint: "\u2230",
-  there4: "\u2234",
-  therefore: "\u2234",
-  Therefore: "\u2234",
-  becaus: "\u2235",
-  because: "\u2235",
-  Because: "\u2235",
-  ratio: "\u2236",
-  Proportion: "\u2237",
-  minusd: "\u2238",
-  dotminus: "\u2238",
-  mDDot: "\u223A",
-  homtht: "\u223B",
-  sim: "\u223C",
-  bsimg: "\u223D",
-  backsim: "\u223D",
-  ac: "\u223E",
-  mstpos: "\u223E",
-  acd: "\u223F",
-  VerticalTilde: "\u2240",
-  wr: "\u2240",
-  wreath: "\u2240",
-  nsime: "\u2244",
-  nsimeq: "\u2244",
-  ncong: "\u2247",
-  simne: "\u2246",
-  ncongdot: "\u2A6D\u0338",
-  ngsim: "\u2275",
-  nsim: "\u2241",
-  napprox: "\u2249",
-  nap: "\u2249",
-  ngeq: "\u2271",
-  nge: "\u2271",
-  nleq: "\u2270",
-  nle: "\u2270",
-  ngtr: "\u226F",
-  ngt: "\u226F",
-  nless: "\u226E",
-  nlt: "\u226E",
-  nprec: "\u2280",
-  npr: "\u2280",
-  nsucc: "\u2281",
-  nsc: "\u2281"
-};
-var ARROWS = {
-  larr: "\u2190",
-  leftarrow: "\u2190",
-  LeftArrow: "\u2190",
-  uarr: "\u2191",
-  uparrow: "\u2191",
-  UpArrow: "\u2191",
-  rarr: "\u2192",
-  rightarrow: "\u2192",
-  RightArrow: "\u2192",
-  darr: "\u2193",
-  downarrow: "\u2193",
-  DownArrow: "\u2193",
-  harr: "\u2194",
-  leftrightarrow: "\u2194",
-  LeftRightArrow: "\u2194",
-  varr: "\u2195",
-  updownarrow: "\u2195",
-  UpDownArrow: "\u2195",
-  nwarr: "\u2196",
-  nwarrow: "\u2196",
-  UpperLeftArrow: "\u2196",
-  nearr: "\u2197",
-  nearrow: "\u2197",
-  UpperRightArrow: "\u2197",
-  searr: "\u2198",
-  searrow: "\u2198",
-  LowerRightArrow: "\u2198",
-  swarr: "\u2199",
-  swarrow: "\u2199",
-  LowerLeftArrow: "\u2199",
-  lArr: "\u21D0",
-  Leftarrow: "\u21D0",
-  uArr: "\u21D1",
-  Uparrow: "\u21D1",
-  rArr: "\u21D2",
-  Rightarrow: "\u21D2",
-  dArr: "\u21D3",
-  Downarrow: "\u21D3",
-  hArr: "\u21D4",
-  Leftrightarrow: "\u21D4",
-  iff: "\u21D4",
-  vArr: "\u21D5",
-  Updownarrow: "\u21D5",
-  lAarr: "\u21DA",
-  Lleftarrow: "\u21DA",
-  rAarr: "\u21DB",
-  Rrightarrow: "\u21DB",
-  lrarr: "\u21C6",
-  leftrightarrows: "\u21C6",
-  rlarr: "\u21C4",
-  rightleftarrows: "\u21C4",
-  lrhar: "\u21CB",
-  leftrightharpoons: "\u21CB",
-  ReverseEquilibrium: "\u21CB",
-  rlhar: "\u21CC",
-  rightleftharpoons: "\u21CC",
-  Equilibrium: "\u21CC",
-  udarr: "\u21C5",
-  UpArrowDownArrow: "\u21C5",
-  duarr: "\u21F5",
-  DownArrowUpArrow: "\u21F5",
-  llarr: "\u21C7",
-  leftleftarrows: "\u21C7",
-  rrarr: "\u21C9",
-  rightrightarrows: "\u21C9",
-  ddarr: "\u21CA",
-  downdownarrows: "\u21CA",
-  har: "\u21BD",
-  lhard: "\u21BD",
-  leftharpoondown: "\u21BD",
-  lharu: "\u21BC",
-  leftharpoonup: "\u21BC",
-  rhard: "\u21C1",
-  rightharpoondown: "\u21C1",
-  rharu: "\u21C0",
-  rightharpoonup: "\u21C0",
-  lsh: "\u21B0",
-  Lsh: "\u21B0",
-  rsh: "\u21B1",
-  Rsh: "\u21B1",
-  ldsh: "\u21B2",
-  rdsh: "\u21B3",
-  hookleftarrow: "\u21A9",
-  hookrightarrow: "\u21AA",
-  mapstoleft: "\u21A4",
-  mapstoup: "\u21A5",
-  map: "\u21A6",
-  mapsto: "\u21A6",
-  mapstodown: "\u21A7",
-  crarr: "\u21B5",
-  nleftarrow: "\u219A",
-  nleftrightarrow: "\u21AE",
-  nrightarrow: "\u219B",
-  nrarr: "\u219B",
-  larrtl: "\u21A2",
-  rarrtl: "\u21A3",
-  leftarrowtail: "\u21A2",
-  rightarrowtail: "\u21A3",
-  twoheadleftarrow: "\u219E",
-  twoheadrightarrow: "\u21A0",
-  Larr: "\u219E",
-  Rarr: "\u21A0",
-  larrhk: "\u21A9",
-  rarrhk: "\u21AA",
-  larrlp: "\u21AB",
-  looparrowleft: "\u21AB",
-  rarrlp: "\u21AC",
-  looparrowright: "\u21AC",
-  harrw: "\u21AD",
-  leftrightsquigarrow: "\u21AD",
-  nrarrw: "\u219D\u0338",
-  rarrw: "\u219D",
-  rightsquigarrow: "\u219D",
-  larrbfs: "\u291F",
-  rarrbfs: "\u2920",
-  nvHarr: "\u2904",
-  nvlArr: "\u2902",
-  nvrArr: "\u2903",
-  larrfs: "\u291D",
-  rarrfs: "\u291E",
-  Map: "\u2905",
-  larrsim: "\u2973",
-  rarrsim: "\u2974",
-  harrcir: "\u2948",
-  Uarrocir: "\u2949",
-  lurdshar: "\u294A",
-  ldrdhar: "\u2967",
-  ldrushar: "\u294B",
-  rdldhar: "\u2969",
-  lrhard: "\u296D",
-  uharr: "\u21BE",
-  uharl: "\u21BF",
-  dharr: "\u21C2",
-  dharl: "\u21C3",
-  Uarr: "\u219F",
-  Darr: "\u21A1",
-  zigrarr: "\u21DD",
-  nwArr: "\u21D6",
-  neArr: "\u21D7",
-  seArr: "\u21D8",
-  swArr: "\u21D9",
-  nharr: "\u21AE",
-  nhArr: "\u21CE",
-  nlarr: "\u219A",
-  nlArr: "\u21CD",
-  nrArr: "\u21CF",
-  larrb: "\u21E4",
-  LeftArrowBar: "\u21E4",
-  rarrb: "\u21E5",
-  RightArrowBar: "\u21E5"
-};
-var SHAPES = {
-  square: "\u25A1",
-  Square: "\u25A1",
-  squ: "\u25A1",
-  squf: "\u25AA",
-  squarf: "\u25AA",
-  blacksquar: "\u25AA",
-  blacksquare: "\u25AA",
-  FilledVerySmallSquare: "\u25AA",
-  blk34: "\u2593",
-  blk12: "\u2592",
-  blk14: "\u2591",
-  block: "\u2588",
-  srect: "\u25AD",
-  rect: "\u25AD",
-  sdot: "\u22C5",
-  sdotb: "\u22A1",
-  dotsquare: "\u22A1",
-  triangle: "\u25B5",
-  tri: "\u25B5",
-  trine: "\u25B5",
-  utri: "\u25B5",
-  triangledown: "\u25BF",
-  dtri: "\u25BF",
-  tridown: "\u25BF",
-  triangleleft: "\u25C3",
-  ltri: "\u25C3",
-  triangleright: "\u25B9",
-  rtri: "\u25B9",
-  blacktriangle: "\u25B4",
-  utrif: "\u25B4",
-  blacktriangledown: "\u25BE",
-  dtrif: "\u25BE",
-  blacktriangleleft: "\u25C2",
-  ltrif: "\u25C2",
-  blacktriangleright: "\u25B8",
-  rtrif: "\u25B8",
-  loz: "\u25CA",
-  lozenge: "\u25CA",
-  blacklozenge: "\u29EB",
-  lozf: "\u29EB",
-  bigcirc: "\u25EF",
-  xcirc: "\u25EF",
-  circ: "\u02C6",
-  Circle: "\u25CB",
-  cir: "\u25CB",
-  o: "\u25CB",
-  bullet: "\u2022",
-  bull: "\u2022",
-  hellip: "\u2026",
-  mldr: "\u2026",
-  nldr: "\u2025",
-  boxh: "\u2500",
-  HorizontalLine: "\u2500",
-  boxv: "\u2502",
-  boxdr: "\u250C",
-  boxdl: "\u2510",
-  boxur: "\u2514",
-  boxul: "\u2518",
-  boxvr: "\u251C",
-  boxvl: "\u2524",
-  boxhd: "\u252C",
-  boxhu: "\u2534",
-  boxvh: "\u253C",
-  boxH: "\u2550",
-  boxV: "\u2551",
-  boxdR: "\u2552",
-  boxDr: "\u2553",
-  boxDR: "\u2554",
-  boxDl: "\u2555",
-  boxdL: "\u2556",
-  boxDL: "\u2557",
-  boxuR: "\u2558",
-  boxUr: "\u2559",
-  boxUR: "\u255A",
-  boxUl: "\u255C",
-  boxuL: "\u255B",
-  boxUL: "\u255D",
-  boxvR: "\u255E",
-  boxVr: "\u255F",
-  boxVR: "\u2560",
-  boxVl: "\u2562",
-  boxvL: "\u2561",
-  boxVL: "\u2563",
-  boxHd: "\u2564",
-  boxhD: "\u2565",
-  boxHD: "\u2566",
-  boxHu: "\u2567",
-  boxhU: "\u2568",
-  boxHU: "\u2569",
-  boxvH: "\u256A",
-  boxVh: "\u256B",
-  boxVH: "\u256C"
-};
-var PUNCTUATION = {
-  excl: "!",
-  iexcl: "\xA1",
-  brvbar: "\xA6",
-  sect: "\xA7",
-  uml: "\xA8",
-  copy: "\xA9",
-  ordf: "\xAA",
-  laquo: "\xAB",
-  not: "\xAC",
-  shy: "\xAD",
-  reg: "\xAE",
-  macr: "\xAF",
-  deg: "\xB0",
-  plusmn: "\xB1",
-  sup2: "\xB2",
-  sup3: "\xB3",
-  acute: "\xB4",
-  micro: "\xB5",
-  para: "\xB6",
-  middot: "\xB7",
-  cedil: "\xB8",
-  sup1: "\xB9",
-  ordm: "\xBA",
-  raquo: "\xBB",
-  frac14: "\xBC",
-  frac12: "\xBD",
-  frac34: "\xBE",
-  iquest: "\xBF",
-  nbsp: "\xA0",
-  comma: ",",
-  period: ".",
-  colon: ":",
-  semi: ";",
-  vert: "|",
-  Verbar: "\u2016",
-  verbar: "|",
-  dblac: "\u02DD",
-  circ: "\u02C6",
-  caron: "\u02C7",
-  breve: "\u02D8",
-  dot: "\u02D9",
-  ring: "\u02DA",
-  ogon: "\u02DB",
-  tilde: "\u02DC",
-  DiacriticalGrave: "`",
-  DiacriticalAcute: "\xB4",
-  DiacriticalTilde: "\u02DC",
-  DiacriticalDot: "\u02D9",
-  DiacriticalDoubleAcute: "\u02DD",
-  grave: "`"
-};
+// node_modules/@nodable/entities/src/entities.js
 var CURRENCY = {
   cent: "\xA2",
   pound: "\xA3",
@@ -39750,106 +39147,6 @@ var CURRENCY = {
   won: "\u20A9",
   yuan: "\xA5",
   cedil: "\xB8"
-};
-var FRACTIONS = {
-  frac12: "\xBD",
-  half: "\xBD",
-  frac13: "\u2153",
-  frac14: "\xBC",
-  frac15: "\u2155",
-  frac16: "\u2159",
-  frac18: "\u215B",
-  frac23: "\u2154",
-  frac25: "\u2156",
-  frac34: "\xBE",
-  frac35: "\u2157",
-  frac38: "\u215C",
-  frac45: "\u2158",
-  frac56: "\u215A",
-  frac58: "\u215D",
-  frac78: "\u215E",
-  frasl: "\u2044"
-};
-var MISC_SYMBOLS = {
-  trade: "\u2122",
-  TRADE: "\u2122",
-  telrec: "\u2315",
-  target: "\u2316",
-  ulcorn: "\u231C",
-  ulcorner: "\u231C",
-  urcorn: "\u231D",
-  urcorner: "\u231D",
-  dlcorn: "\u231E",
-  llcorner: "\u231E",
-  drcorn: "\u231F",
-  lrcorner: "\u231F",
-  intercal: "\u22BA",
-  intcal: "\u22BA",
-  oplus: "\u2295",
-  CirclePlus: "\u2295",
-  ominus: "\u2296",
-  CircleMinus: "\u2296",
-  otimes: "\u2297",
-  CircleTimes: "\u2297",
-  osol: "\u2298",
-  odot: "\u2299",
-  CircleDot: "\u2299",
-  oast: "\u229B",
-  circledast: "\u229B",
-  odash: "\u229D",
-  circleddash: "\u229D",
-  ocirc: "\u229A",
-  circledcirc: "\u229A",
-  boxplus: "\u229E",
-  plusb: "\u229E",
-  boxminus: "\u229F",
-  minusb: "\u229F",
-  boxtimes: "\u22A0",
-  timesb: "\u22A0",
-  boxdot: "\u22A1",
-  sdotb: "\u22A1",
-  veebar: "\u22BB",
-  vee: "\u2228",
-  barvee: "\u22BD",
-  and: "\u2227",
-  wedge: "\u2227",
-  Cap: "\u22D2",
-  Cup: "\u22D3",
-  Fork: "\u22D4",
-  pitchfork: "\u22D4",
-  epar: "\u22D5",
-  ltlarr: "\u2976",
-  nvap: "\u224D\u20D2",
-  nvsim: "\u223C\u20D2",
-  nvge: "\u2265\u20D2",
-  nvle: "\u2264\u20D2",
-  nvlt: "<\u20D2",
-  nvgt: ">\u20D2",
-  nvltrie: "\u22B4\u20D2",
-  nvrtrie: "\u22B5\u20D2",
-  Vdash: "\u22A9",
-  dashv: "\u22A3",
-  vDash: "\u22A8",
-  Vvdash: "\u22AA",
-  nvdash: "\u22AC",
-  nvDash: "\u22AD",
-  nVdash: "\u22AE",
-  nVDash: "\u22AF"
-};
-var ALL_ENTITIES = {
-  ...BASIC_LATIN,
-  ...LATIN_ACCENTS,
-  ...LATIN_EXTENDED,
-  ...GREEK,
-  ...CYRILLIC,
-  ...MATH,
-  ...MATH_ADVANCED,
-  ...ARROWS,
-  ...SHAPES,
-  ...PUNCTUATION,
-  ...CURRENCY,
-  ...FRACTIONS,
-  ...MISC_SYMBOLS
 };
 var XML = {
   amp: "&",
@@ -39881,7 +39178,15 @@ var COMMON_HTML = {
   frac34: "\xBE"
 };
 
-// ../../node_modules/.pnpm/@nodable+entities@2.1.1/node_modules/@nodable/entities/src/EntityDecoder.js
+// node_modules/@nodable/entities/src/EntityDecoder.js
+var ENTITY_ACTION = Object.freeze({
+  /** Resolve and expand the entity normally. */
+  ALLOW: "allow",
+  /** Silently skip this entity — it will not be registered. */
+  BLOCK: "block",
+  /** Throw an error, aborting entity registration entirely. */
+  THROW: "throw"
+});
 var SPECIAL_CHARS = new Set("!?\\\\/[]$%{}^&*()<>|+");
 function validateEntityName(name) {
   if (name[0] === "#") {
@@ -39968,6 +39273,14 @@ var EntityDecoder = class {
    *   the effective action is max(onNCR, rangeMinimum).
    * @param {'remove'|'throw'} [options.ncr.nullNCR='remove']
    *   Action for U+0000 (null). 'allow' and 'leave' are clamped to 'remove' since null is never safe.
+   * @param {((name: string, value: string) => 'allow'|'block'|'throw')|null} [options.onExternalEntity=null]
+   *   Hook called when an external entity is registered via `setExternalEntities()` or
+   *   `addExternalEntity()`. Return `ENTITY_ACTION.ALLOW` to accept the entity,
+   *   `ENTITY_ACTION.BLOCK` to silently skip it, or `ENTITY_ACTION.THROW` to abort with an error.
+   * @param {((name: string, value: string) => 'allow'|'block'|'throw')|null} [options.onInputEntity=null]
+   *   Hook called when an input entity is registered via `addInputEntities()`. Return
+   *   `ENTITY_ACTION.ALLOW` to accept, `ENTITY_ACTION.BLOCK` to silently skip, or
+   *   `ENTITY_ACTION.THROW` to abort with an error.
    */
   constructor(options = {}) {
     this._limit = options.limit || {};
@@ -39987,6 +39300,33 @@ var EntityDecoder = class {
     this._ncrXmlVersion = ncrCfg.xmlVersion;
     this._ncrOnLevel = ncrCfg.onLevel;
     this._ncrNullLevel = ncrCfg.nullLevel;
+    this._onExternalEntity = typeof options.onExternalEntity === "function" ? options.onExternalEntity : null;
+    this._onInputEntity = typeof options.onInputEntity === "function" ? options.onInputEntity : null;
+  }
+  // -------------------------------------------------------------------------
+  // Private: registration hook dispatch
+  // -------------------------------------------------------------------------
+  /**
+   * Invoke a registration hook for a single entity name/value pair.
+   * Returns true when the entity should be accepted, false when it should be
+   * silently skipped (BLOCK), and throws when the hook returns THROW.
+   *
+   * @param {((name: string, value: string) => 'allow'|'block'|'throw')|null} hook
+   * @param {string} name
+   * @param {string} value
+   * @param {string} context  — used in error messages ('external' | 'input')
+   * @returns {boolean}  true = accept, false = skip
+   */
+  _applyRegistrationHook(hook, name, value, context) {
+    if (!hook) return true;
+    const action = hook(name, value);
+    if (action === ENTITY_ACTION.BLOCK) return false;
+    if (action === ENTITY_ACTION.THROW) {
+      throw new Error(
+        `[EntityDecoder] Registration of ${context} entity "&${name};" was rejected by hook`
+      );
+    }
+    return true;
   }
   // -------------------------------------------------------------------------
   // Persistent external entity registration
@@ -39994,6 +39334,9 @@ var EntityDecoder = class {
   /**
    * Replace the full set of persistent external entities.
    * All keys are validated — throws on invalid characters.
+   * If `onExternalEntity` is set, it is called once per entry; entries that
+   * return `ENTITY_ACTION.BLOCK` are silently omitted, `ENTITY_ACTION.THROW`
+   * aborts the whole call.
    * @param {Record<string, string | { regex?: RegExp, val: string }>} map
    */
   setExternalEntities(map) {
@@ -40002,17 +39345,32 @@ var EntityDecoder = class {
         validateEntityName(key);
       }
     }
-    this._externalMap = mergeEntityMaps(map);
+    if (!this._onExternalEntity) {
+      this._externalMap = mergeEntityMaps(map);
+      return;
+    }
+    const flat = mergeEntityMaps(map);
+    const filtered = /* @__PURE__ */ Object.create(null);
+    for (const [name, value] of Object.entries(flat)) {
+      if (this._applyRegistrationHook(this._onExternalEntity, name, value, "external")) {
+        filtered[name] = value;
+      }
+    }
+    this._externalMap = filtered;
   }
   /**
    * Add a single persistent external entity.
+   * If `onExternalEntity` is set it is called before the entity is stored;
+   * `ENTITY_ACTION.BLOCK` silently skips storage, `ENTITY_ACTION.THROW` raises.
    * @param {string} key
    * @param {string} value
    */
   addExternalEntity(key, value) {
     validateEntityName(key);
     if (typeof value === "string" && value.indexOf("&") === -1) {
-      this._externalMap[key] = value;
+      if (this._applyRegistrationHook(this._onExternalEntity, key, value, "external")) {
+        this._externalMap[key] = value;
+      }
     }
   }
   // -------------------------------------------------------------------------
@@ -40021,12 +39379,25 @@ var EntityDecoder = class {
   /**
    * Inject DOCTYPE entities for the current document.
    * Also resets per-document expansion counters.
+   * If `onInputEntity` is set it is called once per entry; entries returning
+   * `ENTITY_ACTION.BLOCK` are silently omitted, `ENTITY_ACTION.THROW` aborts.
    * @param {Record<string, string | { regx?: RegExp, regex?: RegExp, val: string }>} map
    */
   addInputEntities(map) {
     this._totalExpansions = 0;
     this._expandedLength = 0;
-    this._inputMap = mergeEntityMaps(map);
+    if (!this._onInputEntity) {
+      this._inputMap = mergeEntityMaps(map);
+      return;
+    }
+    const flat = mergeEntityMaps(map);
+    const filtered = /* @__PURE__ */ Object.create(null);
+    for (const [name, value] of Object.entries(flat)) {
+      if (this._applyRegistrationHook(this._onInputEntity, name, value, "input")) {
+        filtered[name] = value;
+      }
+    }
+    this._inputMap = filtered;
   }
   // -------------------------------------------------------------------------
   // Per-document reset
@@ -40258,7 +39629,7 @@ var EntityDecoder = class {
   }
 };
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/OptionsBuilder.js
+// node_modules/fast-xml-parser/src/xmlparser/OptionsBuilder.js
 var defaultOnDangerousProperty = /* @__PURE__ */ __name((name) => {
   if (DANGEROUS_PROPERTY_NAMES.includes(name)) {
     return "__" + name;
@@ -40284,7 +39655,8 @@ var defaultOptions2 = {
   numberParseOptions: {
     hex: true,
     leadingZeros: true,
-    eNotation: true
+    eNotation: true,
+    unicode: false
   },
   tagValueProcessor: /* @__PURE__ */ __name(function(tagName, val) {
     return val;
@@ -40394,7 +39766,7 @@ var buildOptions = /* @__PURE__ */ __name(function(options) {
   return built;
 }, "buildOptions");
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/xmlNode.js
+// node_modules/fast-xml-parser/src/xmlparser/xmlNode.js
 var METADATA_SYMBOL;
 if (typeof Symbol !== "function") {
   METADATA_SYMBOL = "@@xmlMetadata";
@@ -40421,8 +39793,17 @@ var XmlNode = class {
     } else {
       this.child.push({ [node.tagname]: node.child });
     }
+    this.addStartIndex(startIndex);
+  }
+  addStartIndex(startIndex) {
     if (startIndex !== void 0) {
       this.child[this.child.length - 1][METADATA_SYMBOL] = { startIndex };
+    }
+  }
+  addEndIndex(endIndex) {
+    const lastChild = this.child[this.child.length - 1];
+    if (lastChild !== void 0 && lastChild[METADATA_SYMBOL] !== void 0 && lastChild[METADATA_SYMBOL].endIndex === void 0) {
+      lastChild[METADATA_SYMBOL].endIndex = endIndex;
     }
   }
   /** symbol used for metadata */
@@ -40431,14 +39812,46 @@ var XmlNode = class {
   }
 };
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/DocTypeReader.js
+// node_modules/xml-naming/src/index.js
+var nameStartChar10 = ":A-Za-z_\xC0-\xD6\xD8-\xF6\xF8-\u02FF\u0370-\u037D\u037F-\u0486\u0488-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD";
+var nameChar10 = nameStartChar10 + "\\-\\.\\d\xB7\u0300-\u036F\u203F-\u2040";
+var nameStartChar11 = ":A-Za-z_\xC0-\u02FF\u0370-\u037D\u037F-\u0486\u0488-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u{10000}-\u{EFFFF}";
+var nameChar11 = nameStartChar11 + "\\-\\.\\d\xB7\u0300-\u036F\u0487\u203F-\u2040";
+var buildRegexes = /* @__PURE__ */ __name((startChar, char, flags = "") => {
+  const ncStart = startChar.replace(":", "");
+  const ncChar = char.replace(":", "");
+  const ncNamePat = `[${ncStart}][${ncChar}]*`;
+  return {
+    name: new RegExp(`^[${startChar}][${char}]*$`, flags),
+    ncName: new RegExp(`^${ncNamePat}$`, flags),
+    qName: new RegExp(`^${ncNamePat}(?::${ncNamePat})?$`, flags),
+    nmToken: new RegExp(`^[${char}]+$`, flags),
+    nmTokens: new RegExp(`^[${char}]+(?:\\s+[${char}]+)*$`, flags)
+  };
+}, "buildRegexes");
+var regexes10 = buildRegexes(nameStartChar10, nameChar10);
+var regexes11 = buildRegexes(nameStartChar11, nameChar11, "u");
+var nameStartCharAscii = ":A-Za-z_";
+var nameCharAscii = nameStartCharAscii + "\\-\\.\\d";
+var regexesAscii = buildRegexes(nameStartCharAscii, nameCharAscii);
+var getRegexes = /* @__PURE__ */ __name((xmlVersion = "1.0", asciiOnly = false) => {
+  if (asciiOnly) return regexesAscii;
+  return xmlVersion === "1.1" ? regexes11 : regexes10;
+}, "getRegexes");
+var qName = /* @__PURE__ */ __name((str, { xmlVersion = "1.0", asciiOnly = false } = {}) => getRegexes(xmlVersion, asciiOnly).qName.test(str), "qName");
+
+// node_modules/fast-xml-parser/src/xmlparser/DocTypeReader.js
 var DocTypeReader = class {
   static {
     __name(this, "DocTypeReader");
   }
-  constructor(options) {
+  constructor(options, xmlVersion) {
     this.suppressValidationErr = !options;
     this.options = options;
+    this.xmlVersion = xmlVersion || 1;
+  }
+  setXmlVersion(xmlVersion = 1) {
+    this.xmlVersion = xmlVersion;
   }
   readDocType(xmlData, i) {
     const entities = /* @__PURE__ */ Object.create(null);
@@ -40447,8 +39860,19 @@ var DocTypeReader = class {
       i = i + 9;
       let angleBracketsCount = 1;
       let hasBody = false, comment = false;
+      let quoteChar = null;
       let exp = "";
       for (; i < xmlData.length; i++) {
+        if (quoteChar !== null) {
+          if (xmlData[i] === quoteChar) quoteChar = null;
+          exp += xmlData[i];
+          continue;
+        }
+        if (!hasBody && !comment && (xmlData[i] === '"' || xmlData[i] === "'")) {
+          quoteChar = xmlData[i];
+          exp += xmlData[i];
+          continue;
+        }
         if (xmlData[i] === "<" && !comment) {
           if (hasBody && hasSeq(xmlData, "!ENTITY", i)) {
             i += 7;
@@ -40495,7 +39919,7 @@ var DocTypeReader = class {
           exp += xmlData[i];
         }
       }
-      if (angleBracketsCount !== 0) {
+      if (quoteChar !== null || angleBracketsCount !== 0) {
         throw new Error(`Unclosed DOCTYPE`);
       }
     } else {
@@ -40510,7 +39934,7 @@ var DocTypeReader = class {
       i++;
     }
     let entityName = xmlData.substring(startIndex, i);
-    validateEntityName2(entityName);
+    validateEntityName2(entityName, { xmlVersion: this.xmlVersion });
     i = skipWhitespace(xmlData, i);
     if (!this.suppressValidationErr) {
       if (xmlData.substring(i, i + 6).toUpperCase() === "SYSTEM") {
@@ -40536,7 +39960,7 @@ var DocTypeReader = class {
       i++;
     }
     let notationName = xmlData.substring(startIndex, i);
-    !this.suppressValidationErr && validateEntityName2(notationName);
+    !this.suppressValidationErr && validateEntityName2(notationName, { xmlVersion: this.xmlVersion });
     i = skipWhitespace(xmlData, i);
     const identifierType = xmlData.substring(i, i + 6).toUpperCase();
     if (!this.suppressValidationErr && identifierType !== "SYSTEM" && identifierType !== "PUBLIC") {
@@ -40585,7 +40009,7 @@ var DocTypeReader = class {
       i++;
     }
     let elementName = xmlData.substring(startIndex, i);
-    if (!this.suppressValidationErr && !isName(elementName)) {
+    if (!this.suppressValidationErr && !qName(elementName, { xmlVersion: this.xmlVersion })) {
       throw new Error(`Invalid element name: "${elementName}"`);
     }
     i = skipWhitespace(xmlData, i);
@@ -40618,14 +40042,14 @@ var DocTypeReader = class {
       i++;
     }
     let elementName = xmlData.substring(startIndex, i);
-    validateEntityName2(elementName);
+    validateEntityName2(elementName, { xmlVersion: this.xmlVersion });
     i = skipWhitespace(xmlData, i);
     startIndex = i;
     while (i < xmlData.length && !/\s/.test(xmlData[i])) {
       i++;
     }
     let attributeName = xmlData.substring(startIndex, i);
-    if (!validateEntityName2(attributeName)) {
+    if (!validateEntityName2(attributeName, { xmlVersion: this.xmlVersion })) {
       throw new Error(`Invalid attribute name: "${attributeName}"`);
     }
     i = skipWhitespace(xmlData, i);
@@ -40646,7 +40070,7 @@ var DocTypeReader = class {
         }
         let notation = xmlData.substring(startIndex2, i);
         notation = notation.trim();
-        if (!validateEntityName2(notation)) {
+        if (!validateEntityName2(notation, { xmlVersion: this.xmlVersion })) {
           throw new Error(`Invalid notation name: "${notation}"`);
         }
         allowedNotations.push(notation);
@@ -40704,15 +40128,244 @@ function hasSeq(data, seq, i) {
   return true;
 }
 __name(hasSeq, "hasSeq");
-function validateEntityName2(name) {
-  if (isName(name))
+function validateEntityName2(name, xmlVersion) {
+  if (qName(name, { xmlVersion }))
     return name;
   else
     throw new Error(`Invalid entity name ${name}`);
 }
 __name(validateEntityName2, "validateEntityName");
 
-// ../../node_modules/.pnpm/strnum@2.3.0/node_modules/strnum/strnum.js
+// node_modules/anynum/digitTable.js
+var SCRIPT_ZEROS = [
+  // Basic Latin (ASCII) — included for completeness / pass-through
+  48,
+  // 0-9
+  // Arabic scripts
+  1632,
+  // Arabic-Indic ٠١٢٣٤٥٦٧٨٩
+  1776,
+  // Extended Arabic-Indic (Urdu/Persian/Sindhi) ۰۱۲۳
+  // Indic scripts
+  2406,
+  // Devanagari ०१२३४५६७८९
+  2534,
+  // Bengali ০১২৩৪৫৬৭৮৯
+  2662,
+  // Gurmukhi ੦੧੨੩੪੫੬੭੮੯
+  2790,
+  // Gujarati ૦૧૨૩૪૫૬૭૮૯
+  2918,
+  // Odia ୦୧୨୩୪୫୬୭୮୯
+  3046,
+  // Tamil ௦௧௨௩௪௫௬௭௮௯
+  3174,
+  // Telugu ౦౧౨౩౪౫౬౭౮౯
+  3302,
+  // Kannada ೦೧೨೩೪೫೬೭೮೯
+  3430,
+  // Malayalam ൦൧൨൩൪൫൬൭൮൯
+  3558,
+  // Sinhala Archaic ෦෧෨෩෪෫෬෭෮෯
+  // Southeast Asian scripts
+  3664,
+  // Thai ๐๑๒๓๔๕๖๗๘๙
+  3792,
+  // Lao ໐໑໒໓໔໕໖໗໘໙
+  3872,
+  // Tibetan ༠༡༢༣༤༥༦༧༨༩
+  4160,
+  // Myanmar ၀၁၂၃၄၅၆၇၈၉
+  4240,
+  // Myanmar Shan ႐႑႒႓႔႕႖႗႘႙
+  6112,
+  // Khmer ០១២៣៤៥៦៧៨៩
+  6160,
+  // Mongolian ᠐᠑᠒᠓᠔᠕᠖᠗᠘᠙
+  6470,
+  // Limbu ᥆᥇᥈᥉᥊᥋᥌᥍᥎᥏
+  6608,
+  // New Tai Lue ᧐᧑᧒᧓᧔᧕᧖᧗᧘᧙
+  6784,
+  // Tai Tham Hora ᪀᪁᪂᪃᪄᪅᪆᪇᪈᪉
+  6800,
+  // Tai Tham Tham ᪐᪑᪒᪓᪔᪕᪖᪗᪘᪙
+  6992,
+  // Balinese ᭐᭑᭒᭓᭔᭕᭖᭗᭘᭙
+  7088,
+  // Sundanese ᮰᮱᮲᮳᮴᮵᮶᮷᮸᮹
+  7232,
+  // Lepcha ᱀᱁᱂᱃᱄᱅᱆᱇᱈᱉
+  7248,
+  // Ol Chiki ᱐᱑᱒᱓᱔᱕᱖᱗᱘᱙
+  // Fullwidth (CJK context)
+  65296,
+  // Fullwidth ０１２３４５６７８９
+  // Mathematical digit variants (Unicode math block)
+  120782,
+  // Mathematical Bold
+  120792,
+  // Mathematical Double-Struck
+  120802,
+  // Mathematical Sans-Serif
+  120812,
+  // Mathematical Sans-Serif Bold
+  120822,
+  // Mathematical Monospace
+  // Other scripts
+  66720,
+  // Osmanya 𐒠𐒡𐒢𐒣𐒤𐒥𐒦𐒧𐒨𐒩
+  68912,
+  // Hanifi Rohingya 𐴰𐴱𐴲𐴳𐴴𐴵𐴶𐴷𐴸𐴹
+  69734,
+  // Brahmi 𑁦𑁧𑁨𑁩𑁪𑁫𑁬𑁭𑁮𑁯
+  69872,
+  // Sora Sompeng 𑃰𑃱𑃲𑃳𑃴𑃵𑃶𑃷𑃸𑃹
+  69942,
+  // Chakma 𑄶𑄷𑄸𑄹𑄺𑄻𑄼𑄽𑄾𑄿
+  70096,
+  // Sharada 𑇐𑇑𑇒𑇓𑇔𑇕𑇖𑇗𑇘𑇙
+  70384,
+  // Khudawadi 𑋰𑋱𑋲𑋳𑋴𑋵𑋶𑋷𑋸𑋹
+  70736,
+  // Newa 𑑐𑑑𑑒𑑓𑑔𑑕𑑖𑑗𑑘𑑙
+  70864,
+  // Tirhuta 𑓐𑓑𑓒𑓓𑓔𑓕𑓖𑓗𑓘𑓙
+  71248,
+  // Modi 𑙐𑙑𑙒𑙓𑙔𑙕𑙖𑙗𑙘𑙙
+  71360,
+  // Takri 𑛀𑛁𑛂𑛃𑛄𑛅𑛆𑛇𑛈𑛉
+  71472,
+  // Ahom 𑜰𑜱𑜲𑜳𑜴𑜵𑜶𑜷𑜸𑜹
+  71904,
+  // Warang Citi 𑣠𑣡𑣢𑣣𑣤𑣥𑣦𑣧𑣨𑣩
+  72016,
+  // Dives Akuru 𑥐𑥑𑥒𑥓𑥔𑥕𑥖𑥗𑥘𑥙
+  72688,
+  // Khitan Small Script 𑯰𑯱𑯲𑯳𑯴𑯵𑯶𑯷𑯸𑯹
+  72784,
+  // Bhaiksuki 𑱐𑱑𑱒𑱓𑱔𑱕𑱖𑱗𑱘𑱙
+  73040,
+  // Masaram Gondi 𑵐𑵑𑵒𑵓𑵔𑵕𑵖𑵗𑵘𑵙
+  73120,
+  // Gunjala Gondi 𑶠𑶡𑶢𑶣𑶤𑶥𑶦𑶧𑶨𑶩
+  73552,
+  // Kawi 𑽐𑽑𑽒𑽓𑽔𑽕𑽖𑽗𑽘𑽙
+  92768,
+  // Mro 𖩠𖩡𖩢𖩣𖩤𖩥𖩦𖩧𖩨𖩩
+  92864,
+  // Tangsa 𖫀𖫁𖫂𖫃𖫄𖫅𖫆𖫇𖫈𖫉
+  93008,
+  // Pahawh Hmong 𖭐𖭑𖭒𖭓𖭔𖭕𖭖𖭗𖭘𖭙
+  123200,
+  // Nyiakeng Puachue Hmong 𞅀𞅁𞅂𞅃𞅄𞅅𞅆𞅇𞅈𞅉
+  123632,
+  // Wancho 𞋰𞋱𞋲𞋳𞋴𞋵𞋶𞋷𞋸𞋹
+  124144,
+  // Nag Mundari 𞓰𞓱𞓲𞓳𞓴𞓵𞓶𞓷𞓸𞓹
+  125264,
+  // Adlam 𞥐𞥑𞥒𞥓𞥔𞥕𞥖𞥗𞥘𞥙
+  130032
+  // Segmented digit symbols 🯰🯱🯲🯳🯴🯵🯶🯷🯸🯹
+];
+var NOT_DIGIT = 255;
+var HIGH_MAP = /* @__PURE__ */ new Map();
+var LOW_MAX = 65535;
+var LOW_MIN = 1632;
+var TABLE_OFFSET = LOW_MIN;
+var TABLE_SIZE = LOW_MAX - LOW_MIN + 1;
+var TABLE = new Uint8Array(TABLE_SIZE).fill(NOT_DIGIT);
+for (const zero of SCRIPT_ZEROS) {
+  for (let d = 0; d < 10; d++) {
+    const cp = zero + d;
+    if (cp <= LOW_MAX) {
+      TABLE[cp - TABLE_OFFSET] = d;
+    } else {
+      HIGH_MAP.set(cp, d);
+    }
+  }
+}
+
+// node_modules/anynum/anynum.js
+var CHAR_0 = 48;
+var CHAR_9 = 57;
+var CHAR_MINUS = 45;
+var MINUS_SET = /* @__PURE__ */ new Set([8722, 65293, 65123]);
+function anynum(str) {
+  if (typeof str !== "string") return str;
+  const len = str.length;
+  if (len === 0) return str;
+  let firstHit = -1;
+  for (let i = 0; i < len; i++) {
+    const cc = str.charCodeAt(i);
+    if (cc >= CHAR_0 && cc <= CHAR_9 || cc === CHAR_MINUS) continue;
+    if (cc < TABLE_OFFSET) {
+      if (MINUS_SET.has(cc)) {
+        firstHit = i;
+        break;
+      }
+      continue;
+    }
+    if (cc >= 55296 && cc <= 56319) {
+      if (i + 1 < len) {
+        const low = str.charCodeAt(i + 1);
+        if (low >= 56320 && low <= 57343) {
+          const cp = 65536 + (cc - 55296 << 10) + (low - 56320);
+          if (HIGH_MAP.has(cp)) {
+            firstHit = i;
+            break;
+          }
+        }
+      }
+      continue;
+    }
+    if (TABLE[cc - TABLE_OFFSET] !== NOT_DIGIT || MINUS_SET.has(cc)) {
+      firstHit = i;
+      break;
+    }
+  }
+  if (firstHit === -1) return str;
+  const chars = [];
+  if (firstHit > 0) chars.push(str.slice(0, firstHit));
+  for (let i = firstHit; i < len; i++) {
+    const cc = str.charCodeAt(i);
+    if (cc >= CHAR_0 && cc <= CHAR_9 || cc === CHAR_MINUS) {
+      chars.push(str[i]);
+      continue;
+    }
+    if (cc < TABLE_OFFSET) {
+      chars.push(MINUS_SET.has(cc) ? "-" : str[i]);
+      continue;
+    }
+    if (cc >= 55296 && cc <= 56319) {
+      if (i + 1 < len) {
+        const low = str.charCodeAt(i + 1);
+        if (low >= 56320 && low <= 57343) {
+          const cp = 65536 + (cc - 55296 << 10) + (low - 56320);
+          const d2 = HIGH_MAP.get(cp);
+          if (d2 !== void 0) {
+            chars.push(String.fromCharCode(d2 + 48));
+            i++;
+            continue;
+          }
+        }
+      }
+      chars.push(str[i]);
+      continue;
+    }
+    if (MINUS_SET.has(cc)) {
+      chars.push("-");
+      continue;
+    }
+    const d = TABLE[cc - TABLE_OFFSET];
+    chars.push(d !== NOT_DIGIT ? String.fromCharCode(d + 48) : str[i]);
+  }
+  return chars.join("");
+}
+__name(anynum, "anynum");
+var anynum_default = anynum;
+
+// node_modules/strnum/strnum.js
 var hexRegex = /^[-+]?0x[a-fA-F0-9]+$/;
 var binRegex = /^0b[01]+$/;
 var octRegex = /^0o[0-7]+$/;
@@ -40725,8 +40378,9 @@ var consider = {
   decimalPoint: ".",
   eNotation: true,
   //skipLike: /regex/,
-  infinity: "original"
+  infinity: "original",
   // "null", "infinity" (Infinity type), "string" ("Infinity" (the string literal))
+  unicode: false
 };
 function toNumber(str, options = {}) {
   options = Object.assign({}, consider, options);
@@ -40735,7 +40389,11 @@ function toNumber(str, options = {}) {
   if (trimmedStr.length === 0) return str;
   else if (options.skipLike !== void 0 && options.skipLike.test(trimmedStr)) return str;
   else if (trimmedStr === "0") return 0;
-  else if (options.hex && hexRegex.test(trimmedStr)) {
+  if (options.unicode) {
+    trimmedStr = anynum_default(trimmedStr);
+    if (trimmedStr === "0") return 0;
+  }
+  if (options.hex && hexRegex.test(trimmedStr)) {
     return parse_int(trimmedStr, 16);
   } else if (options.binary && binRegex.test(trimmedStr)) {
     return parse_int(trimmedStr, 2);
@@ -40813,7 +40471,9 @@ function resolveEnotation(str, trimmedStr, options) {
 __name(resolveEnotation, "resolveEnotation");
 function trimZeros(numStr) {
   if (numStr && numStr.indexOf(".") !== -1) {
-    numStr = numStr.replace(/0+$/, "");
+    let end = numStr.length;
+    while (end > 0 && numStr.charCodeAt(end - 1) === 48) end--;
+    numStr = numStr.slice(0, end);
     if (numStr === ".") numStr = "0";
     else if (numStr[0] === ".") numStr = "0" + numStr;
     else if (numStr[numStr.length - 1] === ".") numStr = numStr.substring(0, numStr.length - 1);
@@ -40848,7 +40508,7 @@ function handleInfinity(str, num2, options) {
 }
 __name(handleInfinity, "handleInfinity");
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/ignoreAttributes.js
+// node_modules/fast-xml-parser/src/ignoreAttributes.js
 function getIgnoreAttributesFn(ignoreAttributes) {
   if (typeof ignoreAttributes === "function") {
     return ignoreAttributes;
@@ -40869,7 +40529,7 @@ function getIgnoreAttributesFn(ignoreAttributes) {
 }
 __name(getIgnoreAttributesFn, "getIgnoreAttributesFn");
 
-// ../../node_modules/.pnpm/path-expression-matcher@1.5.0/node_modules/path-expression-matcher/src/Expression.js
+// node_modules/path-expression-matcher/src/Expression.js
 var Expression = class {
   static {
     __name(this, "Expression");
@@ -41035,7 +40695,7 @@ var Expression = class {
   }
 };
 
-// ../../node_modules/.pnpm/path-expression-matcher@1.5.0/node_modules/path-expression-matcher/src/ExpressionSet.js
+// node_modules/path-expression-matcher/src/ExpressionSet.js
 var ExpressionSet = class {
   static {
     __name(this, "ExpressionSet");
@@ -41044,6 +40704,7 @@ var ExpressionSet = class {
     this._byDepthAndTag = /* @__PURE__ */ new Map();
     this._wildcardByDepth = /* @__PURE__ */ new Map();
     this._deepWildcards = [];
+    this._deepByTerminalTag = /* @__PURE__ */ new Map();
     this._patterns = /* @__PURE__ */ new Set();
     this._sealed = false;
   }
@@ -41068,7 +40729,14 @@ var ExpressionSet = class {
     if (this._patterns.has(expression.pattern)) return this;
     this._patterns.add(expression.pattern);
     if (expression.hasDeepWildcard()) {
-      this._deepWildcards.push(expression);
+      const lastSeg2 = expression.segments[expression.segments.length - 1];
+      if (lastSeg2 && lastSeg2.type !== "deep-wildcard" && lastSeg2.tag !== "*") {
+        const tag2 = lastSeg2.tag;
+        if (!this._deepByTerminalTag.has(tag2)) this._deepByTerminalTag.set(tag2, []);
+        this._deepByTerminalTag.get(tag2).push(expression);
+      } else {
+        this._deepWildcards.push(expression);
+      }
       return this;
     }
     const depth = expression.length;
@@ -41186,6 +40854,12 @@ var ExpressionSet = class {
         if (matcher.matches(wildcardBucket[i])) return wildcardBucket[i];
       }
     }
+    const deepBucket = this._deepByTerminalTag.get(tag);
+    if (deepBucket) {
+      for (let i = 0; i < deepBucket.length; i++) {
+        if (matcher.matches(deepBucket[i])) return deepBucket[i];
+      }
+    }
     for (let i = 0; i < this._deepWildcards.length; i++) {
       if (matcher.matches(this._deepWildcards[i])) return this._deepWildcards[i];
     }
@@ -41193,7 +40867,7 @@ var ExpressionSet = class {
   }
 };
 
-// ../../node_modules/.pnpm/path-expression-matcher@1.5.0/node_modules/path-expression-matcher/src/Matcher.js
+// node_modules/path-expression-matcher/src/Matcher.js
 var MatcherView = class {
   static {
     __name(this, "MatcherView");
@@ -41247,6 +40921,24 @@ var MatcherView = class {
     if (path.length === 0) return false;
     const current = path[path.length - 1];
     return current.values !== void 0 && attrName in current.values;
+  }
+  /**
+   * Get the value of a "kept" attribute from the nearest ancestor (or
+   * current node) that declared it via `push(tag, attrs, ns, { keep: [...] })`.
+   * @param {string} attrName
+   * @returns {*}
+   */
+  getAnyParentAttr(attrName) {
+    return this._matcher.getAnyParentAttr(attrName);
+  }
+  /**
+   * Check whether any ancestor (or the current node) kept the given
+   * attribute via `push(tag, attrs, ns, { keep: [...] })`.
+   * @param {string} attrName
+   * @returns {boolean}
+   */
+  hasAnyParentAttr(attrName) {
+    return this._matcher.hasAnyParentAttr(attrName);
   }
   /**
    * Get current node's sibling position (child index in parent).
@@ -41329,30 +41021,32 @@ var Matcher = class {
     this.siblingStacks = [];
     this._pathStringCache = null;
     this._view = new MatcherView(this);
+    this._keptAttrs = [];
   }
   /**
    * Push a new tag onto the path.
    * @param {string} tagName
    * @param {Object|null} [attrValues=null]
    * @param {string|null} [namespace=null]
+   * @param {Object|null} [options=null]
+   * @param {string[]} [options.keep] - Names of attributes (from attrValues)
    */
-  push(tagName, attrValues = null, namespace = null) {
+  push(tagName, attrValues = null, namespace = null, options = null) {
     this._pathStringCache = null;
     if (this.path.length > 0) {
       this.path[this.path.length - 1].values = void 0;
     }
     const currentLevel = this.path.length;
-    if (!this.siblingStacks[currentLevel]) {
-      this.siblingStacks[currentLevel] = /* @__PURE__ */ new Map();
+    let level = this.siblingStacks[currentLevel];
+    if (!level) {
+      level = { counts: /* @__PURE__ */ new Map(), total: 0 };
+      this.siblingStacks[currentLevel] = level;
     }
-    const siblings = this.siblingStacks[currentLevel];
     const siblingKey = namespace ? `${namespace}:${tagName}` : tagName;
-    const counter = siblings.get(siblingKey) || 0;
-    let position = 0;
-    for (const count of siblings.values()) {
-      position += count;
-    }
-    siblings.set(siblingKey, counter + 1);
+    const counter = level.counts.get(siblingKey) || 0;
+    const position = level.total;
+    level.counts.set(siblingKey, counter + 1);
+    level.total++;
     const node = {
       tag: tagName,
       position,
@@ -41365,6 +41059,16 @@ var Matcher = class {
       node.values = attrValues;
     }
     this.path.push(node);
+    const depth = this.path.length;
+    const keep = options !== null ? options.keep : null;
+    if (keep !== null && keep !== void 0 && keep.length > 0 && attrValues) {
+      for (let i = 0; i < keep.length; i++) {
+        const name = keep[i];
+        if (attrValues[name] !== void 0) {
+          this._keptAttrs.push({ depth, name, value: attrValues[name] });
+        }
+      }
+    }
   }
   /**
    * Pop the last tag from the path.
@@ -41376,6 +41080,10 @@ var Matcher = class {
     const node = this.path.pop();
     if (this.siblingStacks.length > this.path.length + 1) {
       this.siblingStacks.length = this.path.length + 1;
+    }
+    const poppedDepth = this.path.length + 1;
+    while (this._keptAttrs.length > 0 && this._keptAttrs[this._keptAttrs.length - 1].depth >= poppedDepth) {
+      this._keptAttrs.pop();
     }
     return node;
   }
@@ -41426,6 +41134,36 @@ var Matcher = class {
     return current.values !== void 0 && attrName in current.values;
   }
   /**
+   * Get the value of a "kept" attribute from the nearest ancestor (or
+   * current node) that declared it via `push(tag, attrs, ns, { keep: [...] })`.
+   * Unlike getAttrValue(), this works regardless of how deep the path has
+   * gone since the attribute was pushed — but only for attribute names that
+   * were explicitly marked with `keep` at push time. Cost is proportional to
+   * the number of currently-kept attributes (typically 0-3), not path depth.
+   * @param {string} attrName
+   * @returns {*} the value, or undefined if no ancestor kept this attribute
+   */
+  getAnyParentAttr(attrName) {
+    const kept = this._keptAttrs;
+    for (let i = kept.length - 1; i >= 0; i--) {
+      if (kept[i].name === attrName) return kept[i].value;
+    }
+    return void 0;
+  }
+  /**
+   * Check whether any ancestor (or the current node) kept the given
+   * attribute via `push(tag, attrs, ns, { keep: [...] })`.
+   * @param {string} attrName
+   * @returns {boolean}
+   */
+  hasAnyParentAttr(attrName) {
+    const kept = this._keptAttrs;
+    for (let i = kept.length - 1; i >= 0; i--) {
+      if (kept[i].name === attrName) return true;
+    }
+    return false;
+  }
+  /**
    * Get current node's sibling position (child index in parent).
    * @returns {number}
    */
@@ -41463,21 +41201,21 @@ var Matcher = class {
    * @returns {string}
    */
   toString(separator, includeNamespace = true) {
-    const sep = separator || this.separator;
-    const isDefault = sep === this.separator && includeNamespace === true;
+    const sep2 = separator || this.separator;
+    const isDefault = sep2 === this.separator && includeNamespace === true;
     if (isDefault) {
       if (this._pathStringCache !== null) {
         return this._pathStringCache;
       }
       const result = this.path.map(
         (n) => n.namespace ? `${n.namespace}:${n.tag}` : n.tag
-      ).join(sep);
+      ).join(sep2);
       this._pathStringCache = result;
       return result;
     }
     return this.path.map(
       (n) => includeNamespace && n.namespace ? `${n.namespace}:${n.tag}` : n.tag
-    ).join(sep);
+    ).join(sep2);
   }
   /**
    * Get path as array of tag names.
@@ -41493,6 +41231,7 @@ var Matcher = class {
     this._pathStringCache = null;
     this.path = [];
     this.siblingStacks = [];
+    this._keptAttrs = [];
   }
   /**
    * Match current path against an Expression.
@@ -41616,7 +41355,8 @@ var Matcher = class {
   snapshot() {
     return {
       path: this.path.map((node) => ({ ...node })),
-      siblingStacks: this.siblingStacks.map((map) => new Map(map))
+      siblingStacks: this.siblingStacks.map((level) => level ? { counts: new Map(level.counts), total: level.total } : level),
+      keptAttrs: this._keptAttrs.map((entry) => ({ ...entry }))
     };
   }
   /**
@@ -41626,7 +41366,8 @@ var Matcher = class {
   restore(snapshot) {
     this._pathStringCache = null;
     this.path = snapshot.path.map((node) => ({ ...node }));
-    this.siblingStacks = snapshot.siblingStacks.map((map) => new Map(map));
+    this.siblingStacks = snapshot.siblingStacks.map((level) => level ? { counts: new Map(level.counts), total: level.total } : level);
+    this._keptAttrs = (snapshot.keptAttrs || []).map((entry) => ({ ...entry }));
   }
   /**
    * Return the read-only {@link MatcherView} for this matcher.
@@ -41649,7 +41390,733 @@ var Matcher = class {
   }
 };
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/OrderedObjParser.js
+// node_modules/is-unsafe/src/contexts/html.js
+var HTML_PATTERNS = [
+  {
+    id: "html-script-open",
+    description: "<script opening tag",
+    pattern: /<script[\s>/]/i
+  },
+  {
+    id: "html-script-close",
+    description: "</script closing tag",
+    pattern: /<\/script[\s>]/i
+  },
+  {
+    id: "html-javascript-protocol",
+    description: "javascript: URI scheme (with optional whitespace/encoding)",
+    // Handles j&#x61;vascript:, j\u0061vascript:, and whitespace variants
+    pattern: /j[\t\n\r ]*a[\t\n\r ]*v[\t\n\r ]*a[\t\n\r ]*s[\t\n\r ]*c[\t\n\r ]*r[\t\n\r ]*i[\t\n\r ]*p[\t\n\r ]*t[\t\n\r ]*:/i
+  },
+  {
+    id: "html-vbscript-protocol",
+    description: "vbscript: URI scheme",
+    pattern: /vbscript[\t\n\r ]*:/i
+  },
+  {
+    id: "html-data-html",
+    description: "data:text/html URI \u2014 can execute scripts in browsers",
+    pattern: /data[\t\n\r ]*:[\t\n\r ]*text\/html/i
+  },
+  {
+    id: "html-data-xhtml",
+    description: "data:application/xhtml+xml URI",
+    pattern: /data[\t\n\r ]*:[\t\n\r ]*application\/xhtml/i
+  },
+  {
+    id: "html-data-svg",
+    description: "data:image/svg+xml URI \u2014 can execute scripts",
+    pattern: /data[\t\n\r ]*:[\t\n\r ]*image\/svg\+xml/i
+  },
+  {
+    id: "html-inline-event-handler",
+    description: "Inline event handler attributes: onclick=, onerror=, onload=, etc.",
+    // \bon ensures we match a word boundary so "phonetic=" is not caught
+    pattern: /\bon\w{1,30}\s*=/i
+  },
+  {
+    id: "html-entity-obfuscated-script",
+    description: "HTML-entity-encoded <script (e.g. &#x3C;script or &lt;script)",
+    // Entities include optional trailing semicolon: &#x3C; or &#x3C (both valid in HTML5)
+    pattern: /(?:&#x0*3[Cc];?|&#0*60;?|&lt;)\s*script/i
+  },
+  {
+    id: "html-entity-obfuscated-javascript",
+    description: 'HTML-entity-encoded javascript: (partial \u2014 catches common &#106; or &#x6a; for "j")',
+    pattern: /(?:&#x0*6[Aa];?|&#0*106;?)\s*(?:&#x0*61;?|a)[\s\S]{0,80}script\s*:/i
+  },
+  {
+    id: "html-style-expression",
+    description: "CSS expression() \u2014 IE-era code execution in style attributes",
+    pattern: /style[\s\S]{0,20}expression\s*\(/i
+  },
+  {
+    id: "html-object-embed",
+    description: "<object or <embed tags that can load active content",
+    pattern: /<(?:object|embed)[\s>/]/i
+  },
+  {
+    id: "html-base-tag",
+    description: "<base href= \u2014 can hijack all relative URLs on a page",
+    pattern: /<base[\s>]/i
+  },
+  {
+    id: "html-meta-refresh",
+    description: '<meta http-equiv="refresh" \u2014 can redirect users',
+    pattern: /<meta[\s\S]{0,40}http-equiv[\s\S]{0,20}refresh/i
+  },
+  {
+    id: "html-srcdoc",
+    description: "srcdoc= attribute on iframes \u2014 embeds HTML that can run scripts",
+    pattern: /srcdoc\s*=/i
+  },
+  {
+    id: "html-iframe",
+    description: "<iframe tag",
+    pattern: /<iframe[\s>/]/i
+  },
+  {
+    id: "html-form",
+    description: "<form tag \u2014 can be used for phishing / credential harvesting injection",
+    pattern: /<form[\s>/]/i
+  }
+];
+var html_default = HTML_PATTERNS;
+
+// node_modules/is-unsafe/src/contexts/xml.js
+var XML_PATTERNS = [
+  {
+    id: "xml-cdata-injection",
+    description: "CDATA section injection: <![CDATA[ breaks out of text node context",
+    pattern: /<!\[CDATA\[/i
+  },
+  {
+    id: "xml-cdata-close",
+    description: "CDATA close sequence: ]]> can terminate an enclosing CDATA section",
+    pattern: /\]\]>/
+  },
+  {
+    id: "xml-processing-instruction",
+    description: "XML processing instruction: <?xml-stylesheet or <?php etc.",
+    pattern: /<\?(?:xml[\- ]|php|asp)/i
+  },
+  {
+    id: "xml-doctype-injection",
+    description: "DOCTYPE declaration embedded in content \u2014 can define entities",
+    // Match <!DOCTYPE followed by end-of-string, whitespace, or [ (internal subset)
+    pattern: /<!DOCTYPE(?:[\s[]|$)/i
+  },
+  {
+    id: "xml-entity-system",
+    description: "SYSTEM keyword \u2014 used in external entity declarations (XXE)",
+    pattern: /\bSYSTEM\s+["']/i
+  },
+  {
+    id: "xml-entity-public",
+    description: "PUBLIC keyword \u2014 used in external entity declarations (XXE)",
+    pattern: /\bPUBLIC\s+["']/i
+  },
+  {
+    id: "xml-entity-declaration",
+    description: "<!ENTITY declaration \u2014 defines entities, potential XXE or entity expansion",
+    pattern: /<!ENTITY[\s%]/i
+  },
+  {
+    id: "xml-billion-laughs",
+    description: "Entity reference chaining / billion laughs: repeated &eX; style references",
+    // Heuristic: 3+ consecutive entity refs suggests expansion attack
+    pattern: /(?:&\w{1,20};){3,}/
+  },
+  {
+    id: "xml-namespace-confusion",
+    description: "xmlns: attribute injection \u2014 can redefine namespaces to confuse parsers",
+    // pattern: /\bxmlns\s*(?::\w{1,40})?\s*=/i,
+    pattern: /\bxmlns(?::\w{1,40})?\s*=/i
+  },
+  {
+    id: "xml-comment-injection",
+    description: "<!-- comment injection \u2014 can hide content from some parsers",
+    pattern: /<!--/
+  },
+  {
+    id: "xml-comment-close",
+    description: "--> closes an enclosing XML comment",
+    pattern: /-->/
+  },
+  {
+    id: "xml-pi-close",
+    description: "?> closes an enclosing processing instruction",
+    pattern: /\?>/
+  }
+];
+var xml_default = XML_PATTERNS;
+
+// node_modules/is-unsafe/src/contexts/svg.js
+var SVG_PATTERNS = [
+  {
+    id: "svg-script-element",
+    description: "<script element inside SVG executes JavaScript",
+    pattern: /<script[\s>/]/i
+  },
+  {
+    id: "svg-xlink-href-javascript",
+    description: "xlink:href with javascript: \u2014 classic SVG XSS via <a> or <use>",
+    pattern: /xlink\s*:\s*href\s*=\s*["']?\s*javascript\s*:/i
+  },
+  {
+    id: "svg-href-javascript",
+    description: "href= with javascript: in SVG context (<a>, <animate>, etc.)",
+    pattern: /href\s*=\s*["']?\s*javascript\s*:/i
+  },
+  {
+    id: "svg-foreignobject",
+    description: "<foreignObject embeds HTML inside SVG \u2014 can execute scripts",
+    pattern: /<foreignObject[\s>/]/i
+  },
+  {
+    id: "svg-use-external",
+    description: "<use xlink:href or href pointing to external resource (non-fragment URL)",
+    // Match <use with href= where the value starts with a non-# character (external URL)
+    // [\"'][^#] catches quoted values not starting with #; [^\"'#\s>] catches unquoted
+    pattern: /<use[\s\S]{0,60}(?:xlink\s*:\s*)?href\s*=\s*(?:["'][^#]|[^"'#\s>])/i
+  },
+  {
+    id: "svg-animate-href",
+    description: '<animate attributeName="href" \u2014 can dynamically change href to javascript:',
+    pattern: /<animate[\s\S]{0,80}attributeName\s*=\s*["'][\s]*href["']/i
+  },
+  {
+    id: "svg-animate-xlinkhref",
+    description: '<animate attributeName="xlink:href"',
+    pattern: /<animate[\s\S]{0,80}attributeName\s*=\s*["'][\s]*xlink\s*:\s*href["']/i
+  },
+  {
+    id: "svg-set-javascript",
+    description: '<set to="javascript:..." \u2014 sets an attribute to a javascript: URI',
+    pattern: /<set[\s\S]{0,80}to\s*=\s*["']?\s*javascript\s*:/i
+  },
+  {
+    id: "svg-event-handler",
+    description: "SVG-specific event handler attributes: onload=, onerror=, onactivate=, etc.",
+    pattern: /\bon(?:load|error|activate|begin|end|repeat|focus|blur|click|mouse\w{1,20}|key\w{1,20})\s*=/i
+  },
+  {
+    id: "svg-handler-generic",
+    description: "Generic on* handler catch-all for SVG attributes",
+    pattern: /\bon\w{1,30}\s*=/i
+  },
+  {
+    id: "svg-filter-feimage",
+    description: "<feImage href= \u2014 filter primitive that can load external resources",
+    pattern: /<feImage[\s\S]{0,80}(?:xlink\s*:\s*)?href\s*=/i
+  },
+  {
+    id: "svg-image-external",
+    description: "<image xlink:href with http/https or javascript protocol",
+    pattern: /<image[\s\S]{0,80}(?:xlink\s*:\s*)?href\s*=\s*["']?\s*(?:https?|javascript)\s*:/i
+  },
+  {
+    id: "svg-style-javascript",
+    description: "style= attribute containing javascript: (e.g. background:url(javascript:...))",
+    pattern: /style\s*=[\s\S]{0,60}javascript\s*:/i
+  }
+];
+var svg_default = SVG_PATTERNS;
+
+// node_modules/is-unsafe/src/contexts/sql.js
+var SQL_PATTERNS = [
+  {
+    id: "sql-block-comment-open",
+    description: "SQL block comment open: /* ... */ \u2014 unusual in legitimate user text",
+    pattern: /\/\*/
+  },
+  {
+    id: "sql-union-select",
+    description: "UNION SELECT \u2014 most common SQL injection aggregation attack",
+    pattern: /\bUNION\s{1,20}(?:ALL\s{1,20})?SELECT\b/i
+  },
+  {
+    id: "sql-drop-table",
+    description: "DROP TABLE \u2014 destructive DDL injection",
+    pattern: /\bDROP\s{1,20}TABLE\b/i
+  },
+  {
+    id: "sql-drop-database",
+    description: "DROP DATABASE \u2014 destructive DDL injection",
+    pattern: /\bDROP\s{1,20}DATABASE\b/i
+  },
+  {
+    id: "sql-insert-into",
+    description: "INSERT INTO \u2014 data injection",
+    pattern: /\bINSERT\s{1,20}INTO\b/i
+  },
+  {
+    id: "sql-delete-from",
+    description: "DELETE FROM \u2014 data deletion injection",
+    pattern: /\bDELETE\s{1,20}FROM\b/i
+  },
+  {
+    id: "sql-update-set",
+    description: "UPDATE ... SET \u2014 data modification injection",
+    // Allows arbitrary content between UPDATE and SET (table name, alias, etc.)
+    pattern: /\bUPDATE\b[\s\S]{1,60}\bSET\b/i
+  },
+  {
+    id: "sql-exec-xp",
+    description: "EXEC xp_ \u2014 MSSQL extended stored procedure execution",
+    pattern: /\bEXEC(?:UTE)?\s{1,20}xp_/i
+  },
+  {
+    id: "sql-tautology-string",
+    description: `Classic string tautology: ' OR '1'='1 or " OR "1"="1"`,
+    // Last quote is optional — injection may truncate it: ' OR '1'='1--
+    pattern: /'\s{0,10}OR\s{0,10}'[^']{0,20}'\s*=\s*'[^']{0,20}/i
+  },
+  {
+    id: "sql-tautology-numeric",
+    description: "Numeric tautology: OR 1=1",
+    pattern: /\bOR\s{1,10}1\s*=\s*1\b/i
+  },
+  {
+    id: "sql-always-true-zero",
+    description: "Numeric tautology: OR 0=0",
+    pattern: /\bOR\s{1,10}0\s*=\s*0\b/i
+  },
+  {
+    id: "sql-sleep-benchmark",
+    description: "Time-based blind injection: SLEEP() or BENCHMARK()",
+    pattern: /\b(?:SLEEP|BENCHMARK)\s*\(/i
+  },
+  {
+    id: "sql-waitfor-delay",
+    description: "MSSQL time-based blind injection: WAITFOR DELAY",
+    pattern: /\bWAITFOR\s{1,20}DELAY\b/i
+  },
+  {
+    id: "sql-char-function",
+    description: "CHAR() function \u2014 used to obfuscate injected strings",
+    pattern: /\bCHAR\s*\(\s*\d{1,3}/i
+  },
+  {
+    id: "sql-information-schema",
+    description: "INFORMATION_SCHEMA \u2014 reconnaissance query for table/column enumeration",
+    pattern: /\bINFORMATION_SCHEMA\b/i
+  }
+];
+var sql_default = SQL_PATTERNS;
+
+// node_modules/is-unsafe/src/contexts/shell.js
+var SHELL_PATTERNS = [
+  {
+    id: "shell-path-traversal-unix",
+    description: "Unix path traversal: ../  \u2014 climbing the directory tree",
+    pattern: /\.\.\//
+  },
+  {
+    id: "shell-path-traversal-windows",
+    description: "Windows path traversal: ..\\ \u2014 climbing the directory tree",
+    pattern: /\.\.\\/
+  },
+  {
+    id: "shell-path-traversal-encoded",
+    description: "URL-encoded path traversal: %2e%2e or %2f variants",
+    pattern: /%2e%2e|%2f\.\.|\.\.%2f/i
+  },
+  {
+    id: "shell-null-byte",
+    description: "Null byte injection: \\x00 or %00 \u2014 truncates strings in C-backed functions",
+    pattern: /\x00|%00/
+  },
+  {
+    id: "shell-semicolon",
+    description: "Semicolon command separator: cmd1; cmd2",
+    pattern: /;/
+  },
+  {
+    id: "shell-pipe",
+    description: "Pipe operator: cmd1 | cmd2",
+    pattern: /\|/
+  },
+  {
+    id: "shell-and-operator",
+    description: "AND operator: cmd1 && cmd2",
+    pattern: /&&/
+  },
+  {
+    id: "shell-or-operator",
+    description: "OR operator: cmd1 || cmd2",
+    pattern: /\|\|/
+  },
+  {
+    id: "shell-backtick",
+    description: "Backtick command substitution: `cmd`",
+    pattern: /`/
+  },
+  {
+    id: "shell-dollar-paren",
+    description: "Dollar-paren command substitution: $(cmd)",
+    pattern: /\$\(/
+  },
+  {
+    id: "shell-dollar-brace",
+    description: "Dollar-brace variable expansion: ${var} \u2014 can be abused for injection",
+    pattern: /\$\{/
+  },
+  {
+    id: "shell-redirect-out",
+    description: "Output redirection: cmd > file or cmd >> file",
+    pattern: />{1,2}/
+  },
+  {
+    id: "shell-redirect-in",
+    description: "Input redirection: cmd < file",
+    pattern: /</
+  },
+  {
+    id: "shell-newline-injection",
+    description: "Newline injection: \\n or \\r \u2014 can inject new shell commands",
+    pattern: /[\n\r]/
+  },
+  {
+    id: "shell-glob-star",
+    description: "Glob expansion: * or ? \u2014 can expand to unintended files",
+    // Only flag when combined with path separators to reduce false positives
+    pattern: /[/\\][*?]/
+  },
+  {
+    id: "shell-absolute-root",
+    description: "Absolute root path injection: string starting with / or \\ (Windows UNC)",
+    pattern: /^(?:\/|\\\\)/
+  },
+  {
+    id: "shell-windows-drive",
+    description: "Windows drive letter path injection: C:\\ or D:/",
+    pattern: /^[a-zA-Z]:[/\\]/
+  },
+  {
+    id: "shell-curl-wget",
+    description: "curl/wget with URL or flags \u2014 can exfiltrate data or download payloads",
+    // Require a URL scheme (http/https/ftp) or a flag (-) to reduce false positives
+    // "curl is a tool" won't match; "curl http://..." or "curl -s ..." will
+    pattern: /\b(?:curl|wget)\s+(?:https?:\/\/|ftp:\/\/|-)/i
+  }
+];
+var shell_default = SHELL_PATTERNS;
+
+// node_modules/is-unsafe/src/contexts/redos.js
+var REDOS_PATTERNS = [
+  {
+    id: "redos-nested-quantifier-plus",
+    description: "Nested + quantifier inside a group with outer quantifier: (a+)+, (.+b)*, etc.",
+    // Matches any group containing a + quantifier, with an outer * or + — catches (a+)+, (.+b)*, etc.
+    pattern: /\([^)]*\+[^)]*\)[+*]/
+  },
+  {
+    id: "redos-nested-quantifier-star",
+    description: "Nested * quantifier: (a*)* or (a*)+ \u2014 catastrophic backtracking",
+    pattern: /\([^)]*\*[^)]*\)[*+]/
+  },
+  {
+    id: "redos-nested-groups",
+    description: "Doubly nested quantified groups: ((a+)+) \u2014 guaranteed catastrophic",
+    pattern: /\(\([^)]{0,40}\)[+*]\)[+*]/
+  },
+  {
+    id: "redos-alternation-overlap",
+    description: "Overlapping alternation under quantifier: (a|a)+ \u2014 ambiguous NFA paths",
+    // Detect repeated identical alternatives under a quantifier
+    pattern: /\(([^|()]{1,20})\|(?:\1)(?:\|[^|()]{1,20}){0,5}\)[+*?]{1,2}/
+  },
+  {
+    id: "redos-star-plus-concat",
+    description: "(x*x)+ pattern \u2014 triggers super-linear backtracking",
+    pattern: /\([^)]{0,10}\*[^)]{0,10}\)[+*]/
+  },
+  {
+    id: "redos-dot-star-greedy",
+    description: "(.*){n,} or (.+){n,} \u2014 repeated greedy dot quantifiers",
+    pattern: /\(\.[*+]\)\{?\d/
+  },
+  {
+    id: "redos-large-repetition",
+    description: "Very large fixed or range repetition count {1000,} or {1000,n} \u2014 denial of service via backtracking",
+    // Matches { followed by 4+ digits (≥1000), then optional ,digits }
+    pattern: /\{\d{4,}(?:,\d*)?\}/
+  },
+  {
+    id: "redos-catastrophic-alternation",
+    description: "Long alternation with many similar branches \u2014 polynomial backtracking risk",
+    // Heuristic: 10+ pipe-separated alternatives in a single group
+    pattern: /\([^)]{0,200}(?:\|[^|)]{0,50}){9,}\)/
+  }
+];
+var redos_default = REDOS_PATTERNS;
+
+// node_modules/is-unsafe/src/contexts/nosql.js
+var sep = `["'\\s]*:`;
+var NOSQL_PATTERNS = [
+  // ─── MongoDB $ operator injection ────────────────────────────────────────
+  {
+    id: "nosql-where-operator",
+    description: "$where \u2014 executes arbitrary JavaScript server-side in MongoDB",
+    pattern: new RegExp(`\\$where${sep}`, "i")
+  },
+  {
+    id: "nosql-ne-operator",
+    description: '$ne \u2014 "not equal" operator used to bypass equality checks',
+    pattern: new RegExp(`\\$ne${sep}`, "i")
+  },
+  {
+    id: "nosql-gt-operator",
+    description: '$gt \u2014 "greater than" used to bypass password/value checks',
+    pattern: new RegExp(`\\$gte?${sep}`, "i")
+  },
+  {
+    id: "nosql-lt-operator",
+    description: '$lt / $lte \u2014 "less than" bypass variants',
+    pattern: new RegExp(`\\$lte?${sep}`, "i")
+  },
+  {
+    id: "nosql-regex-operator",
+    description: "$regex \u2014 can be used to extract data character by character (blind injection)",
+    pattern: new RegExp(`\\$regex${sep}`, "i")
+  },
+  {
+    id: "nosql-or-operator",
+    description: "$or \u2014 logical OR; used to create always-true conditions",
+    pattern: new RegExp(`\\$or${sep}\\s*\\[`, "i")
+  },
+  {
+    id: "nosql-and-operator",
+    description: "$and \u2014 logical AND operator injection",
+    pattern: new RegExp(`\\$and${sep}\\s*\\[`, "i")
+  },
+  {
+    id: "nosql-nor-operator",
+    description: "$nor \u2014 logical NOR operator injection",
+    pattern: new RegExp(`\\$nor${sep}\\s*\\[`, "i")
+  },
+  {
+    id: "nosql-exists-operator",
+    description: "$exists \u2014 can enumerate fields to determine schema",
+    pattern: new RegExp(`\\$exists${sep}`, "i")
+  },
+  {
+    id: "nosql-in-operator",
+    description: "$in \u2014 matches any value in a list; can enumerate values",
+    pattern: new RegExp(`\\$in${sep}\\s*\\[`, "i")
+  },
+  {
+    id: "nosql-expr-operator",
+    description: "$expr \u2014 allows aggregation expressions in queries (MongoDB 3.6+)",
+    pattern: new RegExp(`\\$expr${sep}`, "i")
+  },
+  {
+    id: "nosql-function-operator",
+    description: "$function \u2014 executes arbitrary JavaScript in MongoDB 4.4+",
+    pattern: new RegExp(`\\$function${sep}`, "i")
+  },
+  {
+    id: "nosql-accumulator-operator",
+    description: "$accumulator \u2014 custom aggregation with arbitrary JS execution",
+    pattern: new RegExp(`\\$accumulator${sep}`, "i")
+  },
+  // ─── Prototype pollution ─────────────────────────────────────────────────
+  {
+    id: "nosql-proto-pollution",
+    description: "__proto__ \u2014 prototype pollution via object key injection",
+    pattern: /__proto__/
+  },
+  {
+    id: "nosql-constructor-prototype",
+    description: "constructor.prototype \u2014 alternative prototype pollution vector (dot notation or JSON key)",
+    // Matches dot-notation (obj.constructor.prototype) and JSON key adjacency
+    // ("constructor": {"prototype": ...})
+    pattern: /constructor[\s"':.,{\[]*prototype/i
+  },
+  {
+    id: "nosql-proto-bracket",
+    description: '["__proto__"] \u2014 bracket-notation prototype pollution',
+    pattern: /\[["']__proto__["']\]/
+  }
+];
+var nosql_default = NOSQL_PATTERNS;
+
+// node_modules/is-unsafe/src/contexts/log.js
+var LOG_PATTERNS = [
+  // ─── CRLF / newline injection ─────────────────────────────────────────────
+  {
+    id: "log-crlf-injection",
+    description: "CRLF injection: literal \\r or \\n embeds fake log lines",
+    pattern: /[\r\n]/
+  },
+  {
+    id: "log-url-encoded-crlf",
+    description: "URL-encoded CRLF: %0d, %0a, %0D, %0A \u2014 decoded by some log parsers",
+    pattern: /%0[dDaA]/
+  },
+  {
+    id: "log-unicode-newline",
+    description: "Unicode newline variants: U+2028 (line separator), U+2029 (paragraph separator)",
+    pattern: /[\u2028\u2029]/
+  },
+  // ─── Log4Shell / JNDI injection (CVE-2021-44228) ─────────────────────────
+  {
+    id: "log-log4shell-jndi",
+    description: "Log4Shell: ${jndi:...} triggers remote code execution in Apache Log4j",
+    pattern: /\$\{jndi\s*:/i
+  },
+  {
+    id: "log-log4shell-obfuscated",
+    description: "Obfuscated Log4Shell: ${::-j}... lookup-bypass prefix used to evade WAF detection",
+    // ${::- is the Log4j lookup-bypass escape sequence; presence alone is suspicious
+    pattern: /\$\{::-/
+  },
+  {
+    id: "log-log4j-lookup",
+    description: "Log4j lookup syntax: ${env:...}, ${sys:...}, ${ctx:...} \u2014 data exfiltration",
+    pattern: /\$\{(?:env|sys|ctx|main|map|sd|web|docker|k8s|spring)\s*:/i
+  },
+  // ─── Server-Side Template Injection (SSTI) in log messages ───────────────
+  {
+    id: "log-ssti-double-brace",
+    description: "SSTI double-brace: {{expression}} \u2014 Jinja2, Twig, Handlebars, etc.",
+    pattern: /\{\{[\s\S]{0,80}\}\}/
+  },
+  {
+    id: "log-ssti-hash-brace",
+    description: "SSTI hash-brace: #{expression} \u2014 Thymeleaf, Velocity, Ruby ERB",
+    pattern: /#\{[\s\S]{0,80}\}/
+  },
+  {
+    id: "log-ssti-dollar-brace",
+    description: "SSTI/EL injection: ${expression with operators or method calls} \u2014 JSP EL, Freemarker, SpEL",
+    // Require that the ${...} content looks like an expression, not a plain variable name.
+    // Flags if the content contains: . ( * + operators, or known SSTI keywords.
+    // This avoids flagging ${PATH}, ${HOME} etc. (plain shell variables).
+    pattern: /\$\{[^}]*(?:\.|\(|\*|\+|\bclass\b|\bruntime\b|\bprocess\b|\bexec\b)[^}]{0,80}\}/i
+  },
+  {
+    id: "log-ssti-percent-tag",
+    description: "SSTI ERB/ASP tag: <%= expression %> \u2014 Ruby ERB, ASP",
+    pattern: /<%=[\s\S]{0,80}%>/
+  },
+  // ─── Null byte ────────────────────────────────────────────────────────────
+  {
+    id: "log-null-byte",
+    description: "Null byte: \\x00 or %00 \u2014 can truncate log entries in C-backed loggers",
+    pattern: /\x00|%00/
+  },
+  // ─── ANSI escape injection ────────────────────────────────────────────────
+  {
+    id: "log-ansi-escape",
+    description: "ANSI escape sequence: ESC[ \u2014 can manipulate terminal output when logs are tailed",
+    pattern: /\x1b\[/
+  }
+];
+var log_default = LOG_PATTERNS;
+
+// node_modules/is-unsafe/src/contexts/sql-strict.js
+var SQL_STRICT_EXTRA = [
+  {
+    id: "sql-line-comment",
+    description: "SQL line comment: -- followed by whitespace or end of string",
+    pattern: /--(?:\s|$)/
+  },
+  {
+    id: "sql-stacked-query",
+    description: "Stacked queries: semicolon immediately followed by a SQL keyword",
+    pattern: /;\s{0,10}(?:SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC)\b/i
+  },
+  {
+    id: "sql-hex-encoding",
+    description: "Hex-encoded string injection: 0x41414141 style (MySQL)",
+    pattern: /\b0x[0-9a-f]{4,}/i
+  }
+];
+var SQL_STRICT_PATTERNS = [...sql_default, ...SQL_STRICT_EXTRA];
+var sql_strict_default = SQL_STRICT_PATTERNS;
+
+// node_modules/is-unsafe/src/index.js
+html_default.label = "HTML";
+xml_default.label = "XML";
+svg_default.label = "SVG";
+sql_default.label = "SQL";
+sql_strict_default.label = "SQL-STRICT";
+shell_default.label = "SHELL";
+redos_default.label = "REDOS";
+nosql_default.label = "NOSQL";
+log_default.label = "LOG";
+var VALID_CONTEXTS = Object.freeze({
+  HTML: html_default,
+  XML: xml_default,
+  SVG: svg_default,
+  SQL: sql_default,
+  "SQL-STRICT": sql_strict_default,
+  SHELL: shell_default,
+  REDOS: redos_default,
+  NOSQL: nosql_default,
+  LOG: log_default
+});
+function assertString(value) {
+  if (typeof value !== "string") {
+    throw new TypeError(
+      `is-unsafe: first argument must be a string, got ${typeof value}`
+    );
+  }
+}
+__name(assertString, "assertString");
+function assertContext(context) {
+  if (context instanceof RegExp) return;
+  if (Array.isArray(context)) {
+    if (context.length === 0) {
+      throw new TypeError("is-unsafe: context must not be an empty array");
+    }
+    if (Array.isArray(context[0])) {
+      for (const list of context) {
+        if (!Array.isArray(list) || list.length === 0) {
+          throw new TypeError(
+            "is-unsafe: each context in the array must be a non-empty pattern array (PatternList)"
+          );
+        }
+      }
+    }
+    return;
+  }
+  throw new TypeError(
+    `is-unsafe: second argument must be a PatternList (e.g. HTML), an array of PatternLists (e.g. [HTML, XML]), or a RegExp. Got: ${typeof context}`
+  );
+}
+__name(assertContext, "assertContext");
+function normalise(context) {
+  if (context instanceof RegExp) return { lists: null, regex: context };
+  if (Array.isArray(context[0])) return { lists: context, regex: null };
+  return { lists: [context], regex: null };
+}
+__name(normalise, "normalise");
+function matchList(value, list) {
+  const label = list.label ?? "CUSTOM";
+  for (const rule of list) {
+    if (rule.pattern.test(value)) {
+      return { context: label, id: rule.id, description: rule.description, pattern: rule.pattern };
+    }
+  }
+  return null;
+}
+__name(matchList, "matchList");
+function isUnsafe(value, context) {
+  assertString(value);
+  assertContext(context);
+  const { lists, regex } = normalise(context);
+  if (regex) return regex.test(value);
+  for (const list of lists) {
+    if (matchList(value, list) !== null) return true;
+  }
+  return false;
+}
+__name(isUnsafe, "isUnsafe");
+
+// node_modules/fast-xml-parser/src/xmlparser/OrderedObjParser.js
 function extractRawAttributes(prefixedAttrs, options) {
   if (!prefixedAttrs) return {};
   const attrs = options.attributesGroupName ? prefixedAttrs[options.attributesGroupName] : prefixedAttrs;
@@ -41698,6 +42165,7 @@ var OrderedObjParser = class {
     this.ignoreAttributesFn = getIgnoreAttributesFn(this.options.ignoreAttributes);
     this.entityExpansionCount = 0;
     this.currentExpandedLength = 0;
+    this.doctypefound = false;
     let namedEntities = { ...XML };
     if (this.options.entityDecoder) {
       this.entityDecoder = this.options.entityDecoder;
@@ -41711,7 +42179,12 @@ var OrderedObjParser = class {
           maxTotalExpansions: this.options.processEntities.maxTotalExpansions,
           maxExpandedLength: this.options.processEntities.maxExpandedLength,
           applyLimitsTo: this.options.processEntities.appliesTo
-        }
+        },
+        // onExternalEntity: (name, value) => isUnsafe(value) ? 'block' : 'allow',
+        onInputEntity: /* @__PURE__ */ __name((name, value) => (
+          //TODO: VALID_CONTEXTS.HTML should be set only if this.options.htmlEntities
+          isUnsafe(value, [html_default, xml_default]) ? ENTITY_ACTION.BLOCK : ENTITY_ACTION.ALLOW
+        ), "onInputEntity")
         //postCheck: resolved => resolved
       });
     }
@@ -41847,6 +42320,7 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
   this.entityDecoder.reset();
   this.entityExpansionCount = 0;
   this.currentExpandedLength = 0;
+  this.doctypefound = false;
   const options = this.options;
   const docTypeReader = new DocTypeReader(options.processEntities);
   const xmlLen = xmlData.length;
@@ -41877,7 +42351,10 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
         }
         this.matcher.pop();
         this.isCurrentNodeStopNode = false;
-        currentNode = this.tagsNodeStack.pop();
+        currentNode = this.tagsNodeStack.pop() || xmlObj;
+        if (options.captureMetaData && currentNode) {
+          currentNode.addEndIndex(closeIndex + 1);
+        }
         textData = "";
         i = closeIndex;
       } else if (c1 === 63) {
@@ -41888,6 +42365,7 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
         if (attsMap) {
           const ver = attsMap[this.options.attributeNamePrefix + "version"];
           this.entityDecoder.setXmlVersion(Number(ver) || 1);
+          docTypeReader.setXmlVersion(Number(ver) || 1);
         }
         if (options.ignoreDeclaration && tagData.tagName === "?xml" || options.ignorePiTags) {
         } else {
@@ -41897,6 +42375,9 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
             childNode[":@"] = attsMap;
           }
           this.addChild(currentNode, childNode, this.readonlyMatcher, i);
+          if (options.captureMetaData) {
+            currentNode.addEndIndex(tagData.closeIndex + 2);
+          }
         }
         i = tagData.closeIndex + 1;
       } else if (c1 === 33 && xmlData.charCodeAt(i + 2) === 45 && xmlData.charCodeAt(i + 3) === 45) {
@@ -41908,6 +42389,8 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
         }
         i = endIndex;
       } else if (c1 === 33 && xmlData.charCodeAt(i + 2) === 68) {
+        if (this.doctypefound) throw new Error("Multiple DOCTYPE declarations found.");
+        this.doctypefound = true;
         const result = docTypeReader.readDocType(xmlData, i);
         this.entityDecoder.addInputEntities(result.entities);
         i = result.i;
@@ -41996,6 +42479,9 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
           this.matcher.pop();
           this.isCurrentNodeStopNode = false;
           this.addChild(currentNode, childNode, this.readonlyMatcher, startIndex);
+          if (options.captureMetaData) {
+            currentNode.addEndIndex(i + 1);
+          }
         } else {
           if (isSelfClosing) {
             ({ tagName, tagExp } = transformTagName(options.transformTagName, tagName, tagExp, options));
@@ -42004,6 +42490,9 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
               childNode[":@"] = prefixedAttrs;
             }
             this.addChild(currentNode, childNode, this.readonlyMatcher, startIndex);
+            if (options.captureMetaData) {
+              currentNode.addEndIndex(closeIndex + 1);
+            }
             this.matcher.pop();
             this.isCurrentNodeStopNode = false;
           } else if (options.unpairedTagsSet.has(tagName)) {
@@ -42012,6 +42501,9 @@ var parseXml = /* @__PURE__ */ __name(function(xmlData) {
               childNode[":@"] = prefixedAttrs;
             }
             this.addChild(currentNode, childNode, this.readonlyMatcher, startIndex);
+            if (options.captureMetaData) {
+              currentNode.addEndIndex(result.closeIndex + 1);
+            }
             this.matcher.pop();
             this.isCurrentNodeStopNode = false;
             i = result.closeIndex;
@@ -42249,7 +42741,7 @@ function sanitizeName(name, options) {
 }
 __name(sanitizeName, "sanitizeName");
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/node2json.js
+// node_modules/fast-xml-parser/src/xmlparser/node2json.js
 var METADATA_SYMBOL2 = XmlNode.getMetaDataSymbol();
 function stripAttributePrefix(attrs, prefix) {
   if (!attrs || typeof attrs !== "object") return {};
@@ -42271,7 +42763,7 @@ function prettify(node, options, matcher, readonlyMatcher) {
 }
 __name(prettify, "prettify");
 function compress(arr, options, matcher, readonlyMatcher) {
-  let text;
+  let text2;
   const compressedObj = {};
   for (let i = 0; i < arr.length; i++) {
     const tagObj = arr[i];
@@ -42284,8 +42776,8 @@ function compress(arr, options, matcher, readonlyMatcher) {
       matcher.push(property, rawAttrs);
     }
     if (property === options.textNodeName) {
-      if (text === void 0) text = tagObj[property];
-      else text += "" + tagObj[property];
+      if (text2 === void 0) text2 = tagObj[property];
+      else text2 += "" + tagObj[property];
     } else if (property === void 0) {
       continue;
     } else if (tagObj[property]) {
@@ -42323,9 +42815,9 @@ function compress(arr, options, matcher, readonlyMatcher) {
       }
     }
   }
-  if (typeof text === "string") {
-    if (text.length > 0) compressedObj[options.textNodeName] = text;
-  } else if (text !== void 0) compressedObj[options.textNodeName] = text;
+  if (typeof text2 === "string") {
+    if (text2.length > 0) compressedObj[options.textNodeName] = text2;
+  } else if (text2 !== void 0) compressedObj[options.textNodeName] = text2;
   return compressedObj;
 }
 __name(compress, "compress");
@@ -42367,7 +42859,7 @@ function isLeafTag(obj, options) {
 }
 __name(isLeafTag, "isLeafTag");
 
-// ../../node_modules/.pnpm/fast-xml-parser@5.7.3/node_modules/fast-xml-parser/src/xmlparser/XMLParser.js
+// node_modules/fast-xml-parser/src/xmlparser/XMLParser.js
 var XMLParser = class {
   static {
     __name(this, "XMLParser");
@@ -42441,19 +42933,19 @@ function xmlArray(v) {
 }
 __name(xmlArray, "xmlArray");
 var XML_INVALID_CHARS = new RegExp("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\uFFFE\\uFFFF]|\\p{Cs}", "gu");
-function sanitizeXmlChars(text) {
+function sanitizeXmlChars(text2) {
   XML_INVALID_CHARS.lastIndex = 0;
-  if (!XML_INVALID_CHARS.test(text)) return text;
+  if (!XML_INVALID_CHARS.test(text2)) return text2;
   XML_INVALID_CHARS.lastIndex = 0;
-  return text.replace(XML_INVALID_CHARS, (ch) => ch === "\v" || ch === "\f" ? " " : "");
+  return text2.replace(XML_INVALID_CHARS, (ch) => ch === "\v" || ch === "\f" ? " " : "");
 }
 __name(sanitizeXmlChars, "sanitizeXmlChars");
-function escapeXmlText(text) {
-  return sanitizeXmlChars(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function escapeXmlText(text2) {
+  return sanitizeXmlChars(text2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 __name(escapeXmlText, "escapeXmlText");
-function escapeXmlAttr(text) {
-  return escapeXmlText(text).replace(/"/g, "&quot;");
+function escapeXmlAttr(text2) {
+  return escapeXmlText(text2).replace(/"/g, "&quot;");
 }
 __name(escapeXmlAttr, "escapeXmlAttr");
 function creationIdExtXml() {
@@ -45585,7 +46077,7 @@ function uid(prefix) {
 }
 __name(uid, "uid");
 function parseSlide(input) {
-  const { slideXml, path, layoutPath, masterPath, ctx } = input;
+  const { slideXml, path, layoutPath, masterPath, ctx: ctx2 } = input;
   const scan = scanSlide(slideXml);
   const elements = [];
   scan.elements.forEach((sp, idx) => {
@@ -45596,12 +46088,12 @@ function parseSlide(input) {
       range: [sp.start, sp.end],
       ...sp.gapAfter ? { gapAfter: sp.gapAfter } : {}
     };
-    const el = parseShapeFragment(sp, fragXml, anchor, ctx);
+    const el = parseShapeFragment(sp, fragXml, anchor, ctx2);
     if (el) elements.push(el);
   });
-  const ownBackground = parseBackground(slideXml, ctx);
-  const defaultBg1 = resolveSchemeColor("bg1", ctx.theme);
-  const background = ownBackground ?? (ctx.layoutBg ? parseBackground(ctx.layoutBg, { ...ctx, mediaRels: ctx.layoutMediaRels ?? ctx.mediaRels }) : void 0) ?? (ctx.masterBg ? parseBackground(ctx.masterBg, { ...ctx, mediaRels: ctx.masterMediaRels ?? ctx.mediaRels }) : void 0) ?? (defaultBg1 && defaultBg1.toUpperCase() !== "#FFFFFF" ? { type: "solid", color: defaultBg1 } : void 0);
+  const ownBackground = parseBackground(slideXml, ctx2);
+  const defaultBg1 = resolveSchemeColor("bg1", ctx2.theme);
+  const background = ownBackground ?? (ctx2.layoutBg ? parseBackground(ctx2.layoutBg, { ...ctx2, mediaRels: ctx2.layoutMediaRels ?? ctx2.mediaRels }) : void 0) ?? (ctx2.masterBg ? parseBackground(ctx2.masterBg, { ...ctx2, mediaRels: ctx2.masterMediaRels ?? ctx2.mediaRels }) : void 0) ?? (defaultBg1 && defaultBg1.toUpperCase() !== "#FFFFFF" ? { type: "solid", color: defaultBg1 } : void 0);
   const masterSpHidden = /<p:sld\b[^>]*\bshowMasterSp=(?:"(?:0|false)"|'(?:0|false)')/.test(
     slideXml
   );
@@ -45619,7 +46111,7 @@ function parseSlide(input) {
   };
 }
 __name(parseSlide, "parseSlide");
-function parseBackground(xml, ctx) {
+function parseBackground(xml, ctx2) {
   const m = /<p:bg\b[\s\S]*?<\/p:bg>/.exec(xml);
   if (!m) return void 0;
   let doc;
@@ -45631,18 +46123,18 @@ function parseBackground(xml, ctx) {
   const bg = doc["p:bg"];
   const bgPr = bg?.["p:bgPr"];
   if (bgPr) {
-    return parseFill(bgPr, ctx);
+    return parseFill(bgPr, ctx2);
   }
   const bgRef = bg?.["p:bgRef"];
   if (bgRef) {
-    const color = resolveColorNode2(bgRef, ctx);
+    const color = resolveColorNode2(bgRef, ctx2);
     const idx = parseInt(String(bgRef["@_idx"] ?? ""), 10);
-    const tpl = idx >= 1001 ? ctx.theme?.bgFillStyles?.[idx - 1001] : idx >= 1 ? ctx.theme?.fillStyles?.[idx - 1] : void 0;
+    const tpl = idx >= 1001 ? ctx2.theme?.bgFillStyles?.[idx - 1001] : idx >= 1 ? ctx2.theme?.fillStyles?.[idx - 1] : void 0;
     if (tpl) {
       const fill = parseFill(tpl, {
-        ...ctx,
+        ...ctx2,
         phClr: color,
-        mediaRels: ctx.themeMediaRels ?? ctx.mediaRels
+        mediaRels: ctx2.themeMediaRels ?? ctx2.mediaRels
       });
       if (fill) return fill;
     }
@@ -45669,8 +46161,8 @@ var MATH_AC_RE = /<mc:AlternateContent\b[^>]*>\s*<mc:Choice\b[^>]*>\s*<a14:m\b[\
 function mathBlockAsRun(block) {
   const fallback = /<mc:Fallback\b[^>]*>([\s\S]*?)<\/mc:Fallback>/.exec(block)?.[1] ?? "";
   const texts = /* @__PURE__ */ __name((m) => [...m.matchAll(/<(?:a|m):t(?:\s[^>]*)?>([\s\S]*?)<\/(?:a|m):t>/g)].map((x) => x[1]).join(""), "texts");
-  const text = texts(fallback) || texts(block);
-  return `<a:r gxRaw="${utf8ToBase64(block)}"><a:rPr/><a:t>${text}</a:t></a:r>`;
+  const text2 = texts(fallback) || texts(block);
+  return `<a:r gxRaw="${utf8ToBase64(block)}"><a:rPr/><a:t>${text2}</a:t></a:r>`;
 }
 __name(mathBlockAsRun, "mathBlockAsRun");
 function utf8ToBase64(s) {
@@ -45688,7 +46180,7 @@ function base64ToUtf8(b64) {
   return new TextDecoder().decode(bytes);
 }
 __name(base64ToUtf8, "base64ToUtf8");
-function parseShapeFragment(sp, fragXml, anchor, ctx) {
+function parseShapeFragment(sp, fragXml, anchor, ctx2) {
   const semanticXml = fragXml.replace(MATH_AC_RE, mathBlockAsRun).replace(/<a:br\b[^>]*\/>|<a:br\b[\s\S]*?<\/a:br>/g, "<a:r><a:t>\n</a:t></a:r>").replace(/<a:fld\b/g, "<a:r").replace(/<\/a:fld>/g, "</a:r>");
   const doc = parser2.parse(semanticXml);
   const node = doc[sp.name] ? Array.isArray(doc[sp.name]) ? doc[sp.name][0] : doc[sp.name] : null;
@@ -45700,15 +46192,15 @@ function parseShapeFragment(sp, fragXml, anchor, ctx) {
   }
   switch (sp.name) {
     case "p:sp":
-      return parseSpShape(node, anchor, ctx, fragXml);
+      return parseSpShape(node, anchor, ctx2, fragXml);
     case "p:pic":
-      return parsePicture(node, anchor, ctx, fragXml);
+      return parsePicture(node, anchor, ctx2, fragXml);
     case "p:grpSp":
-      return parseGroup(node, anchor, ctx, fragXml);
+      return parseGroup(node, anchor, ctx2, fragXml);
     case "p:graphicFrame":
-      return graphicFramePassthrough(node, anchor, ctx);
+      return graphicFramePassthrough(node, anchor, ctx2);
     case "p:cxnSp":
-      return parseConnector(node, anchor, ctx);
+      return parseConnector(node, anchor, ctx2);
     case "mc:AlternateContent": {
       const choicesRaw = node["mc:Choice"];
       const choices = Array.isArray(choicesRaw) ? choicesRaw : choicesRaw ? [choicesRaw] : [];
@@ -45716,16 +46208,16 @@ function parseShapeFragment(sp, fragXml, anchor, ctx) {
         const gfRaw = ch?.["p:graphicFrame"];
         const gf = Array.isArray(gfRaw) ? gfRaw[0] : gfRaw;
         if (!gf) continue;
-        const el = graphicFramePassthrough(gf, anchor, ctx);
+        const el = graphicFramePassthrough(gf, anchor, ctx2);
         if (el && el.type !== "passthrough") return el;
       }
       const fb = node["mc:Fallback"];
       const picRaw = fb?.["p:pic"];
       const pic = Array.isArray(picRaw) ? picRaw[0] : picRaw;
-      if (pic) return parsePicture(pic, anchor, ctx);
+      if (pic) return parsePicture(pic, anchor, ctx2);
       const spRaw = fb?.["p:sp"];
       const sp2 = Array.isArray(spRaw) ? spRaw[0] : spRaw;
-      if (sp2) return parseSpShape(sp2, anchor, ctx);
+      if (sp2) return parseSpShape(sp2, anchor, ctx2);
       const silent = passthrough(anchor, "unknown", node);
       silent.noChip = true;
       return silent;
@@ -45735,7 +46227,7 @@ function parseShapeFragment(sp, fragXml, anchor, ctx) {
   }
 }
 __name(parseShapeFragment, "parseShapeFragment");
-function parseSpShape(node, anchor, ctx, rawXml) {
+function parseSpShape(node, anchor, ctx2, rawXml) {
   const spPr = node["p:spPr"] ?? {};
   const nv = node["p:nvSpPr"];
   const ph = nv?.["p:nvPr"]?.["p:ph"];
@@ -45745,8 +46237,8 @@ function parseSpShape(node, anchor, ctx, rawXml) {
   let transform = parseXfrm(spPr["a:xfrm"]);
   if (ph && !spPr["a:xfrm"]) {
     const inherited = resolvePlaceholderTransform(
-      ctx.layoutPlaceholders,
-      ctx.masterPlaceholders,
+      ctx2.layoutPlaceholders,
+      ctx2.masterPlaceholders,
       phType,
       phIdx
     );
@@ -45756,87 +46248,87 @@ function parseSpShape(node, anchor, ctx, rawXml) {
   const presetGeometry = prstGeom?.["@_prst"];
   const adjust = parseAvLst(prstGeom?.["a:avLst"]);
   const customGeometry = spPr["a:custGeom"] != null ? parseCustGeom(rawXml || anchor.originalXml, transform.offset.cx, transform.offset.cy) : void 0;
-  let fill = parseFill(spPr, ctx);
+  let fill = parseFill(spPr, ctx2);
   const txBody = node["p:txBody"];
   const phChain = ph ? placeholderStyleChain(
-    ctx.layoutPlaceholders,
-    ctx.masterPlaceholders,
-    ctx.masterTextStyles,
+    ctx2.layoutPlaceholders,
+    ctx2.masterPlaceholders,
+    ctx2.masterTextStyles,
     phType,
     phIdx
-  ) : ctx.defaultTextStyle ? [{ ...ctx.defaultTextStyle, src: "presentation defaultTextStyle" }] : [];
-  const fontRefColor = resolveColorNode2(node["p:style"]?.["a:fontRef"], ctx);
+  ) : ctx2.defaultTextStyle ? [{ ...ctx2.defaultTextStyle, src: "presentation defaultTextStyle" }] : [];
+  const fontRefColor = resolveColorNode2(node["p:style"]?.["a:fontRef"], ctx2);
   const chainLayers2 = fontRefColor ? [{ levels: [{ color: fontRefColor }], src: "shape style" }, ...phChain] : phChain;
-  const phInsets = ph ? resolvePlaceholderInsets(ctx.layoutPlaceholders, ctx.masterPlaceholders, phType, phIdx) : void 0;
-  const text = txBody ? parseTextBody(txBody, ctx, chainLayers2, phInsets) : void 0;
-  if (ph && text && !text.anchor) {
+  const phInsets = ph ? resolvePlaceholderInsets(ctx2.layoutPlaceholders, ctx2.masterPlaceholders, phType, phIdx) : void 0;
+  const text2 = txBody ? parseTextBody(txBody, ctx2, chainLayers2, phInsets) : void 0;
+  if (ph && text2 && !text2.anchor) {
     const inherited = resolvePlaceholderAnchor(
-      ctx.layoutPlaceholders,
-      ctx.masterPlaceholders,
+      ctx2.layoutPlaceholders,
+      ctx2.masterPlaceholders,
       phType,
       phIdx
     );
-    if (inherited) text.anchor = inherited;
+    if (inherited) text2.anchor = inherited;
   }
-  if (ph && text && text.anchorCtr == null) {
+  if (ph && text2 && text2.anchorCtr == null) {
     const inherited = resolvePlaceholderAnchorCtr(
-      ctx.layoutPlaceholders,
-      ctx.masterPlaceholders,
+      ctx2.layoutPlaceholders,
+      ctx2.masterPlaceholders,
       phType,
       phIdx
     );
-    if (inherited != null) text.anchorCtr = inherited;
+    if (inherited != null) text2.anchorCtr = inherited;
   }
-  let stroke = parseStroke(spPr, ctx);
-  let shadow = parseShadow(spPr, ctx);
-  let glow = parseGlow(spPr, ctx);
+  let stroke = parseStroke(spPr, ctx2);
+  let shadow = parseShadow(spPr, ctx2);
+  let glow = parseGlow(spPr, ctx2);
   const reflection = parseReflection(spPr);
-  const scene3d = parseScene3D(spPr, ctx);
+  const scene3d = parseScene3D(spPr, ctx2);
   const softEdgeRad = spPr?.["a:effectLst"]?.["a:softEdge"]?.["@_rad"];
   const overlayNode = spPr?.["a:effectLst"]?.["a:fillOverlay"];
-  const fillOverlay = overlayNode ? parseFill(overlayNode, ctx) : void 0;
+  const fillOverlay = overlayNode ? parseFill(overlayNode, ctx2) : void 0;
   const style = node["p:style"];
   if (style && typeof style === "object") {
     if (fill === void 0) {
       const ref = style["a:fillRef"];
       const idx = parseInt(String(ref?.["@_idx"] ?? "0"), 10) || 0;
-      const phClr = resolveColorNode2(ref, ctx);
+      const phClr = resolveColorNode2(ref, ctx2);
       if (idx > 0) {
-        const tpl = idx > 1e3 ? ctx.theme?.bgFillStyles?.[idx - 1001] : ctx.theme?.fillStyles?.[idx - 1];
-        const tplFill = tpl ? parseFill(tpl, { ...ctx, phClr, mediaRels: ctx.themeMediaRels ?? ctx.mediaRels }) : void 0;
+        const tpl = idx > 1e3 ? ctx2.theme?.bgFillStyles?.[idx - 1001] : ctx2.theme?.fillStyles?.[idx - 1];
+        const tplFill = tpl ? parseFill(tpl, { ...ctx2, phClr, mediaRels: ctx2.themeMediaRels ?? ctx2.mediaRels }) : void 0;
         fill = tplFill ?? (phClr ? { type: "solid", color: phClr } : void 0);
       }
     }
-    if (stroke === void 0) stroke = styleRefStroke(node, ctx);
+    if (stroke === void 0) stroke = styleRefStroke(node, ctx2);
     if (!shadow && !glow) {
       const ref = style["a:effectRef"];
       const idx = parseInt(String(ref?.["@_idx"] ?? "0"), 10) || 0;
-      const phClr = resolveColorNode2(ref, ctx);
-      const es = idx > 0 ? ctx.theme?.effectStyles?.[idx - 1]?.["a:effectStyle"] : void 0;
+      const phClr = resolveColorNode2(ref, ctx2);
+      const es = idx > 0 ? ctx2.theme?.effectStyles?.[idx - 1]?.["a:effectStyle"] : void 0;
       if (es) {
-        const tplCtx = { ...ctx, phClr };
+        const tplCtx = { ...ctx2, phClr };
         shadow = parseShadow(es, tplCtx);
         glow = parseGlow(es, tplCtx);
       }
     }
-    const fontColor = resolveColorNode2(style["a:fontRef"], ctx);
-    if (fontColor && text) {
-      for (const p of text.paragraphs) {
+    const fontColor = resolveColorNode2(style["a:fontRef"], ctx2);
+    if (fontColor && text2) {
+      for (const p of text2.paragraphs) {
         for (const r of p.runs) if (!r.color) r.color = fontColor;
       }
     }
   }
   if (fill === void 0 && ph) {
     const inh = resolvePlaceholderFillSpPr(
-      ctx.layoutPlaceholders,
-      ctx.masterPlaceholders,
+      ctx2.layoutPlaceholders,
+      ctx2.masterPlaceholders,
       phType,
       phIdx
     );
     if (inh) {
       fill = parseFill(inh.spPr, {
-        ...ctx,
-        mediaRels: (inh.layer === "layout" ? ctx.layoutMediaRels : ctx.masterMediaRels) ?? ctx.mediaRels
+        ...ctx2,
+        mediaRels: (inh.layer === "layout" ? ctx2.layoutMediaRels : ctx2.masterMediaRels) ?? ctx2.mediaRels
       });
     }
   }
@@ -45861,25 +46353,25 @@ function parseSpShape(node, anchor, ctx, rawXml) {
     ...reflection ? { reflection } : {},
     ...scene3d ? { scene3d } : {},
     ...softEdgeRad != null ? { softEdge: intOr(softEdgeRad, 0) } : {},
-    text
+    text: text2
   };
   return el;
 }
 __name(parseSpShape, "parseSpShape");
-function styleRefStroke(node, ctx) {
+function styleRefStroke(node, ctx2) {
   const ref = node?.["p:style"]?.["a:lnRef"];
   const idx = parseInt(String(ref?.["@_idx"] ?? "0"), 10) || 0;
   if (idx <= 0) return void 0;
-  const phClr = resolveColorNode2(ref, ctx);
-  const tpl = ctx.theme?.lnStyles?.[idx - 1];
-  return (tpl ? parseStroke(tpl, { ...ctx, phClr }) : void 0) ?? (phClr ? { fill: { type: "solid", color: phClr }, width: 12700 } : void 0);
+  const phClr = resolveColorNode2(ref, ctx2);
+  const tpl = ctx2.theme?.lnStyles?.[idx - 1];
+  return (tpl ? parseStroke(tpl, { ...ctx2, phClr }) : void 0) ?? (phClr ? { fill: { type: "solid", color: phClr }, width: 12700 } : void 0);
 }
 __name(styleRefStroke, "styleRefStroke");
-function parseStroke(spPr, ctx, fallbackColor) {
+function parseStroke(spPr, ctx2, fallbackColor) {
   const ln = spPr?.["a:ln"];
   if (!ln || typeof ln !== "object") return void 0;
   if ("a:noFill" in ln) return null;
-  let fill = parseFill(ln, ctx);
+  let fill = parseFill(ln, ctx2);
   if (!fill || fill.type === "none") {
     if (!fallbackColor) return void 0;
     fill = { type: "solid", color: fallbackColor };
@@ -45924,14 +46416,14 @@ function parseArrowEnd(node) {
   };
 }
 __name(parseArrowEnd, "parseArrowEnd");
-function parseConnector(node, anchor, ctx) {
+function parseConnector(node, anchor, ctx2) {
   const spPr = node["p:spPr"] ?? {};
   const nvCxn = node["p:nvCxnSpPr"];
   const name = nvCxn?.["p:cNvPr"]?.["@_name"];
   const prstGeom = spPr["a:prstGeom"];
-  const refStroke = styleRefStroke(node, ctx);
-  const fallback = (refStroke?.fill.type === "solid" ? refStroke.fill.color : void 0) ?? ctx.theme?.colors?.["dk1"] ?? "#000000";
-  const explicitStroke = parseStroke(spPr, ctx, spPr?.["a:ln"] ? fallback : void 0);
+  const refStroke = styleRefStroke(node, ctx2);
+  const fallback = (refStroke?.fill.type === "solid" ? refStroke.fill.color : void 0) ?? ctx2.theme?.colors?.["dk1"] ?? "#000000";
+  const explicitStroke = parseStroke(spPr, ctx2, spPr?.["a:ln"] ? fallback : void 0);
   const stroke = explicitStroke === null ? void 0 : explicitStroke ?? refStroke ?? { fill: { type: "solid", color: fallback }, width: 12700 };
   const cxnPr = nvCxn?.["p:cNvCxnSpPr"];
   const st = cxnPr?.["a:stCxn"];
@@ -45955,10 +46447,10 @@ function parseConnector(node, anchor, ctx) {
   };
 }
 __name(parseConnector, "parseConnector");
-function parseGlow(spPr, ctx) {
+function parseGlow(spPr, ctx2) {
   const glow = spPr?.["a:effectLst"]?.["a:glow"];
   if (!glow || typeof glow !== "object") return void 0;
-  const color = resolveColorNode2(glow, ctx);
+  const color = resolveColorNode2(glow, ctx2);
   if (!color) return void 0;
   const rad = glow["@_rad"] != null ? parseInt(glow["@_rad"], 10) : 0;
   return { color, radius: Number.isFinite(rad) ? rad : 0 };
@@ -45975,11 +46467,11 @@ function parseReflection(spPr) {
   };
 }
 __name(parseReflection, "parseReflection");
-function parseShadow(spPr, ctx) {
+function parseShadow(spPr, ctx2) {
   const outer = spPr?.["a:effectLst"]?.["a:outerShdw"];
   const shdw = outer ?? spPr?.["a:effectLst"]?.["a:innerShdw"];
   if (!shdw || typeof shdw !== "object") return void 0;
-  const color = resolveColorNode2(shdw, ctx);
+  const color = resolveColorNode2(shdw, ctx2);
   if (!color) return void 0;
   const sx = shdw["@_sx"] != null ? intOr(shdw["@_sx"], 1e5) / 1e5 : void 0;
   const sy = shdw["@_sy"] != null ? intOr(shdw["@_sy"], 1e5) / 1e5 : void 0;
@@ -45999,7 +46491,7 @@ function parseShadow(spPr, ctx) {
   };
 }
 __name(parseShadow, "parseShadow");
-function parseScene3D(spPr, ctx) {
+function parseScene3D(spPr, ctx2) {
   const s3 = spPr?.["a:scene3d"];
   const camera = s3?.["a:camera"];
   const cameraPreset = camera?.["@_prst"];
@@ -46012,7 +46504,7 @@ function parseScene3D(spPr, ctx) {
   }, "rot");
   const rig = s3["a:lightRig"];
   const extrusionClr = sp3d?.["a:extrusionClr"];
-  const extrusionColor = extrusionClr && typeof extrusionClr === "object" ? resolveColorNode2(extrusionClr, ctx) : void 0;
+  const extrusionColor = extrusionClr && typeof extrusionClr === "object" ? resolveColorNode2(extrusionClr, ctx2) : void 0;
   const cameraRot = rot(camera);
   const lightRot = rot(rig);
   return {
@@ -46042,13 +46534,13 @@ function parseAvLst(avLst) {
 }
 __name(parseAvLst, "parseAvLst");
 var GROUP_CHILD_TAGS = ["p:sp", "p:pic", "p:grpSp", "p:graphicFrame", "p:cxnSp"];
-function parseGroup(node, anchor, ctx, rawXml) {
+function parseGroup(node, anchor, ctx2, rawXml) {
   const grpSpPr = node["p:grpSpPr"] ?? {};
   const xfrm = grpSpPr["a:xfrm"];
   const transform = parseXfrm(xfrm);
   const name = node["p:nvGrpSpPr"]?.["p:cNvPr"]?.["@_name"];
-  const groupFill = "a:grpFill" in grpSpPr ? ctx.groupFill : parseFill(grpSpPr, ctx) ?? ctx.groupFill;
-  const childCtx = groupFill === ctx.groupFill ? ctx : { ...ctx, groupFill };
+  const groupFill = "a:grpFill" in grpSpPr ? ctx2.groupFill : parseFill(grpSpPr, ctx2) ?? ctx2.groupFill;
+  const childCtx = groupFill === ctx2.groupFill ? ctx2 : { ...ctx2, groupFill };
   const chOff = xfrm?.["a:chOff"];
   const chExt = xfrm?.["a:chExt"];
   const childOffset = chOff || chExt ? {
@@ -46085,25 +46577,25 @@ function parseGroup(node, anchor, ctx, rawXml) {
   };
 }
 __name(parseGroup, "parseGroup");
-function parseGroupChild(tag, child2, ctx, rawXml) {
+function parseGroupChild(tag, child2, ctx2, rawXml) {
   const childAnchor = { spIndex: -1, originalXml: "", range: [0, 0] };
   if (isHiddenElement(child2, tag)) return null;
   let el;
   switch (tag) {
     case "p:sp":
-      el = parseSpShape(child2, childAnchor, ctx, rawXml);
+      el = parseSpShape(child2, childAnchor, ctx2, rawXml);
       break;
     case "p:pic":
-      el = parsePicture(child2, childAnchor, ctx, rawXml);
+      el = parsePicture(child2, childAnchor, ctx2, rawXml);
       break;
     case "p:grpSp":
-      el = parseGroup(child2, childAnchor, ctx, rawXml);
+      el = parseGroup(child2, childAnchor, ctx2, rawXml);
       break;
     case "p:graphicFrame":
-      el = graphicFramePassthrough(child2, childAnchor, ctx);
+      el = graphicFramePassthrough(child2, childAnchor, ctx2);
       break;
     case "p:cxnSp":
-      el = parseConnector(child2, childAnchor, ctx);
+      el = parseConnector(child2, childAnchor, ctx2);
       break;
     default:
       return null;
@@ -46175,14 +46667,14 @@ function blipEmbedId(blip) {
   return void 0;
 }
 __name(blipEmbedId, "blipEmbedId");
-function parsePicture(node, anchor, ctx, rawXml) {
+function parsePicture(node, anchor, ctx2, rawXml) {
   const spPr = node["p:spPr"] ?? {};
   let transform = parseXfrm(spPr["a:xfrm"]);
   const picPh = node["p:nvPicPr"]?.["p:nvPr"]?.["p:ph"];
   if (picPh && !spPr["a:xfrm"]) {
     const inherited = resolvePlaceholderTransform(
-      ctx.layoutPlaceholders,
-      ctx.masterPlaceholders,
+      ctx2.layoutPlaceholders,
+      ctx2.masterPlaceholders,
       picPh["@_type"],
       picPh["@_idx"] != null ? String(picPh["@_idx"]) : void 0
     );
@@ -46191,7 +46683,7 @@ function parsePicture(node, anchor, ctx, rawXml) {
   const blipFill = node["p:blipFill"];
   const blip = blipFill?.["a:blip"];
   const embedId = blipEmbedId(blip);
-  const mediaRef = embedId && ctx.mediaRels?.get(embedId) || "";
+  const mediaRef = embedId && ctx2.mediaRels?.get(embedId) || "";
   const name = node["p:nvPicPr"]?.["p:cNvPr"]?.["@_name"];
   const descr = node["p:nvPicPr"]?.["p:cNvPr"]?.["@_descr"];
   const srcRect = parseSrcRect(blipFill?.["a:srcRect"]);
@@ -46199,8 +46691,8 @@ function parsePicture(node, anchor, ctx, rawXml) {
   let picAdjust = parseAvLst(spPr["a:prstGeom"]?.["a:avLst"]);
   if (!picGeom && !spPr["a:custGeom"] && picPh) {
     const inheritedGeom = resolvePlaceholderPresetGeom(
-      ctx.layoutPlaceholders,
-      ctx.masterPlaceholders,
+      ctx2.layoutPlaceholders,
+      ctx2.masterPlaceholders,
       picPh["@_type"],
       picPh["@_idx"] != null ? String(picPh["@_idx"]) : void 0
     );
@@ -46210,17 +46702,17 @@ function parsePicture(node, anchor, ctx, rawXml) {
     }
   }
   const customGeometry = spPr["a:custGeom"] != null ? parseCustGeom(rawXml || anchor.originalXml, transform.offset.cx, transform.offset.cy) : void 0;
-  const scene3d = parseScene3D(spPr, ctx);
+  const scene3d = parseScene3D(spPr, ctx2);
   const softEdgeRad = spPr["a:effectLst"]?.["a:softEdge"]?.["@_rad"];
   const alphaAmt = blip?.["a:alphaModFix"]?.["@_amt"];
   const opacity = alphaAmt != null ? Math.max(0, Math.min(1, parseInt(alphaAmt, 10) / 1e5)) : void 0;
-  const stroke = parseStroke(spPr, ctx);
-  const shadow = parseShadow(spPr, ctx);
-  const glow = parseGlow(spPr, ctx);
+  const stroke = parseStroke(spPr, ctx2);
+  const shadow = parseShadow(spPr, ctx2);
+  const glow = parseGlow(spPr, ctx2);
   const reflection = parseReflection(spPr);
-  const fill = parseFill(spPr, ctx);
-  const duotone = parseDuotone(blip, ctx);
-  const clrChange = parseClrChange(blip, ctx);
+  const fill = parseFill(spPr, ctx2);
+  const duotone = parseDuotone(blip, ctx2);
+  const clrChange = parseClrChange(blip, ctx2);
   const lum = parseLum(blip);
   const biLevel = parseBiLevel(blip);
   const nvPr = node["p:nvPicPr"]?.["p:nvPr"];
@@ -46229,7 +46721,7 @@ function parsePicture(node, anchor, ctx, rawXml) {
   if (avNode !== void 0) {
     const kind = nvPr?.["a:videoFile"] !== void 0 ? "video" : "audio";
     const link = avNode?.["@_r:link"];
-    const rel = link ? ctx.avRels?.get(String(link)) : void 0;
+    const rel = link ? ctx2.avRels?.get(String(link)) : void 0;
     media = {
       kind,
       ...rel ? { target: rel.target, ...rel.external ? { external: true } : {} } : {}
@@ -46270,7 +46762,7 @@ function parseSrcRect(sr) {
   return rect;
 }
 __name(parseSrcRect, "parseSrcRect");
-function parseChartUserLines(usXml, ctx) {
+function parseChartUserLines(usXml, ctx2) {
   let doc;
   try {
     doc = parser2.parse(usXml);
@@ -46286,7 +46778,7 @@ function parseChartUserLines(usXml, ctx) {
     const spPr = sp?.["cdr:spPr"];
     const prst = spPr?.["a:prstGeom"]?.["@_prst"];
     if (prst !== "line" && prst !== "straightConnector1") continue;
-    const color = resolveColorNode2(spPr?.["a:ln"]?.["a:solidFill"], ctx);
+    const color = resolveColorNode2(spPr?.["a:ln"]?.["a:solidFill"], ctx2);
     if (!color) continue;
     const frac = /* @__PURE__ */ __name((n) => {
       const v = parseFloat(String(n ?? ""));
@@ -46305,18 +46797,18 @@ function parseChartUserLines(usXml, ctx) {
   return out;
 }
 __name(parseChartUserLines, "parseChartUserLines");
-function graphicFramePassthrough(node, anchor, ctx) {
+function graphicFramePassthrough(node, anchor, ctx2) {
   const data = node["a:graphic"]?.["a:graphicData"];
   const uri = data?.["@_uri"] ?? "";
   if (uri.includes("/table") && data?.["a:tbl"]) {
-    const table = parseTable(node, data["a:tbl"], anchor, ctx);
+    const table = parseTable(node, data["a:tbl"], anchor, ctx2);
     if (table) return table;
   }
   if (uri.includes("/chartex")) {
     const rid = data?.["cx:chart"]?.["@_r:id"];
-    const chartXml = rid ? ctx.chartXmls?.get(String(rid)) : void 0;
-    const ovXml = rid ? ctx.chartThemeOverrides?.get(String(rid)) : void 0;
-    const chartTheme = ovXml ? themeWithOverride(ctx.theme, ovXml) : ctx.theme;
+    const chartXml = rid ? ctx2.chartXmls?.get(String(rid)) : void 0;
+    const ovXml = rid ? ctx2.chartThemeOverrides?.get(String(rid)) : void 0;
+    const chartTheme = ovXml ? themeWithOverride(ctx2.theme, ovXml) : ctx2.theme;
     const model = chartXml ? parseChartExXml(chartXml, chartTheme) : null;
     if (model) {
       const cNvPr = node["p:nvGraphicFramePr"]?.["p:cNvPr"];
@@ -46332,20 +46824,20 @@ function graphicFramePassthrough(node, anchor, ctx) {
   }
   if (uri.includes("/chart")) {
     const rid = data?.["c:chart"]?.["@_r:id"];
-    const chartXml = rid ? ctx.chartXmls?.get(rid) : void 0;
-    const ovXml = rid ? ctx.chartThemeOverrides?.get(String(rid)) : void 0;
-    const chartTheme = ovXml ? themeWithOverride(ctx.theme, ovXml) : ctx.theme;
+    const chartXml = rid ? ctx2.chartXmls?.get(rid) : void 0;
+    const ovXml = rid ? ctx2.chartThemeOverrides?.get(String(rid)) : void 0;
+    const chartTheme = ovXml ? themeWithOverride(ctx2.theme, ovXml) : ctx2.theme;
     const chartFillCtx = {
-      ...ctx,
-      mediaRels: ctx.chartMediaRels?.get(String(rid)),
+      ...ctx2,
+      mediaRels: ctx2.chartMediaRels?.get(String(rid)),
       theme: chartTheme
     };
     const model = chartXml ? parseChartXml(chartXml, chartTheme, (spPr) => parseFill(spPr, chartFillCtx)) : null;
-    if (model && ctx.chartStyleRels?.has(String(rid))) model.hasStylePart = true;
+    if (model && ctx2.chartStyleRels?.has(String(rid))) model.hasStylePart = true;
     if (model) {
-      const usXml = rid ? ctx.chartUserShapes?.get(String(rid)) : void 0;
+      const usXml = rid ? ctx2.chartUserShapes?.get(String(rid)) : void 0;
       if (usXml) {
-        const lines = parseChartUserLines(usXml, ctx);
+        const lines = parseChartUserLines(usXml, ctx2);
         if (lines.length) model.userLines = lines;
       }
     }
@@ -46378,18 +46870,18 @@ function graphicFramePassthrough(node, anchor, ctx) {
   };
   if (kind === "smartart") {
     const dm = data?.["dgm:relIds"]?.["@_r:dm"];
-    const drawingXml = dm ? ctx.diagramDrawings?.get(String(dm)) : void 0;
+    const drawingXml = dm ? ctx2.diagramDrawings?.get(String(dm)) : void 0;
     if (drawingXml) {
-      const drawingRels = dm ? ctx.diagramMediaRels?.get(String(dm)) : void 0;
+      const drawingRels = dm ? ctx2.diagramMediaRels?.get(String(dm)) : void 0;
       const csRel = data?.["dgm:relIds"]?.["@_r:cs"];
       const txColors = diagramTextColors(
-        dm ? ctx.diagramDatas?.get(String(dm)) : void 0,
-        csRel ? ctx.diagramColors?.get(String(csRel)) : void 0,
-        ctx
+        dm ? ctx2.diagramDatas?.get(String(dm)) : void 0,
+        csRel ? ctx2.diagramColors?.get(String(csRel)) : void 0,
+        ctx2
       );
       const shapes = parseDiagramDrawing(
         drawingXml,
-        drawingRels ? { ...ctx, mediaRels: drawingRels } : ctx,
+        drawingRels ? { ...ctx2, mediaRels: drawingRels } : ctx2,
         txColors
       );
       const meaningful = shapes.length > 1 || shapes.some(
@@ -46398,16 +46890,16 @@ function graphicFramePassthrough(node, anchor, ctx) {
       if (shapes.length && meaningful) el.previewShapes = shapes;
     }
     if (!el.previewShapes?.length && transform) {
-      const dataXml = dm ? ctx.diagramDatas?.get(String(dm)) : void 0;
+      const dataXml = dm ? ctx2.diagramDatas?.get(String(dm)) : void 0;
       if (dataXml) {
         const lo = data?.["dgm:relIds"]?.["@_r:lo"];
         const cs = data?.["dgm:relIds"]?.["@_r:cs"];
-        const layoutXml = lo ? ctx.diagramLayouts?.get(String(lo)) : void 0;
+        const layoutXml = lo ? ctx2.diagramLayouts?.get(String(lo)) : void 0;
         const uniqueId = layoutXml ? /\buniqueId="([^"]+)"/.exec(layoutXml)?.[1]?.split("/").pop() : void 0;
-        const colorsXml = cs ? ctx.diagramColors?.get(String(cs)) : void 0;
+        const colorsXml = cs ? ctx2.diagramColors?.get(String(cs)) : void 0;
         const shapes = layoutDiagramFallback(
           dataXml,
-          ctx,
+          ctx2,
           transform.offset.cx,
           transform.offset.cy,
           uniqueId,
@@ -46421,11 +46913,11 @@ function graphicFramePassthrough(node, anchor, ctx) {
   if (kind === "ole") {
     const pic = findDescendantPic(data);
     const hasBlip = pic?.["p:blipFill"]?.["a:blip"]?.["@_r:embed"] != null;
-    if (pic && hasBlip) el.previewPicture = parsePicture(pic, anchor, ctx);
+    if (pic && hasBlip) el.previewPicture = parsePicture(pic, anchor, ctx2);
     else if (transform) {
       const oleObj = data?.["p:oleObj"] ?? data?.["mc:AlternateContent"]?.["mc:Choice"]?.["p:oleObj"] ?? data?.["mc:AlternateContent"]?.["mc:Fallback"]?.["p:oleObj"];
       const spid = oleObj?.["@_spid"];
-      const mediaRef = spid != null ? ctx.vmlPreviews?.get(String(spid)) : void 0;
+      const mediaRef = spid != null ? ctx2.vmlPreviews?.get(String(spid)) : void 0;
       if (mediaRef) {
         el.previewPicture = { id: uid("olepic"), type: "picture", anchor, transform, mediaRef };
       }
@@ -46434,7 +46926,7 @@ function graphicFramePassthrough(node, anchor, ctx) {
   return el;
 }
 __name(graphicFramePassthrough, "graphicFramePassthrough");
-function diagramTextColors(dataXml, colorsXml, ctx) {
+function diagramTextColors(dataXml, colorsXml, ctx2) {
   const out = /* @__PURE__ */ new Map();
   if (!dataXml || !colorsXml) return out;
   const lblColor = /* @__PURE__ */ new Map();
@@ -46443,7 +46935,7 @@ function diagramTextColors(dataXml, colorsXml, ctx) {
     if (!lst) continue;
     const cm = /<a:schemeClr val="([^"]+)"|<a:srgbClr val="([^"]+)"/.exec(lst);
     if (!cm) continue;
-    const c = cm[1] ? resolveColorNode2({ "a:schemeClr": { "@_val": cm[1] } }, ctx) : "#" + String(cm[2]).toUpperCase();
+    const c = cm[1] ? resolveColorNode2({ "a:schemeClr": { "@_val": cm[1] } }, ctx2) : "#" + String(cm[2]).toUpperCase();
     if (c) lblColor.set(m[1], c);
   }
   if (!lblColor.size) return out;
@@ -46456,7 +46948,7 @@ function diagramTextColors(dataXml, colorsXml, ctx) {
 }
 __name(diagramTextColors, "diagramTextColors");
 function parseDiagramDrawing(drawingXml, parentCtx, txColors) {
-  const ctx = { ...parentCtx, defaultTextStyle: void 0 };
+  const ctx2 = { ...parentCtx, defaultTextStyle: void 0 };
   const xml = drawingXml.replace(/<(\/?)dsp:/g, "<$1p:");
   let doc;
   try {
@@ -46486,7 +46978,7 @@ function parseDiagramDrawing(drawingXml, parentCtx, txColors) {
     if (txXfrm && typeof txXfrm === "object" && txBody) {
       const shapeOnly = { ...sp };
       delete shapeOnly["p:txBody"];
-      const shapeEl = parseSpShape(shapeOnly, anchor, ctx);
+      const shapeEl = parseSpShape(shapeOnly, anchor, ctx2);
       if (shapeEl.type !== "passthrough") out.push(shapeEl);
       const spRot = parseInt(sp["p:spPr"]?.["a:xfrm"]?.["@_rot"] ?? "0", 10) || 0;
       const txRot = parseInt(txXfrm["@_rot"] ?? "0", 10) || 0;
@@ -46503,11 +46995,11 @@ function parseDiagramDrawing(drawingXml, parentCtx, txColors) {
         ...fontRef ? { "p:style": { "a:fontRef": fontRef } } : {},
         "p:txBody": txBody
       };
-      const textEl = parseSpShape(textSp, anchor, ctx);
+      const textEl = parseSpShape(textSp, anchor, ctx2);
       if (textEl.type !== "passthrough") out.push(textEl);
       continue;
     }
-    const el = parseSpShape(sp, anchor, ctx);
+    const el = parseSpShape(sp, anchor, ctx2);
     if (el.type !== "passthrough") out.push(el);
   }
   return out;
@@ -46522,7 +47014,7 @@ function dgmBulletLines(node, lvl = 1) {
   return out;
 }
 __name(dgmBulletLines, "dgmBulletLines");
-function diagramLabelFills(colorsXml, ctx) {
+function diagramLabelFills(colorsXml, ctx2) {
   const out = /* @__PURE__ */ new Map();
   if (!colorsXml) return out;
   let doc;
@@ -46540,7 +47032,7 @@ function diagramLabelFills(colorsXml, ctx) {
     for (const tag of COLOR_NODE_TAGS) {
       const v = lst[tag];
       for (const c of Array.isArray(v) ? v : v ? [v] : []) {
-        const hex = resolveColorNode2({ [tag]: c }, ctx);
+        const hex = resolveColorNode2({ [tag]: c }, ctx2);
         if (hex) fills.push(hex.slice(0, 7));
       }
     }
@@ -46613,7 +47105,7 @@ function dgmTint(hex, pct) {
   return "#" + mix(0) + mix(2) + mix(4);
 }
 __name(dgmTint, "dgmTint");
-function layoutDiagramFallback(dataXml, ctx, frameCx, frameCy, layoutId, colorsXml, layoutXml) {
+function layoutDiagramFallback(dataXml, ctx2, frameCx, frameCy, layoutId, colorsXml, layoutXml) {
   let doc;
   try {
     doc = parser2.parse(dataXml);
@@ -46677,9 +47169,9 @@ function layoutDiagramFallback(dataXml, ctx, frameCx, frameCy, layoutId, colorsX
   }), "build");
   const roots = build(String(docId));
   if (!roots.length) return [];
-  const labelFills = diagramLabelFills(colorsXml, ctx);
+  const labelFills = diagramLabelFills(colorsXml, ctx2);
   const colors = labelFills.get("node1") ?? labelFills.get("node0") ?? [
-    resolveColorNode2({ "a:schemeClr": { "@_val": "accent1" } }, ctx) ?? "#4472C4"
+    resolveColorNode2({ "a:schemeClr": { "@_val": "accent1" } }, ctx2) ?? "#4472C4"
   ];
   const colorOf = /* @__PURE__ */ __name((node, i) => {
     if (node.spPr) return { spPr: node.spPr };
@@ -47155,7 +47647,7 @@ function layoutDiagramFallback(dataXml, ctx, frameCx, frameCy, layoutId, colorsX
     nodes.forEach((node, i) => {
       const q = quads[i];
       const bullets = dgmBulletLines(node);
-      const strokeColor = node.spPr ? resolveColorNode2(node.spPr["a:solidFill"], ctx) ?? colors[0] : colors[0];
+      const strokeColor = node.spPr ? resolveColorNode2(node.spPr["a:solidFill"], ctx2) ?? colors[0] : colors[0];
       sps.push(
         dgmSp(
           { x: q.bxy.x, y: q.bxy.y, cx: bw, cy: bh },
@@ -47679,7 +48171,7 @@ function layoutDiagramFallback(dataXml, ctx, frameCx, frameCy, layoutId, colorsX
   const anchor = { spIndex: -1, originalXml: "", range: [0, 0] };
   const out = [];
   for (const sp of sps) {
-    const el = parseSpShape(sp, anchor, ctx);
+    const el = parseSpShape(sp, anchor, ctx2);
     if (el.type !== "passthrough") out.push(el);
   }
   return out;
@@ -47728,7 +48220,7 @@ var xsdBool = /* @__PURE__ */ __name((v) => {
   const s = String(v ?? "").toLowerCase();
   return s === "1" || s === "true";
 }, "xsdBool");
-function parseTable(node, tbl, anchor, ctx) {
+function parseTable(node, tbl, anchor, ctx2) {
   const gridRaw = tbl["a:tblGrid"]?.["a:gridCol"];
   const gridCols = Array.isArray(gridRaw) ? gridRaw : gridRaw ? [gridRaw] : [];
   const colWidths = gridCols.map((g) => intOr(g["@_w"], 0));
@@ -47738,12 +48230,12 @@ function parseTable(node, tbl, anchor, ctx) {
   const tblPr2 = tbl["a:tblPr"] ?? {};
   const styleIdRaw = tblPr2["a:tableStyleId"];
   const styleId = typeof styleIdRaw === "string" ? styleIdRaw : styleIdRaw?.["#text"];
-  const styleDef = resolveTableStyle(styleId, ctx.tableStyles, ctx.theme);
+  const styleDef = resolveTableStyle(styleId, ctx2.tableStyles, ctx2.theme);
   let bgFill = styleDef?.tblBg;
   if (!bgFill && styleDef?.tblBgRef) {
     const { idx, phClr } = styleDef.tblBgRef;
-    const tpl = idx > 1e3 ? ctx.theme?.bgFillStyles?.[idx - 1001] : ctx.theme?.fillStyles?.[idx - 1];
-    bgFill = tpl ? parseFill(tpl, { ...ctx, phClr, mediaRels: ctx.themeMediaRels ?? ctx.mediaRels }) : void 0;
+    const tpl = idx > 1e3 ? ctx2.theme?.bgFillStyles?.[idx - 1001] : ctx2.theme?.fillStyles?.[idx - 1];
+    bgFill = tpl ? parseFill(tpl, { ...ctx2, phClr, mediaRels: ctx2.themeMediaRels ?? ctx2.mediaRels }) : void 0;
     if (!bgFill && phClr) bgFill = { type: "solid", color: phClr };
   }
   const flags = {
@@ -47770,7 +48262,7 @@ function parseTable(node, tbl, anchor, ctx) {
       const c = gridCols2[i];
       const part = styleDef ? cellPartStyle(styleDef, flags, r, c, nRows, nCols) : void 0;
       const inside = styleDef ? cellStyleBorders(styleDef, flags, r, c, nRows, nCols) : void 0;
-      return parseTableCell(tc, ctx, part, inside);
+      return parseTableCell(tc, ctx2, part, inside);
     });
   });
   return {
@@ -47789,7 +48281,7 @@ function parseTable(node, tbl, anchor, ctx) {
   };
 }
 __name(parseTable, "parseTable");
-function parseTableCell(tc, ctx, part, inside) {
+function parseTableCell(tc, ctx2, part, inside) {
   const tcPr = tc["a:tcPr"] ?? {};
   const cell = {};
   if (tc["a:txBody"]) {
@@ -47803,18 +48295,18 @@ function parseTableCell(tc, ctx, part, inside) {
         ]
       }
     ] : [];
-    const text = parseTextBody(tc["a:txBody"], ctx, styleChain);
+    const text2 = parseTextBody(tc["a:txBody"], ctx2, styleChain);
     const anchorMap = { t: "top", ctr: "middle", b: "bottom" };
-    if (tcPr["@_anchor"]) text.anchor = anchorMap[tcPr["@_anchor"]];
-    text.insets = {
+    if (tcPr["@_anchor"]) text2.anchor = anchorMap[tcPr["@_anchor"]];
+    text2.insets = {
       l: intOr(tcPr["@_marL"], 91440),
       r: intOr(tcPr["@_marR"], 91440),
       t: intOr(tcPr["@_marT"], 45720),
       b: intOr(tcPr["@_marB"], 45720)
     };
-    cell.text = text;
+    cell.text = text2;
   }
-  const fill = parseFill(tcPr, ctx);
+  const fill = parseFill(tcPr, ctx2);
   if (fill) {
     if (fill.type !== "none") cell.fill = fill;
   } else if (part?.fill) cell.fill = part.fill;
@@ -47828,7 +48320,7 @@ function parseTableCell(tc, ctx, part, inside) {
     const ln = tcPr[tag];
     if (!ln || typeof ln !== "object") continue;
     if (ln["@_w"] === "0" && !("a:noFill" in ln)) continue;
-    const stroke = parseStroke({ "a:ln": ln }, ctx);
+    const stroke = parseStroke({ "a:ln": ln }, ctx2);
     if (stroke) borders[key] = stroke;
   }
   for (const k of ["l", "r", "t", "b"]) {
@@ -47890,7 +48382,7 @@ function parseBiLevel(blipNode) {
   return Math.max(0, Math.min(1, thresh / 1e5));
 }
 __name(parseBiLevel, "parseBiLevel");
-function parseDuotone(blipNode, ctx) {
+function parseDuotone(blipNode, ctx2) {
   const duoRaw = blipNode?.["a:duotone"];
   if (!duoRaw) return blipNode?.["a:grayscl"] !== void 0 ? ["#000000", "#FFFFFF"] : void 0;
   const clrs = [];
@@ -47898,7 +48390,7 @@ function parseDuotone(blipNode, ctx) {
     const raw = duoRaw[tag];
     const arr = Array.isArray(raw) ? raw : raw ? [raw] : [];
     for (const c of arr) {
-      const resolved = resolveColorNode2({ [tag]: c }, ctx);
+      const resolved = resolveColorNode2({ [tag]: c }, ctx2);
       if (resolved) clrs.push({ c: resolved, tag });
     }
   }
@@ -47911,34 +48403,34 @@ function parseDuotone(blipNode, ctx) {
   return [pair[0].c, pair[1].c];
 }
 __name(parseDuotone, "parseDuotone");
-function parseClrChange(blipNode, ctx) {
+function parseClrChange(blipNode, ctx2) {
   const cc = blipNode?.["a:clrChange"];
   if (!cc) return void 0;
-  const from = resolveColorNode2(cc["a:clrFrom"], ctx);
-  const to = resolveColorNode2(cc["a:clrTo"], ctx);
+  const from = resolveColorNode2(cc["a:clrFrom"], ctx2);
+  const to = resolveColorNode2(cc["a:clrTo"], ctx2);
   return from && to ? { from, to } : void 0;
 }
 __name(parseClrChange, "parseClrChange");
-function parseFill(spPr, ctx) {
+function parseFill(spPr, ctx2) {
   if (!spPr) return void 0;
   if ("a:noFill" in spPr) return { type: "none" };
-  if ("a:grpFill" in spPr) return ctx.groupFill;
+  if ("a:grpFill" in spPr) return ctx2.groupFill;
   const solid2 = spPr["a:solidFill"];
   if (solid2) {
-    const color = resolveColorNode2(solid2, ctx);
+    const color = resolveColorNode2(solid2, ctx2);
     if (color) return { type: "solid", color };
   }
   const grad = spPr["a:gradFill"];
-  if (grad) return parseGradFill(grad, ctx);
+  if (grad) return parseGradFill(grad, ctx2);
   const blip = spPr["a:blipFill"];
   if (blip) {
     const embedId = blipEmbedId(blip["a:blip"]);
-    const mediaRef = embedId && ctx.mediaRels?.get(embedId) || "";
+    const mediaRef = embedId && ctx2.mediaRels?.get(embedId) || "";
     if (mediaRef) {
       const alphaAmt = blip["a:blip"]?.["a:alphaModFix"]?.["@_amt"];
       const alpha = alphaAmt != null ? Math.max(0, Math.min(1, parseInt(alphaAmt, 10) / 1e5)) : void 0;
-      const duotone = parseDuotone(blip["a:blip"], ctx);
-      const clrChange = parseClrChange(blip["a:blip"], ctx);
+      const duotone = parseDuotone(blip["a:blip"], ctx2);
+      const clrChange = parseClrChange(blip["a:blip"], ctx2);
       const lum = parseLum(blip["a:blip"]);
       const biLevel = parseBiLevel(blip["a:blip"]);
       const fr = blip["a:stretch"]?.["a:fillRect"];
@@ -47969,19 +48461,19 @@ function parseFill(spPr, ctx) {
   }
   const pat = spPr["a:pattFill"];
   if (pat) {
-    const fg = resolveColorNode2(pat["a:fgClr"], ctx) ?? "#000000";
-    const bg = resolveColorNode2(pat["a:bgClr"], ctx) ?? "#FFFFFF";
+    const fg = resolveColorNode2(pat["a:fgClr"], ctx2) ?? "#000000";
+    const bg = resolveColorNode2(pat["a:bgClr"], ctx2) ?? "#FFFFFF";
     return { type: "pattern", fg, bg, preset: String(pat["@_prst"] ?? "pct50") };
   }
   return void 0;
 }
 __name(parseFill, "parseFill");
-function parseGradFill(grad, ctx) {
+function parseGradFill(grad, ctx2) {
   const gsLst = grad["a:gsLst"]?.["a:gs"];
   const list = gsLst ? Array.isArray(gsLst) ? gsLst : [gsLst] : [];
   const stops = list.map((gs) => {
     const pos = (parseInt(gs["@_pos"], 10) || 0) / 1e5;
-    const color = resolveColorNode2(gs, ctx);
+    const color = resolveColorNode2(gs, ctx2);
     return color ? { pos, color } : null;
   }).filter((s) => !!s);
   if (!stops.length) return void 0;
@@ -48016,8 +48508,8 @@ function parseGradFill(grad, ctx) {
   };
 }
 __name(parseGradFill, "parseGradFill");
-function resolveColorNode2(node, ctx) {
-  return resolveColorNode(node, ctx.theme, ctx.phClr);
+function resolveColorNode2(node, ctx2) {
+  return resolveColorNode(node, ctx2.theme, ctx2.phClr);
 }
 __name(resolveColorNode2, "resolveColorNode");
 var COLOR_NODE_TAGS = [
@@ -48055,19 +48547,19 @@ function colorNodeXml(fillNode) {
   return void 0;
 }
 __name(colorNodeXml, "colorNodeXml");
-function parseTextBody(txBody, ctx, phChain = [], inheritedInsets) {
+function parseTextBody(txBody, ctx2, phChain = [], inheritedInsets) {
   const bodyPrRaw = txBody["a:bodyPr"];
   const bodyPr = bodyPrRaw && typeof bodyPrRaw === "object" ? bodyPrRaw : {};
   const anchorMap = { t: "top", ctr: "middle", b: "bottom" };
   const paras = txBody["a:p"] ? Array.isArray(txBody["a:p"]) ? txBody["a:p"] : [txBody["a:p"]] : [];
-  const ownStyle = parseLstStyleLevels(txBody["a:lstStyle"], ctx.theme, {
-    mediaRels: ctx.mediaRels
+  const ownStyle = parseLstStyleLevels(txBody["a:lstStyle"], ctx2.theme, {
+    mediaRels: ctx2.mediaRels
   });
   const chain2 = [
     ownStyle ? { ...ownStyle, src: "shape lstStyle" } : void 0,
     ...phChain
   ];
-  const paragraphs = paras.map((p) => parseParagraph(p, ctx, chain2));
+  const paragraphs = paras.map((p) => parseParagraph(p, ctx2, chain2));
   let autofit = "none";
   if ("a:normAutofit" in bodyPr) autofit = "shrink";
   else if ("a:spAutoFit" in bodyPr) autofit = "resize";
@@ -48086,7 +48578,7 @@ function parseTextBody(txBody, ctx, phChain = [], inheritedInsets) {
   const depthEmu = bodySp3d ? intOr(bodySp3d["@_extrusionH"], 0) : 0;
   if (depthEmu > 0) {
     const extClr = bodySp3d["a:extrusionClr"];
-    const color = (extClr && typeof extClr === "object" ? resolveColorNode2(extClr, ctx) : void 0) ?? "#808080";
+    const color = (extClr && typeof extClr === "object" ? resolveColorNode2(extClr, ctx2) : void 0) ?? "#808080";
     const rot = bodyPr["a:scene3d"]?.["a:camera"]?.["a:rot"];
     extrusion3d = {
       color,
@@ -48140,7 +48632,7 @@ function spcPts(node) {
   return v != null ? (parseInt(v, 10) || 0) / 100 : void 0;
 }
 __name(spcPts, "spcPts");
-function parseParagraph(p, ctx, chain2 = []) {
+function parseParagraph(p, ctx2, chain2 = []) {
   const pPr = p["a:pPr"] ?? {};
   const alignMap = {
     l: "left",
@@ -48151,27 +48643,27 @@ function parseParagraph(p, ctx, chain2 = []) {
   const level = pPr["@_lvl"] ? parseInt(pPr["@_lvl"], 10) : void 0;
   const dflt = mergeTextStyleChain(chain2, level ?? 0);
   const defRPrNode = pPr["a:defRPr"];
-  const paraStyle = parseDefRPrStyle(defRPrNode, ctx.theme, ctx.phClr);
+  const paraStyle = parseDefRPrStyle(defRPrNode, ctx2.theme, ctx2.phClr);
   const runDflt = paraStyle ? { ...dflt, ...paraStyle, src: paragraphSources(dflt, paraStyle) } : dflt;
   if (runDflt && paraStyle?.eaFont && !paraStyle.eaFontRef) delete runDflt.eaFontRef;
   if (runDflt && paraStyle?.latinFont && !paraStyle.latinFontRef) delete runDflt.latinFontRef;
   const defRPr = paraStyle ? parseParagraphDefRPr(defRPrNode, paraStyle) : void 0;
   const runsRaw = p["a:r"] ? Array.isArray(p["a:r"]) ? p["a:r"] : [p["a:r"]] : [];
   const runs = runsRaw.map((r) => {
-    const run = parseRun(r, ctx, runDflt);
+    const run = parseRun(r, ctx2, runDflt);
     if (r?.["@_type"]) run.field = String(r["@_type"]);
     if (r?.["@_gxRaw"]) run.rawXml = base64ToUtf8(String(r["@_gxRaw"]));
     return run;
   });
   const fldsRaw = p["a:fld"] ? Array.isArray(p["a:fld"]) ? p["a:fld"] : [p["a:fld"]] : [];
   for (const f of fldsRaw) {
-    const run = parseRun(f, ctx, runDflt);
+    const run = parseRun(f, ctx2, runDflt);
     if (f?.["@_type"]) run.field = String(f["@_type"]);
     runs.push(run);
   }
   const endPr = p["a:endParaRPr"];
   if (endPr && typeof endPr === "object" && runs.every((r) => !r.text && !r.field && !r.rawXml)) {
-    const mark = parseRun({ "a:rPr": endPr, "a:t": "" }, ctx, runDflt);
+    const mark = parseRun({ "a:rPr": endPr, "a:t": "" }, ctx2, runDflt);
     mark.paraMark = true;
     runs.splice(0, runs.length, mark);
   }
@@ -48198,13 +48690,13 @@ function parseParagraph(p, ctx, chain2 = []) {
     const embed = blipEmbedId(pPr["a:buBlip"]?.["a:blip"]);
     if (embed) {
       bullet.blipEmbedId = embed;
-      const ref = ctx.mediaRels?.get(embed);
+      const ref = ctx2.mediaRels?.get(embed);
       if (ref) bullet.mediaRef = ref;
     }
   }
   if (bullet && bullet.type !== "none") {
     if (pPr["a:buClr"]) {
-      const c = resolveColorNode2(pPr["a:buClr"], ctx);
+      const c = resolveColorNode2(pPr["a:buClr"], ctx2);
       if (c) bullet.color = c;
       const node = nonPlainColorNode(pPr["a:buClr"]);
       if (node) bullet.colorNodeXml = node;
@@ -48335,19 +48827,19 @@ function themeFontSource(ref) {
   return ref.startsWith("+mj") ? "theme major" : "theme minor";
 }
 __name(themeFontSource, "themeFontSource");
-function parseRun(r, ctx, dflt) {
+function parseRun(r, ctx2, dflt) {
   const rPr = r["a:rPr"] ?? {};
   const rawT = r["a:t"];
-  const text = decodeCharRefs(
+  const text2 = decodeCharRefs(
     typeof rawT === "string" ? rawT : rawT == null ? "" : typeof rawT === "object" ? String(rawT["#text"] ?? "") : String(rawT)
   );
   const hlink = rPr["a:hlinkClick"];
   const hlinkNamedAction = namedActionOf(hlink?.["@_action"] ? String(hlink["@_action"]) : null);
-  const hlinkTarget = hlinkNamedAction ? `action:${hlinkNamedAction}` : hlink?.["@_r:id"] ? ctx.hlinkRels?.get(String(hlink["@_r:id"])) : void 0;
+  const hlinkTarget = hlinkNamedAction ? `action:${hlinkNamedAction}` : hlink?.["@_r:id"] ? ctx2.hlinkRels?.get(String(hlink["@_r:id"])) : void 0;
   const fill = rPr["a:solidFill"];
   let gradient;
   if (rPr["a:gradFill"] && typeof rPr["a:gradFill"] === "object") {
-    const g = parseFill(rPr, ctx);
+    const g = parseFill(rPr, ctx2);
     if (g?.type === "gradient" && g.stops.length) {
       gradient = {
         stops: g.stops,
@@ -48356,21 +48848,21 @@ function parseRun(r, ctx, dflt) {
       };
     }
   }
-  const color = (fill ? resolveColorNode2(fill, ctx) : void 0) ?? gradient?.stops[Math.floor(gradient.stops.length / 2)]?.color ?? (hlinkTarget ? ctx.theme?.colors?.hlink : void 0) ?? dflt?.color;
+  const color = (fill ? resolveColorNode2(fill, ctx2) : void 0) ?? gradient?.stops[Math.floor(gradient.stops.length / 2)]?.color ?? (hlinkTarget ? ctx2.theme?.colors?.hlink : void 0) ?? dflt?.color;
   const srgb = fill?.["a:srgbClr"];
   const srgbHasMods = srgb != null && typeof srgb === "object" && Object.keys(srgb).some((k) => k.startsWith("a:"));
   const colorFollowsTheme = color != null && (!(fill && srgb) || srgbHasMods);
   const colorInherited = color != null && !fill;
   const highlightNode = rPr["a:highlight"];
-  const highlight = highlightNode ? resolveColorNode2(highlightNode, ctx) : void 0;
+  const highlight = highlightNode ? resolveColorNode2(highlightNode, ctx2) : void 0;
   const langScript = eaScriptOfLang;
   const runLangScript = langScript(rPr["@_altLang"]) ?? langScript(rPr["@_lang"]);
-  const eaScript = runLangScript ?? (/[\u3040-\u30ff\u31f0-\u31ff]/.test(text) ? "ja" : /[\uac00-\ud7af\u1100-\u11ff]/.test(text) ? "ko" : void 0) ?? dflt?.eaScript ?? (/[\u3400-\u9fff\uf900-\ufaff]/.test(text) ? "han" : void 0);
-  const latin = resolveFontRef(rPr["a:latin"]?.["@_typeface"], ctx.theme, eaScript) ?? dflt?.latinFont;
-  const ea = resolveFontRef(rPr["a:ea"]?.["@_typeface"] ?? dflt?.eaFontRef, ctx.theme, eaScript) ?? dflt?.eaFont;
-  const cs = resolveFontRef(rPr["a:cs"]?.["@_typeface"], ctx.theme, eaScript) ?? dflt?.csFont;
-  const sym = resolveFontRef(rPr["a:sym"]?.["@_typeface"], ctx.theme);
-  const puaOnly = sym != null && /^[\uf000-\uf0ff]+$/.test(text.replace(/\s+/g, "")) && !!text.trim();
+  const eaScript = runLangScript ?? (/[\u3040-\u30ff\u31f0-\u31ff]/.test(text2) ? "ja" : /[\uac00-\ud7af\u1100-\u11ff]/.test(text2) ? "ko" : void 0) ?? dflt?.eaScript ?? (/[\u3400-\u9fff\uf900-\ufaff]/.test(text2) ? "han" : void 0);
+  const latin = resolveFontRef(rPr["a:latin"]?.["@_typeface"], ctx2.theme, eaScript) ?? dflt?.latinFont;
+  const ea = resolveFontRef(rPr["a:ea"]?.["@_typeface"] ?? dflt?.eaFontRef, ctx2.theme, eaScript) ?? dflt?.eaFont;
+  const cs = resolveFontRef(rPr["a:cs"]?.["@_typeface"], ctx2.theme, eaScript) ?? dflt?.csFont;
+  const sym = resolveFontRef(rPr["a:sym"]?.["@_typeface"], ctx2.theme);
+  const puaOnly = sym != null && /^[\uf000-\uf0ff]+$/.test(text2.replace(/\s+/g, "")) && !!text2.trim();
   const CHARSET_SCRIPT = {
     128: "ja",
     // SHIFTJIS
@@ -48400,23 +48892,23 @@ function parseRun(r, ctx, dflt) {
   const csPair = cs != null ? { f: cs, cset: charsetOf("a:cs"), decl: charsetAttrOf("a:cs") } : void 0;
   const eaPair = ea != null ? { f: ea, cset: charsetOf("a:ea"), decl: charsetAttrOf("a:ea") } : void 0;
   const latinPair = latin != null ? { f: latin, cset: charsetOf("a:latin"), decl: charsetAttrOf("a:latin") } : void 0;
-  const picked = puaOnly ? sym != null ? { f: sym, cset: void 0, decl: void 0 } : void 0 : (CS_RE.test(text) ? csPair ?? latinPair ?? eaPair : CJK_RE.test(text) ? eaPair ?? latinPair : latinPair ?? eaPair) ?? (ctx.theme?.minorFont != null ? { f: ctx.theme.minorFont, cset: void 0, decl: void 0 } : void 0);
+  const picked = puaOnly ? sym != null ? { f: sym, cset: void 0, decl: void 0 } : void 0 : (CS_RE.test(text2) ? csPair ?? latinPair ?? eaPair : CJK_RE.test(text2) ? eaPair ?? latinPair : latinPair ?? eaPair) ?? (ctx2.theme?.minorFont != null ? { f: ctx2.theme.minorFont, cset: void 0, decl: void 0 } : void 0);
   const fontFamily = picked?.f;
   const latinFamily = picked && picked === eaPair && latinPair && latinPair.f !== picked.f ? latinPair.f : void 0;
-  const fontScriptHint = CJK_RE.test(text) ? picked?.cset : picked?.decl;
+  const fontScriptHint = CJK_RE.test(text2) ? picked?.cset : picked?.decl;
   const bAttr = rPr["@_b"];
   const iAttr = rPr["@_i"];
   let outline;
   const lnNode = rPr["a:ln"];
   if (lnNode && typeof lnNode === "object" && lnNode["a:solidFill"]) {
-    const lnColor = resolveColorNode2(lnNode["a:solidFill"], ctx);
+    const lnColor = resolveColorNode2(lnNode["a:solidFill"], ctx2);
     if (lnColor) {
       const w = lnNode["@_w"] != null ? parseInt(lnNode["@_w"], 10) : 9525;
       outline = { color: lnColor, widthEmu: Number.isFinite(w) ? w : 9525 };
     }
   }
-  const runShadow = parseShadow(rPr, ctx) ?? dflt?.shadow;
-  const runGlow = parseGlow(rPr, ctx);
+  const runShadow = parseShadow(rPr, ctx2) ?? dflt?.shadow;
+  const runGlow = parseGlow(rPr, ctx2);
   const reflection = rPr["a:effectLst"]?.["a:reflection"] != null;
   const uAttr = rPr["@_u"];
   const strikeAttr = rPr["@_strike"];
@@ -48441,11 +48933,11 @@ function parseRun(r, ctx, dflt) {
     fontSize: rPr["@_sz"] ? "run" : inherited("fontSize", dflt?.fontSize != null),
     bold: bAttr != null ? "run" : inherited("bold", dflt?.bold != null),
     italic: iAttr != null ? "run" : inherited("italic", dflt?.italic != null),
-    color: fill || gradient ? "run" : hlinkTarget && ctx.theme?.colors?.hlink ? "theme hlink" : inherited("color", dflt?.color != null),
+    color: fill || gradient ? "run" : hlinkTarget && ctx2.theme?.colors?.hlink ? "theme hlink" : inherited("color", dflt?.color != null),
     fontFamily: fontSource()
   };
   return {
-    text,
+    text: text2,
     styleSrc,
     bold: bAttr != null ? bAttr === "1" || bAttr === "true" : !!dflt?.bold,
     ...bAttr == null ? { boldImplicit: true } : {},
@@ -48497,7 +48989,7 @@ function parseRun(r, ctx, dflt) {
   };
 }
 __name(parseRun, "parseRun");
-function parseDecorations(xml, ctx, opts = {}) {
+function parseDecorations(xml, ctx2, opts = {}) {
   let scan;
   try {
     scan = scanSlide(xml);
@@ -48508,7 +49000,7 @@ function parseDecorations(xml, ctx, opts = {}) {
   scan.elements.forEach((sp, idx) => {
     const fragXml = xml.slice(sp.start, sp.end);
     const anchor = { spIndex: -(idx + 1), originalXml: "", range: [0, 0] };
-    const el = parseShapeFragment(sp, fragXml, anchor, ctx);
+    const el = parseShapeFragment(sp, fragXml, anchor, ctx2);
     if (!el || el.type === "passthrough") return;
     const ph = el.placeholder;
     if (ph !== void 0) {
@@ -48527,9 +49019,9 @@ function substituteSlideNum(el, num2) {
     for (const c of el.children) substituteSlideNum(c, num2);
     return;
   }
-  const text = el.text;
-  if (!text) return;
-  for (const p of text.paragraphs) {
+  const text2 = el.text;
+  if (!text2) return;
+  for (const p of text2.paragraphs) {
     for (const r of p.runs) {
       if (r.field === "slidenum") r.text = String(num2);
     }
@@ -52387,33 +52879,33 @@ function parseMasterPart(archive, partPath) {
       }
     }
   }
-  const ctx = {};
+  const ctx2 = {};
   if (masterPath) {
     for (const rel of archive.readRels(masterPath).values()) {
       if (rel.type.endsWith("/theme")) {
         const themeXml = archive.readText(resolveTarget(masterPath, rel.target));
-        if (themeXml) ctx.theme = parseTheme(themeXml);
+        if (themeXml) ctx2.theme = parseTheme(themeXml);
         break;
       }
     }
   }
-  ctx.mediaRels = partMedia(archive, partPath);
-  ctx.tableStyles = archive.readText("ppt/tableStyles.xml") ?? void 0;
+  ctx2.mediaRels = partMedia(archive, partPath);
+  ctx2.tableStyles = archive.readText("ppt/tableStyles.xml") ?? void 0;
   const masterXml = !isMaster && masterPath ? archive.readText(masterPath) : void 0;
-  if (ctx.theme)
-    ctx.theme.clrMap = isMaster ? parseClrMap(xml) : parseClrMap(masterXml ?? void 0, xml);
+  if (ctx2.theme)
+    ctx2.theme.clrMap = isMaster ? parseClrMap(xml) : parseClrMap(masterXml ?? void 0, xml);
   if (isMaster) {
-    ctx.masterTextStyles = parseMasterTextStyles(xml, ctx.theme, ctx.mediaRels);
+    ctx2.masterTextStyles = parseMasterTextStyles(xml, ctx2.theme, ctx2.mediaRels);
   } else if (masterXml) {
-    if (masterPath) ctx.masterMediaRels = partMedia(archive, masterPath);
-    ctx.masterPlaceholders = parsePlaceholderMap(masterXml, ctx.theme, ctx.masterMediaRels);
-    ctx.masterTextStyles = parseMasterTextStyles(masterXml, ctx.theme, ctx.masterMediaRels);
-    ctx.masterBg = masterXml;
+    if (masterPath) ctx2.masterMediaRels = partMedia(archive, masterPath);
+    ctx2.masterPlaceholders = parsePlaceholderMap(masterXml, ctx2.theme, ctx2.masterMediaRels);
+    ctx2.masterTextStyles = parseMasterTextStyles(masterXml, ctx2.theme, ctx2.masterMediaRels);
+    ctx2.masterBg = masterXml;
   }
-  const slide = parseSlide({ path: partPath, slideXml: xml, masterPath, ctx });
+  const slide = parseSlide({ path: partPath, slideXml: xml, masterPath, ctx: ctx2 });
   if (!isMaster && masterXml && masterPath) {
     if (!/<p:sldLayout\b[^>]*showMasterSp=(?:"(?:0|false)"|'(?:0|false)')/.test(xml)) {
-      const dctx = { theme: ctx.theme, mediaRels: partMedia(archive, masterPath) };
+      const dctx = { theme: ctx2.theme, mediaRels: partMedia(archive, masterPath) };
       const dec = parseDecorations(masterXml, dctx, {});
       if (dec.length) slide.decorations = dec;
     }
@@ -52708,8 +53200,8 @@ function numCacheXml(values, f) {
 }
 __name(numCacheXml, "numCacheXml");
 var DLBLS_XML = '<c:dLbls><c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbls>';
-function axTitleXml(text, vertical) {
-  return `<c:title><c:tx><c:rich><a:bodyPr${vertical ? ' rot="-5400000" vert="horz"' : ""}/><a:lstStyle/><a:p><a:r><a:t>${escapeXmlText(text)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
+function axTitleXml(text2, vertical) {
+  return `<c:title><c:tx><c:rich><a:bodyPr${vertical ? ' rot="-5400000" vert="horz"' : ""}/><a:lstStyle/><a:p><a:r><a:t>${escapeXmlText(text2)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
 }
 __name(axTitleXml, "axTitleXml");
 function buildChartSpaceXml(opts) {
@@ -53292,8 +53784,8 @@ function findBodySp(xml) {
   return null;
 }
 __name(findBodySp, "findBodySp");
-function buildNotesTxBody(text) {
-  const lines = text.split("\n");
+function buildNotesTxBody(text2) {
+  const lines = text2.split("\n");
   const paras = lines.every((l) => l === "") ? '<a:p><a:endParaRPr lang="zh-CN"/></a:p>' : lines.map(
     (line2) => line2 === "" ? '<a:p><a:endParaRPr lang="zh-CN"/></a:p>' : `<a:p><a:r><a:rPr lang="zh-CN" dirty="0"/><a:t>${escapeXmlText(line2)}</a:t></a:r></a:p>`
   ).join("");
@@ -53301,7 +53793,7 @@ function buildNotesTxBody(text) {
 }
 __name(buildNotesTxBody, "buildNotesTxBody");
 var NOTES_BODY_SP_OPEN = '<p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/>';
-function setSlideNotes(opened, slideIndex, text) {
+function setSlideNotes(opened, slideIndex, text2) {
   const slide = opened.deck.slides[slideIndex];
   if (!slide) return false;
   const { archive } = opened;
@@ -53309,7 +53801,7 @@ function setSlideNotes(opened, slideIndex, text) {
   if (!notesPath) return false;
   const xml = archive.readText(notesPath);
   if (!xml) return false;
-  const txBody = buildNotesTxBody(text);
+  const txBody = buildNotesTxBody(text2);
   const body = findBodySp(xml);
   let next;
   if (body) {
@@ -54637,30 +55129,30 @@ function parseSlideFromArchive(archive, slidePath) {
   const slideXml = archive.readText(slidePath);
   if (slideXml == null) return null;
   const chain2 = archive.resolveSlideChain(slidePath);
-  const ctx = {};
+  const ctx2 = {};
   const layoutXml = (chain2.layoutPath ? archive.readText(chain2.layoutPath) : void 0) ?? void 0;
   const masterXml = (chain2.masterPath ? archive.readText(chain2.masterPath) : void 0) ?? void 0;
   if (chain2.themePath) {
     const themeXml = archive.readText(chain2.themePath);
     if (themeXml) {
-      ctx.theme = parseTheme(themeXml);
-      ctx.theme.clrMap = parseClrMap(masterXml, layoutXml, slideXml);
-      ctx.themeMediaRels = partMediaRels(archive, chain2.themePath);
+      ctx2.theme = parseTheme(themeXml);
+      ctx2.theme.clrMap = parseClrMap(masterXml, layoutXml, slideXml);
+      ctx2.themeMediaRels = partMediaRels(archive, chain2.themePath);
     }
   }
   if (layoutXml) {
-    if (chain2.layoutPath) ctx.layoutMediaRels = partMediaRels(archive, chain2.layoutPath);
-    ctx.layoutPlaceholders = parsePlaceholderMap(layoutXml, ctx.theme, ctx.layoutMediaRels);
-    ctx.layoutBg = layoutXml;
+    if (chain2.layoutPath) ctx2.layoutMediaRels = partMediaRels(archive, chain2.layoutPath);
+    ctx2.layoutPlaceholders = parsePlaceholderMap(layoutXml, ctx2.theme, ctx2.layoutMediaRels);
+    ctx2.layoutBg = layoutXml;
   }
   if (masterXml) {
-    if (chain2.masterPath) ctx.masterMediaRels = partMediaRels(archive, chain2.masterPath);
-    ctx.masterPlaceholders = parsePlaceholderMap(masterXml, ctx.theme, ctx.masterMediaRels);
-    ctx.masterTextStyles = parseMasterTextStyles(masterXml, ctx.theme, ctx.masterMediaRels);
-    ctx.masterBg = masterXml;
+    if (chain2.masterPath) ctx2.masterMediaRels = partMediaRels(archive, chain2.masterPath);
+    ctx2.masterPlaceholders = parsePlaceholderMap(masterXml, ctx2.theme, ctx2.masterMediaRels);
+    ctx2.masterTextStyles = parseMasterTextStyles(masterXml, ctx2.theme, ctx2.masterMediaRels);
+    ctx2.masterBg = masterXml;
   }
   const presXml = archive.readText("ppt/presentation.xml");
-  if (presXml) ctx.defaultTextStyle = parseDefaultTextStyle(presXml, ctx.theme);
+  if (presXml) ctx2.defaultTextStyle = parseDefaultTextStyle(presXml, ctx2.theme);
   const rels = archive.readRels(slidePath);
   const mediaRels = /* @__PURE__ */ new Map();
   const chartXmls = /* @__PURE__ */ new Map();
@@ -54749,35 +55241,35 @@ function parseSlideFromArchive(archive, slidePath) {
       if (xml) diagramColors.set(rel.id, xml);
     }
   }
-  ctx.mediaRels = mediaRels;
-  ctx.chartXmls = chartXmls;
-  if (chartMediaRels.size) ctx.chartMediaRels = chartMediaRels;
-  if (chartUserShapes.size) ctx.chartUserShapes = chartUserShapes;
-  if (chartStyleRels.size) ctx.chartStyleRels = chartStyleRels;
-  ctx.chartThemeOverrides = chartThemeOverrides;
-  if (hlinkRels.size) ctx.hlinkRels = hlinkRels;
-  if (avRels.size) ctx.avRels = avRels;
-  if (diagramDrawings.size) ctx.diagramDrawings = diagramDrawings;
-  if (diagramDatas.size) ctx.diagramDatas = diagramDatas;
-  if (diagramMediaRels.size) ctx.diagramMediaRels = diagramMediaRels;
-  if (diagramLayouts.size) ctx.diagramLayouts = diagramLayouts;
-  if (diagramColors.size) ctx.diagramColors = diagramColors;
-  if (vmlPreviews.size) ctx.vmlPreviews = vmlPreviews;
-  ctx.tableStyles = archive.readText("ppt/tableStyles.xml") ?? void 0;
+  ctx2.mediaRels = mediaRels;
+  ctx2.chartXmls = chartXmls;
+  if (chartMediaRels.size) ctx2.chartMediaRels = chartMediaRels;
+  if (chartUserShapes.size) ctx2.chartUserShapes = chartUserShapes;
+  if (chartStyleRels.size) ctx2.chartStyleRels = chartStyleRels;
+  ctx2.chartThemeOverrides = chartThemeOverrides;
+  if (hlinkRels.size) ctx2.hlinkRels = hlinkRels;
+  if (avRels.size) ctx2.avRels = avRels;
+  if (diagramDrawings.size) ctx2.diagramDrawings = diagramDrawings;
+  if (diagramDatas.size) ctx2.diagramDatas = diagramDatas;
+  if (diagramMediaRels.size) ctx2.diagramMediaRels = diagramMediaRels;
+  if (diagramLayouts.size) ctx2.diagramLayouts = diagramLayouts;
+  if (diagramColors.size) ctx2.diagramColors = diagramColors;
+  if (vmlPreviews.size) ctx2.vmlPreviews = vmlPreviews;
+  ctx2.tableStyles = archive.readText("ppt/tableStyles.xml") ?? void 0;
   const slide = parseSlide({
     path: slidePath,
     slideXml,
     layoutPath: chain2.layoutPath,
     masterPath: chain2.masterPath,
-    ctx
+    ctx: ctx2
   });
   const decorations = buildDecorations(archive, slidePath, slideXml, slide, layoutXml, masterXml, {
     layoutPath: chain2.layoutPath,
     masterPath: chain2.masterPath,
-    theme: ctx.theme,
-    masterPlaceholders: ctx.masterPlaceholders,
-    masterTextStyles: ctx.masterTextStyles,
-    defaultTextStyle: ctx.defaultTextStyle
+    theme: ctx2.theme,
+    masterPlaceholders: ctx2.masterPlaceholders,
+    masterTextStyles: ctx2.masterTextStyles,
+    defaultTextStyle: ctx2.defaultTextStyle
   });
   if (decorations.length) slide.decorations = decorations;
   return slide;
@@ -54828,13 +55320,13 @@ function buildDecorations(archive, slidePath, slideXml, slide, layoutXml, master
   if (masterXml && parts.masterPath) {
     const hfTypes = new Set([...enabled].filter((k) => !slidePh.has(k) && !hasPh(layoutXml, k)));
     if (masterShown || hfTypes.size) {
-      const ctx = {
+      const ctx2 = {
         theme: parts.theme,
         mediaRels: partMediaRels(archive, parts.masterPath),
         defaultTextStyle: parts.defaultTextStyle
       };
       out.push(
-        ...parseDecorations(masterXml, ctx, {
+        ...parseDecorations(masterXml, ctx2, {
           hfTypes,
           hideShapes: !masterShown,
           ...slideNum != null ? { slideNum } : {}
@@ -54845,7 +55337,7 @@ function buildDecorations(archive, slidePath, slideXml, slide, layoutXml, master
   if (layoutXml && parts.layoutPath) {
     const hfTypes = new Set([...enabled].filter((k) => !slidePh.has(k)));
     if (!slideHidesInherited || hfTypes.size) {
-      const ctx = {
+      const ctx2 = {
         theme: parts.theme,
         mediaRels: partMediaRels(archive, parts.layoutPath),
         masterPlaceholders: parts.masterPlaceholders,
@@ -54853,7 +55345,7 @@ function buildDecorations(archive, slidePath, slideXml, slide, layoutXml, master
         defaultTextStyle: parts.defaultTextStyle
       };
       out.push(
-        ...parseDecorations(layoutXml, ctx, {
+        ...parseDecorations(layoutXml, ctx2, {
           hfTypes,
           hideShapes: slideHidesInherited,
           ...slideNum != null ? { slideNum } : {}
@@ -57552,16 +58044,16 @@ function withFutureFunctionMarkers(formula) {
 __name(withFutureFunctionMarkers, "withFutureFunctionMarkers");
 
 // vendor/genoffice/packages/xlsx-gateway/src/gateway/xlsx-escapes.ts
-function decodeXlsxEscapes(text) {
-  if (!text.includes("_x")) return text;
-  return text.replace(/_x([0-9A-Fa-f]{4})_/g, (match, hex) => {
+function decodeXlsxEscapes(text2) {
+  if (!text2.includes("_x")) return text2;
+  return text2.replace(/_x([0-9A-Fa-f]{4})_/g, (match, hex) => {
     const code = Number.parseInt(hex, 16);
     return code >= 55296 && code <= 57343 ? match : String.fromCharCode(code);
   });
 }
 __name(decodeXlsxEscapes, "decodeXlsxEscapes");
-function encodeXlsxEscapes(text) {
-  return text.replace(/_(?=x[0-9A-Fa-f]{4}_)/g, "_x005F_").replace(
+function encodeXlsxEscapes(text2) {
+  return text2.replace(/_(?=x[0-9A-Fa-f]{4}_)/g, "_x005F_").replace(
     // eslint-disable-next-line no-control-regex -- the control range is the thing being escaped
     /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF\r]/g,
     (character) => `_x${character.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0")}_`
@@ -58103,9 +58595,9 @@ function setChartTitle(chartXml, title) {
     const rewritten = titleElement[0].replace(
       /(<a:t>)[\s\S]*?(<\/a:t>)|<a:t\/>/g,
       (_full, open, close) => {
-        const text = isFirstRun ? escaped : "";
+        const text2 = isFirstRun ? escaped : "";
         isFirstRun = false;
-        return `${open ?? "<a:t>"}${text}${close ?? "</a:t>"}`;
+        return `${open ?? "<a:t>"}${text2}${close ?? "</a:t>"}`;
       }
     );
     if (isFirstRun) {
@@ -58579,8 +59071,8 @@ function dataLabelsXml(mode, position, format) {
   return "<c:dLbls>" + (format === void 0 ? "" : `<c:numFmt formatCode="${escapeXmlAttribute2(format)}" sourceLinked="0"/>`) + (position === void 0 ? "" : `<c:dLblPos val="${DLBL_POSITIONS2[position]}"/>`) + `<c:showLegendKey val="0"/><c:showVal val="${showValue ? "1" : "0"}"/><c:showCatName val="${showCategory ? "1" : "0"}"/><c:showSerName val="0"/><c:showPercent val="${showPercent ? "1" : "0"}"/><c:showBubbleSize val="0"/></c:dLbls>`;
 }
 __name(dataLabelsXml, "dataLabelsXml");
-function axisTitleXml(text) {
-  return `<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeXmlText3(text)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
+function axisTitleXml(text2) {
+  return `<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeXmlText3(text2)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
 }
 __name(axisTitleXml, "axisTitleXml");
 function plotOpenTag(chartType, grouping) {
@@ -62004,27 +62496,27 @@ function highlightRule(rule, priority, stopIfTrue, anchor, dxfs) {
       );
     }
     case "text": {
-      const text = typeof value === "string" ? value : "";
-      const quoted = `"${text.replaceAll('"', '""')}"`;
+      const text2 = typeof value === "string" ? value : "";
+      const quoted = `"${text2.replaceAll('"', '""')}"`;
       switch (operator) {
         case "containsText":
           return element(
-            `${attributes("containsText", priority, stopIfTrue, dxfId)} operator="containsText" text="${escapeXmlAttribute5(text)}"`,
+            `${attributes("containsText", priority, stopIfTrue, dxfId)} operator="containsText" text="${escapeXmlAttribute5(text2)}"`,
             [`NOT(ISERROR(SEARCH(${quoted},${anchor})))`]
           );
         case "notContainsText":
           return element(
-            `${attributes("notContainsText", priority, stopIfTrue, dxfId)} operator="notContains" text="${escapeXmlAttribute5(text)}"`,
+            `${attributes("notContainsText", priority, stopIfTrue, dxfId)} operator="notContains" text="${escapeXmlAttribute5(text2)}"`,
             [`ISERROR(SEARCH(${quoted},${anchor}))`]
           );
         case "beginsWith":
           return element(
-            `${attributes("beginsWith", priority, stopIfTrue, dxfId)} operator="beginsWith" text="${escapeXmlAttribute5(text)}"`,
+            `${attributes("beginsWith", priority, stopIfTrue, dxfId)} operator="beginsWith" text="${escapeXmlAttribute5(text2)}"`,
             [`LEFT(${anchor},LEN(${quoted}))=${quoted}`]
           );
         case "endsWith":
           return element(
-            `${attributes("endsWith", priority, stopIfTrue, dxfId)} operator="endsWith" text="${escapeXmlAttribute5(text)}"`,
+            `${attributes("endsWith", priority, stopIfTrue, dxfId)} operator="endsWith" text="${escapeXmlAttribute5(text2)}"`,
             [`RIGHT(${anchor},LEN(${quoted}))=${quoted}`]
           );
         case "equal":
@@ -62474,28 +62966,28 @@ function serializeFormulas(type, rule) {
 __name(serializeFormulas, "serializeFormulas");
 function formulaText(type, raw) {
   if (raw === void 0 || raw === null) return void 0;
-  const text = String(raw);
-  if (text === "") return void 0;
+  const text2 = String(raw);
+  if (text2 === "") return void 0;
   if (type === "list") {
-    return text.startsWith("=") ? text.slice(1) : `"${text}"`;
+    return text2.startsWith("=") ? text2.slice(1) : `"${text2}"`;
   }
   if (type === "custom") {
-    return text.startsWith("=") ? text.slice(1) : text;
+    return text2.startsWith("=") ? text2.slice(1) : text2;
   }
   if (type === "date") {
-    const serial = dateToSerial(text);
+    const serial = dateToSerial(text2);
     if (serial !== void 0) return String(serial);
   }
   if (type === "time") {
-    const fraction = timeToFraction(text);
+    const fraction = timeToFraction(text2);
     if (fraction !== void 0) return String(fraction);
   }
-  return text.startsWith("=") ? text.slice(1) : text;
+  return text2.startsWith("=") ? text2.slice(1) : text2;
 }
 __name(formulaText, "formulaText");
-function dateToSerial(text) {
+function dateToSerial(text2) {
   const match = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/.exec(
-    text.trim()
+    text2.trim()
   );
   if (!match) return void 0;
   const [, year, month, day, hour, minute, second] = match;
@@ -62528,8 +63020,8 @@ function isLeapYear(year) {
   return year % 4 === 0 && year % 100 !== 0 || year % 400 === 0;
 }
 __name(isLeapYear, "isLeapYear");
-function timeToFraction(text) {
-  const match = /^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/.exec(text.trim());
+function timeToFraction(text2) {
+  const match = /^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/.exec(text2.trim());
   if (!match) return void 0;
   const [, hour, minute, second] = match;
   const hourNum = Number(hour);
@@ -62696,7 +63188,7 @@ function encodeHeaderFooterSections(parts) {
     ["&C", parts.center],
     ["&R", parts.right]
   ];
-  return sections.filter(([, text]) => text !== void 0 && text !== "").map(([marker, text]) => marker + (text ?? "")).join("");
+  return sections.filter(([, text2]) => text2 !== void 0 && text2 !== "").map(([marker, text2]) => marker + (text2 ?? "")).join("");
 }
 __name(encodeHeaderFooterSections, "encodeHeaderFooterSections");
 function headerFooterSectionPattern(tag) {
@@ -62707,10 +63199,10 @@ function setHeaderFooter(xml, header, footer) {
   const existing = /<headerFooter\b([^>]*?)(?:\/>|>([\s\S]*?)<\/headerFooter>)/.exec(xml);
   const attributes2 = existing?.[1] ?? "";
   let body = existing?.[2] ?? "";
-  const setSection = /* @__PURE__ */ __name((tag, text) => {
-    if (text === void 0) return;
+  const setSection = /* @__PURE__ */ __name((tag, text2) => {
+    if (text2 === void 0) return;
     const pattern = headerFooterSectionPattern(tag);
-    const element2 = text === "" ? "" : `<${tag}>${text}</${tag}>`;
+    const element2 = text2 === "" ? "" : `<${tag}>${text2}</${tag}>`;
     if (pattern.test(body)) {
       body = body.replace(pattern, () => element2);
       return;
@@ -65105,25 +65597,25 @@ function readHeaderCellText(worksheetXml, address, sharedStrings) {
   const type = readXmlAttribute(attributes2, "t");
   if (type === "e") return { kind: "opaque" };
   if (type === "inlineStr") {
-    const text2 = [...body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((textMatch) => decodeCellText(textMatch[1] ?? "")).join("");
-    return text2 === "" ? { kind: "blank" } : { kind: "text", text: text2, plain: true };
+    const text3 = [...body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((textMatch) => decodeCellText(textMatch[1] ?? "")).join("");
+    return text3 === "" ? { kind: "blank" } : { kind: "text", text: text3, plain: true };
   }
   const rawValue = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body)?.[1];
   if (rawValue === void 0) return { kind: "blank" };
   if (type === "s") {
-    const text2 = sharedStrings[Number(rawValue)] ?? "";
-    return text2 === "" ? { kind: "blank" } : { kind: "text", text: text2, plain: true };
+    const text3 = sharedStrings[Number(rawValue)] ?? "";
+    return text3 === "" ? { kind: "blank" } : { kind: "text", text: text3, plain: true };
   }
   if (type === "b") return { kind: "text", text: rawValue === "1" ? "TRUE" : "FALSE", plain: false };
-  const text = type === "str" ? decodeCellText(rawValue) : decodeXmlText(rawValue);
-  if (text === "") return { kind: "blank" };
-  return { kind: "text", text, plain: type === "str" };
+  const text2 = type === "str" ? decodeCellText(rawValue) : decodeXmlText(rawValue);
+  if (text2 === "") return { kind: "blank" };
+  return { kind: "text", text: text2, plain: type === "str" };
 }
 __name(readHeaderCellText, "readHeaderCellText");
-function writeHeaderCellText(worksheetXml, address, text) {
+function writeHeaderCellText(worksheetXml, address, text2) {
   const pattern = new RegExp(`<c\\b([^>]*)\\br="${address}"([^>]*?)(?:/>|>[\\s\\S]*?</c>)`);
   const match = pattern.exec(worksheetXml);
-  const body = `<is><t xml:space="preserve">${escapeCellText(text)}</t></is>`;
+  const body = `<is><t xml:space="preserve">${escapeCellText(text2)}</t></is>`;
   if (match) {
     const style = readXmlAttribute(`${match[1] ?? ""} ${match[2] ?? ""}`, "s");
     const cell2 = `<c r="${address}"${style === void 0 ? "" : ` s="${style}"`} t="inlineStr">${body}</c>`;
@@ -65131,7 +65623,7 @@ function writeHeaderCellText(worksheetXml, address, text) {
   }
   const rowNumber = address.match(/[1-9][0-9]*$/)?.[0];
   const rowMatch = rowNumber === void 0 ? null : new RegExp(`<row\\b[^>]*\\br="${rowNumber}"[^>]*?(/>|>)`).exec(worksheetXml);
-  if (!rowMatch) return patchCell(worksheetXml, address, { value: text });
+  if (!rowMatch) return patchCell(worksheetXml, address, { value: text2 });
   const cell = `<c r="${address}" t="inlineStr">${body}</c>`;
   const rowStart = rowMatch.index + rowMatch[0].length;
   if (rowMatch[1] === "/>") {
@@ -65139,7 +65631,7 @@ function writeHeaderCellText(worksheetXml, address, text) {
     return worksheetXml.slice(0, rowMatch.index) + `${opened}${cell}</row>` + worksheetXml.slice(rowStart);
   }
   const rowEnd = worksheetXml.indexOf("</row>", rowStart);
-  if (rowEnd === -1) return patchCell(worksheetXml, address, { value: text });
+  if (rowEnd === -1) return patchCell(worksheetXml, address, { value: text2 });
   const column = parseA1Column(address);
   const siblings = worksheetXml.slice(rowStart, rowEnd);
   let insertAt = rowEnd;
@@ -65152,11 +65644,11 @@ function writeHeaderCellText(worksheetXml, address, text) {
   return worksheetXml.slice(0, insertAt) + cell + worksheetXml.slice(insertAt);
 }
 __name(writeHeaderCellText, "writeHeaderCellText");
-function uniqueTableColumnName(text, taken, ownName) {
+function uniqueTableColumnName(text2, taken, ownName) {
   const isFree = /* @__PURE__ */ __name((candidate) => candidate.toLowerCase() === ownName.toLowerCase() || !taken.has(candidate.toLowerCase()), "isFree");
-  if (isFree(text)) return text;
+  if (isFree(text2)) return text2;
   for (let suffix = 2; ; suffix += 1) {
-    const candidate = `${text}${suffix}`;
+    const candidate = `${text2}${suffix}`;
     if (isFree(candidate)) return candidate;
   }
 }
@@ -65738,8 +66230,8 @@ function lettersToColumn2(letters) {
 }
 __name(lettersToColumn2, "lettersToColumn");
 function formulaXml(address, formula) {
-  const text = escapeXmlText9(withFutureFunctionMarkers(formula));
-  return spillsDynamicArray(formula) ? `<f t="array" ref="${address}">${text}</f>` : `<f>${text}</f>`;
+  const text2 = escapeXmlText9(withFutureFunctionMarkers(formula));
+  return spillsDynamicArray(formula) ? `<f t="array" ref="${address}">${text2}</f>` : `<f>${text2}</f>`;
 }
 __name(formulaXml, "formulaXml");
 function serializeCell(address, cell) {
@@ -65772,8 +66264,8 @@ function parseWorksheetCells(worksheetXml, sharedStrings) {
     }
     const type = readXmlAttribute(attributes2, "t");
     if (type === "inlineStr") {
-      const text = [...body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((textMatch) => decodeCellText(textMatch[1] ?? "")).join("");
-      cells[address] = { value: text };
+      const text2 = [...body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((textMatch) => decodeCellText(textMatch[1] ?? "")).join("");
+      cells[address] = { value: text2 };
       continue;
     }
     const rawValue = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body)?.[1];
@@ -65813,8 +66305,8 @@ function escapeCellText(input) {
 }
 __name(escapeCellText, "escapeCellText");
 function decodeCellText(input) {
-  const text = decodeXmlText(input).replace(/\r\n?/g, "\n");
-  return decodeXlsxEscapes(text).replace(/\r\n?/g, "\n");
+  const text2 = decodeXmlText(input).replace(/\r\n?/g, "\n");
+  return decodeXlsxEscapes(text2).replace(/\r\n?/g, "\n");
 }
 __name(decodeCellText, "decodeCellText");
 var XML_NAMED_ENTITIES = {
@@ -65916,8 +66408,8 @@ async function applyXlsxEdits(bytes, ops) {
     ops.map(toCellEdit)
   );
   for (const name of plan.removedEntries) zip.remove(name);
-  for (const [name, text] of plan.replaced) zip.file(name, text);
-  for (const [name, text] of plan.added) zip.file(name, text);
+  for (const [name, text2] of plan.replaced) zip.file(name, text2);
+  for (const [name, text2] of plan.added) zip.file(name, text2);
   for (const [name, data] of plan.addedBinary) zip.file(name, data);
   return zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 }
@@ -66159,27 +66651,27 @@ function opNames() {
   return [...REGISTRY.keys()];
 }
 __name(opNames, "opNames");
-function resolvePart(ctx, op, part) {
-  let slide = ctx.parts.get(part);
+function resolvePart(ctx2, op, part) {
+  let slide = ctx2.parts.get(part);
   if (!slide) {
-    const known = listMasterParts(ctx.opened.archive);
+    const known = listMasterParts(ctx2.opened.archive);
     if (!known.some((p) => p.partPath === part)) {
       throw new GuidedError(
         `op "${op.op}": no master/layout part "${part}". Available: [${known.map((p) => p.partPath).join(", ")}].`
       );
     }
-    const parsed2 = parseMasterPart(ctx.opened.archive, part);
+    const parsed2 = parseMasterPart(ctx2.opened.archive, part);
     if (!parsed2) {
       throw new GuidedError(`op "${op.op}": part "${part}" could not be parsed.`);
     }
     slide = parsed2;
-    ctx.parts.set(part, slide);
+    ctx2.parts.set(part, slide);
   }
-  ctx.touchedParts.add(part);
+  ctx2.touchedParts.add(part);
   return slide;
 }
 __name(resolvePart, "resolvePart");
-function resolveSlide(ctx, op, opts = {}) {
+function resolveSlide(ctx2, op, opts = {}) {
   const part = op.target?.part;
   if (typeof part === "string" && part) {
     if (!opts.allowPart) {
@@ -66187,10 +66679,10 @@ function resolveSlide(ctx, op, opts = {}) {
         `op "${op.op}" cannot target a master/layout part \u2014 address a slide via target.slide.`
       );
     }
-    return { index: -1, slide: resolvePart(ctx, op, part) };
+    return { index: -1, slide: resolvePart(ctx2, op, part) };
   }
   const ref = op.target?.slide;
-  const slides = ctx.opened.deck.slides;
+  const slides = ctx2.opened.deck.slides;
   if (typeof ref === "string") {
     const index2 = slides.findIndex((s) => slideDurableId(s) === ref);
     if (index2 < 0) {
@@ -66214,8 +66706,8 @@ function resolveSlide(ctx, op, opts = {}) {
   return { index: ref, slide };
 }
 __name(resolveSlide, "resolveSlide");
-function resolveElement(ctx, op, opts = {}) {
-  const { index: index2, slide } = resolveSlide(ctx, op, opts);
+function resolveElement(ctx2, op, opts = {}) {
+  const { index: index2, slide } = resolveSlide(ctx2, op, opts);
   const where = op.target?.part ? `part "${op.target.part}"` : `slide ${index2}`;
   const id = op.target?.el;
   if (typeof id !== "string" || !id) {
@@ -66290,12 +66782,12 @@ __name(requireLinkTarget, "requireLinkTarget");
 // vendor/genoffice/packages/pptx-ops/src/ops/core-ops.ts
 register({
   name: "deleteElement",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { allowPart: true });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { allowPart: true });
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op, { allowPart: true });
-    if (!deleteElement(ctx.opened, slide, el.id)) {
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op, { allowPart: true });
+    if (!deleteElement(ctx2.opened, slide, el.id)) {
       throw new GuidedError(`op "deleteElement": element "${el.id}" could not be removed.`);
     }
     return { op, before: { type: el.type } };
@@ -66303,7 +66795,7 @@ register({
 });
 register({
   name: "setFill",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     if (typeof op.fill === "string") {
       if (op.fill !== "none") requireHexColor(op.fill, "setFill", "fill");
     } else if (typeof op.fill === "object" && op.fill !== null) {
@@ -66316,28 +66808,28 @@ register({
       );
     }
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op, { types: ["text", "shape"], allowPart: true });
+    resolveElement(ctx2, op, { types: ["text", "shape"], allowPart: true });
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const fill = op.fill;
     if (op.group) {
-      const { index: index2, slide: slide2 } = resolveSlide(ctx, op);
+      const { index: index2, slide: slide2 } = resolveSlide(ctx2, op);
       const groupId = resolveGroup(op, index2, slide2.elements);
       const id = resolveGroupChildId(slide2, groupId, String(op.target?.el ?? ""));
-      if (!setElementFill(ctx.opened, slide2, id, fill, { groupId })) {
+      if (!setElementFill(ctx2.opened, slide2, id, fill, { groupId })) {
         const found = findGroupChild(slide2, groupId, id);
         const detail = found ? "the child does not support fill" : `no child "${id}" in group "${groupId}"`;
         throw new GuidedError(`op "setFill": ${detail}.`);
       }
       return { op, after: fill };
     }
-    const { slide, el } = resolveElement(ctx, op, { types: ["text", "shape"], allowPart: true });
+    const { slide, el } = resolveElement(ctx2, op, { types: ["text", "shape"], allowPart: true });
     const before = el.fill;
-    if (!setElementFill(ctx.opened, slide, el.id, fill)) {
+    if (!setElementFill(ctx2.opened, slide, el.id, fill)) {
       throw new GuidedError(`op "setFill": element "${el.id}" does not support fill.`);
     }
     return { op, before, after: fill };
@@ -66345,7 +66837,7 @@ register({
 });
 register({
   name: "setStroke",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     if (op.stroke !== null && (typeof op.stroke !== "object" || Array.isArray(op.stroke))) {
       throw new GuidedError(
         'op "setStroke" needs "stroke": a stroke patch object, or null to remove the outline.'
@@ -66365,16 +66857,16 @@ register({
       }
     }
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op, { types: ["text", "shape", "picture"], allowPart: true });
+    resolveElement(ctx2, op, { types: ["text", "shape", "picture"], allowPart: true });
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const patch = op.stroke;
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       const groupId = resolveGroup(op, index2, slide.elements);
       const id = resolveGroupChildId(slide, groupId, String(op.target?.el ?? ""));
       if (!editGroupChildStroke(slide, groupId, id, patch)) {
@@ -66384,7 +66876,7 @@ register({
       }
       return { op, after: patch };
     }
-    const { el } = resolveElement(ctx, op, { types: ["text", "shape", "picture"], allowPart: true });
+    const { el } = resolveElement(ctx2, op, { types: ["text", "shape", "picture"], allowPart: true });
     const te = el;
     const before = te.stroke;
     te.stroke = patch ? strokePatchToModel(patch) : void 0;
@@ -66609,7 +67101,7 @@ function landBulletImage(opened, slide, patch, landed, opName) {
 __name(landBulletImage, "landBulletImage");
 register({
   name: "setText",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     if (!Array.isArray(op.paragraphs)) {
       throw new GuidedError('op "setText" needs "paragraphs": an EditParagraph array.');
     }
@@ -66619,15 +67111,15 @@ register({
       }
     }
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op, { types: ["text", "shape"], allowPart: true });
+    resolveElement(ctx2, op, { types: ["text", "shape"], allowPart: true });
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const paragraphs = op.paragraphs;
-    const { index: index2, slide } = resolveSlide(ctx, op, { allowPart: true });
+    const { index: index2, slide } = resolveSlide(ctx2, op, { allowPart: true });
     if (op.group) {
       const groupId = resolveGroup(op, index2, slide.elements);
       const id = resolveGroupChildId(slide, groupId, String(op.target?.el ?? ""));
@@ -66649,7 +67141,7 @@ register({
       const before2 = plainText(childBody.paragraphs);
       childBody.paragraphs = applyEditParagraphs(childBody.paragraphs, paragraphs);
       if (autoShape2) centerParagraphs(childBody.paragraphs);
-      ensureRunLinkRels(ctx.opened, index2, childBody.paragraphs);
+      ensureRunLinkRels(ctx2.opened, index2, childBody.paragraphs);
       if (!patchGroupChildText(slide, groupId, textChild)) {
         throw new GuidedError(
           `op "setText": the child slice for "${id}" could not be located inside group "${groupId}".`
@@ -66657,13 +67149,13 @@ register({
       }
       const landed2 = /* @__PURE__ */ new Map();
       for (const { index: pi, patch } of collectParagraphFormatPatches(paragraphs)) {
-        const fmt = landBulletImage(ctx.opened, slide, patch, landed2, "setText");
+        const fmt = landBulletImage(ctx2.opened, slide, patch, landed2, "setText");
         setGroupChildParagraphFormat(slide, groupId, id, fmt, [pi]);
       }
-      cleanupSupersededSlideResources(ctx.opened, slide, previousXml2, patchSlideXml(slide));
+      cleanupSupersededSlideResources(ctx2.opened, slide, previousXml2, patchSlideXml(slide));
       return { op, before: before2, after: { levelDirty: false } };
     }
-    const { el } = resolveElement(ctx, op, { types: ["text", "shape"], allowPart: true });
+    const { el } = resolveElement(ctx2, op, { types: ["text", "shape"], allowPart: true });
     const te = el;
     const freshBody = !te.text;
     let autoShape = false;
@@ -66678,24 +67170,24 @@ register({
     const levelDirty = levelsChanged(body.paragraphs, paragraphs);
     body.paragraphs = applyEditParagraphs(body.paragraphs, paragraphs);
     if (autoShape) centerParagraphs(body.paragraphs);
-    if (index2 >= 0) ensureRunLinkRels(ctx.opened, index2, body.paragraphs);
+    if (index2 >= 0) ensureRunLinkRels(ctx2.opened, index2, body.paragraphs);
     te.dirty = true;
     const landed = /* @__PURE__ */ new Map();
     for (const { index: pi, patch } of collectParagraphFormatPatches(paragraphs)) {
-      const fmt = landBulletImage(ctx.opened, slide, patch, landed, "setText");
+      const fmt = landBulletImage(ctx2.opened, slide, patch, landed, "setText");
       setElementParagraphFormat(slide, te.id, fmt, [pi]);
     }
-    cleanupSupersededSlideResources(ctx.opened, slide, previousXml, patchSlideXml(slide));
+    cleanupSupersededSlideResources(ctx2.opened, slide, previousXml, patchSlideXml(slide));
     if (levelDirty && index2 >= 0) {
       te.dirtyPPr = { ...te.dirtyPPr, level: true, indents: true };
-      materializeSlide(ctx.opened, index2);
+      materializeSlide(ctx2.opened, index2);
     }
     return { op, before, after: { levelDirty } };
   }
 });
 register({
   name: "setFont",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     if (typeof op.font !== "object" || op.font === null) {
       throw new GuidedError('op "setFont" needs "font": an ElementFontPatch object.');
     }
@@ -66710,15 +67202,15 @@ register({
       }
     }
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op);
+    resolveElement(ctx2, op);
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const font = op.font;
-    const { index: index2, slide } = resolveSlide(ctx, op);
+    const { index: index2, slide } = resolveSlide(ctx2, op);
     let id = String(op.target?.el ?? "");
     let ok;
     if (op.group) {
@@ -66726,7 +67218,7 @@ register({
       id = resolveGroupChildId(slide, groupId, id);
       ok = setGroupChildFont(slide, groupId, id, font);
     } else {
-      id = resolveElement(ctx, op).el.id;
+      id = resolveElement(ctx2, op).el.id;
       ok = setElementFont(slide, id, font);
     }
     if (!ok) {
@@ -66737,7 +67229,7 @@ register({
 });
 register({
   name: "setParagraphFormat",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     if (typeof op.format !== "object" || op.format === null) {
       throw new GuidedError(
         'op "setParagraphFormat" needs "format": a ParagraphFormatPatch object.'
@@ -66788,16 +67280,16 @@ register({
       throw new GuidedError('op "setParagraphFormat": "format.rtl" must be a boolean.');
     }
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op);
+    resolveElement(ctx2, op);
   },
-  apply(op, ctx) {
-    const { index: index2, slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { index: index2, slide } = resolveSlide(ctx2, op);
     const format = landBulletImage(
-      ctx.opened,
+      ctx2.opened,
       slide,
       op.format,
       /* @__PURE__ */ new Map(),
@@ -66810,7 +67302,7 @@ register({
       id = resolveGroupChildId(slide, groupId, id);
       ok = setGroupChildParagraphFormat(slide, groupId, id, format);
     } else {
-      id = resolveElement(ctx, op).el.id;
+      id = resolveElement(ctx2, op).el.id;
       ok = setElementParagraphFormat(slide, id, format);
     }
     if (!ok) {
@@ -66836,19 +67328,19 @@ function emuRect(op, field = "box") {
 __name(emuRect, "emuRect");
 register({
   name: "setTransform",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     emuRect(op, op.group && op.absBox !== void 0 ? "absBox" : "box");
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op, { allowPart: true });
+    resolveElement(ctx2, op, { allowPart: true });
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const rotDeg = typeof op.rotDeg === "number" ? op.rotDeg : 0;
     if (op.group) {
-      const { index: index2, slide: slide2 } = resolveSlide(ctx, op);
+      const { index: index2, slide: slide2 } = resolveSlide(ctx2, op);
       const groupId = resolveGroup(op, index2, slide2.elements);
       const id = resolveGroupChildId(slide2, groupId, String(op.target?.el ?? ""));
       let box2;
@@ -66881,7 +67373,7 @@ register({
       return { op, after: { ...box2, rotDeg } };
     }
     const box = emuRect(op);
-    const { slide, el } = resolveElement(ctx, op, { allowPart: true });
+    const { slide, el } = resolveElement(ctx2, op, { allowPart: true });
     const before = { ...el.transform.offset, rot: el.transform.rot };
     const isTable = el.type === "table" && op.resizeTableGrid === true;
     if (isTable) resizeTable(slide, el.id, box.cx, box.cy);
@@ -66903,8 +67395,8 @@ register({
 });
 register({
   name: "setConnectorEndpoints",
-  validate(op, ctx) {
-    const { el } = resolveElement(ctx, op);
+  validate(op, ctx2) {
+    const { el } = resolveElement(ctx2, op);
     if (!isConnectorXml(el.anchor.originalXml)) {
       throw new GuidedError(`op "setConnectorEndpoints": element "${el.id}" is not a connector.`);
     }
@@ -66915,8 +67407,8 @@ register({
       }
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     const p1 = op.p1;
     const p2 = op.p2;
     const start = toRef5(
@@ -66958,8 +67450,8 @@ function toRef5(slide, which, v) {
 __name(toRef5, "toRef");
 register({
   name: "flipElements",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (!Array.isArray(op.els) || op.els.length === 0) {
       throw new GuidedError('op "flipElements" needs "els": a non-empty element id array.');
     }
@@ -66967,8 +67459,8 @@ register({
       throw new GuidedError('op "flipElements" needs "axis": "h" or "v".');
     }
   },
-  apply(op, ctx) {
-    const { index: index2, slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { index: index2, slide } = resolveSlide(ctx2, op);
     const ids = op.els.map(String);
     const groupId = op.group ? resolveGroup(op, index2, slide.elements) : void 0;
     const targets = ids.map(
@@ -67009,8 +67501,8 @@ register({
 });
 register({
   name: "setPictureSrcRect",
-  validate(op, ctx) {
-    resolveElement(ctx, op);
+  validate(op, ctx2) {
+    resolveElement(ctx2, op);
     if (op.srcRect !== null) {
       if (typeof op.srcRect !== "object" || op.srcRect === void 0) {
         throw new GuidedError(
@@ -67036,8 +67528,8 @@ register({
     }
     if (op.box !== void 0) emuRect(op);
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     const raw = op.srcRect;
     const rect = raw && { l: raw.l ?? 0, t: raw.t ?? 0, r: raw.r ?? 0, b: raw.b ?? 0 };
     if (!editPictureSrcRect(slide, el.id, rect)) {
@@ -67056,12 +67548,12 @@ register({
 });
 register({
   name: "setPictureOpacity",
-  validate(op, ctx) {
-    resolveElement(ctx, op);
+  validate(op, ctx2) {
+    resolveElement(ctx2, op);
     requireFinite(op.opacity, "setPictureOpacity", "opacity");
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     if (!setPictureOpacity(slide, el.id, op.opacity)) {
       throw new GuidedError(`op "setPictureOpacity": element "${el.id}" is not a picture.`);
     }
@@ -67070,14 +67562,14 @@ register({
 });
 register({
   name: "reorderElement",
-  validate(op, ctx) {
-    resolveElement(ctx, op);
+  validate(op, ctx2) {
+    resolveElement(ctx2, op);
     if (!["front", "back", "forward", "backward"].includes(String(op.dir))) {
       throw new GuidedError('op "reorderElement" needs "dir": front/back/forward/backward.');
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     if (!reorderElement(slide, el.id, op.dir)) {
       throw new GuidedError(`op "reorderElement": element "${el.id}" is already at that extreme.`);
     }
@@ -67086,15 +67578,15 @@ register({
 });
 register({
   name: "groupElements",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (!Array.isArray(op.els) || op.els.length < 2) {
       throw new GuidedError('op "groupElements" needs "els": at least two element ids.');
     }
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const r = groupElements(ctx.opened, index2, op.els.map(String));
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const r = groupElements(ctx2.opened, index2, op.els.map(String));
     if (!r) {
       throw new GuidedError(
         `op "groupElements": the elements could not be grouped (check the ids exist and are groupable).`
@@ -67105,12 +67597,12 @@ register({
 });
 register({
   name: "ungroupElement",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["group"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["group"] });
   },
-  apply(op, ctx) {
-    const { index: index2, el } = resolveElement(ctx, op, { types: ["group"] });
-    if (!ungroupElement(ctx.opened, index2, el.id)) {
+  apply(op, ctx2) {
+    const { index: index2, el } = resolveElement(ctx2, op, { types: ["group"] });
+    if (!ungroupElement(ctx2.opened, index2, el.id)) {
       throw new GuidedError(`op "ungroupElement": group "${el.id}" could not be dissolved.`);
     }
     return { op, before: { group: el.id } };
@@ -67118,20 +67610,20 @@ register({
 });
 register({
   name: "setShapeGeometry",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     if (typeof op.prst !== "string" || !op.prst) {
       throw new GuidedError('op "setShapeGeometry" needs "prst": an OOXML preset geometry name.');
     }
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op);
+    resolveElement(ctx2, op);
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     if (op.group) {
-      const { index: index2, slide: slide2 } = resolveSlide(ctx, op);
+      const { index: index2, slide: slide2 } = resolveSlide(ctx2, op);
       const groupId = resolveGroup(op, index2, slide2.elements);
       const id = resolveGroupChildId(slide2, groupId, String(op.target?.el ?? ""));
       if (!setGroupChildShapePresetGeometry(slide2, groupId, id, String(op.prst))) {
@@ -67141,7 +67633,7 @@ register({
       }
       return { op, after: op.prst };
     }
-    const { slide, el } = resolveElement(ctx, op);
+    const { slide, el } = resolveElement(ctx2, op);
     if (!setShapePresetGeometry(slide, el.id, String(op.prst))) {
       throw new GuidedError(`op "setShapeGeometry": element "${el.id}" has no preset geometry.`);
     }
@@ -67150,7 +67642,7 @@ register({
 });
 register({
   name: "setShapeAdjust",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     const adjust = op.adjust;
     if (!adjust || typeof adjust !== "object" || Array.isArray(adjust) || Object.keys(adjust).length === 0 || Object.values(adjust).some((v) => typeof v !== "number" || !Number.isFinite(v))) {
       throw new GuidedError(
@@ -67158,16 +67650,16 @@ register({
       );
     }
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op);
+    resolveElement(ctx2, op);
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const adjust = op.adjust;
     if (op.group) {
-      const { index: index2, slide: slide2 } = resolveSlide(ctx, op);
+      const { index: index2, slide: slide2 } = resolveSlide(ctx2, op);
       const groupId = resolveGroup(op, index2, slide2.elements);
       const id = resolveGroupChildId(slide2, groupId, String(op.target?.el ?? ""));
       if (!setGroupChildShapeAdjustValues(slide2, groupId, id, adjust)) {
@@ -67177,7 +67669,7 @@ register({
       }
       return { op, after: adjust };
     }
-    const { slide, el } = resolveElement(ctx, op);
+    const { slide, el } = resolveElement(ctx2, op);
     if (!setShapeAdjustValues(slide, el.id, adjust)) {
       throw new GuidedError(`op "setShapeAdjust": element "${el.id}" has no preset geometry.`);
     }
@@ -67186,14 +67678,14 @@ register({
 });
 register({
   name: "setTextAnchor",
-  validate(op, ctx) {
-    resolveElement(ctx, op);
+  validate(op, ctx2) {
+    resolveElement(ctx2, op);
     if (!["top", "middle", "bottom"].includes(String(op.anchor))) {
       throw new GuidedError('op "setTextAnchor" needs "anchor": top/middle/bottom.');
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     if (!setElementTextAnchor(slide, el.id, op.anchor)) {
       throw new GuidedError(`op "setTextAnchor": element "${el.id}" has no text body.`);
     }
@@ -67202,8 +67694,8 @@ register({
 });
 register({
   name: "setTextBodyProps",
-  validate(op, ctx) {
-    resolveElement(ctx, op);
+  validate(op, ctx2) {
+    resolveElement(ctx2, op);
     const props = op.props;
     if (!props || !props.vert && !props.autofit && !props.insets && props.wrap === void 0) {
       throw new GuidedError(
@@ -67219,8 +67711,8 @@ register({
       throw new GuidedError('op "setTextBodyProps": "autofit" must be none/shrink/resize.');
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     if (!setElementTextBodyProps(slide, el.id, op.props)) {
       throw new GuidedError(`op "setTextBodyProps": element "${el.id}" has no text body.`);
     }
@@ -67229,8 +67721,8 @@ register({
 });
 register({
   name: "setEffects",
-  validate(op, ctx) {
-    resolveElement(ctx, op);
+  validate(op, ctx2) {
+    resolveElement(ctx2, op);
     const p = op.effects;
     if (!p || p.shadow === void 0 && p.glow === void 0 && p.reflection === void 0 && p.softEdge === void 0) {
       throw new GuidedError(
@@ -67238,8 +67730,8 @@ register({
       );
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     if (!setElementEffects(slide, el.id, op.effects)) {
       throw new GuidedError(`op "setEffects": element "${el.id}" does not support effects.`);
     }
@@ -67248,13 +67740,13 @@ register({
 });
 register({
   name: "setLink",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     requireLinkTarget("setLink", op.link);
-    resolveElement(ctx, op);
+    resolveElement(ctx2, op);
   },
-  apply(op, ctx) {
-    const { index: index2, el } = resolveElement(ctx, op);
-    if (!setElementLink(ctx.opened, index2, el.id, op.link)) {
+  apply(op, ctx2) {
+    const { index: index2, el } = resolveElement(ctx2, op);
+    if (!setElementLink(ctx2.opened, index2, el.id, op.link)) {
       throw new GuidedError(`op "setLink": element "${el.id}" does not accept links.`);
     }
     return { op, after: op.link };
@@ -67262,7 +67754,7 @@ register({
 });
 register({
   name: "setImageFill",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     const source = op.source;
     if (!source || !source.bytes && !source.mediaPath) {
       throw new GuidedError(
@@ -67280,19 +67772,19 @@ register({
       }
     }
     if (op.group) {
-      const { index: index2, slide } = resolveSlide(ctx, op);
+      const { index: index2, slide } = resolveSlide(ctx2, op);
       resolveGroup(op, index2, slide.elements);
       return;
     }
-    resolveElement(ctx, op);
+    resolveElement(ctx2, op);
   },
-  apply(op, ctx) {
-    const { index: index2, slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { index: index2, slide } = resolveSlide(ctx2, op);
     const groupId = op.group ? resolveGroup(op, index2, slide.elements) : void 0;
     const rawId = String(op.target?.el ?? "");
-    const id = groupId ? resolveGroupChildId(slide, groupId, rawId) : resolveElement(ctx, op).el.id;
+    const id = groupId ? resolveGroupChildId(slide, groupId, rawId) : resolveElement(ctx2, op).el.id;
     const used = setElementImageFill(
-      ctx.opened,
+      ctx2.opened,
       slide,
       id,
       op.source,
@@ -67334,8 +67826,8 @@ function fillExtFromDataUrl(op, field = "bytes") {
 __name(fillExtFromDataUrl, "fillExtFromDataUrl");
 register({
   name: "addElement",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     reqRect(op);
     if (typeof op.kind !== "string" || !op.kind) {
       throw new GuidedError('op "addElement" needs "kind": "textbox" or a preset geometry name.');
@@ -67354,8 +67846,8 @@ register({
       );
     }
   },
-  apply(op, ctx) {
-    const { slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { slide } = resolveSlide(ctx2, op);
     const el = addElement(slide, {
       kind: String(op.kind),
       offset: reqRect(op),
@@ -67370,8 +67862,8 @@ register({
 });
 register({
   name: "addPicture",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     reqRect(op);
     fillExtFromDataUrl(op);
     reqBytes(op);
@@ -67379,9 +67871,9 @@ register({
       throw new GuidedError('op "addPicture" needs "ext": the image extension (png/jpg/\u2026).');
     }
   },
-  apply(op, ctx) {
-    const { slide } = resolveSlide(ctx, op);
-    const el = addPicture(ctx.opened, slide, {
+  apply(op, ctx2) {
+    const { slide } = resolveSlide(ctx2, op);
+    const el = addPicture(ctx2.opened, slide, {
       bytes: reqBytes(op),
       ext: String(op.ext),
       offset: reqRect(op),
@@ -67398,18 +67890,18 @@ register({
 });
 register({
   name: "replacePicture",
-  validate(op, ctx) {
-    resolveElement(ctx, op);
+  validate(op, ctx2) {
+    resolveElement(ctx2, op);
     fillExtFromDataUrl(op);
     reqBytes(op);
     if (typeof op.ext !== "string" || !op.ext) {
       throw new GuidedError('op "replacePicture" needs "ext": the image extension.');
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     const ok = replacePictureBytes(
-      ctx.opened,
+      ctx2.opened,
       slide,
       el.id,
       reqBytes(op),
@@ -67426,8 +67918,8 @@ register({
 });
 register({
   name: "addTable",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     reqRect(op);
     if (typeof op.rows !== "number" || typeof op.cols !== "number" || op.rows < 1 || op.cols < 1) {
       throw new GuidedError('op "addTable" needs "rows" and "cols" (>= 1).');
@@ -67449,9 +67941,9 @@ register({
       );
     }
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const r = addTable(ctx.opened, index2, {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const r = addTable(ctx2.opened, index2, {
       rows: op.rows,
       cols: op.cols,
       offset: reqRect(op),
@@ -67465,8 +67957,8 @@ register({
 });
 register({
   name: "addChart",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     reqRect(op);
     if (typeof op.kind !== "string") throw new GuidedError('op "addChart" needs "kind".');
     if (!Array.isArray(op.categories) || op.categories.length === 0) {
@@ -67487,9 +67979,9 @@ register({
       requireFinite(op.holeSizePct, "addChart", "holeSizePct");
     }
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const r = addChart(ctx.opened, index2, {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const r = addChart(ctx2.opened, index2, {
       kind: op.kind,
       ...op.barDir ? { barDir: op.barDir } : {},
       ...typeof op.title === "string" && op.title ? { title: op.title } : {},
@@ -67505,16 +67997,16 @@ register({
 });
 register({
   name: "addSmartArt",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     reqRect(op);
     if (typeof op.layout !== "string" || !Array.isArray(op.items)) {
       throw new GuidedError('op "addSmartArt" needs "layout" and "items".');
     }
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const r = addSmartArt(ctx.opened, index2, {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const r = addSmartArt(ctx2.opened, index2, {
       layout: op.layout,
       items: op.items,
       offset: reqRect(op)
@@ -67525,8 +68017,8 @@ register({
 });
 register({
   name: "addMedia",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     reqRect(op);
     fillExtFromDataUrl(op);
     reqBytes(op);
@@ -67546,9 +68038,9 @@ register({
       }
     }
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const added = addMedia(ctx.opened, index2, {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const added = addMedia(ctx2.opened, index2, {
       kind: op.kind,
       bytes: reqBytes(op),
       ext: String(op.ext),
@@ -67562,15 +68054,15 @@ register({
 });
 register({
   name: "addModel3d",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     reqRect(op);
     reqBytes(op);
     if (typeof op.ext !== "string" || !op.ext) throw new GuidedError('op "addModel3d" needs "ext".');
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const added = addModel3d(ctx.opened, index2, {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const added = addModel3d(ctx2.opened, index2, {
       bytes: reqBytes(op),
       ext: String(op.ext),
       ...op.poster ? { poster: op.poster } : {},
@@ -67583,8 +68075,8 @@ register({
 });
 register({
   name: "pasteElements",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (!Array.isArray(op.items) || op.items.length === 0) {
       throw new GuidedError('op "pasteElements" needs "items": copied element data.');
     }
@@ -67592,9 +68084,9 @@ register({
       throw new GuidedError('op "pasteElements" needs "dx"/"dy" (EMU offsets).');
     }
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const r = pasteElements(ctx.opened, index2, op.items, {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const r = pasteElements(ctx2.opened, index2, op.items, {
       dx: op.dx,
       dy: op.dy
     });
@@ -67606,14 +68098,14 @@ register({
 // vendor/genoffice/packages/pptx-ops/src/ops/table-ops.ts
 register({
   name: "setTableCell",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["table"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["table"] });
     if (typeof op.row !== "number" || typeof op.col !== "number" || !Array.isArray(op.paragraphs)) {
       throw new GuidedError('op "setTableCell" needs "row", "col" and "paragraphs".');
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op, { types: ["table"] });
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op, { types: ["table"] });
     const row = op.row;
     const col = op.col;
     const cell = el.rows[row]?.[col];
@@ -67635,15 +68127,15 @@ register({
 });
 register({
   name: "tableMerge",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["table"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["table"] });
     if (typeof op.kind !== "string" || typeof op.row !== "number" || typeof op.col !== "number") {
       throw new GuidedError('op "tableMerge" needs "kind", "row" and "col".');
     }
   },
-  apply(op, ctx) {
-    const { index: index2, el } = resolveElement(ctx, op, { types: ["table"] });
-    const r = mergeTableCells(ctx.opened, index2, el.id, {
+  apply(op, ctx2) {
+    const { index: index2, el } = resolveElement(ctx2, op, { types: ["table"] });
+    const r = mergeTableCells(ctx2.opened, index2, el.id, {
       kind: op.kind,
       row: op.row,
       col: op.col
@@ -67658,15 +68150,15 @@ register({
 });
 register({
   name: "tableStructure",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["table"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["table"] });
     if (typeof op.kind !== "string" || typeof op.index !== "number") {
       throw new GuidedError('op "tableStructure" needs "kind" and "index".');
     }
   },
-  apply(op, ctx) {
-    const { index: index2, el } = resolveElement(ctx, op, { types: ["table"] });
-    const r = editTableStructure(ctx.opened, index2, el.id, {
+  apply(op, ctx2) {
+    const { index: index2, el } = resolveElement(ctx2, op, { types: ["table"] });
+    const r = editTableStructure(ctx2.opened, index2, el.id, {
       kind: op.kind,
       index: op.index,
       ...op.before ? { before: true } : {}
@@ -67681,14 +68173,14 @@ register({
 });
 register({
   name: "setTableRowHeight",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["table"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["table"] });
     if (typeof op.row !== "number" || typeof op.hEmu !== "number") {
       throw new GuidedError('op "setTableRowHeight" needs "row" and "hEmu".');
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op, { types: ["table"] });
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op, { types: ["table"] });
     if (!setTableRowHeight(slide, el.id, op.row, op.hEmu)) {
       throw new GuidedError(`op "setTableRowHeight": row ${op.row} does not exist on "${el.id}".`);
     }
@@ -67697,8 +68189,8 @@ register({
 });
 register({
   name: "setTableCellAnchor",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["table"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["table"] });
     if (typeof op.row !== "number" || typeof op.col !== "number") {
       throw new GuidedError('op "setTableCellAnchor" needs "row" and "col".');
     }
@@ -67706,8 +68198,8 @@ register({
       throw new GuidedError('op "setTableCellAnchor" needs "anchor": top/middle/bottom.');
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op, { types: ["table"] });
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op, { types: ["table"] });
     if (!setTableCellAnchor(
       slide,
       el.id,
@@ -67724,14 +68216,14 @@ register({
 });
 register({
   name: "setTableColWidth",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["table"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["table"] });
     if (typeof op.col !== "number" || typeof op.wEmu !== "number") {
       throw new GuidedError('op "setTableColWidth" needs "col" and "wEmu".');
     }
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op, { types: ["table"] });
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op, { types: ["table"] });
     if (!setTableColWidth(slide, el.id, op.col, op.wEmu)) {
       throw new GuidedError(`op "setTableColWidth": column ${op.col} does not exist on "${el.id}".`);
     }
@@ -67833,14 +68325,14 @@ function resolveTableStyle2(op) {
 __name(resolveTableStyle2, "resolveTableStyle");
 register({
   name: "setTableStyle",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["table"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["table"] });
     resolveTableStyle2(op);
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op, { types: ["table"] });
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op, { types: ["table"] });
     const { edit, stylePart } = resolveTableStyle2(op);
-    if (stylePart) ensureTableStylePart(ctx.opened, stylePart.styleId, stylePart.styleDefXml);
+    if (stylePart) ensureTableStylePart(ctx2.opened, stylePart.styleId, stylePart.styleDefXml);
     if (!editTableStyle(slide, el.id, edit)) {
       throw new GuidedError(`op "setTableStyle": table "${el.id}" rejected the style edit.`);
     }
@@ -67849,17 +68341,17 @@ register({
 });
 register({
   name: "setChart",
-  validate(op, ctx) {
-    resolveElement(ctx, op, { types: ["chart"] });
+  validate(op, ctx2) {
+    resolveElement(ctx2, op, { types: ["chart"] });
     if (typeof op.patch !== "object" || op.patch === null) {
       throw new GuidedError('op "setChart" needs "patch": a chart edit object.');
     }
   },
-  apply(op, ctx) {
-    const { index: index2, slide, el } = resolveElement(ctx, op, { types: ["chart"] });
+  apply(op, ctx2) {
+    const { index: index2, slide, el } = resolveElement(ctx2, op, { types: ["chart"] });
     markChartEditable(slide, el.id);
     if (!editChartElement(
-      ctx.opened,
+      ctx2.opened,
       index2,
       el.id,
       op.patch
@@ -67873,12 +68365,12 @@ register({
 // vendor/genoffice/packages/pptx-ops/src/ops/slide-ops.ts
 register({
   name: "deleteSlide",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    if (!deleteSlide(ctx.opened, index2)) {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    if (!deleteSlide(ctx2.opened, index2)) {
       throw new GuidedError(`op "deleteSlide": slide ${index2} could not be removed.`);
     }
     return { op, before: { index: index2 } };
@@ -67886,12 +68378,12 @@ register({
 });
 register({
   name: "duplicateSlide",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const slide = duplicateSlide(ctx.opened, index2, { clearText: op.clearText === true });
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const slide = duplicateSlide(ctx2.opened, index2, { clearText: op.clearText === true });
     if (!slide)
       throw new GuidedError(`op "duplicateSlide": slide ${index2} could not be duplicated.`);
     return { op, after: { index: index2 + 1 } };
@@ -67899,12 +68391,12 @@ register({
 });
 register({
   name: "addBlankSlide",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    if (!insertBlankSlide(ctx.opened, index2)) {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    if (!insertBlankSlide(ctx2.opened, index2)) {
       throw new GuidedError(
         `op "addBlankSlide": a blank slide could not be inserted after ${index2}.`
       );
@@ -67912,8 +68404,8 @@ register({
     return { op, after: { index: index2 + 1 } };
   }
 });
-function resolveLayoutPath(op, ctx) {
-  const layouts = listSlideLayouts(ctx.opened.archive);
+function resolveLayoutPath(op, ctx2) {
+  const layouts = listSlideLayouts(ctx2.opened.archive);
   const ref = op.layout ?? op.layoutPath;
   const available = /* @__PURE__ */ __name(() => layouts.map((l, i) => `${i}: "${l.name}"`).join(", "), "available");
   if (typeof ref === "number") {
@@ -67945,14 +68437,14 @@ function resolveLayoutPath(op, ctx) {
 __name(resolveLayoutPath, "resolveLayoutPath");
 register({
   name: "addSlideWithLayout",
-  validate(op, ctx) {
-    if (op.target?.slide !== void 0) resolveSlide(ctx, op);
-    resolveLayoutPath(op, ctx);
+  validate(op, ctx2) {
+    if (op.target?.slide !== void 0) resolveSlide(ctx2, op);
+    resolveLayoutPath(op, ctx2);
   },
-  apply(op, ctx) {
-    const index2 = op.target?.slide !== void 0 ? resolveSlide(ctx, op).index : ctx.opened.deck.slides.length - 1;
-    const layoutPath = resolveLayoutPath(op, ctx);
-    const slide = insertSlideWithLayout(ctx.opened, index2, layoutPath);
+  apply(op, ctx2) {
+    const index2 = op.target?.slide !== void 0 ? resolveSlide(ctx2, op).index : ctx2.opened.deck.slides.length - 1;
+    const layoutPath = resolveLayoutPath(op, ctx2);
+    const slide = insertSlideWithLayout(ctx2.opened, index2, layoutPath);
     if (!slide) {
       throw new GuidedError(`op "addSlideWithLayout": layout "${layoutPath}" could not be applied.`);
     }
@@ -67979,14 +68471,14 @@ register({
       throw new GuidedError('op "pasteSlide" needs "bundle": a copied slide bundle.');
     }
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const afterIndex = op.afterIndex;
     if (op.mode === "picture") {
-      const { deck } = ctx.opened;
+      const { deck } = ctx2.opened;
       const anchorIndex = Math.min(Math.max(afterIndex, 0), deck.slides.length - 1);
       const slide2 = deck.slides[anchorIndex];
       if (!slide2) throw new GuidedError('op "pasteSlide": no anchor slide for the bitmap.');
-      const el = addPicture(ctx.opened, slide2, {
+      const el = addPicture(ctx2.opened, slide2, {
         bytes: new Uint8Array(Buffer.from(String(op.png), "base64")),
         ext: "png",
         offset: { x: 0, y: 0, cx: deck.size.cx, cy: deck.size.cy }
@@ -67995,7 +68487,7 @@ register({
       return { op, created: [el.id], after: { index: anchorIndex } };
     }
     const slide = pasteSlide(
-      ctx.opened,
+      ctx2.opened,
       afterIndex,
       op.bundle,
       {
@@ -68003,12 +68495,12 @@ register({
       }
     );
     if (!slide) throw new GuidedError('op "pasteSlide": the copied slide could not be pasted.');
-    return { op, after: { index: ctx.opened.deck.slides.indexOf(slide) } };
+    return { op, after: { index: ctx2.opened.deck.slides.indexOf(slide) } };
   }
 });
 register({
   name: "insertSlidePptx",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     const source = op.source;
     if (typeof source !== "object" || source === null || typeof source.slideXml !== "string") {
       throw new GuidedError(
@@ -68022,7 +68514,7 @@ register({
         );
       }
     }
-    const total = ctx.opened.deck.slides.length;
+    const total = ctx2.opened.deck.slides.length;
     const at = op.at;
     if (at != null && (typeof at !== "number" || !Number.isInteger(at) || at < 0 || at > total)) {
       throw new GuidedError(`op "insertSlidePptx": "at" is out of range (0-${total}).`);
@@ -68033,8 +68525,8 @@ register({
       );
     }
   },
-  apply(op, ctx) {
-    const opened = ctx.opened;
+  apply(op, ctx2) {
+    const opened = ctx2.opened;
     const total = opened.deck.slides.length;
     const slide = mergeSlideFromSource(
       opened,
@@ -68054,14 +68546,14 @@ register({
 });
 register({
   name: "moveSlide",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (typeof op.to !== "number")
       throw new GuidedError('op "moveSlide" needs "to": a slide index.');
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    if (!moveSlide(ctx.opened, index2, op.to)) {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    if (!moveSlide(ctx2.opened, index2, op.to)) {
       throw new GuidedError(`op "moveSlide": cannot move slide ${index2} to ${op.to}.`);
     }
     return { op, before: { index: index2 }, after: { index: op.to } };
@@ -68069,14 +68561,14 @@ register({
 });
 register({
   name: "setSlideLayout",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
-    if (op.layout != null || op.layoutPath != null) resolveLayoutPath(op, ctx);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
+    if (op.layout != null || op.layoutPath != null) resolveLayoutPath(op, ctx2);
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const layoutPath = op.layout != null || op.layoutPath != null ? resolveLayoutPath(op, ctx) : null;
-    const ok = layoutPath ? setSlideLayout(ctx.opened, index2, layoutPath) : resetSlideLayout(ctx.opened, index2);
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const layoutPath = op.layout != null || op.layoutPath != null ? resolveLayoutPath(op, ctx2) : null;
+    const ok = layoutPath ? setSlideLayout(ctx2.opened, index2, layoutPath) : resetSlideLayout(ctx2.opened, index2);
     if (!ok) {
       throw new GuidedError(
         `op "setSlideLayout": layout ${layoutPath ? `"${layoutPath}"` : "(reset)"} could not be applied to slide ${index2}.`
@@ -68092,16 +68584,16 @@ register({
       throw new GuidedError('op "setSlideSize" needs "cx"/"cy" (EMU).');
     }
   },
-  apply(op, ctx) {
-    const before = { ...ctx.opened.deck.size };
-    if (!setSlideSize(ctx.opened, op.cx, op.cy)) {
+  apply(op, ctx2) {
+    const before = { ...ctx2.opened.deck.size };
+    if (!setSlideSize(ctx2.opened, op.cx, op.cy)) {
       throw new GuidedError('op "setSlideSize": the deck size could not be changed.');
     }
     return { op, before, after: { cx: op.cx, cy: op.cy } };
   }
 });
-function repaintFullBleedBackdrops(ctx, slide, fill) {
-  const size = ctx.opened.deck.size;
+function repaintFullBleedBackdrops(ctx2, slide, fill) {
+  const size = ctx2.opened.deck.size;
   for (const raw of slide.elements) {
     const el = raw;
     if (el.type !== "shape" && el.type !== "text") continue;
@@ -68119,8 +68611,8 @@ function repaintFullBleedBackdrops(ctx, slide, fill) {
 __name(repaintFullBleedBackdrops, "repaintFullBleedBackdrops");
 register({
   name: "setBackground",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     const kind = op.kind;
     if (kind === "solid") {
       requireHexColor(op.color, "setBackground", "color");
@@ -68149,11 +68641,11 @@ register({
       throw new GuidedError('op "setBackground" needs "kind": solid/gradient/image/reset/graphics.');
     }
   },
-  apply(op, ctx) {
-    const { slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { slide } = resolveSlide(ctx2, op);
     if (op.kind === "solid") {
-      setSlideBackground(ctx.opened, slide, String(op.color));
-      repaintFullBleedBackdrops(ctx, slide, { type: "solid", color: String(op.color) });
+      setSlideBackground(ctx2.opened, slide, String(op.color));
+      repaintFullBleedBackdrops(ctx2, slide, { type: "solid", color: String(op.color) });
       return { op, after: { kind: "solid" } };
     }
     if (op.kind === "gradient") {
@@ -68162,11 +68654,11 @@ register({
         { pos: 1, color: String(op.to) }
       ];
       const angle = Math.round((op.angleDeg ?? 0) * 6e4);
-      setSlideBackground(ctx.opened, slide, {
+      setSlideBackground(ctx2.opened, slide, {
         stops,
         ...op.radial ? { radial: true } : { angle }
       });
-      repaintFullBleedBackdrops(ctx, slide, {
+      repaintFullBleedBackdrops(ctx2, slide, {
         type: "gradient",
         stops,
         ...op.radial ? { path: "circle" } : { angle }
@@ -68175,70 +68667,70 @@ register({
     }
     if (op.kind === "image") {
       const used = setSlideBackgroundImage(
-        ctx.opened,
+        ctx2.opened,
         slide,
         op.source,
         op.tile === true
       );
       if (!used) throw new GuidedError('op "setBackground": the image could not be landed.');
-      repaintFullBleedBackdrops(ctx, slide, { type: "none" });
+      repaintFullBleedBackdrops(ctx2, slide, { type: "none" });
       return { op, after: { kind: "image", mediaPath: used } };
     }
     if (op.kind === "reset") {
-      resetSlideBackground(ctx.opened, slide);
+      resetSlideBackground(ctx2.opened, slide);
       return { op, after: { kind: "reset" } };
     }
-    setSlideBgGraphicsHidden(ctx.opened, slide, op.hidden === true);
+    setSlideBgGraphicsHidden(ctx2.opened, slide, op.hidden === true);
     return { op, after: { kind: "graphics", hidden: op.hidden === true } };
   }
 });
 register({
   name: "setHidden",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
   },
-  apply(op, ctx) {
-    const { slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { slide } = resolveSlide(ctx2, op);
     setSlideHidden(slide, op.hidden === true);
     return { op, after: op.hidden === true };
   }
 });
 register({
   name: "setTransition",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (!TRANSITION_KINDS.includes(op.kind)) {
       throw new GuidedError(
         `op "setTransition" needs "kind": one of [${TRANSITION_KINDS.join(", ")}].`
       );
     }
   },
-  apply(op, ctx) {
-    const { slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { slide } = resolveSlide(ctx2, op);
     setSlideTransition(slide, op.kind);
     return { op, after: op.kind };
   }
 });
 register({
   name: "setAdvanceTime",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (op.ms !== null && (typeof op.ms !== "number" || !Number.isFinite(op.ms) || op.ms < 0)) {
       throw new GuidedError(
         'op "setAdvanceTime" needs "ms": non-negative milliseconds, or null to clear.'
       );
     }
   },
-  apply(op, ctx) {
-    const { slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { slide } = resolveSlide(ctx2, op);
     setSlideAdvanceTime(slide, op.ms == null ? null : Math.round(op.ms));
     return { op, after: op.ms };
   }
 });
 register({
   name: "setAnimations",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (!Array.isArray(op.items)) throw new GuidedError('op "setAnimations" needs "items".');
     for (const [i, raw] of op.items.entries()) {
       if (typeof raw?.sourceId !== "string" || !raw.sourceId) {
@@ -68261,8 +68753,8 @@ register({
       }
     }
   },
-  apply(op, ctx) {
-    const { slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { slide } = resolveSlide(ctx2, op);
     const anims = [];
     const unresolved = [];
     for (const raw of op.items) {
@@ -68301,8 +68793,8 @@ register({
     }
     if (typeof op.replace !== "string") throw new GuidedError('op "findReplace" needs "replace".');
   },
-  apply(op, ctx) {
-    const { count } = replaceAllInDeck(ctx.opened.deck, String(op.find), String(op.replace), {
+  apply(op, ctx2) {
+    const { count } = replaceAllInDeck(ctx2.opened.deck, String(op.find), String(op.replace), {
       matchCase: op.matchCase,
       firstOnly: op.firstOnly,
       slideIndex: op.slideIndex,
@@ -68321,8 +68813,8 @@ register({
       throw new GuidedError('op "applyHeaderFooter" needs "settings".');
     }
   },
-  apply(op, ctx) {
-    if (!applyHeaderFooter(ctx.opened, op.settings)) {
+  apply(op, ctx2) {
+    if (!applyHeaderFooter(ctx2.opened, op.settings)) {
       throw new GuidedError('op "applyHeaderFooter": nothing changed (same settings as before).');
     }
     return { op, after: op.settings };
@@ -68333,16 +68825,16 @@ var sectionOp = /* @__PURE__ */ __name((name, applyFn, needs) => register({
   validate(op) {
     needs?.(op);
   },
-  apply(op, ctx) {
-    const r = applyFn(op, ctx);
+  apply(op, ctx2) {
+    const r = applyFn(op, ctx2);
     if (!r) throw new GuidedError(`op "${name}": the section change was rejected.`);
     return { op, after: r };
   }
 }), "sectionOp");
 sectionOp(
   "setSections",
-  (op, ctx) => {
-    setSections(ctx.opened, op.sections);
+  (op, ctx2) => {
+    setSections(ctx2.opened, op.sections);
     return true;
   },
   (op) => {
@@ -68351,29 +68843,29 @@ sectionOp(
 );
 sectionOp(
   "addSection",
-  (op, ctx) => addSection(ctx.opened, op.atSlideIndex, op.name)
+  (op, ctx2) => addSection(ctx2.opened, op.atSlideIndex, op.name)
 );
 sectionOp(
   "renameSection",
-  (op, ctx) => renameSection(ctx.opened, op.id, op.name)
+  (op, ctx2) => renameSection(ctx2.opened, op.id, op.name)
 );
 sectionOp(
   "removeSection",
-  (op, ctx) => removeSection(ctx.opened, op.id, { keepSlides: true })
+  (op, ctx2) => removeSection(ctx2.opened, op.id, { keepSlides: true })
 );
 sectionOp(
   "moveSection",
-  (op, ctx) => moveSection(ctx.opened, op.id, op.dir)
+  (op, ctx2) => moveSection(ctx2.opened, op.id, op.dir)
 );
 register({
   name: "setNotes",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (typeof op.text !== "string") throw new GuidedError('op "setNotes" needs "text".');
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    if (!setSlideNotes(ctx.opened, index2, String(op.text))) {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    if (!setSlideNotes(ctx2.opened, index2, String(op.text))) {
       throw new GuidedError(`op "setNotes": notes for slide ${index2} could not be written.`);
     }
     return { op, after: op.text };
@@ -68381,16 +68873,16 @@ register({
 });
 register({
   name: "addComment",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (typeof op.text !== "string" || !op.text)
       throw new GuidedError('op "addComment" needs "text".');
     if (typeof op.author !== "string" || !op.author)
       throw new GuidedError('op "addComment" needs "author".');
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    const added = addSlideComment(ctx.opened, index2, {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    const added = addSlideComment(ctx2.opened, index2, {
       author: String(op.author),
       text: String(op.text)
     });
@@ -68401,15 +68893,15 @@ register({
 });
 register({
   name: "deleteComment",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     if (typeof op.authorId !== "number" || typeof op.idx !== "number") {
       throw new GuidedError('op "deleteComment" needs "authorId" and "idx".');
     }
   },
-  apply(op, ctx) {
-    const { index: index2 } = resolveSlide(ctx, op);
-    if (!deleteSlideComment(ctx.opened, index2, {
+  apply(op, ctx2) {
+    const { index: index2 } = resolveSlide(ctx2, op);
+    if (!deleteSlideComment(ctx2.opened, index2, {
       authorId: op.authorId,
       idx: op.idx
     })) {
@@ -68438,26 +68930,26 @@ register({
       }
     }
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const spec = {
       name: op.name,
       colors: op.colors,
       ...typeof op.majorFont === "string" && op.majorFont ? { majorFont: op.majorFont } : {},
       ...typeof op.minorFont === "string" && op.minorFont ? { minorFont: op.minorFont } : {}
     };
-    commitSaved(ctx.opened);
-    const patched = applyThemeToArchive(ctx.opened, spec);
-    const remapped = remapDeckColors(ctx.opened, spec);
+    commitSaved(ctx2.opened);
+    const patched = applyThemeToArchive(ctx2.opened, spec);
+    const remapped = remapDeckColors(ctx2.opened, spec);
     let backgrounds = 0;
     const lt1 = spec.colors.lt1;
     if ((patched > 0 || remapped > 0) && lt1) {
-      ctx.opened.deck.slides = reparseDeck(ctx.opened).deck.slides;
-      const slides = ctx.opened.deck.slides;
+      ctx2.opened.deck.slides = reparseDeck(ctx2.opened).deck.slides;
+      const slides = ctx2.opened.deck.slides;
       for (let i = 0; i < slides.length; i++) {
         const s = slides[i];
         if (s.background) continue;
-        setSlideBackground(ctx.opened, s, `#${lt1.replace(/^#/, "")}`);
-        materializeSlide(ctx.opened, i);
+        setSlideBackground(ctx2.opened, s, `#${lt1.replace(/^#/, "")}`);
+        materializeSlide(ctx2.opened, i);
         backgrounds++;
       }
     }
@@ -68481,8 +68973,8 @@ function availableIds(slide) {
   }).join(", ");
 }
 __name(availableIds, "availableIds");
-function resolveTopLevel(op, ctx, min) {
-  const { index: index2, slide } = resolveSlide(ctx, op);
+function resolveTopLevel(op, ctx2, min) {
+  const { index: index2, slide } = resolveSlide(ctx2, op);
   const ids = op.els;
   if (!Array.isArray(ids) || ids.length < min) {
     throw new GuidedError(`op "${op.op}" needs "els": at least ${min} element ids.`);
@@ -68532,18 +69024,18 @@ var rectsOf = /* @__PURE__ */ __name((els) => els.map((el) => {
 }), "rectsOf");
 register({
   name: "alignElements",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     if (!ALIGN_MODES[String(op.mode)]) {
       throw new GuidedError(
         `op "alignElements" needs "mode": ${Object.keys(ALIGN_MODES).join("/")}.`
       );
     }
-    resolveTopLevel(op, ctx, toRef6(op) === "slide" ? 1 : 2);
+    resolveTopLevel(op, ctx2, toRef6(op) === "slide" ? 1 : 2);
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const to = toRef6(op);
-    const { slide, els } = resolveTopLevel(op, ctx, to === "slide" ? 1 : 2);
-    const size = ctx.opened.deck.size;
+    const { slide, els } = resolveTopLevel(op, ctx2, to === "slide" ? 1 : 2);
+    const size = ctx2.opened.deck.size;
     const container = to === "slide" ? { x: 0, y: 0, w: size.cx, h: size.cy } : null;
     const before = els.map((el) => ({ id: el.id, ...el.transform.offset }));
     const pos = alignRects(rectsOf(els), ALIGN_MODES[String(op.mode)], container);
@@ -68553,15 +69045,15 @@ register({
 });
 register({
   name: "distributeElements",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     if (op.axis !== "horizontal" && op.axis !== "vertical") {
       throw new GuidedError('op "distributeElements" needs "axis": "horizontal" or "vertical".');
     }
-    resolveTopLevel(op, ctx, toRef6(op) === "slide" ? 1 : 3);
+    resolveTopLevel(op, ctx2, toRef6(op) === "slide" ? 1 : 3);
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const to = toRef6(op);
-    const { slide, els } = resolveTopLevel(op, ctx, to === "slide" ? 1 : 3);
+    const { slide, els } = resolveTopLevel(op, ctx2, to === "slide" ? 1 : 3);
     const horizontal = op.axis === "horizontal";
     const rects = rectsOf(els);
     const before = els.map((el) => ({ id: el.id, ...el.transform.offset }));
@@ -68569,7 +69061,7 @@ register({
     if (to === "selection") {
       pos = distributeRects(rects, horizontal ? "horizontal" : "vertical");
     } else {
-      const size = ctx.opened.deck.size;
+      const size = ctx2.opened.deck.size;
       const span = horizontal ? size.cx : size.cy;
       const total = rects.reduce((s, r) => s + (horizontal ? r.w : r.h), 0);
       const gap = (span - total) / (rects.length + 1);
@@ -68685,8 +69177,8 @@ function arrowOf(op) {
 __name(arrowOf, "arrowOf");
 register({
   name: "addConnector",
-  validate(op, ctx) {
-    const { index: index2, slide } = resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    const { index: index2, slide } = resolveSlide(ctx2, op);
     const from = resolveEndpoint(op, slide, "from", index2);
     const to = resolveEndpoint(op, slide, "to", index2);
     if (from === to) throw new GuidedError('op "addConnector": "from" and "to" must differ.');
@@ -68698,8 +69190,8 @@ register({
     arrowOf(op);
     connectorLine(op);
   },
-  apply(op, ctx) {
-    const { index: index2, slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { index: index2, slide } = resolveSlide(ctx2, op);
     const from = resolveEndpoint(op, slide, "from", index2);
     const to = resolveEndpoint(op, slide, "to", index2);
     const kind = CONNECTOR_KINDS[String(op.kind ?? "straight")];
@@ -68924,13 +69416,13 @@ function buildAnimation(op, el) {
 __name(buildAnimation, "buildAnimation");
 register({
   name: "addAnimation",
-  validate(op, ctx) {
-    const { el } = resolveElement(ctx, op);
+  validate(op, ctx2) {
+    const { el } = resolveElement(ctx2, op);
     buildAnimation(op, el);
     parseSeq(op, "after", false);
   },
-  apply(op, ctx) {
-    const { slide, el } = resolveElement(ctx, op);
+  apply(op, ctx2) {
+    const { slide, el } = resolveElement(ctx2, op);
     const anim = buildAnimation(op, el);
     const anims = getSlideAnimations(slide);
     const after = parseSeq(op, "after", false);
@@ -68947,18 +69439,18 @@ register({
 });
 register({
   name: "removeAnimation",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     const seq = parseSeq(op, "seq", false);
     if (seq === void 0) {
-      resolveElement(ctx, op);
+      resolveElement(ctx2, op);
     } else {
-      resolveSlide(ctx, op);
+      resolveSlide(ctx2, op);
     }
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const seq = parseSeq(op, "seq", false);
     if (seq !== void 0) {
-      const { slide: slide2 } = resolveSlide(ctx, op);
+      const { slide: slide2 } = resolveSlide(ctx2, op);
       const anims2 = getSlideAnimations(slide2);
       if (seq >= anims2.length) {
         throw new GuidedError(
@@ -68969,7 +69461,7 @@ register({
       setSlideAnimations(slide2, anims2);
       return { op, before: removed, after: { removed: 1, count: anims2.length } };
     }
-    const { slide, el } = resolveElement(ctx, op);
+    const { slide, el } = resolveElement(ctx2, op);
     const spid = elementSpid(el);
     const anims = getSlideAnimations(slide);
     const kept = anims.filter((a) => a.spid !== spid);
@@ -68979,13 +69471,13 @@ register({
 });
 register({
   name: "reorderAnimation",
-  validate(op, ctx) {
-    resolveSlide(ctx, op);
+  validate(op, ctx2) {
+    resolveSlide(ctx2, op);
     parseSeq(op, "seq", true);
     parseSeq(op, "to", true);
   },
-  apply(op, ctx) {
-    const { slide } = resolveSlide(ctx, op);
+  apply(op, ctx2) {
+    const { slide } = resolveSlide(ctx2, op);
     const seq = parseSeq(op, "seq", true);
     const to = parseSeq(op, "to", true);
     const anims = getSlideAnimations(slide);
@@ -69015,12 +69507,12 @@ var parserOptions = {
 var xmlParser = new XMLParser(parserOptions);
 var deepXmlParser = new XMLParser({ ...parserOptions, maxNestedTags: 1e5 });
 var ILLEGAL_XML_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g;
-function escapeXmlText10(text) {
-  return text.replace(ILLEGAL_XML_CHARS, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function escapeXmlText10(text2) {
+  return text2.replace(ILLEGAL_XML_CHARS, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 __name(escapeXmlText10, "escapeXmlText");
-function escapeXmlAttr2(text) {
-  return escapeXmlText10(text).replace(/"/g, "&quot;");
+function escapeXmlAttr2(text2) {
+  return escapeXmlText10(text2).replace(/"/g, "&quot;");
 }
 __name(escapeXmlAttr2, "escapeXmlAttr");
 
@@ -69237,10 +69729,10 @@ function latexToOmml(latex) {
   return out;
 }
 __name(latexToOmml, "latexToOmml");
-function mathRun(text, plain = false) {
-  if (text === "") return "";
+function mathRun(text2, plain = false) {
+  if (text2 === "") return "";
   const rPr = plain ? '<m:rPr><m:sty m:val="p"/></m:rPr>' : "";
-  return `<m:r>${rPr}<m:t xml:space="preserve">${escapeXmlText10(text)}</m:t></m:r>`;
+  return `<m:r>${rPr}<m:t xml:space="preserve">${escapeXmlText10(text2)}</m:t></m:r>`;
 }
 __name(mathRun, "mathRun");
 function peek(p) {
@@ -69340,17 +69832,17 @@ function parseAtom(p) {
     p.pos++;
     return parseControl(p);
   }
-  let text = "";
+  let text2 = "";
   while (p.pos < p.src.length && !"\\{}^_&".includes(peek(p)) && peek(p) !== "\n") {
-    text += p.src[p.pos++];
+    text2 += p.src[p.pos++];
   }
-  if (text === "") throw new LatexError(`Cannot parse: "${ch}"`);
-  const chars = [...text];
+  if (text2 === "") throw new LatexError(`Cannot parse: "${ch}"`);
+  const chars = [...text2];
   if ((peek(p) === "^" || peek(p) === "_") && chars.length > 1) {
     p.pos -= chars[chars.length - 1].length;
     return mathRun(chars.slice(0, -1).join(""));
   }
-  return mathRun(text);
+  return mathRun(text2);
 }
 __name(parseAtom, "parseAtom");
 function naryOmml(p, chr, limLoc) {
@@ -69664,9 +70156,9 @@ __name(escapeText, "escapeText");
 function equationRun(latex) {
   const inner = latexToOmml(latex);
   const oMath = `<m:oMath xmlns:m="${M_NS}">${inner}</m:oMath>`;
-  const text = ommlToText(oMath) || latex.trim();
-  const rawXml = `<mc:AlternateContent xmlns:mc="${MC_NS}"><mc:Choice xmlns:a14="${A14_NS}" Requires="a14"><a14:m><m:oMathPara xmlns:m="${M_NS}"><m:oMathParaPr><m:jc m:val="centerGroup"/></m:oMathParaPr>${oMath}</m:oMathPara></a14:m></mc:Choice><mc:Fallback><a:r><a:rPr lang="en-US" dirty="0"/><a:t>${escapeText(text)}</a:t></a:r></mc:Fallback></mc:AlternateContent>`;
-  return { text, rawXml };
+  const text2 = ommlToText(oMath) || latex.trim();
+  const rawXml = `<mc:AlternateContent xmlns:mc="${MC_NS}"><mc:Choice xmlns:a14="${A14_NS}" Requires="a14"><a14:m><m:oMathPara xmlns:m="${M_NS}"><m:oMathParaPr><m:jc m:val="centerGroup"/></m:oMathParaPr>${oMath}</m:oMathPara></a14:m></mc:Choice><mc:Fallback><a:r><a:rPr lang="en-US" dirty="0"/><a:t>${escapeText(text2)}</a:t></a:r></mc:Fallback></mc:AlternateContent>`;
+  return { text: text2, rawXml };
 }
 __name(equationRun, "equationRun");
 function requireLatex(op) {
@@ -69709,12 +70201,12 @@ function optionalBox(op) {
 __name(optionalBox, "optionalBox");
 register({
   name: "insertEquation",
-  validate(op, ctx) {
+  validate(op, ctx2) {
     requireLatex(op);
     requirePosition(op);
     const box = optionalBox(op);
     if (box) {
-      resolveSlide(ctx, op);
+      resolveSlide(ctx2, op);
       if (op.target?.el !== void 0) {
         throw new GuidedError(
           `op "${op.op}": give either target.el (existing text) or "box" (new text box), not both.`
@@ -69727,19 +70219,19 @@ register({
         `op "${op.op}" needs target.el (a text or shape element) or "box": {x, y, cx, cy} to create a text box for the formula.`
       );
     }
-    resolveElement(ctx, op, { types: ["text", "shape"] });
+    resolveElement(ctx2, op, { types: ["text", "shape"] });
   },
-  apply(op, ctx) {
+  apply(op, ctx2) {
     const run = equationRun(requireLatex(op));
     const position = requirePosition(op);
     const box = optionalBox(op);
     const paragraph = { runs: [run], align: "center" };
     if (box) {
-      const { slide } = resolveSlide(ctx, op);
+      const { slide } = resolveSlide(ctx2, op);
       const el2 = addElement(slide, { kind: "textbox", offset: box, paragraphs: [paragraph] });
       return { op, created: [el2.id], after: { text: run.text } };
     }
-    const { el } = resolveElement(ctx, op, { types: ["text", "shape"] });
+    const { el } = resolveElement(ctx2, op, { types: ["text", "shape"] });
     const te = el;
     if (!te.text) te.text = { paragraphs: [] };
     const paragraphs = te.text.paragraphs;
@@ -69929,15 +70421,15 @@ function normalizeLengthUnits(value, key, parent) {
 __name(normalizeLengthUnits, "normalizeLengthUnits");
 
 // vendor/genoffice/packages/pptx-ops/src/ops/executor.ts
-function applyStamped(op, ctx) {
+function applyStamped(op, ctx2) {
   let slideId;
   if (!op.target?.part && op.target?.slide != null) {
     try {
-      slideId = slideDurableId(resolveSlide(ctx, op).slide);
+      slideId = slideDurableId(resolveSlide(ctx2, op).slide);
     } catch {
     }
   }
-  const rec = lookup(op.op).apply(op, ctx);
+  const rec = lookup(op.op).apply(op, ctx2);
   return slideId ? { ...rec, slideId } : rec;
 }
 __name(applyStamped, "applyStamped");
@@ -69966,10 +70458,10 @@ function message(e) {
   return e instanceof Error ? e.message : String(e);
 }
 __name(message, "message");
-function hardenTargetIdentity(op, ctx) {
+function hardenTargetIdentity(op, ctx2) {
   if (typeof op.target?.el !== "string") return;
   try {
-    ensureCreationId(resolveElement(ctx, op, { allowPart: true }).el);
+    ensureCreationId(resolveElement(ctx2, op, { allowPart: true }).el);
   } catch {
   }
 }
@@ -69980,11 +70472,11 @@ function withUsage(op, msg) {
 ${usage}` : msg;
 }
 __name(withUsage, "withUsage");
-function flushTouchedParts(opened, ctx) {
-  if (ctx.touchedParts.size === 0) return;
+function flushTouchedParts(opened, ctx2) {
+  if (ctx2.touchedParts.size === 0) return;
   const entries = opened.archive.entries;
-  for (const part of ctx.touchedParts) {
-    const slide = ctx.parts.get(part);
+  for (const part of ctx2.touchedParts) {
+    const slide = ctx2.parts.get(part);
     if (slide) entries.set(part, Buffer.from(patchSlideXml(slide), "utf8"));
   }
   for (let i = 0; i < opened.deck.slides.length; i++) materializeSlide(opened, i);
@@ -69997,7 +70489,7 @@ function runTxn(opened, req2) {
       failures: [{ index: 0, op: { op: "(none)" }, error: "ops must be a non-empty array." }]
     };
   }
-  const ctx = { opened, parts: new Map(req2.parts ?? []), touchedParts: /* @__PURE__ */ new Set() };
+  const ctx2 = { opened, parts: new Map(req2.parts ?? []), touchedParts: /* @__PURE__ */ new Set() };
   const isolation = req2.isolation ?? "atomic";
   const plan = [];
   const planFailures = [];
@@ -70008,7 +70500,7 @@ function runTxn(opened, req2) {
       }
       assertXmlSafeStrings(op);
       normalizeLengthUnits(op);
-      lookup(op.op).validate(op, ctx);
+      lookup(op.op).validate(op, ctx2);
       plan.push(planLine(i, op));
     } catch (e) {
       planFailures.push({ index: i, op, error: withUsage(op, message(e)) });
@@ -70031,14 +70523,14 @@ function runTxn(opened, req2) {
       }))
     };
   }
-  ctx.touchedParts.clear();
+  ctx2.touchedParts.clear();
   if (isolation === "atomic") {
     const snap = takeSnapshot(opened);
     const records2 = [];
     for (const [i, op] of req2.ops.entries()) {
       try {
-        records2.push(applyStamped(op, ctx));
-        hardenTargetIdentity(op, ctx);
+        records2.push(applyStamped(op, ctx2));
+        hardenTargetIdentity(op, ctx2);
       } catch (e) {
         restoreSnapshot(opened, snap);
         return {
@@ -70056,7 +70548,7 @@ function runTxn(opened, req2) {
         };
       }
     }
-    flushTouchedParts(opened, ctx);
+    flushTouchedParts(opened, ctx2);
     return { applied: true, records: records2 };
   }
   const records = [];
@@ -70065,13 +70557,13 @@ function runTxn(opened, req2) {
   for (const [i, op] of req2.ops.entries()) {
     if (failedIdx.has(i)) continue;
     try {
-      records.push(applyStamped(op, ctx));
-      hardenTargetIdentity(op, ctx);
+      records.push(applyStamped(op, ctx2));
+      hardenTargetIdentity(op, ctx2);
     } catch (e) {
       failures.push({ index: i, op, error: withUsage(op, message(e)) });
     }
   }
-  if (records.length > 0) flushTouchedParts(opened, ctx);
+  if (records.length > 0) flushTouchedParts(opened, ctx2);
   failures.sort((a, b) => a.index - b.index);
   return {
     applied: records.length > 0,
@@ -70082,6 +70574,7 @@ function runTxn(opened, req2) {
 __name(runTxn, "runTxn");
 
 // src/backend/index.ts
+var ctx;
 var MAX_READ_BYTES = 200 * 1024 * 1024;
 function samePath(a, b) {
   try {
@@ -70091,471 +70584,412 @@ function samePath(a, b) {
   }
 }
 __name(samePath, "samePath");
-function main(parentPort) {
-  const state = { uiPort: null, currentFile: "" };
-  let seq = 0;
-  const pending = /* @__PURE__ */ new Map();
-  const post = /* @__PURE__ */ __name((msg) => parentPort.postMessage(msg), "post");
-  const log = /* @__PURE__ */ __name((level, message2) => post({ type: "log", level, message: message2 }), "log");
-  function call(method, params = {}) {
-    return new Promise((resolve, reject) => {
-      const id = "c" + ++seq;
-      pending.set(id, { resolve, reject });
-      post({ type: "call", id, method, params });
-      setTimeout(() => {
-        if (pending.delete(id)) reject(new Error(`capability timeout: ${method}`));
-      }, 3e4);
-    });
-  }
-  __name(call, "call");
-  const uiPost = /* @__PURE__ */ __name((payload) => {
-    try {
-      state.uiPort?.postMessage(payload);
-    } catch {
+var PANEL = "viewer";
+var currentFile = "";
+var renderViewer = /* @__PURE__ */ __name((data) => ctx.send(PANEL, "ui.render", data), "renderViewer");
+function openFile(path) {
+  currentFile = String(path ?? "");
+  renderViewer(currentFile ? { path: currentFile } : {});
+}
+__name(openFile, "openFile");
+var mcpPending = /* @__PURE__ */ new Map();
+var mcpSeq = 0;
+var mcpReady = false;
+function requireDocxOpen(path) {
+  const open = currentFile;
+  if (open.toLowerCase().endsWith(".docx") && samePath(open, path)) return;
+  throw new Error(
+    open ? `the viewer is showing ${open}, not ${path} \u2014 open the document you want to edit in the viewer, then retry` : `no document is open in the viewer \u2014 open ${path} there, then retry`
+  );
+}
+__name(requireDocxOpen, "requireDocxOpen");
+function mcpCommand(command, payload, timeoutMs = 12e4) {
+  const requestId = "m" + ++mcpSeq;
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      mcpPending.delete(requestId);
+      reject(
+        new Error(
+          `the viewer did not answer "${command}" within ${Math.round(timeoutMs / 1e3)}s \u2014 is the document still open and finished loading?`
+        )
+      );
+    }, timeoutMs);
+    mcpPending.set(requestId, { resolve, reject, timer });
+    const delivered = ctx.send(PANEL, "mcp-command", { requestId, command, payload });
+    if (!delivered) {
+      clearTimeout(timer);
+      mcpPending.delete(requestId);
+      reject(new Error("the file viewer is not open \u2014 open the document in the viewer, then retry"));
+      return;
     }
-  }, "uiPost");
-  const renderViewer = /* @__PURE__ */ __name((data) => uiPost({ kind: "event", event: "ui.render", panelId: "viewer", data }), "renderViewer");
-  function openFile(path) {
-    state.currentFile = String(path ?? "");
-    renderViewer(state.currentFile ? { path: state.currentFile } : {});
-  }
-  __name(openFile, "openFile");
-  const mcpPending = /* @__PURE__ */ new Map();
-  let mcpSeq = 0;
-  let mcpReady = false;
-  function requireDocxOpen(path) {
-    if (!state.uiPort) {
-      throw new Error("the file viewer is not open \u2014 open this document in the viewer, then retry");
+    if (!mcpReady) {
+      ctx.log.info("docx bridge: no ready signal yet, sending anyway");
     }
-    const open = state.currentFile;
-    if (open.toLowerCase().endsWith(".docx") && samePath(open, path)) return;
-    throw new Error(
-      open ? `the viewer is showing ${open}, not ${path} \u2014 open the document you want to edit in the viewer, then retry` : `no document is open in the viewer \u2014 open ${path} there, then retry`
+  });
+}
+__name(mcpCommand, "mcpCommand");
+async function readOfficeBytes(path) {
+  const info = await stat(path).catch(() => null);
+  if (!info || !info.isFile()) throw new Error(`not a file: ${path}`);
+  if (info.size > MAX_READ_BYTES) {
+    throw new Error(`file too large for the engine (${Math.round(info.size / 1e6)}MB > ${MAX_READ_BYTES / 1e6}MB)`);
+  }
+  return new Uint8Array(await readFile2(path));
+}
+__name(readOfficeBytes, "readOfficeBytes");
+async function writeOfficeBytes(path, bytes, expectedMtime) {
+  return ctx.call("filesystem.write", {
+    path,
+    contentB64: Buffer.from(bytes).toString("base64"),
+    expectedMtime: typeof expectedMtime === "number" ? expectedMtime : void 0
+  });
+}
+__name(writeOfficeBytes, "writeOfficeBytes");
+var text = /* @__PURE__ */ __name((t, details) => ({
+  content: [{ type: "text", text: t }],
+  details
+}), "text");
+async function toolGuide(p) {
+  const domain = String(p.domain ?? "pptx");
+  if (domain === "xlsx") {
+    return text(
+      "xlsx ops are cell edits. Each one is:\n  { sheet: string, cell: string, value: string | number | boolean | null }\n\n  sheet \u2014 a sheet name exactly as office_read reported it\n  cell  \u2014 an A1-style address, also from office_read\n  value \u2014 null clears the cell\n\nPut them in office_edit's `ops` array. Read first; the addresses come from office_read.\nNOT yet supported for xlsx: adding or removing sheets, formulas, formatting,\ncharts, merged cells. Those need a different op set; say so instead of retrying.",
+      { domain, op: "setCell" }
     );
   }
-  __name(requireDocxOpen, "requireDocxOpen");
-  function mcpCommand(command, payload, timeoutMs = 12e4) {
-    const requestId = "m" + ++mcpSeq;
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        mcpPending.delete(requestId);
-        reject(
-          new Error(
-            `the viewer did not answer "${command}" within ${Math.round(timeoutMs / 1e3)}s \u2014 is the document still open and finished loading?`
-          )
-        );
-      }, timeoutMs);
-      mcpPending.set(requestId, { resolve, reject, timer });
-      uiPost({ kind: "event", event: "mcp-command", data: { requestId, command, payload } });
-      if (!mcpReady) {
-        log("info", "docx bridge: no ready signal yet, sending anyway");
-      }
-    });
+  if (domain === "docx") {
+    return text(docxGuide(), { domain, ops: DOCX_OP_GROUPS });
   }
-  __name(mcpCommand, "mcpCommand");
-  async function readOfficeBytes(path) {
-    const info = await stat(path).catch(() => null);
-    if (!info || !info.isFile()) throw new Error(`not a file: ${path}`);
-    if (info.size > MAX_READ_BYTES) {
-      throw new Error(`file too large for the engine (${Math.round(info.size / 1e6)}MB > ${MAX_READ_BYTES / 1e6}MB)`);
-    }
-    return new Uint8Array(await readFile2(path));
+  if (domain !== "pptx") {
+    return text(`domain "${domain}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry with another argument; tell the user this format has no structural editing yet.`);
   }
-  __name(readOfficeBytes, "readOfficeBytes");
-  async function writeOfficeBytes(path, bytes, expectedMtime) {
-    return call("filesystem.write", {
-      path,
-      contentB64: Buffer.from(bytes).toString("base64"),
-      expectedMtime: typeof expectedMtime === "number" ? expectedMtime : void 0
-    });
+  const group2 = p.group === void 0 ? void 0 : String(p.group);
+  if (group2 !== void 0) {
+    const guide = opGuide(group2);
+    if (!guide) {
+      return text(`unknown op group "${group2}". Available: ${OP_GROUPS.join(", ")}`);
+    }
+    return text(guide, { domain, group: group2 });
   }
-  __name(writeOfficeBytes, "writeOfficeBytes");
-  const text = /* @__PURE__ */ __name((t, details) => ({
-    content: [{ type: "text", text: t }],
-    details
-  }), "text");
-  async function toolGuide(p) {
-    const domain = String(p.domain ?? "pptx");
-    if (domain === "xlsx") {
-      return text(
-        "xlsx ops are cell edits. Each one is:\n  { sheet: string, cell: string, value: string | number | boolean | null }\n\n  sheet \u2014 a sheet name exactly as office_read reported it\n  cell  \u2014 an A1-style address, also from office_read\n  value \u2014 null clears the cell\n\nPut them in office_edit's `ops` array. Read first; the addresses come from office_read.\nNOT yet supported for xlsx: adding or removing sheets, formulas, formatting,\ncharts, merged cells. Those need a different op set; say so instead of retrying.",
-        { domain, op: "setCell" }
-      );
-    }
-    if (domain === "docx") {
-      return text(docxGuide(), { domain, ops: DOCX_OP_GROUPS });
-    }
-    if (domain !== "pptx") {
-      return text(`domain "${domain}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry with another argument; tell the user this format has no structural editing yet.`);
-    }
-    const group2 = p.group === void 0 ? void 0 : String(p.group);
-    if (group2 !== void 0) {
-      const guide = opGuide(group2);
-      if (!guide) {
-        return text(`unknown op group "${group2}". Available: ${OP_GROUPS.join(", ")}`);
-      }
-      return text(guide, { domain, group: group2 });
-    }
-    if (p.style === "signatures") {
-      return text(opSignatureIndex(), { domain, count: opNames().length });
-    }
-    return text(
-      `${opVocabulary()}
+  if (p.style === "signatures") {
+    return text(opSignatureIndex(), { domain, count: opNames().length });
+  }
+  return text(
+    `${opVocabulary()}
 
 Call office_guide again with { group } for one group's field tables and examples.`,
-      { domain, groups: OP_GROUPS, count: opNames().length }
+    { domain, groups: OP_GROUPS, count: opNames().length }
+  );
+}
+__name(toolGuide, "toolGuide");
+async function toolRead(p) {
+  const path = String(p.path ?? "");
+  if (!path) throw new Error("office_read: path is required");
+  const ext = path.toLowerCase().split(".").pop();
+  if (ext === "xlsx") {
+    const sheets = await readXlsxStructure(await readOfficeBytes(path));
+    const MAX_CELLS = 40;
+    return text(
+      `${path}: ${sheets.length} sheet(s)
+` + sheets.map((s) => {
+        const shown = s.cells.slice(0, MAX_CELLS);
+        const more = s.cells.length - shown.length;
+        const cells = shown.map((c) => `${c.address}=${c.value === null ? "\u2205" : c.value}${c.formula ? ` [${c.formula}]` : ""}`).join(", ");
+        return `  ${s.name} \u2014 ${s.cells.length} cell(s)${cells ? `: ${cells}` : ""}${more > 0 ? ` \u2026 ${more} more` : ""}`;
+      }).join("\n"),
+      { sheetCount: sheets.length, sheets }
     );
   }
-  __name(toolGuide, "toolGuide");
-  async function toolRead(p) {
-    const path = String(p.path ?? "");
-    if (!path) throw new Error("office_read: path is required");
-    const ext = path.toLowerCase().split(".").pop();
-    if (ext === "xlsx") {
-      const sheets = await readXlsxStructure(await readOfficeBytes(path));
-      const MAX_CELLS = 40;
+  if (ext === "docx") {
+    requireDocxOpen(path);
+    const result = await mcpCommand("read_document", {});
+    return text(String(result?.text ?? ""), { path, via: "viewer" });
+  }
+  if (ext !== "pptx") {
+    return text(`office_read: "${ext}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry; this format has no structural reading yet.`);
+  }
+  const opened = await openPptx(await readOfficeBytes(path));
+  const slides = opened.deck.slides.map((s, i) => ({
+    index: i,
+    id: s.slideId ?? null,
+    path: s.path,
+    elements: (s.elements ?? []).map((el) => {
+      const e = el;
+      return {
+        id: e.id ?? null,
+        name: e.name ?? null,
+        kind: e.kind ?? e.type ?? null,
+        // The box is what an agent needs to reason about position; keep it
+        // flat and numeric rather than dumping the element.
+        ...e.box ? { box: e.box } : {}
+      };
+    })
+  }));
+  return text(
+    `${path}: ${slides.length} slide(s)
+` + slides.map((s) => `  [${s.index}] ${s.path} \u2014 ${s.elements.length} element(s): ` + s.elements.map((e) => `${e.id}(${e.kind})`).join(", ")).join("\n"),
+    { slideCount: slides.length, slides }
+  );
+}
+__name(toolRead, "toolRead");
+async function toolEdit(p) {
+  const path = String(p.path ?? "");
+  if (!path) throw new Error("office_edit: path is required");
+  const ops = Array.isArray(p.ops) ? p.ops : [];
+  if (ops.length === 0) throw new Error("office_edit: ops is required and must be non-empty");
+  const dryRun = p.dryRun === true;
+  const ext = path.toLowerCase().split(".").pop();
+  if (ext === "xlsx") {
+    const info2 = await stat(path);
+    const bytes2 = await readOfficeBytes(path);
+    const cellOps = ops;
+    if (dryRun) {
+      const planned = await planXlsxEdits(bytes2, cellOps);
       return text(
-        `${path}: ${sheets.length} sheet(s)
-` + sheets.map((s) => {
-          const shown = s.cells.slice(0, MAX_CELLS);
-          const more = s.cells.length - shown.length;
-          const cells = shown.map((c) => `${c.address}=${c.value === null ? "\u2205" : c.value}${c.formula ? ` [${c.formula}]` : ""}`).join(", ");
-          return `  ${s.name} \u2014 ${s.cells.length} cell(s)${cells ? `: ${cells}` : ""}${more > 0 ? ` \u2026 ${more} more` : ""}`;
-        }).join("\n"),
-        { sheetCount: sheets.length, sheets }
+        `dry run ok \u2014 ${cellOps.length} op(s) validated, nothing written:
+  would touch: ${planned.touchedEntries.join(", ") || "(nothing)"}`,
+        { applied: false, dryRun: true, plan: planned.touchedEntries }
       );
     }
-    if (ext === "docx") {
-      requireDocxOpen(path);
-      const result = await mcpCommand("read_document", {});
-      return text(String(result?.text ?? ""), { path, via: "viewer" });
-    }
-    if (ext !== "pptx") {
-      return text(`office_read: "${ext}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry; this format has no structural reading yet.`);
-    }
-    const opened = await openPptx(await readOfficeBytes(path));
-    const slides = opened.deck.slides.map((s, i) => ({
-      index: i,
-      id: s.slideId ?? null,
-      path: s.path,
-      elements: (s.elements ?? []).map((el) => {
-        const e = el;
-        return {
-          id: e.id ?? null,
-          name: e.name ?? null,
-          kind: e.kind ?? e.type ?? null,
-          // The box is what an agent needs to reason about position; keep it
-          // flat and numeric rather than dumping the element.
-          ...e.box ? { box: e.box } : {}
-        };
-      })
-    }));
-    return text(
-      `${path}: ${slides.length} slide(s)
-` + slides.map((s) => `  [${s.index}] ${s.path} \u2014 ${s.elements.length} element(s): ` + s.elements.map((e) => `${e.id}(${e.kind})`).join(", ")).join("\n"),
-      { slideCount: slides.length, slides }
-    );
+    const next = await applyXlsxEdits(bytes2, cellOps);
+    const written2 = await writeOfficeBytes(path, next, info2.mtimeMs);
+    return text(`applied ${cellOps.length} op(s) to ${path} and saved (${next.length} bytes)`, {
+      applied: true,
+      mtime: written2?.mtime
+    });
   }
-  __name(toolRead, "toolRead");
-  async function toolEdit(p) {
-    const path = String(p.path ?? "");
-    if (!path) throw new Error("office_edit: path is required");
-    const ops = Array.isArray(p.ops) ? p.ops : [];
-    if (ops.length === 0) throw new Error("office_edit: ops is required and must be non-empty");
-    const dryRun = p.dryRun === true;
-    const ext = path.toLowerCase().split(".").pop();
-    if (ext === "xlsx") {
-      const info2 = await stat(path);
-      const bytes2 = await readOfficeBytes(path);
-      const cellOps = ops;
-      if (dryRun) {
-        const planned = await planXlsxEdits(bytes2, cellOps);
-        return text(
-          `dry run ok \u2014 ${cellOps.length} op(s) validated, nothing written:
-  would touch: ${planned.touchedEntries.join(", ") || "(nothing)"}`,
-          { applied: false, dryRun: true, plan: planned.touchedEntries }
-        );
-      }
-      const next = await applyXlsxEdits(bytes2, cellOps);
-      const written2 = await writeOfficeBytes(path, next, info2.mtimeMs);
-      return text(`applied ${cellOps.length} op(s) to ${path} and saved (${next.length} bytes)`, {
-        applied: true,
-        mtime: written2?.mtime
-      });
+  if (ext === "docx") {
+    requireDocxOpen(path);
+    const commands = planDocxCommands(ops, dryRun);
+    const steps = [];
+    for (const step of commands) {
+      steps.push(await mcpCommand(step.command, step.payload));
     }
-    if (ext === "docx") {
-      requireDocxOpen(path);
-      const commands = planDocxCommands(ops, dryRun);
-      const steps = [];
-      for (const step of commands) {
-        steps.push(await mcpCommand(step.command, step.payload));
-      }
-      if (dryRun) {
-        const plan = steps[0]?.output ?? "";
-        return text(`dry run ok \u2014 ${ops.length} op(s) validated, nothing written:
+    if (dryRun) {
+      const plan = steps[0]?.output ?? "";
+      return text(`dry run ok \u2014 ${ops.length} op(s) validated, nothing written:
 ${plan}`, {
-          applied: false,
-          dryRun: true,
-          steps
-        });
-      }
-      const saved = await mcpCommand("save_document", { path, overwrite: true });
-      if (saved?.ok !== true) throw new Error(`office_edit: the document could not be saved to ${path}`);
-      const info2 = await stat(path).catch(() => null);
-      return text(`applied ${ops.length} op(s) to ${path} and saved`, {
-        applied: true,
-        path,
-        mtime: info2?.mtimeMs,
+        applied: false,
+        dryRun: true,
         steps
       });
     }
-    if (ext !== "pptx") {
-      return text(`office_edit: "${ext}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry; this format has no structural editing yet.`);
-    }
-    const info = await stat(path);
-    const opened = await openPptx(await readOfficeBytes(path));
-    const result = runTxn(opened, { dryRun, ops });
-    if (result.failures && result.failures.length > 0) {
-      const lines = result.failures.map((f) => `  [${f.index}] ${f.error}`);
-      return text(
-        `nothing applied \u2014 ${result.failures.length} op(s) rejected:
+    const saved = await mcpCommand("save_document", { path, overwrite: true });
+    if (saved?.ok !== true) throw new Error(`office_edit: the document could not be saved to ${path}`);
+    const info2 = await stat(path).catch(() => null);
+    return text(`applied ${ops.length} op(s) to ${path} and saved`, {
+      applied: true,
+      path,
+      mtime: info2?.mtimeMs,
+      steps
+    });
+  }
+  if (ext !== "pptx") {
+    return text(`office_edit: "${ext}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry; this format has no structural editing yet.`);
+  }
+  const info = await stat(path);
+  const opened = await openPptx(await readOfficeBytes(path));
+  const result = runTxn(opened, { dryRun, ops });
+  if (result.failures && result.failures.length > 0) {
+    const lines = result.failures.map((f) => `  [${f.index}] ${f.error}`);
+    return text(
+      `nothing applied \u2014 ${result.failures.length} op(s) rejected:
 ${lines.join("\n")}
 
 Fix the listed op(s) and resend the whole batch.`,
-        {
-          applied: false,
-          failures: result.failures,
-          // Lets the agent notice its cached op list is stale.
-          opsAvailable: opNames().length
-        }
-      );
-    }
-    if (dryRun) {
-      return text(`dry run ok \u2014 ${ops.length} op(s) validated, nothing written:
-  ${(result.plan ?? []).join("\n  ")}`, {
+      {
         applied: false,
-        dryRun: true,
-        plan: result.plan ?? []
-      });
-    }
-    const bytes = await savePptx(opened);
-    const written = await writeOfficeBytes(path, bytes, info.mtimeMs);
-    return text(
-      `applied ${result.records?.length ?? ops.length} op(s) to ${path} and saved (${bytes.length} bytes)`,
-      { applied: true, records: result.records ?? [], mtime: written?.mtime }
+        failures: result.failures,
+        // Lets the agent notice its cached op list is stale.
+        opsAvailable: opNames().length
+      }
     );
   }
-  __name(toolEdit, "toolEdit");
-  async function onTool(msg) {
-    const { id, name } = msg;
-    const p = msg.params ?? {};
-    const done = /* @__PURE__ */ __name((r) => post({ type: "tool-result", id, content: r.content, details: r.details }), "done");
-    switch (name) {
-      case "office_guide":
-        return done(await toolGuide(p));
-      case "office_read":
-        return done(await toolRead(p));
-      case "office_edit":
-        return done(await toolEdit(p));
-      // ── legacy P9a probes (kept until the viewer work lands) ──
-      case "files_probe_write": {
-        if (!p.path) throw new Error("missing path");
-        const result = await call("filesystem.write", {
-          path: String(p.path),
-          content: String(p.content ?? ""),
-          expectedMtime: typeof p.expectedMtime === "number" ? p.expectedMtime : void 0
-        });
-        return done(text(`\u5DF2\u5199\u5165 ${result?.path} (${result?.size} bytes, mtime ${Math.round(Number(result?.mtime ?? 0))})`, result));
-      }
-      case "files_probe_read": {
-        if (!p.path) throw new Error("missing path");
-        const result = await call("filesystem.read", { path: String(p.path) });
-        return done(text(`\u8BFB\u53D6 ${result?.path} (${result?.size} bytes):
-${String(result?.content ?? "").slice(0, 4e3)}`, result));
-      }
-      case "files_probe_open": {
-        const panelId = typeof p.panelId === "string" && p.panelId ? String(p.panelId) : "viewer";
-        if (panelId !== "viewer") {
-          await call("panel.open", { panelId, focus: true });
-          return done(text(`\u5DF2\u6253\u5F00\u9762\u677F ${panelId}`));
-        }
-        const target = typeof p.path === "string" && p.path ? String(p.path) : state.currentFile;
-        if (!target) throw new Error("no file to open (pass path or click a file first)");
-        await call("panel.open", { panelId: "viewer", focus: true });
-        openFile(target);
-        return done(text(`\u5DF2\u5728\u67E5\u770B\u5668\u4E2D\u6253\u5F00 ${target}`));
-      }
-      default:
-        throw new Error(`unknown tool: ${name}`);
-    }
+  if (dryRun) {
+    return text(`dry run ok \u2014 ${ops.length} op(s) validated, nothing written:
+  ${(result.plan ?? []).join("\n  ")}`, {
+      applied: false,
+      dryRun: true,
+      plan: result.plan ?? []
+    });
   }
-  __name(onTool, "onTool");
-  async function onUiRequest(id, method, params = {}) {
-    try {
-      const result = await (async () => {
-        switch (method) {
-          case "chat.send": {
-            const t = String(params.text ?? "").trim();
-            if (!t) throw new Error("chat.send: text is required");
-            return call("chat.send", { text: t });
-          }
-          case "mcp.ready": {
-            mcpReady = true;
-            return { ok: true };
-          }
-          case "mcp.result": {
-            const requestId = String(params.requestId ?? "");
-            const entry = mcpPending.get(requestId);
-            if (!entry) return { ok: false, reason: "no such pending command" };
-            mcpPending.delete(requestId);
-            clearTimeout(entry.timer);
-            if (params.ok === false) {
-              entry.reject(new Error(String(params.error ?? "the viewer reported a failure")));
-            } else {
-              entry.resolve(params.result);
-            }
-            return { ok: true };
-          }
-          case "file.scratchPath": {
-            const dir = join4(tmpdir(), "pi-files-preview");
-            await mkdir(dir, { recursive: true });
-            return { path: join4(dir, `preview-${process.pid}.html`) };
-          }
-          case "file.pickOpenPath": {
-            const opened = await call("dialog.openFile", {
-              ...params.title ? { title: String(params.title) } : {},
-              ...params.filters ? { filters: params.filters } : {},
-              ...params.multi ? { multi: true } : {}
-            });
-            return { path: opened?.path ?? null, paths: opened?.paths ?? [] };
-          }
-          case "file.pickSavePath": {
-            const saved = await call("dialog.saveFile", {
-              ...params.title ? { title: String(params.title) } : {},
-              ...params.defaultName ? { defaultName: String(params.defaultName) } : {},
-              ...params.filters ? { filters: params.filters } : {}
-            });
-            return { path: saved?.path ?? null };
-          }
-          case "file.write": {
-            const path = String(params.path ?? "");
-            if (!path) throw new Error("file.write: path is required");
-            return call("filesystem.write", {
-              path,
-              contentB64: String(params.base64 ?? ""),
-              expectedMtime: typeof params.expectedMtime === "number" ? params.expectedMtime : void 0
-            });
-          }
-          case "file.stat": {
-            const path = String(params.path ?? "");
-            const info = await stat(path);
-            return { path, size: info.size, mtime: info.mtimeMs };
-          }
-          case "pdf.save": {
-            const path = String(params.path ?? "");
-            if (!path) throw new Error("pdf.save: path is required");
-            const { applySaveRequest: applySaveRequest2 } = await Promise.resolve().then(() => (init_save_pdf(), save_pdf_exports));
-            const { bytes, ...skips } = await applySaveRequest2(
-              new Uint8Array(await readFile2(path)),
-              params
-            );
-            const written = await call("filesystem.write", {
-              path,
-              contentB64: Buffer.from(bytes).toString("base64"),
-              expectedMtime: typeof params.expectedMtime === "number" ? params.expectedMtime : void 0
-            });
-            return { ok: true, mtime: written?.mtime, skips };
-          }
-          case "font.metrics": {
-            const family = String(params.family ?? "");
-            const { familyVerticalMetrics: familyVerticalMetrics2 } = await Promise.resolve().then(() => (init_src(), src_exports));
-            return familyVerticalMetrics2(family) ?? null;
-          }
-          default:
-            throw new Error(`unknown ui request: ${method}`);
-        }
-      })();
-      uiPost({ kind: "response", id, result });
-    } catch (err) {
-      uiPost({ kind: "response", id, error: err instanceof Error ? err.message : String(err) });
-    }
-  }
-  __name(onUiRequest, "onUiRequest");
-  async function onUiEvent(eventId, data) {
-    if (eventId === "chat-send") {
-      const t = String(data?.text ?? "").trim();
-      if (!t) return;
-      try {
-        await call("chat.send", { text: t });
-      } catch (err) {
-        log("error", `chat-send failed: ${err instanceof Error ? err.message : String(err)}`);
-      }
-      return;
-    }
-    if (eventId !== "file-save") return;
-    const { path, contentB64, expectedMtime } = data ?? {};
-    if (!path || typeof contentB64 !== "string") return;
-    try {
-      const result = await call("filesystem.write", { path, contentB64, expectedMtime });
-      renderViewer({ saved: true, mtime: result?.mtime });
-    } catch (err) {
-      const m = err instanceof Error ? err.message : String(err);
-      log("error", `file-save failed: ${m}`);
-      renderViewer({ error: `\u4FDD\u5B58\u5931\u8D25: ${m}` });
-    }
-  }
-  __name(onUiEvent, "onUiEvent");
-  parentPort.on("message", (event) => {
-    const msg = event.data ?? {};
-    switch (msg.type) {
-      case "init":
-        state.uiPort = null;
-        break;
-      case "call-result": {
-        const p = pending.get(String(msg.id));
-        if (p) {
-          pending.delete(String(msg.id));
-          msg.error ? p.reject(new Error(String(msg.error))) : p.resolve(msg.result);
-        }
-        break;
-      }
-      case "tool-call":
-        onTool(msg).catch(
-          (e) => post({ type: "tool-result", id: msg.id, error: e instanceof Error ? e.message : String(e) })
-        );
-        break;
-      case "ui-port": {
-        const port = event.ports?.[0];
-        if (!port) break;
-        state.uiPort = port;
-        port.on("message", (ev) => {
-          const p = ev.data;
-          if (p?.kind === "request") {
-            onUiRequest(String(p.id), String(p.method), p.params ?? {}).catch(() => {
-            });
-            return;
-          }
-          if (p?.kind !== "event") return;
-          if (p.event === "panel.mounted") {
-            openFile(String(p.data?.params?.file ?? state.currentFile));
-          } else if (p.event === "ui.event" && p.panelId === "viewer") {
-            onUiEvent(String(p.data?.eventId ?? ""), p.data?.data).catch(() => {
-            });
-          }
-        });
-        port.start?.();
-        break;
-      }
-    }
-  });
-  post({ type: "ready" });
+  const bytes = await savePptx(opened);
+  const written = await writeOfficeBytes(path, bytes, info.mtimeMs);
+  return text(
+    `applied ${result.records?.length ?? ops.length} op(s) to ${path} and saved (${bytes.length} bytes)`,
+    { applied: true, records: result.records ?? [], mtime: written?.mtime }
+  );
 }
-__name(main, "main");
-var injected = process.parentPort;
-if (injected) main(injected);
+__name(toolEdit, "toolEdit");
+async function runTool(name, p) {
+  switch (name) {
+    case "office_guide":
+      return await toolGuide(p);
+    case "office_read":
+      return await toolRead(p);
+    case "office_edit":
+      return await toolEdit(p);
+    // ── legacy P9a probes (kept until the viewer work lands) ──
+    case "files_probe_write": {
+      if (!p.path) throw new Error("missing path");
+      const result = await ctx.call("filesystem.write", {
+        path: String(p.path),
+        content: String(p.content ?? ""),
+        expectedMtime: typeof p.expectedMtime === "number" ? p.expectedMtime : void 0
+      });
+      return text(`\u5DF2\u5199\u5165 ${result?.path} (${result?.size} bytes, mtime ${Math.round(Number(result?.mtime ?? 0))})`, result);
+    }
+    case "files_probe_read": {
+      if (!p.path) throw new Error("missing path");
+      const result = await ctx.call("filesystem.read", { path: String(p.path) });
+      return text(`\u8BFB\u53D6 ${result?.path} (${result?.size} bytes):
+${String(result?.content ?? "").slice(0, 4e3)}`, result);
+    }
+    case "files_probe_open": {
+      const panelId = typeof p.panelId === "string" && p.panelId ? String(p.panelId) : "viewer";
+      if (panelId !== "viewer") {
+        await ctx.call("panel.open", { panelId, focus: true });
+        return text(`\u5DF2\u6253\u5F00\u9762\u677F ${panelId}`);
+      }
+      const target = typeof p.path === "string" && p.path ? String(p.path) : currentFile;
+      if (!target) throw new Error("no file to open (pass path or click a file first)");
+      await ctx.call("panel.open", { panelId: "viewer", focus: true });
+      openFile(target);
+      return text(`\u5DF2\u5728\u67E5\u770B\u5668\u4E2D\u6253\u5F00 ${target}`);
+    }
+    default:
+      throw new Error(`unknown tool: ${name}`);
+  }
+}
+__name(runTool, "runTool");
+async function onUiRequest(method, params = {}) {
+  switch (method) {
+    case "chat.send": {
+      const t = String(params.text ?? "").trim();
+      if (!t) throw new Error("chat.send: text is required");
+      return ctx.call("chat.send", { text: t });
+    }
+    case "mcp.ready": {
+      mcpReady = true;
+      return { ok: true };
+    }
+    case "mcp.result": {
+      const requestId = String(params.requestId ?? "");
+      const entry = mcpPending.get(requestId);
+      if (!entry) return { ok: false, reason: "no such pending command" };
+      mcpPending.delete(requestId);
+      clearTimeout(entry.timer);
+      if (params.ok === false) {
+        entry.reject(new Error(String(params.error ?? "the viewer reported a failure")));
+      } else {
+        entry.resolve(params.result);
+      }
+      return { ok: true };
+    }
+    case "file.scratchPath": {
+      const dir = join4(tmpdir(), "pi-files-preview");
+      await mkdir(dir, { recursive: true });
+      return { path: join4(dir, `preview-${process.pid}.html`) };
+    }
+    case "file.pickOpenPath": {
+      const opened = await ctx.call("dialog.openFile", {
+        ...params.title ? { title: String(params.title) } : {},
+        ...params.filters ? { filters: params.filters } : {},
+        ...params.multi ? { multi: true } : {}
+      });
+      return { path: opened?.path ?? null, paths: opened?.paths ?? [] };
+    }
+    case "file.pickSavePath": {
+      const saved = await ctx.call("dialog.saveFile", {
+        ...params.title ? { title: String(params.title) } : {},
+        ...params.defaultName ? { defaultName: String(params.defaultName) } : {},
+        ...params.filters ? { filters: params.filters } : {}
+      });
+      return { path: saved?.path ?? null };
+    }
+    case "file.write": {
+      const path = String(params.path ?? "");
+      if (!path) throw new Error("file.write: path is required");
+      return ctx.call("filesystem.write", {
+        path,
+        contentB64: String(params.base64 ?? ""),
+        expectedMtime: typeof params.expectedMtime === "number" ? params.expectedMtime : void 0
+      });
+    }
+    case "file.stat": {
+      const path = String(params.path ?? "");
+      const info = await stat(path);
+      return { path, size: info.size, mtime: info.mtimeMs };
+    }
+    case "pdf.save": {
+      const path = String(params.path ?? "");
+      if (!path) throw new Error("pdf.save: path is required");
+      const { applySaveRequest: applySaveRequest2 } = await Promise.resolve().then(() => (init_save_pdf(), save_pdf_exports));
+      const { bytes, ...skips } = await applySaveRequest2(
+        new Uint8Array(await readFile2(path)),
+        params
+      );
+      const written = await ctx.call("filesystem.write", {
+        path,
+        contentB64: Buffer.from(bytes).toString("base64"),
+        expectedMtime: typeof params.expectedMtime === "number" ? params.expectedMtime : void 0
+      });
+      return { ok: true, mtime: written?.mtime, skips };
+    }
+    case "font.metrics": {
+      const family = String(params.family ?? "");
+      const { familyVerticalMetrics: familyVerticalMetrics2 } = await Promise.resolve().then(() => (init_src(), src_exports));
+      return familyVerticalMetrics2(family) ?? null;
+    }
+    default:
+      throw new Error(`unknown ui request: ${method}`);
+  }
+}
+__name(onUiRequest, "onUiRequest");
+async function onEvent(_panelId, event, data) {
+  const d = data ?? {};
+  if (event === "files.chat") {
+    const t = String(d.text ?? "").trim();
+    if (!t) return;
+    try {
+      await ctx.call("chat.send", { text: t });
+    } catch (err) {
+      ctx.log.error(`chat-send failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    return;
+  }
+  if (event !== "files.save") {
+    ctx.log.warn(`ignoring unknown panel event "${event}"`);
+    return;
+  }
+  const { path, contentB64, expectedMtime } = d;
+  if (!path || typeof contentB64 !== "string") return;
+  try {
+    const result = await ctx.call("filesystem.write", { path, contentB64, expectedMtime });
+    renderViewer({ saved: true, mtime: result?.mtime });
+  } catch (err) {
+    const m = err instanceof Error ? err.message : String(err);
+    ctx.log.error(`file-save failed: ${m}`);
+    renderViewer({ error: `\u4FDD\u5B58\u5931\u8D25: ${m}` });
+  }
+}
+__name(onEvent, "onEvent");
+plugin({
+  onInit(context) {
+    ctx = context;
+  },
+  /** The panel draws from here — onInit runs before anyone has opened it. */
+  onPanelMounted(_panelId, params) {
+    openFile(String(params?.file ?? currentFile));
+  },
+  onTool: runTool,
+  onRequest(_panelId, method, params) {
+    return onUiRequest(method, params);
+  },
+  onEvent
+});
 export {
   createBlankPptx,
-  main,
   opNames,
   openPptx,
   runTxn,

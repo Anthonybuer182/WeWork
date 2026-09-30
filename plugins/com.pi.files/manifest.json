@@ -3,6 +3,7 @@
   "name": "文件中心",
   "description": "文件中心 — 自包含的 office 引擎（创建/编辑/预览 docx/pptx/xlsx/pdf），基于内置的 GenOffice 引擎（Apache-2.0），无需外部工具或联网安装",
   "version": "0.3.0",
+  "apiVersion": 2,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },
@@ -15,7 +16,6 @@
     "panels": [
       {
         "id": "viewer",
-        "kind": "iframe",
         "title": "文件查看器",
         "entry": "./ui-dist/panel/index.html",
         "keepAlive": "lru"

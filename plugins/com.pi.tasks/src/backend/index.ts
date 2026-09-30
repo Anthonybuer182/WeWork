@@ -10,9 +10,11 @@
  *
  * What it cannot do is run while the app is closed, and it cannot reach a
  * conversation when the window is gone. Rather than paper over either, every
- * firing that cannot happen is *written down* — see `runMissed` and
- * `probeUi` — so the 记录 view can show what was skipped and offer to do it.
+ * firing that cannot happen is *written down* — see `runMissed` and the
+ * `ctx.panelAlive` check in `perform` — so the 记录 view can show what was
+ * skipped and offer to do it.
  */
+import { plugin, type PluginContext, type ToolResult } from '@pi/plugin-sdk';
 import type { Item, RunRecord, RunStatus, TasksState, Trigger } from '../core/types.js';
 import { parseWhen, FREE_TEXT_HINT } from '../core/parse-when.js';
 import { buildRRule, describeRepeat, expandOccurrences, alignStartToRule } from '../core/recur.js';
@@ -26,37 +28,14 @@ import {
 } from '../core/triggers.js';
 import { addDays, dayKey, dayStart, formatWhen, formatMonth, toLocalIso, weekdayLabel } from '../core/time.js';
 
-// ── host plumbing (control plane = process.parentPort) ──
-
 /**
- * Electron's `parentPort` is not on the stock `Process` type, so the host port
- * is taken as a parameter with one cast at the bottom of this file — the same
- * shape `com.pi.files` uses. It also means the backend can be imported and
- * driven in a test without an Electron runtime.
+ * The SDK's context, kept at module scope.
+ *
+ * One backend process serves exactly one plugin, so there is one context — and
+ * the timer, the storage helpers and the renderers all need it. Threading it
+ * through every call would be noise.
  */
-export interface HostPort {
-  postMessage(msg: unknown): void;
-  on(event: 'message', listener: (event: { data: any; ports?: any[] }) => void): void;
-}
-
-/** Assigned by `main`; a no-op before that so importing this file cannot throw. */
-let hostPost: (msg: unknown) => void = () => {};
-const post = (msg: unknown): void => hostPost(msg);
-const log = (level: string, message: string): void => post({ type: 'log', level, message });
-
-let seq = 0;
-const pending = new Map<string, { resolve: (v: any) => void; reject: (e: Error) => void }>();
-
-function call(method: string, params: Record<string, unknown> = {}): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const id = 'c' + ++seq;
-    pending.set(id, { resolve, reject });
-    post({ type: 'call', id, method, params });
-    setTimeout(() => {
-      if (pending.delete(id)) reject(new Error(`capability timeout: ${method}`));
-    }, 30_000);
-  });
-}
+let ctx: PluginContext;
 
 // ── state ──
 
@@ -77,20 +56,12 @@ const MAX_TICK_MS = 30_000;
 const MIN_TICK_MS = 250;
 
 let state: TasksState = { items: [], runs: [], notes: {}, completedAt: {} };
-let uiPort: any = null;
-/** Set when the host's port closes — i.e. the window that owned it is gone. */
-let uiPortClosed = false;
 
-const uiPost = (payload: unknown): void => {
-  try {
-    uiPort?.postMessage(payload);
-  } catch {
-    /* The port is gone. Not proof of anything — see probeUi. */
-  }
-};
+/** The panel this plugin draws into. One plugin, one panel. */
+const PANEL = 'items';
 
 async function load(): Promise<void> {
-  const saved = await call('storage.get', { key: STORAGE_KEY }).catch(() => undefined);
+  const saved = await ctx.call('storage.get', { key: STORAGE_KEY }).catch(() => undefined);
   const s = (saved && typeof saved === 'object' ? saved : {}) as Partial<TasksState>;
   state = {
     items: Array.isArray(s.items) ? s.items : [],
@@ -107,8 +78,8 @@ async function save(): Promise<void> {
   if (state.runs.length > MAX_RUNS) {
     state.runs = state.runs.slice(-MAX_RUNS);
   }
-  await call('storage.set', { key: STORAGE_KEY, value: state }).catch((err) => {
-    log('error', `storage.set failed: ${err.message}`);
+  await ctx.call('storage.set', { key: STORAGE_KEY, value: state }).catch((err) => {
+    ctx.log.error(`storage.set failed: ${err.message}`);
   });
 }
 
@@ -175,46 +146,10 @@ function dayPage(day: string): DayPage {
 }
 
 function render(truncated: string[] = []): void {
-  uiPost({ kind: 'event', event: 'ui.render', panelId: 'items', data: buildView(new Date(), truncated) });
+  ctx.send(PANEL, 'ui.render', buildView(new Date(), truncated));
   // A newly saved item can be due seconds from now; re-arming here means it is
   // picked up then rather than at the next poll.
   scheduleNextTick();
-}
-
-// ── delivery probing ──
-//
-// The host offers no signal that the renderer died: it drops its own bookkeeping
-// when a webContents is destroyed but never closes the port or tells the
-// backend. Posting into a dead port is a silent no-op, so `uiPost` returning
-// without throwing proves nothing.
-//
-// So delivery is established the only way that is actually evidence: ask, and
-// wait for an answer. This runs at fire time rather than as a steady heartbeat
-// — nothing is sent when nothing is due.
-
-const PROBE_TIMEOUT_MS = 1500;
-const pendingProbes = new Map<string, () => void>();
-
-function probeUi(): Promise<boolean> {
-  if (!uiPort || uiPortClosed) return Promise.resolve(false);
-  return new Promise((resolve) => {
-    const id = 'probe' + ++seq;
-    const timer = setTimeout(() => {
-      pendingProbes.delete(id);
-      resolve(false);
-    }, PROBE_TIMEOUT_MS);
-    pendingProbes.set(id, () => {
-      clearTimeout(timer);
-      resolve(true);
-    });
-    try {
-      uiPort.postMessage({ kind: 'event', event: 'pi.probe', data: { id } });
-    } catch {
-      clearTimeout(timer);
-      pendingProbes.delete(id);
-      resolve(false);
-    }
-  });
 }
 
 // ── the tick ──
@@ -264,7 +199,7 @@ async function tick(): Promise<void> {
     await save();
     render(truncated);
   } catch (err) {
-    log('error', `tick failed: ${err instanceof Error ? err.message : String(err)}`);
+    ctx.log.error(`tick failed: ${err instanceof Error ? err.message : String(err)}`);
     // Re-arm even on failure: a throwing pass must not stop the clock, or one
     // bad item would silence every reminder after it.
     scheduleNextTick();
@@ -301,13 +236,13 @@ async function perform(run: DueRun): Promise<void> {
   // Raise a badge without stealing focus, so a firing is visible even when the
   // panel is closed. Done for both action kinds — a notification the user
   // missed entirely would otherwise leave no trace in the UI.
-  void call('panel.open', { panelId: 'items', focus: false }).catch(() => undefined);
+  void ctx.call('panel.open', { panelId: 'items', focus: false }).catch(() => undefined);
 
   if (trigger.action.kind === 'notify') {
     const title = trigger.action.title || item.title;
     const body = item.note || formatWhen(fireAt, now, Boolean(item.allDay));
     try {
-      await call('notify.show', { title, body });
+      await ctx.call('notify.show', { title, body });
       state.runs.push(record(run, 'ok', now, '已发送系统通知'));
     } catch (err) {
       state.runs.push(record(run, 'failed', now, err instanceof Error ? err.message : String(err)));
@@ -322,13 +257,13 @@ async function perform(run: DueRun): Promise<void> {
   // window closed the probe passed and the send threw `Object has been
   // destroyed`. So the probe stays as a cheap pre-check, and the authoritative
   // answer is whether the send itself succeeded.
-  if (!(await probeUi())) {
+  if (!(await ctx.panelAlive(PANEL))) {
     state.runs.push(record(run, 'undelivered', undefined, '当时没有打开任何窗口'));
     return;
   }
 
   try {
-    await call('chat.send', { text: trigger.action.prompt });
+    await ctx.call('chat.send', { text: trigger.action.prompt });
     state.runs.push(record(run, 'ok', now, '已送进对话'));
   } catch (err) {
     // Recorded as "not delivered" rather than "failed". From the user's side
@@ -499,8 +434,7 @@ function repeatSpec(value: unknown): string | undefined {
   );
 }
 
-async function onTool(msg: any): Promise<unknown> {
-  const { name, params } = msg;
+async function onTool(name: string, params: Record<string, unknown>): Promise<ToolResult | string> {
   const p = params ?? {};
 
   switch (name) {
@@ -537,7 +471,14 @@ async function onTool(msg: any): Promise<unknown> {
         throw new Error('要设提醒就得先有时间。请同时给 when。');
       }
 
-      const item = saveItem({ title: p.title, note: p.note, start, allDay, rrule, triggers });
+      const item = saveItem({
+        title: String(p.title),
+        note: p.note === undefined ? undefined : String(p.note),
+        start,
+        allDay,
+        rrule,
+        triggers,
+      });
       await save();
       render();
 
@@ -652,7 +593,7 @@ async function onTool(msg: any): Promise<unknown> {
     }
 
     case 'item_update': {
-      const item = findByTitle(p.title, true);
+      const item = findByTitle(String(p.title ?? ""), true);
       if (!item) throw new Error(`没找到事项：${p.title}`);
       const input: SaveInput = { id: item.id };
 
@@ -688,7 +629,7 @@ async function onTool(msg: any): Promise<unknown> {
     }
 
     case 'item_remove': {
-      const item = findByTitle(p.title, false);
+      const item = findByTitle(String(p.title ?? ""), false);
       if (!item) throw new Error(`没找到事项：${p.title}`);
       state.items = state.items.filter((i) => i.id !== item.id);
       await save();
@@ -796,97 +737,30 @@ async function onUiRequest(method: string, params: any): Promise<unknown> {
   }
 }
 
-// ── message pump ──
+// ── the plugin ──
 
-function onHostMessage(event: { data: any; ports?: any[] }): void {
-  const msg = event.data || {};
-  switch (msg.type) {
-    case 'init':
-      load()
-        .then(async () => {
-          render();
-          // The first tick reconciles anything that came due while the app was
-          // closed: `lastTickAt` is from the previous session, so the window
-          // covers the gap. That is the whole catch-up mechanism.
-          await tick();
-        })
-        .catch((e) => log('error', `init failed: ${e.message}`));
-      break;
+plugin({
+  async onInit(context) {
+    ctx = context;
+    await load();
+    render();
+    // The first tick reconciles anything that came due while the app was
+    // closed: `lastTickAt` is from the previous session, so the window covers
+    // the gap. That is the whole catch-up mechanism.
+    await tick();
+  },
 
-    case 'call-result': {
-      const p = pending.get(msg.id);
-      if (p) {
-        pending.delete(msg.id);
-        msg.error ? p.reject(new Error(msg.error)) : p.resolve(msg.result);
-      }
-      break;
-    }
+  async onPanelMounted() {
+    render();
+    // A badge set while no window existed is lost — it is renderer state and
+    // does not survive a reload — so it is re-asserted on every mount.
+    const due = buildView(new Date()).missed.length;
+    if (due > 0) await ctx.setBadge(PANEL, due);
+  },
 
-    case 'tool-call':
-      onTool(msg)
-        .then((result) => post({ type: 'tool-result', id: msg.id, ...(result as object) }))
-        .catch((e) =>
-          post({ type: 'tool-result', id: msg.id, error: e instanceof Error ? e.message : String(e) }),
-        );
-      break;
+  onTool,
 
-    case 'ui-port': {
-      const port = event.ports?.[0];
-      if (!port) break;
-      uiPort = port;
-      uiPortClosed = false;
-      // The host closes a replaced port when a fresh webContents takes over, so
-      // this is the closest thing to "the old window is gone" that exists.
-      try {
-        port.on('close', () => {
-          uiPortClosed = true;
-          log('info', 'ui port closed — window gone');
-        });
-      } catch {
-        /* older Electron: no close event. Probing still covers delivery. */
-      }
-      port.on('message', (ev: any) => {
-        const payload = ev.data;
-        if (payload?.kind === 'event' && payload.event === 'pi.probe.reply') {
-          const resolve = pendingProbes.get(payload.data?.id);
-          if (resolve) {
-            pendingProbes.delete(payload.data.id);
-            resolve();
-          }
-          return;
-        }
-        if (payload?.kind === 'event' && payload.event === 'panel.mounted') {
-          render();
-          // A badge set while no window existed is lost — it is renderer state
-          // and does not survive a reload — so it is re-asserted on every mount.
-          const due = buildView(new Date()).missed.length;
-          if (due > 0) void call('panel.setStatus', { panelId: 'items', badge: due }).catch(() => undefined);
-          return;
-        }
-        if (payload?.kind === 'request') {
-          onUiRequest(payload.method, payload.params)
-            .then((result) => uiPost({ kind: 'response', id: payload.id, result }))
-            .catch((err) =>
-              uiPost({
-                kind: 'response',
-                id: payload.id,
-                error: err instanceof Error ? err.message : String(err),
-              }),
-            );
-        }
-      });
-      if (typeof port.start === 'function') port.start();
-      break;
-    }
-  }
-}
-
-/** Wire the backend to its host port and announce readiness. */
-export function main(parentPort: HostPort): void {
-  hostPost = (msg) => parentPort.postMessage(msg);
-  parentPort.on('message', onHostMessage);
-  post({ type: 'ready' });
-}
-
-const injected = (process as unknown as { parentPort?: HostPort }).parentPort;
-if (injected) main(injected);
+  onRequest(_panelId, method, params) {
+    return onUiRequest(method, params);
+  },
+});

@@ -2,6 +2,7 @@ import { protocol } from 'electron';
 import { existsSync, readFileSync, statSync, openSync, readSync, closeSync } from 'fs';
 import { extname, join, resolve, sep } from 'path';
 import type { PluginRegistry } from './registry';
+import { PANEL_QUERY_PARAM } from '@pi/types';
 import { PI_SDK_FILENAME, buildPluginSdkJs } from './plugin-sdk-js';
 
 export const PI_PLUGIN_SCHEME = 'pi-plugin';
@@ -113,7 +114,11 @@ async function handleRequest(registry: PluginRegistry, request: Request): Promis
   const body = readFileSync(filePath);
 
   if (ext === '.html' || ext === '.htm') {
-    const html = injectSdk(body.toString('utf-8'), pluginId);
+    // The panel id rides on the URL because this handler is the only place that
+    // can put it where the injected SDK will find it — a `pi-plugin://` request
+    // carries no caller identity (no webContents, no frame), so two panels of
+    // one plugin issue byte-identical requests otherwise. See panelUrl().
+    const html = injectSdk(body.toString('utf-8'), pluginId, url.searchParams.get(PANEL_QUERY_PARAM));
     return new Response(html, {
       headers: {
         'Content-Type': MIME_TYPES['.html'],
@@ -208,9 +213,17 @@ function serveWorkspaceFile(registry: PluginRegistry, pluginId: string, url: URL
   });
 }
 
-/** Inject the SDK <script> as the first thing in <head>. */
-function injectSdk(html: string, pluginId: string): string {
-  const tag = `<script src="pi-plugin://${pluginId}/${PI_SDK_FILENAME}" data-pi-plugin="${pluginId}"></script>`;
+/**
+ * Inject the panel id and the SDK <script> as the first thing in <head>.
+ *
+ * The panel id goes in as a plain global rather than on the SDK's own URL
+ * because the SDK script is fetched separately and would otherwise need the
+ * same query param threaded through a second request. `JSON.stringify` guards
+ * the string literal against a quote in the id.
+ */
+function injectSdk(html: string, pluginId: string, panelId: string | null): string {
+  const panelGlobal = panelId ? `<script>window.__piPanelId=${JSON.stringify(panelId)};</script>` : '';
+  const tag = `${panelGlobal}<script src="pi-plugin://${pluginId}/${PI_SDK_FILENAME}" data-pi-plugin="${pluginId}"></script>`;
   if (/<head[^>]*>/i.test(html)) {
     return html.replace(/<head[^>]*>/i, (m) => m + tag);
   }

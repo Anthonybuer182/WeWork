@@ -12,7 +12,7 @@ import { BrowserManager, startBrowserHttpServer, VlmAnalyzer } from '@main/brows
 import { registerBrowserIpcHandlers } from '@main/ipc/browser';
 import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
 import { registerPluginIpcHandlers } from '@main/ipc/plugins';
-import { registerLiveViewIpcHandlers, LiveViewRegistry, BROWSER_LIVEVIEW_SLOT } from '@main/plugins/liveview';
+import { registerLiveViewIpcHandlers, LiveViewRegistry, HOST_BROWSER_SLOT } from '@main/plugins/liveview';
 import { PluginWebViews } from '@main/plugins/plugin-webview';
 import { createHostAgentTools, type AgentCustomTool } from '@main/agent-tools';
 
@@ -225,8 +225,7 @@ if (!gotLock) {
     // for BrowserView, which is deprecated since Electron 30). Like BrowserView
     // it owns a persistent webContents — no guest recreation on redirects, no
     // use-after-free — but it attaches through `contentView.addChildView`, which
-    // is the API that can hold MORE than one view (BrowserWindow.setBrowserView
-    // is limited to a single one, which is what caps liveview at one slot today).
+    // can hold more than one view.
     const browserView = new WebContentsView({
       webPreferences: {
         partition: 'persist:pi-browser',
@@ -247,10 +246,10 @@ if (!gotLock) {
     mainWindow.contentView.addChildView(browserView);
     browserManager.setBrowserView(browserView, mainWindow);
 
-    // The browser plugin's preview panel is the first liveview slot. Bounds and
-    // visibility are the registry's job; the browser-specific extras (CDP
-    // warm-up on attach, device metrics for auto-zoom) ride along here.
-    liveViews.register(BROWSER_LIVEVIEW_SLOT, {
+    // The host's browser view, mounted by the `host:browser` host panel.
+    // Bounds and visibility are the registry's job; the browser-specific extras
+    // (CDP warm-up on attach, device metrics for auto-zoom) ride along here.
+    liveViews.register(HOST_BROWSER_SLOT, {
       attach: () =>
         // Ensure CDP is attached so navigation events flow.
         browserManager.connect().catch(() => {}) as Promise<void>,

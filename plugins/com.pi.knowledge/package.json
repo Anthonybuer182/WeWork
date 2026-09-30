@@ -1,0 +1,19 @@
+{
+  "name": "com.pi.knowledge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "知识库 — 面板 + 3 个工具 + 滑词收藏 + 上下文注入",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-backend.mjs",
+    "typecheck": "node scripts/typecheck.mjs",
+    "test:backend": "node scripts/smoke-backend.mjs"
+  },
+  "dependencies": {
+    "@pi/plugin-sdk": "file:../../packages/plugin-sdk"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "esbuild": "^0.24.0"
+  }
+}

@@ -26,6 +26,8 @@ const store = {};
 const notifications = [];
 const sentToChat = [];
 const badges = [];
+/** Every message the backend posted, for asserting on the handshake itself. */
+const hostSaw = [];
 let hostListener = null;
 
 const port = {
@@ -43,9 +45,10 @@ function sendToBackend(msg, ports) {
 }
 
 function handleFromBackend(msg) {
+  hostSaw.push(msg);
   switch (msg.type) {
     case 'ready':
-      sendToBackend({ type: 'init', pluginId: 'com.pi.tasks', dataDir: '/tmp/pi-tasks-smoke' });
+      sendToBackend({ type: 'init', pluginId: 'com.pi.tasks', apiVersion: 2, dataDir: '/tmp/pi-tasks-smoke' });
       break;
     case 'log':
       if (msg.level === 'error') console.log(`  [backend error] ${msg.message}`);
@@ -150,15 +153,18 @@ function attachUi() {
 
 console.log('━━━ smoke: dist/main.mjs against a fake host\n');
 
-const mod = await import(pathToFileURL(join(ROOT, 'dist/main.mjs')).href);
-check('the bundle exports main()', typeof mod.main === 'function');
-mod.main(port);
+// The SDK takes the host port at import time and throws without one, so the
+// fake has to be in place *before* the module loads. This is the same shape the
+// SDK's own smoke test uses — the backend has no `main()` to call any more.
+process.parentPort = port;
+await import(pathToFileURL(join(ROOT, 'dist/main.mjs')).href);
 
-await new Promise((r) => setTimeout(r, 200));
-check('the backend announced itself and took init', store.tasks !== undefined || true);
+await new Promise((r) => setTimeout(r, 50));
+check('the backend announced readiness on load', hostSaw.some((m) => m.type === 'ready'));
 
 attachUi();
-await new Promise((r) => setTimeout(r, 100));
+await new Promise((r) => setTimeout(r, 200));
+check('the backend loaded its stored state on init', store.tasks !== undefined);
 
 // ── tools ──
 

@@ -15,8 +15,12 @@ export interface MarketEntry {
   author?: string;
   /** Zip download URL (http(s):// or absolute file path for local dev). */
   url: string;
-  /** Hex sha256 of the zip; installation aborts on mismatch. */
-  sha256?: string;
+  /**
+   * Hex sha256 of the zip. Required: installation aborts on mismatch, and an
+   * index without it would install unverified bytes while looking like it had
+   * checked them.
+   */
+  sha256: string;
   size?: number;
   permissions?: string[];
 }

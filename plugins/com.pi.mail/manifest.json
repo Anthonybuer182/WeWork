@@ -1,22 +1,21 @@
 {
   "id": "com.pi.mail",
   "name": "邮件草稿",
-  "description": "官方插件:邮件草稿管理面板 + agent 工具(mail_create_draft / mail_list_drafts),Tier 0 起步(发送通道后续接入)",
+  "description": "官方插件:邮件草稿管理面板 + agent 工具(mail_create_draft / mail_list_drafts)。这一版不会真的发信——没有 SMTP,也没有投递接口",
   "version": "0.1.0",
+  "apiVersion": 2,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },
   "backend": "./dist/main.mjs",
   "permissions": [
     "storage",
-    "notify",
-    "network:localhost"
+    "notify"
   ],
   "contributes": {
     "panels": [
       {
         "id": "drafts",
-        "kind": "iframe",
         "title": "邮件",
         "entry": "./ui/index.html",
         "keepAlive": "lru"
@@ -61,7 +60,7 @@
       },
       {
         "name": "mail_send_draft",
-        "description": "Send an email draft through the configured delivery API. Only drafts created earlier can be sent.",
+        "description": "Mark an existing draft as sent. NOTHING IS ACTUALLY DELIVERED — this revision has no SMTP and no delivery API; it flags the draft and shows a desktop notification. Say so if the user expects the mail to arrive.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -87,7 +86,6 @@
     "messageRenderers": [
       {
         "type": "mail_create_draft",
-        "kind": "declarative",
         "streaming": true
       }
     ],

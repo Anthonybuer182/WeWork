@@ -14,7 +14,7 @@ import type {
 
 /** Declarative card returned alongside tool results. */
 type PluginToolCard = UiNode;
-import { HOST_API_VERSION } from './registry';
+import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 
 const READY_TIMEOUT_MS = 10_000;
 const COMMAND_TIMEOUT_MS = 15_000;
@@ -159,7 +159,7 @@ export class PluginProcess {
     this.post({
       type: 'init',
       pluginId: this.pluginId,
-      apiVersion: HOST_API_VERSION,
+      apiVersion: PLUGIN_PROTOCOL_VERSION,
       appVersion: this.appVersion,
       dataDir: this.dataDir,
     });

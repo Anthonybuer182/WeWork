@@ -22,54 +22,26 @@ asarUnpack:
   - "node_modules/@earendil-works/pi-coding-agent/**/*"
   - "node_modules/@mariozechner/clipboard*/**/*"
 
-# ── Built-in plugins ──
+# ── No built-in plugins, on purpose ──
 #
-# Packaged, the registry looks for plugins at `process.resourcesPath/plugins`
-# (registry.ts getBuiltinRoot). Nothing was putting them there, so a release
-# build shipped with ZERO built-in plugins — no file viewer, no browser, no
-# office tools — while dev looked fine because PI_DEV_PLUGINS supplies the
-# repo's plugins/ directory instead.
+# Every plugin is distributed through the plugin marketplace and installed to
+# `~/.pi/agent/plugins/` (the registry's `user` root). A packaged app therefore
+# starts with ZERO plugins: two host panels (settings, plugin center) and
+# nothing else, and the user installs what they want.
 #
-# It has to be extraResources rather than `files`: `files` lands inside the
-# asar, and getBuiltinRoot resolves a real path next to the app bundle.
+# This was not always the case. A release build once shipped with no plugins
+# either, which looked like a bug and was "fixed" by bundling the repo's
+# `plugins/` directory into the app as the builtin root. That fix created a
+# worse problem: the `user` root outranks `builtin`, so any plugin the user had
+# installed SHADOWED the bundled copy — a stale install silently won over a
+# fresh build-in, and the bundled copies were dead weight nobody ever loaded.
+# If you are here because a packaged app has no plugins: that is the intended
+# state. Ship the plugin to the marketplace instead of bundling it.
 #
-# The filter is exclude-based on purpose. A plugin's runtime payload follows the
-# build conventions this repo already uses — the manifest points at `dist/`
-# (backend, bundled), `contributes.panels[].entry` at `ui-dist/` (panel,
-# bundled), and `assets/` for icons — while `src/`, `tests/`, `scripts/` and
-# `vendor/` are build INPUTS, never read at runtime. Both bundlers inline
-# everything they reach: `com.pi.files/dist/main.mjs` is the whole backend and
-# its only surviving dynamic import is `import("module")`.
-#
-# Excluding is still the safer default than an allowlist: a third-party plugin
-# that ships something unusual keeps working, and the thing that actually
-# matters — the 627 MB of node_modules under com.pi.files — is what gets cut.
-#
-# Anchored because a platform that sets extraResources REPLACES the top-level
-# list rather than extending it, so each one below has to name this entry again.
-#
-# The `{,/**/*}` braces are load-bearing, not decoration. electron-builder
-# matches a directory against a negated pattern with partial matching OFF, so
-# `!**/node_modules/**` excludes everything INSIDE node_modules but not the
-# directory itself — shipping an empty `node_modules/`, `src/`, `vendor/` … in
-# every plugin. The brace form covers the directory and its contents.
+# Windows still ships a shell bundle — that is a runtime dependency of the
+# agent's bash tool, not a plugin.
 extraResources:
-  - &pluginResource
-    from: "../../plugins"
-    to: "plugins"
-    filter:
-      - "**/*"
-      - "!**/node_modules{,/**/*}"
-      - "!**/src{,/**/*}"
-      - "!**/tests{,/**/*}"
-      - "!**/scripts{,/**/*}"
-      - "!**/vendor{,/**/*}"
-      - "!**/package-lock.json"
-      - "!**/pnpm-lock.yaml"
-      - "!**/tsconfig*.json"
-      - "!**/*.tsbuildinfo"
-      - "!**/.git{,/**/*}"
-      - "!**/.DS_Store"
+  []
 
 # Office document support used to ship here as a bundled `officecli` skill
 # plus a binary fetched at startup. It is now a plugin (com.pi.files) running
@@ -81,8 +53,6 @@ mac:
   target:
     - dmg
     - zip
-  extraResources:
-    - *pluginResource
   # Code signing: requires Apple Developer account.
   # Uncomment and set these when you have a signing identity:
   # hardenedRuntime: true
@@ -94,9 +64,8 @@ win:
   # Bundle MinGit BusyBox (shell + git + coreutils) so Windows users
   # get bash-like command execution out of the box.
   # Note: platform-level extraResources OVERRIDE the top-level list rather than
-  # extending it, so anything the top level ships must be repeated here.
+  # extending it. The top level ships nothing today, so this entry stands alone.
   extraResources:
-    - *pluginResource
     - from: "bash-bundle/"
       to: "bash-bundle/"
   target:
@@ -120,5 +89,3 @@ linux:
     - deb
   category: Development
   maintainer: pi@example.com
-  extraResources:
-    - *pluginResource

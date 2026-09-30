@@ -40,7 +40,9 @@
 import { argv, exit } from 'node:process';
 
 const CDP_HOST = process.env.PI_CDP_HOST ?? '127.0.0.1:19222';
-const SHELL_MATCH = 'localhost:5174';
+// Matched by origin, not an exact port: Vite falls back to 5174 when 5173 is
+// taken, and a hardcoded port failed *after* the run had already done the work.
+const SHELL_MATCH = process.env.PI_SHELL_MATCH ?? 'localhost:517';
 const PANEL_MATCH = 'com.pi.files';
 
 const KIND = argv[2];

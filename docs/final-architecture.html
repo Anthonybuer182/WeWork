@@ -218,6 +218,21 @@
 </head>
 <body>
 
+<div style="max-width:1080px;margin:24px auto 0;padding:0 28px">
+  <div style="border:1px solid var(--border);border-left:4px solid var(--todo);background:var(--todo-soft);border-radius:8px;padding:16px 20px;font-size:14px;line-height:1.75;color:var(--ink)">
+    <b>这份是 2026-09-03 的设计提案，不是当前架构。</b>
+    它记录的取舍理由（进程模型、宿主边界、权限与能力、与 agent 的双向集成）现在依然成立，
+    指南里没有这些 —— 所以它留在这儿。但它描述的<b>面板模型</b>已经被取代：
+    <ul style="margin:10px 0 10px 20px;line-height:1.9">
+      <li>manifest 里的 <code>kind</code> 字段<b>没了</b>。面板只有一种：一个 <code>entry</code> 指向一张网页，装法由宿主决定。下面的「面板两种 kind」一节，以及 <code>liveview</code> / <code>companionOf</code> / <code>autoHeight</code>，都已作废。</li>
+      <li>浏览器预览不再是插件的 <code>liveview</code> 面板，而是宿主自带的 <code>host:browser</code>；浏览器插件现在只贡献工具。</li>
+      <li>插件后端统一走 <code>@pi/plugin-sdk</code>，<code>main(parentPort)</code> 那套手写协议没了。</li>
+      <li>第一方插件是 <b>5 个</b>（下面表里的 9 个含后来删掉的示例插件）。</li>
+    </ul>
+    当前的对外契约看 <code>docs/plugin-dev-guide.md</code>。<b>不要照着这份写代码。</b>
+  </div>
+</div>
+
 <header class="band">
   <div class="band-inner">
     <div class="kicker">pi-coding-agent-desktop · 定稿 v1.0</div>
@@ -225,7 +240,7 @@
     <p class="lede">宿主最小化、对外一套接口、隔离合同级、渲染按面板类型最优化 —— 全部业务能力以插件形态弹性集成,与 agent 双向互动。</p>
     <div class="meta-row">
       <span><b>10</b> 个阶段已交付</span>
-      <span><b>9</b> 个第一方插件在运行</span>
+      <span><b>9</b> 个第一方插件在运行（当时，含已删示例插件；现为 5）</span>
       <span><b>120+</b> 项可重复验收</span>
       <span>定稿 2026-09-03</span>
     </div>
@@ -435,7 +450,7 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
     <li><strong>市场:</strong>静态 index.json + zip + sha256 校验 + engines 版本协商 + 原子安装;卸载默认保留数据(重装恢复);授权确认对话框逐条列权限</li>
     <li><strong>多根扫描:</strong>dev(开发)> user(市场安装)> builtin(内置);同名高优先级覆盖</li>
     <li><strong>filePreview 路由优先级:</strong>dev > user > builtin —— <b>第三方查看器装上即接管同扩展</b>;无认领类型 → 系统默认应用打开(宿主永不渲染业务内容)</li>
-    <li><strong>连接器脚手架:</strong><code>examples/templates/connector-plugin/</code>(对接真实 ERP/HR/财务系统的起点)</li>
+    <li><strong>连接器脚手架:</strong><code>templates/connector-plugin/</code>(对接真实 ERP/HR/财务系统的起点)</li>
   </ul>
 </section>
 

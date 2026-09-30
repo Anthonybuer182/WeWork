@@ -3,6 +3,7 @@ import type { OpenDialogOptions, SaveDialogOptions } from 'electron';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { CapabilityMethod, PluginEvent, PluginPanelStatus } from '@pi/types';
+import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { deleteFileWithMtimeGuard, writeFileWithMtimeGuard } from '@pi/sdk-wrapper/adapters';
 import type { PluginRegistry } from './registry';
 import type { BrowserManager } from '@main/browser/browser-manager';
@@ -65,7 +66,7 @@ export class CapabilityHub {
     this.capabilities.set('app.info', {
       handler: ({ pluginId }) => ({
         pluginId,
-        apiVersion: '1.0.0',
+        apiVersion: PLUGIN_PROTOCOL_VERSION,
         appVersion: app.getVersion(),
         platform: process.platform,
       }),

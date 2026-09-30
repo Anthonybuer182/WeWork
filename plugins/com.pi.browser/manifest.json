@@ -1,8 +1,9 @@
 {
   "id": "com.pi.browser",
   "name": "浏览器自动化",
-  "description": "P4 标杆插件:agent 工具 + Tier 0 控制面板 + liveview 实时预览 + skill 贡献",
+  "description": "给 agent 的浏览器工具:打开网页、读当前页面、截图。界面部分由宿主自带(host:browser 面板),本插件不提供面板。",
   "version": "0.1.0",
+  "apiVersion": 2,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },
@@ -11,23 +12,6 @@
     "browser"
   ],
   "contributes": {
-    "panels": [
-      {
-        "id": "preview",
-        "kind": "liveview",
-        "title": "浏览器",
-        "keepAlive": "always"
-      },
-      {
-        "id": "control",
-        "kind": "iframe",
-        "title": "浏览器控制",
-        "icon": "sliders",
-        "companionOf": "preview",
-        "entry": "./ui/toolbar.html",
-        "keepAlive": "lru"
-      }
-    ],
     "tools": [
       {
         "name": "browser_navigate",

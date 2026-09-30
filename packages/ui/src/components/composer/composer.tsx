@@ -339,7 +339,6 @@ export function Composer() {
 
       // Cancel outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: ['session', activeSessionId] });
-      const previousSession = queryClient.getQueryData(['session', activeSessionId]);
 
       // Build user message blocks from attachments for inline preview
       const userBlocks: ContentBlock[] = [];
@@ -380,46 +379,6 @@ export function Composer() {
         }
       }
 
-      // Append text references for non-image attachments to the prompt content.
-      // For text-based files, decode and include the actual file content so the
-      // AI can analyze it directly.
-      let promptContent = content;
-      const nonImageAtts = currentAttachments.filter((a) => a.type !== 'image' && a.name);
-      if (nonImageAtts.length > 0) {
-        const TEXT_MIMES = new Set([
-          'text/plain', 'text/html', 'text/css', 'text/csv', 'text/xml',
-          'text/javascript', 'text/typescript', 'text/markdown',
-          'text/x-python', 'text/x-java', 'text/x-rust', 'text/x-go',
-          'text/x-c', 'text/x-c++', 'text/x-sh',
-          'application/json', 'application/javascript', 'application/typescript',
-          'application/xml', 'application/x-yaml',
-        ]);
-
-        const fileSections: string[] = [];
-        for (const att of nonImageAtts) {
-          if (att.data && TEXT_MIMES.has(att.mimeType)) {
-            try {
-              // atob returns a binary string; decode UTF-8 bytes properly
-              const binary = atob(att.data);
-              const bytes = new Uint8Array(binary.length);
-              for (let j = 0; j < binary.length; j++) {
-                bytes[j] = binary.charCodeAt(j);
-              }
-              const text = new TextDecoder().decode(bytes);
-              // Wrap in markdown code fences with language hint from extension
-              const ext = (att.name || '').split('.').pop() || '';
-              const fenceExt = ext === 'tsx' ? 'tsx' : ext === 'jsx' ? 'jsx' : ext === 'md' ? 'md' : ext;
-              fileSections.push(`File: ${att.name}\n\`\`\`${fenceExt}\n${text}\n\`\`\``);
-            } catch {
-              fileSections.push(`[Attached: ${att.name} (${att.type}) - could not decode]`);
-            }
-          } else {
-            fileSections.push(`[Attached: ${att.name} (${att.type})]`);
-          }
-        }
-        promptContent = `${content}\n\n${fileSections.join('\n\n')}`;
-      }
-
       // Optimistically show the user message immediately
       queryClient.setQueryData(['session', activeSessionId], (old: any) => {
         if (!old) return old;
@@ -441,7 +400,6 @@ export function Composer() {
         };
       });
 
-      return { previousSession, promptContent };
     },
     mutationFn: async (content: string) => {
       if (!activeSessionId) return;
@@ -676,7 +634,7 @@ export function Composer() {
       // sdk.chat.steer()/sdk.chat.followUp() and processed by the SDK's
       // internal queue. The SDK emits queue_update events that sync the UI.
     },
-    onError: (error: Error, _content: string, context: any) => {
+    onError: (error: Error) => {
       // User-initiated cancel via Stop button: don't rollback, don't show error
       if (error.name === 'AbortError') {
         clearStreamingBlocks();
@@ -684,15 +642,25 @@ export function Composer() {
         isActuallyStreaming.current = false;
         return;
       }
-      // Rollback optimistic user message
       // Clear streaming state first to prevent the same race condition
-      // as onSuccess (duplicate streaming ghost alongside rollback).
+      // as onSuccess (duplicate streaming ghost alongside the refresh).
       clearStreamingBlocks();
       setIsStreaming(false);
       isActuallyStreaming.current = false;
-      if (context?.previousSession) {
-        queryClient.setQueryData(['session', activeSessionId], context.previousSession);
-      }
+
+      // Re-read the session rather than restoring the pre-send snapshot.
+      //
+      // The snapshot rollback assumed "the send failed, so it never happened".
+      // That is wrong for the ordinary case: a model error arrives AFTER the
+      // message has been written to the session file, so restoring the snapshot
+      // deleted a message that was already on disk. The UI and the session
+      // disagreed, and the user's own words vanished with no explanation — the
+      // symptom that made an out-of-credit account look like a dead send button.
+      //
+      // Re-reading makes the timeline show what is actually stored, whichever
+      // way it went: no message if the send never left, the user's message if it
+      // reached the model and the model refused.
+      void queryClient.invalidateQueries({ queryKey: ['session', activeSessionId] });
       setStreamError(error.message || 'Failed to send message');
     },
     onSettled: () => {

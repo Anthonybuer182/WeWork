@@ -129,10 +129,9 @@ function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion 
  */
 export function PanelRail({ region = 'right' }: { region?: PanelRegion }) {
   const panels = usePanelStore((s) => s.panels);
-  // Auxiliary panels (hidden / companion) are not listed — one plugin, one
-  // rail button. Companions render inside their primary panel's body.
+  // Hidden panels are openable via panel.open / events but get no rail button.
   const railPanels = panels
-    .filter((p) => p.region === region && !p.hidden && !p.companionOf)
+    .filter((p) => p.region === region && !p.hidden)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const topGroup = railPanels.filter((p) => p.anchor !== 'bottom');

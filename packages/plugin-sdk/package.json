@@ -1,0 +1,18 @@
+{
+  "name": "@pi/plugin-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend runtime for pi plugins — handshake, capability calls, panel routing, error surfacing",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node tests/smoke.mjs",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  }
+}

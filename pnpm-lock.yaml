@@ -8,15 +8,9 @@ importers:
 
   .:
     devDependencies:
-      '@earendil-works/pi-agent-core':
-        specifier: ^0.78.1
-        version: 0.78.1(ws@8.21.0)(zod@3.25.76)
-      '@earendil-works/pi-ai':
-        specifier: ^0.78.1
-        version: 0.78.1(ws@8.21.0)(zod@3.25.76)
-      '@earendil-works/pi-coding-agent':
-        specifier: ^0.78.1
-        version: 0.78.1(ws@8.21.0)(zod@3.25.76)
+      adm-zip:
+        specifier: ^0.6.1
+        version: 0.6.1
       prettier:
         specifier: ^3.8.3
         version: 3.8.3
@@ -130,6 +124,8 @@ importers:
       vite:
         specifier: ^5.4.0
         version: 5.4.21(@types/node@25.9.1)
+
+  packages/plugin-sdk: {}
 
   packages/sdk-wrapper:
     dependencies:
@@ -1925,6 +1921,10 @@ packages:
   adm-zip@0.5.17:
     resolution: {integrity: sha512-+Ut8d9LLqwEvHHJl1+PIHqoyDxFgVN847JTVM3Izi3xHDWPE4UtzzXysMZQs64DMcrJfBeS/uoEP4AD3HQHnQQ==}
     engines: {node: '>=12.0'}
+
+  adm-zip@0.6.1:
+    resolution: {integrity: sha512-Xwrja8nx9e5o2N1my4DsKCeKpdrnACyr1wtbPxBDgGzKzKyE9kRtBFA8mWldI+RVlD7CBZNWY/wQ2+ydwOR6kQ==}
+    engines: {node: '>=14.0'}
 
   ag-charts-types@13.3.1:
     resolution: {integrity: sha512-m37eUe4g//swvGh8PWMlYQH3gknjSsPeW4sQwBhM3/auGAHmN0wvxEWlrdAn98pBPg4HoKbtOy+yf7gPCYsnvQ==}
@@ -6313,6 +6313,8 @@ snapshots:
   abbrev@1.1.1: {}
 
   adm-zip@0.5.17: {}
+
+  adm-zip@0.6.1: {}
 
   ag-charts-types@13.3.1: {}
 

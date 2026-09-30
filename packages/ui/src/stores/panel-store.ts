@@ -2,14 +2,20 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PluginInfo, PluginPanelStatus, PanelRegion, PanelAnchor } from '@pi/types';
 
-export type PanelKind = 'host' | 'iframe' | 'declarative' | 'liveview';
 export type PanelKeepAlive = 'always' | 'lru' | 'never';
 // Region/anchor belong to the manifest contract (plugins declare them), so the
 // definitions live in @pi/types. Re-exported here because most call sites
 // import these from the store alongside PanelEntry.
 export type { PanelRegion, PanelAnchor };
 
-/** Unified panel entry — host panels and plugin panels share this shape. */
+/**
+ * Unified panel entry — host panels and plugin panels share this shape.
+ *
+ * There is no `kind`. A panel is a panel; what differs is who provides it, and
+ * that is exactly what `source` says:
+ *   source === 'host'  → a React component in the shell (HOST_COMPONENTS)
+ *   source === <pluginId> → a web page, hosted natively by the host
+ */
 export interface PanelEntry {
   /** 'host:settings' | 'host:plugins' | 'plugin:<pluginId>:<panelId>' */
   id: string;
@@ -18,19 +24,14 @@ export interface PanelEntry {
   icon: string;
   /** Plugin-provided icon (pi-plugin:// URL) — takes precedence over `icon`. */
   iconUrl?: string;
-  kind: PanelKind;
   source: 'host' | string; // 'host' or pluginId
   pluginId?: string;
   panelId?: string;
-  /** iframe panels: entry path relative to the plugin root. */
+  /** The panel's page, relative to the plugin root. Absent on host panels. */
   entry?: string;
   /** Not shown on the rail; still openable via panel.open / events. */
   hidden?: boolean;
-  /** Attached above this panel (same plugin) as a companion card. */
-  companionOf?: string;
   keepAlive: PanelKeepAlive;
-  /** iframe panels: host sizes the frame to the reported content height. */
-  autoHeight?: boolean;
   /** Which sidebar column this panel renders in. */
   region: PanelRegion;
   /** Position within its region's rail. Defaults to 'top'. */
@@ -91,12 +92,11 @@ function pluginPanelId(pluginId: string, panelId: string): string {
   return `plugin:${pluginId}:${panelId}`;
 }
 
-function keepAliveFor(kind: PanelKind, declared?: PanelKeepAlive): PanelKeepAlive {
-  if (kind === 'declarative' || kind === 'host') {
-    // declarative: state lives in the backend — remount is free
-    // host: components manage their own mounts; default never
-    return declared && kind !== 'declarative' ? declared : 'never';
-  }
+function keepAliveFor(source: string, declared?: PanelKeepAlive): PanelKeepAlive {
+  // Host panels manage their own mounts — never keep them alive behind the
+  // user's back. Plugin panels default to 'lru' so switching away and back
+  // does not reload the page from scratch.
+  if (source === 'host') return 'never';
   return declared ?? 'lru';
 }
 
@@ -230,28 +230,21 @@ export const usePanelStore = create<PanelStoreState>()(
         set((s) => {
           const pluginPanels: PanelEntry[] = infos.flatMap((plugin) =>
             plugin.panels
-              .filter((panel) => panel.kind === 'iframe' || panel.kind === 'declarative' || panel.kind === 'liveview')
+              // A panel is a web page. Manifest validation guarantees an entry,
+              // but a malformed descriptor must not take the whole rail down.
+              .filter((panel) => Boolean(panel.entry))
               .map((panel) => ({
                 id: pluginPanelId(plugin.id, panel.id),
                 title: panel.title,
                 icon: panel.icon ?? 'puzzle',
                 iconUrl: panel.iconUrl,
-                kind: panel.kind,
                 source: plugin.id,
                 pluginId: plugin.id,
                 panelId: panel.id,
                 entry: panel.entry,
                 hidden: panel.hidden === true,
-                companionOf: panel.companionOf,
-                keepAlive: keepAliveFor(panel.kind, panel.keepAlive),
-                autoHeight: panel.autoHeight === true,
-                // Liveview panels stay pinned right regardless of what they
-                // declare: every liveview shares a single native view, so a
-                // hidden left-side slot reporting 0x0 would blank the visible
-                // one silently. iframe/declarative panels each own their
-                // surface (per-slot WebContentsView / plain DOM), so they may
-                // sit in either column.
-                region: panel.kind === 'liveview' ? 'right' : (panel.region ?? 'right'),
+                keepAlive: keepAliveFor(plugin.id, panel.keepAlive),
+                region: panel.region ?? 'right',
                 anchor: panel.anchor,
                 order: panel.order,
               })),
