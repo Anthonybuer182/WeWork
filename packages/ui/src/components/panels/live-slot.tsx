@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { MonitorX } from 'lucide-react';
 
 /**
- * Tier 2 liveview slot: a native WebContentsView mount point. The component
+ * Live slot: a native WebContentsView mount point. The component
  * reports its viewport-relative bounds to the main process, which positions
  * the view over this slot; on unmount the view detaches (hidden).
  */
-export function LiveViewSlot({
+export function LiveSlot({
   pluginId,
   panelId,
   /**
@@ -119,8 +119,8 @@ export function LiveViewSlot({
     return (
       <div
         className="flex h-full w-full flex-col items-center justify-center gap-2 p-6 text-center"
-        data-panel-kind="liveview-error"
-        data-liveview-slot={`${pluginId}:${panelId}`}
+        data-panel-kind="live-slot-error"
+        data-live-slot={`${pluginId}:${panelId}`}
       >
         <MonitorX className="h-6 w-6 text-muted-foreground/60" />
         <p className="text-sm text-muted-foreground">此面板需要原生视图支持</p>
@@ -132,8 +132,8 @@ export function LiveViewSlot({
   return (
     <div
       ref={containerRef}
-      data-panel-kind="liveview"
-      data-liveview-slot={`${pluginId}:${panelId}`}
+      data-panel-kind="live-slot"
+      data-live-slot={`${pluginId}:${panelId}`}
       className="h-full w-full bg-background"
     />
   );

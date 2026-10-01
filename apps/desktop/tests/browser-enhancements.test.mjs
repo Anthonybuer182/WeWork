@@ -451,30 +451,6 @@ test('provider URLs are correct', () => {
   assertEqual(urls.google, 'https://generativelanguage.googleapis.com/v1beta');
 });
 
-describe('VLM: HTTP Server Analyze Flag');
-
-test('screenshot with analyze=true', () => {
-  const url = new URL('http://localhost:19223/screenshot?analyze=true');
-  assert(url.searchParams.get('analyze') === 'true', 'analyze should be true');
-});
-
-test('screenshot with fullPage and analyze', () => {
-  const url = new URL('http://localhost:19223/screenshot?fullPage=true&analyze=true');
-  assert(url.searchParams.get('fullPage') === 'true', 'fullPage should be true');
-  assert(url.searchParams.get('analyze') === 'true', 'analyze should be true');
-});
-
-test('screenshot without analyze defaults to false', () => {
-  const url = new URL('http://localhost:19223/screenshot');
-  assert(url.searchParams.get('analyze') !== 'true', 'analyze should default to false');
-});
-
-test('screenshot with only fullPage', () => {
-  const url = new URL('http://localhost:19223/screenshot?fullPage=true');
-  assert(url.searchParams.get('fullPage') === 'true', 'fullPage should be true');
-  assert(url.searchParams.get('analyze') !== 'true', 'analyze should default to false');
-});
-
 describe('Snapshot: ID Filtering');
 
 test('filters vue- IDs', () => {

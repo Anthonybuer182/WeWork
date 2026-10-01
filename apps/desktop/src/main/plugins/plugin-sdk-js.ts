@@ -9,6 +9,9 @@
  *   piSDK.request(method, params) → Promise<result>  (backend round-trip)
  *   piSDK.emit(event, data)                          (fire-and-forget)
  *   piSDK.onMessage(cb)                              (backend → UI events)
+ *   piSDK.liveSlot(name, element) → { detach }       (bind a host engine view
+ *                                                     into the page layout;
+ *                                                     native view panels only)
  *
  * THE PANEL ID IS NOT THE AUTHOR'S PROBLEM. `panelId` rides on the panel URL
  * (see panelUrl in @pi/types), the pi-plugin:// handler turns it into
@@ -217,10 +220,86 @@ const PLUGIN_SDK_SOURCE = String.raw`
     });
   }
 
+  // ── Live slots ─────────────────────────────────────────────────────
+  // Bind a host engine view into this page's layout: the element becomes the
+  // rectangle where the host positions a native view (today: the embedded
+  // browser, for plugins holding the browser permission). Only meaningful
+  // in a native view — an iframe/web panel has no native layer to position.
+  function liveSlot(name, element) {
+    var noop = { detach: function () {} };
+    if (!IN_VIEW || !VIEW.liveAttach) {
+      console.error('[pi-sdk] liveSlot needs a native view container (a desktop panel hosted in a WebContentsView).');
+      return noop;
+    }
+    if (!element) {
+      console.error('[pi-sdk] liveSlot: element is required.');
+      return noop;
+    }
+
+    var stopped = false;
+    var lastKey = null;
+    var timer = null;
+    var observer = null;
+
+    function report() {
+      timer = null;
+      if (stopped) return;
+      var rect = element.getBoundingClientRect();
+      var bounds = {
+        x: Math.round(rect.x + (window.scrollX || 0)),
+        y: Math.round(rect.y + (window.scrollY || 0)),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height)
+      };
+      // Report even when degenerate: 0×0 is the "hide the view" signal — a
+      // display:none slot must not leave a stale engine rectangle up there,
+      // invisibly eating real mouse clicks.
+      var key = bounds.x + ',' + bounds.y + ',' + bounds.width + ',' + bounds.height;
+      if (key === lastKey) return;
+      lastKey = key;
+      VIEW.liveBounds(name, bounds).then(function (res) {
+        if (res && res.ok === false) {
+          console.error('[pi-sdk] live slot "' + name + '" rejected by host: ' + (res.error || 'unknown reason'));
+        }
+      }).catch(function (e) { console.error('[pi-sdk] live slot bounds failed:', e); });
+    }
+
+    function schedule() {
+      if (timer) return;
+      timer = setTimeout(report, 50);
+    }
+
+    VIEW.liveAttach(name).then(function (res) {
+      if (res && res.ok === false) {
+        // The host refused — say why (no browser permission, slot name
+        // colliding with a panel id, plugin disabled…), loudly.
+        console.error('[pi-sdk] live slot "' + name + '" not available: ' + (res.error || 'unknown reason'));
+      }
+    }).catch(function (e) { console.error('[pi-sdk] live slot attach failed:', e); });
+
+    if (typeof ResizeObserver === 'function') {
+      observer = new ResizeObserver(schedule);
+      observer.observe(element);
+    }
+    window.addEventListener('resize', schedule);
+
+    return {
+      detach: function () {
+        stopped = true;
+        if (timer) { clearTimeout(timer); timer = null; }
+        if (observer) { observer.disconnect(); observer = null; }
+        window.removeEventListener('resize', schedule);
+        lastKey = null;
+        VIEW.liveDetach(name).catch(function () {});
+      }
+    };
+  }
+
   window.piSDK = {
     pluginId: PLUGIN_ID,
     request: request,
     emit: emit,
+    liveSlot: liveSlot,
     onMessage: function (cb) {
       if (handlers.indexOf(cb) < 0) handlers.push(cb);
     }

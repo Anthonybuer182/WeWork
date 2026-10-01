@@ -219,6 +219,7 @@ export type CapabilityMethod =
   | 'browser.back'
   | 'browser.forward'
   | 'browser.reload'
+  | 'browser.getUrl'
   | 'browser.getState'
   | 'browser.screenshot'
   | 'browser.click'

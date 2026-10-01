@@ -1,8 +1,8 @@
 {
   "id": "com.pi.browser",
   "name": "浏览器自动化",
-  "description": "给 agent 的浏览器工具:打开网页、读当前页面、截图。界面部分由宿主自带(host:browser 面板),本插件不提供面板。",
-  "version": "0.1.0",
+  "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
+  "version": "0.3.0",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -12,6 +12,15 @@
     "browser"
   ],
   "contributes": {
+    "panels": [
+      {
+        "id": "browser",
+        "title": "浏览器",
+        "icon": "globe",
+        "entry": "./ui/index.html",
+        "keepAlive": "lru"
+      }
+    ],
     "tools": [
       {
         "name": "browser_navigate",
@@ -32,7 +41,7 @@
       },
       {
         "name": "browser_get_state",
-        "description": "Get the current state of the built-in browser: current URL and page title.",
+        "description": "Get the current URL, page title, and a snapshot of the page's interactive elements (buttons, links, inputs — each with a ref you can pass to browser_click / browser_fill). Call this FIRST when you need to see what is on the page and act on it; use browser_screenshot only when you need the visual layout.",
         "inputSchema": {
           "type": "object",
           "properties": {},
@@ -40,8 +49,163 @@
         }
       },
       {
+        "name": "browser_find",
+        "description": "Find interactive elements on the current page by text query (fuzzy match, scored). Returns matches with role, visible text, page section, and a ref usable as a click/fill selector. Use it when browser_get_state's snapshot was truncated or you need to locate one specific control.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Text to search for, e.g. \"登录\" or \"search\""
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_click",
+        "description": "Click an element in the built-in browser. Waits up to 5s for the element, scrolls it into view, then clicks. On failure the result suggests similar elements.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "Element selector. Preferred: a ref from browser_get_state/browser_find, e.g. \"[12]\". Also accepted: text=\"登录\", role=button[name=\"提交\"], or a CSS selector."
+            }
+          },
+          "required": [
+            "selector"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_fill",
+        "description": "Fill an input field (replaces existing content; works with React/Vue controlled inputs). Focuses the field first, so component event handlers fire.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "Input selector — same formats as browser_click (ref like \"[3]\" is preferred)."
+            },
+            "value": {
+              "type": "string",
+              "description": "The text to type into the field"
+            }
+          },
+          "required": [
+            "selector",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_hover",
+        "description": "Hover the pointer over an element — for menus and tooltips that only appear on hover.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "Element selector — same formats as browser_click."
+            }
+          },
+          "required": [
+            "selector"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_select",
+        "description": "Select an option in a <select> dropdown by its value or visible text.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "Select-element selector — same formats as browser_click."
+            },
+            "value": {
+              "type": "string",
+              "description": "Option value or visible text to select"
+            }
+          },
+          "required": [
+            "selector",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_scroll",
+        "description": "Scroll the page up or down.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "enum": [
+                "up",
+                "down"
+              ],
+              "description": "Scroll direction. Defaults to down."
+            },
+            "amount": {
+              "type": "number",
+              "description": "Pixels to scroll. Defaults to 500."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_evaluate",
+        "description": "Run a JavaScript expression in the page context and return its JSON value. Power tool for reading computed data (e.g. document.title, table contents) that the snapshot misses. The page can tell it runs — never use it to bypass a site's defenses.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "expression": {
+              "type": "string",
+              "description": "JavaScript expression to evaluate, e.g. JSON.stringify({h1: document.querySelector('h1')?.textContent})"
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_walk",
+        "description": "Goal-directed navigation: state the target (e.g. \"进入个人设置页\") and the browser plans and executes the click path itself, using screenshot analysis. Use it when a site needs several dependent clicks to reach a place and you do not know its structure. Requires a vision model to be configured; falls back to keyword matching when planning fails. Verify the result with browser_get_state afterwards.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "goal": {
+              "type": "string",
+              "description": "The destination in plain language, e.g. \"打开文章编辑器\""
+            },
+            "maxSteps": {
+              "type": "number",
+              "description": "Maximum click steps to try. Defaults to 5."
+            }
+          },
+          "required": [
+            "goal"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
         "name": "browser_screenshot",
-        "description": "Take a screenshot of the current page in the built-in browser. Returns a base64 PNG image.",
+        "description": "Take a screenshot of the current page in the built-in browser. Returns a base64 PNG image you can see directly — use for visual layout, design, charts, or CAPTCHA-style content the element snapshot cannot express.",
         "inputSchema": {
           "type": "object",
           "properties": {

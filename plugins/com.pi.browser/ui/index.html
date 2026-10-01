@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>浏览器</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      display: flex;
+      flex-direction: column;
+      background: var(--background, #fff);
+      color: var(--foreground, #222);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 13px;
+      overflow: hidden;
+    }
+    #toolbar {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border, #e5e5e5);
+      background: var(--card, #fafafa);
+    }
+    #toolbar button {
+      flex: none;
+      width: 26px;
+      height: 26px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted-foreground, #666);
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    #toolbar button:hover { background: var(--accent, #eee); }
+    #toolbar button:active { transform: scale(0.94); }
+    #url {
+      flex: 1;
+      min-width: 0;
+      height: 26px;
+      padding: 0 10px;
+      border: 1px solid var(--border, #e5e5e5);
+      border-radius: 6px;
+      background: var(--background, #fff);
+      color: var(--foreground, #222);
+      font-size: 12px;
+      outline: none;
+    }
+    #url:focus { border-color: var(--ring, #888); }
+    /* The engine view is positioned exactly over this region by the host
+       (piSDK.liveSlot). Keep it empty — anything painted here is covered. */
+    #page-slot { flex: 1; min-height: 0; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <button id="btn-back" title="后退" aria-label="后退">←</button>
+    <button id="btn-forward" title="前进" aria-label="前进">→</button>
+    <button id="btn-reload" title="刷新" aria-label="刷新">⟳</button>
+    <input id="url" type="text" spellcheck="false" placeholder="输入网址,回车打开" />
+  </div>
+  <div id="page-slot"></div>
+
+  <script>
+    (function () {
+      var input = document.getElementById('url');
+      var slot = document.getElementById('page-slot');
+
+      // Bind the host engine view into the empty region below the toolbar.
+      // The host refused (no browser permission / slot name clash) → the SDK
+      // logs the reason loudly; there is nothing this page can do about it.
+      window.piSDK.liveSlot('page', slot);
+
+      function act(method, params) {
+        return window.piSDK.request(method, params).catch(function (e) {
+          console.warn(method, e && e.message ? e.message : e);
+        });
+      }
+
+      document.getElementById('btn-back').addEventListener('click', function () { act('back'); });
+      document.getElementById('btn-forward').addEventListener('click', function () { act('forward'); });
+      document.getElementById('btn-reload').addEventListener('click', function () { act('reload'); });
+
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          var value = input.value.trim();
+          if (value) act('navigate', { url: value });
+          input.blur();
+        }
+      });
+
+      // Agent-driven navigation arrives as a backend push; keep the address
+      // bar in sync either way.
+      window.piSDK.onMessage(function (msg) {
+        if (msg && msg.event === 'ui.urlChanged' && msg.data) {
+          input.value = String(msg.data.url || '');
+        }
+      });
+
+      window.piSDK.request('state.get').then(function (state) {
+        if (state && state.url) input.value = String(state.url);
+      }).catch(function () {});
+    })();
+  </script>
+</body>
+</html>

@@ -3,33 +3,30 @@ import { createMainWindow } from '@main/window-manager';
 import { registerIpcHandlers } from '@main/ipc/index';
 import { registerNativeIpcHandlers } from '@main/ipc/native';
 import { SettingsManager, ModelRegistry, AuthStorage } from '@earendil-works/pi-coding-agent';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { homedir } from 'os';
-import { execSync } from 'child_process';
-import { join, dirname, delimiter } from 'path';
-import { fileURLToPath } from 'url';
-import { BrowserManager, startBrowserHttpServer, VlmAnalyzer } from '@main/browser';
-import { registerBrowserIpcHandlers } from '@main/ipc/browser';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { BrowserManager, VlmAnalyzer } from '@main/browser';
 import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
 import { registerPluginIpcHandlers } from '@main/ipc/plugins';
-import { registerLiveViewIpcHandlers, LiveViewRegistry, HOST_BROWSER_SLOT } from '@main/plugins/liveview';
+import { registerLiveSlotIpcHandlers, LiveSlotRegistry } from '@main/plugins/slots';
 import { PluginWebViews } from '@main/plugins/plugin-webview';
 import { createHostAgentTools, type AgentCustomTool } from '@main/agent-tools';
 
 let mainWindow: BrowserWindow | null = null;
 
-// BrowserManager instance — shared between IPC handlers and the HTTP server.
-// The HTTP server (port 19223) is the entry point for the pi-browser CLI tool.
+// BrowserManager instance — one singleton behind the plugin capability surface
+// (browser.*) and the engine live slot the browser plugin's panel embeds via
+// piSDK.liveSlot. Agent tools and user clicks drive the same view and the same
+// persist session.
 export const browserManager = new BrowserManager();
 
 // Native-view slots. Each slot owns its own WebContentsView; the renderer only
 // reports where its slot sits, and the registry positions the view to match.
-export const liveViews = new LiveViewRegistry();
+export const liveSlots = new LiveSlotRegistry();
 
-// Enable Chrome DevTools Protocol so Playwright can connect to the
-// Electron app's own webContents (including the embedded browser view) via CDP.
-// The CLI tool (pi-browser) talks to a local HTTP server which drives
-// Playwright — both agent and user see the same browser instance.
+// Enable Chrome DevTools Protocol so external tooling (Playwright, DevTools)
+// can connect to the app's own webContents (including the embedded browser
+// view) via CDP.
 app.commandLine.appendSwitch('remote-debugging-port', '19222');
 
 // Contract-level plugin isolation: force every site (each pi-plugin:// origin)
@@ -69,154 +66,16 @@ if (!gotLock) {
     }
   });
 
-  // Known multimodal model name patterns for auto-detection.
-  const MULTIMODAL_NAME_PATTERNS: RegExp[] = [
-    /vl/i, /vision/i, /visual/i, /multimodal/i,
-    /gpt-4o/i, /gpt-4-turbo/i,
-    /claude-3/i, /claude-4/i, /claude-sonnet/i, /claude-opus/i,
-    /gemini/i,
-    /pixtral/i, /llava/i, /cogv/i, /internvl/i, /minicpm-v/i,
-    /deepseek-vl/i, /glm-4v/i, /yi-vl/i, /phi-3-v/i,
-    /moondream/i, /paligemma/i, /florence/i, /owlv/i,
-    /qwen-vl/i, /qwen2-vl/i, /qwen2.5-vl/i,
-    /minimax-m1/i, /minimax-m3/i, /janus/i, /step.*v/i,
-    /doubao.*vision/i, /doubao.*vl/i,
-    /ernie.*vl/i, /ernie-4/i,
-    /hunyuan.*vision/i, /hunyuan.*vl/i, /hunyuan-turbos/i,
-    /spark.*vl/i,
-  ];
-
-
-  /**
-   * Pre-install CLI tools the app bundles. Runs non-blocking: failures are
-   * silent, because the agent can still install what it needs on demand.
-   *
-   * Office documents are NOT handled here any more. They used to arrive as an
-   * `officecli` skill plus a binary fetched over the network at startup; now
-   * the `com.pi.files` plugin owns them, running the vendored GenOffice engines
-   * in its own backend and exposing them as plugin tools. Nothing to install,
-   * nothing to download, and it works offline.
-   */
-  function ensureBundledBinaries(): void {
-    ensurePiBrowserBinary();
-  }
-
-  /**
-   * Install the pi-browser CLI by symlinking the bundled .mjs script
-   * into ~/.local/bin. The script is a thin Node.js wrapper that calls
-   * the local HTTP server in the main process.
-   */
-  function ensurePiBrowserBinary(): void {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-
-    const binSource = app.isPackaged
-      ? join(process.resourcesPath, 'pi-browser', 'pi-browser.mjs')
-      : join(__dirname, '..', '..', 'resources', 'pi-browser', 'pi-browser.mjs');
-
-    if (!existsSync(binSource)) {
-      console.warn('[pi-browser] Source not found:', binSource);
-      return;
-    }
-
-    if (process.platform === 'win32') {
-      ensurePiBrowserBinaryWindows(binSource);
-    } else {
-      ensurePiBrowserBinaryUnix(binSource);
-    }
-  }
-
-  function ensurePiBrowserBinaryUnix(binSource: string): void {
-    const installDir = join(homedir(), '.local', 'bin');
-    const installTarget = join(installDir, 'pi-browser');
-
-    // Already installed and pointing to the right place
-    try {
-      if (existsSync(installTarget)) {
-        const link = execSync(`readlink "${installTarget}" 2>/dev/null || echo ""`, { encoding: 'utf-8' }).trim();
-        if (link === binSource) return; // Already linked correctly
-      }
-    } catch {
-      // readlink failed, proceed with install
-    }
-
-    try {
-      mkdirSync(installDir, { recursive: true });
-      execSync(`chmod +x "${binSource}"`);
-      execSync(`rm -f "${installTarget}"`);
-      execSync(`ln -s "${binSource}" "${installTarget}"`);
-      execSync(`chmod +x "${installTarget}"`);
-      console.log('[pi-browser] Installed to', installTarget);
-    } catch (err) {
-      console.error('[pi-browser] Install failed:', err);
-    }
-  }
-
-  function ensurePiBrowserBinaryWindows(binSource: string): void {
-    const installDir = join(homedir(), '.local', 'bin');
-    const installTarget = join(installDir, 'pi-browser.cmd');
-
-    const cmdContent = `@echo off\r\nnode "${binSource}" %*`;
-
-    try {
-      // Check if already installed with correct content
-      if (existsSync(installTarget)) {
-        const existing = execSync(`type "${installTarget}" 2>nul || echo ""`, {
-          encoding: 'utf-8',
-          windowsHide: true,
-        }).trim();
-        if (existing.includes(binSource)) return;
-      }
-    } catch {
-      // proceed with install
-    }
-
-    try {
-      mkdirSync(installDir, { recursive: true });
-      writeFileSync(installTarget, cmdContent, { encoding: 'utf-8' });
-      console.log('[pi-browser] Installed to', installTarget);
-
-      // Best-effort: add install directory to user PATH
-      ensureWindowsPath(installDir);
-    } catch (err) {
-      console.error('[pi-browser] Windows install failed:', err);
-    }
-  }
-
-  function ensureWindowsPath(dir: string): void {
-    // Check if already in current PATH
-    if ((process.env.PATH ?? '').toLowerCase().includes(dir.toLowerCase())) return;
-
-    // Check user PATH from registry
-    try {
-      const regOutput = execSync('reg query "HKCU\\Environment" /v Path 2>nul', {
-        encoding: 'utf-8', windowsHide: true,
-      });
-      if (regOutput.toLowerCase().includes(dir.toLowerCase())) return;
-    } catch {}
-
-    // Use PowerShell .NET API (no 1024-char limit, preserves REG_EXPAND_SZ)
-    try {
-      execSync(
-        `powershell -NoProfile -Command "[Environment]::SetEnvironmentVariable('Path', '${dir};' + [Environment]::GetEnvironmentVariable('Path', 'User'), 'User')"`,
-        { windowsHide: true },
-      );
-      // Also update current process PATH so it takes effect immediately
-      process.env.PATH = dir + delimiter + (process.env.PATH ?? '');
-    } catch {
-      // Best-effort only
-    }
-  }
-
   app.whenReady().then(async () => {
     const settingsManager = SettingsManager.create(app.getPath('home'));
 
-    // Shared ModelRegistry — used by chat service AND VLM analyzer
+    // Shared ModelRegistry — used by the chat service and the browser walk
+    // planner's VLM analyzer.
     const sharedModelRegistry = ModelRegistry.create(AuthStorage.inMemory());
-    // VLM analyzer for error recovery (gracefully handles missing VLM config)
+    // VLM analyzer for goal-directed browser navigation (gracefully handles
+    // missing VLM config).
     const vlmAnalyzer = new VlmAnalyzer(sharedModelRegistry, { timeoutMs: 15000 });
 
-    ensureBundledBinaries();
     injectBundledShell(settingsManager);
 
     mainWindow = createMainWindow();
@@ -246,28 +105,17 @@ if (!gotLock) {
     mainWindow.contentView.addChildView(browserView);
     browserManager.setBrowserView(browserView, mainWindow);
 
-    // The host's browser view, mounted by the `host:browser` host panel.
-    // Bounds and visibility are the registry's job; the browser-specific extras
-    // (CDP warm-up on attach, device metrics for auto-zoom) ride along here.
-    liveViews.register(HOST_BROWSER_SLOT, {
-      attach: () =>
-        // Ensure CDP is attached so navigation events flow.
-        browserManager.connect().catch(() => {}) as Promise<void>,
-      show: async ({ x, y, width, height }) => {
-        browserManager.setBounds(x, y, width, height);
-        // Keep device metrics in sync for auto-zoom (mirrors the legacy preview).
-        await browserManager.setDeviceMetrics(width, height).catch(() => {});
-      },
-      hide: () => browserManager.hide(),
-    });
+    // The engine view has no host panel of its own any more: the browser
+    // plugin's panel embeds it via piSDK.liveSlot, and plugin-webview.ts
+    // registers the `<pluginId>:page` slot for it.
 
     // A renderer reload never runs React cleanup, so slots vanish without
     // calling detach — their views would keep stale bounds and invisibly
     // occlude the UI (eating real mouse clicks). Reset every slot on any
     // renderer navigation; each slot re-reports its bounds after remounting.
     mainWindow.webContents.on('did-start-navigation', () => {
-      console.log('[liveview] renderer navigation — hiding all native views (stale-overlay guard)');
-      liveViews.hideAll();
+      console.log('[slots] renderer navigation — hiding all native views (stale-overlay guard)');
+      liveSlots.hideAll();
     });
 
     // Warm up the CDP connection at boot. The legacy preview panel used to do
@@ -276,14 +124,14 @@ if (!gotLock) {
     browserManager.connect().catch(() => {});
 
     registerNativeIpcHandlers();
-    registerBrowserIpcHandlers(browserManager);
 
-    // Plugin kernel: scan ~/.pi/agent/plugins (plus dev/builtin roots),
+    // Plugin kernel: scan ~/.pi/agent/plugins (plus the dev root when set),
     // spawn backend UtilityProcesses, serve pi-plugin:// and expose IPC.
     // Created BEFORE the SDK IPC handlers so plugin tools can be injected
     // into the agent session (customTools).
     const pluginSystem = new PluginSystem({
       browserManager,
+      vlmAnalyzer,
       // chat.send: relay a plugin's message to the renderer, which owns the composer.
       sendToRenderer: (channel, payload) => mainWindow?.webContents.send(channel, payload),
     });
@@ -292,19 +140,29 @@ if (!gotLock) {
     // queue behind kernel boot (whenReady) instead of rejecting outright.
     registerPluginIpcHandlers(pluginSystem);
     await pluginSystem.init();
-    registerLiveViewIpcHandlers(liveViews);
+    registerLiveSlotIpcHandlers(liveSlots);
 
     // Plugin web panels are hosted in native views, not iframes: a panel gets a
     // real top-level frame (correct IME, working print/alert/download, its own
-    // renderer process). Registered against the same liveview registry as the
+    // renderer process). Registered against the same live-slot registry as the
     // browser preview, so `hideAll()`'s renderer-navigation guard covers them.
     const pluginWebViews = new PluginWebViews({
       registry: pluginSystem.registry,
-      liveViews,
+      liveSlots,
       getWindow: () => mainWindow,
+      browserManager,
     });
     pluginWebViews.installIpc();
     pluginWebViews.sync();
+
+    // A reused panel view never re-requests its backend port (its page did not
+    // reload), so the host pushes a fresh pair whenever a backend (re)starts —
+    // disable→enable, install, rollback, crash restart.
+    pluginSystem.onBackendStarted = (pluginId) => {
+      pluginWebViews.rewirePluginPorts(pluginId, (wc) => {
+        pluginSystem.ensureUiPort(pluginId, wc);
+      });
+    };
 
     // Host-contributed tools are built after the chat service exists, but the
     // provider is only *called* when a session is created — so the array is
@@ -330,10 +188,6 @@ if (!gotLock) {
     });
 
     app.on('will-quit', () => pluginSystem.dispose());
-
-    // Start the browser automation HTTP server (for pi-browser CLI).
-    // The BrowserManager connects to CDP lazily when the webview is ready.
-    startBrowserHttpServer(browserManager, 19223, vlmAnalyzer);
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {

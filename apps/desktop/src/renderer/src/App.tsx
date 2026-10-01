@@ -44,11 +44,9 @@ const queryClient = new QueryClient({
  */
 const HOST_PANELS: PanelEntry[] = [
   { id: 'host:plugins', title: '插件中心', icon: 'puzzle', source: 'host', keepAlive: 'never', region: 'right' },
-  // The embedded browser is the host's own resource — the agent's browser tools
-  // drive the very same WebContentsView this panel shows. It is a host panel
-  // rather than a plugin panel for that reason: nothing about it belongs to a
-  // plugin, and no plugin should be able to borrow a host-owned view.
-  { id: 'host:browser', title: '浏览器', icon: 'globe', source: 'host', keepAlive: 'never', region: 'right' },
+  // The browser is a plugin panel now (com.pi.browser): its page embeds the
+  // host's engine view via piSDK.liveSlot. The engine and its session stay
+  // host-owned — the plugin only positions and drives it.
   // Settings is a left-sidebar view pinned to the rail's bottom — the VS Code
   // gear position. It reads as configuration rather than navigation.
   // keepAlive 'always' so in-progress form edits survive switching views.
@@ -192,18 +190,6 @@ function AppContent() {
       if (text) useComposerStore.getState().setTriggerSend(text);
     });
   }, []);
-
-  // Listen for "switch to Browser tab" signals from the main process.
-  // The browser panel is a host panel: open it so its native view gets a slot.
-  useEffect(() => {
-    const api = (window as unknown as { electronAPI?: { browser?: { onSwitchToBrowserTab?: (cb: () => void) => void } } }).electronAPI?.browser;
-    if (api?.onSwitchToBrowserTab) {
-      api.onSwitchToBrowserTab(() => {
-        openPanel('host:browser', { focus: true });
-        useUIStore.getState().setRightPanelOpen(true);
-      });
-    }
-  }, [openPanel]);
 
 
   return (

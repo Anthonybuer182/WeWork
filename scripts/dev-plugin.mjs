@@ -3,11 +3,10 @@
  * Launch the desktop app with THIS repo's `plugins/` as a dev plugin root.
  *
  * Why this script exists: the plugin registry resolves roots by priority
- * (dev 3 > user 2 > builtin 1), and `~/.pi/agent/plugins/` always shadows
- * everything below it. The repo's top-level `plugins/` directory is not a
- * builtin root either — `getBuiltinRoot()` resolves to `apps/desktop/plugins`.
- * So without `PI_DEV_PLUGINS`, edits to `plugins/<id>/` are never loaded and
- * the app silently runs whatever stale copy sits in `~/.pi/agent/plugins/`.
+ * (dev 3 > user 2), and `~/.pi/agent/plugins/` — the user root — always
+ * shadows the repo checkout below it. So without `PI_DEV_PLUGINS`, edits to
+ * `plugins/<id>/` are never loaded and the app silently runs whatever stale
+ * copy sits in `~/.pi/agent/plugins/`.
  * That has repeatedly looked like "my change had no effect".
  *
  * Usage:  node scripts/dev-plugin.mjs [extra args for electron-vite]

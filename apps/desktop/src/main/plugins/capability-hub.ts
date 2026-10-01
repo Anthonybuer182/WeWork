@@ -7,6 +7,7 @@ import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { deleteFileWithMtimeGuard, writeFileWithMtimeGuard } from '@pi/sdk-wrapper/adapters';
 import type { PluginRegistry } from './registry';
 import type { BrowserManager } from '@main/browser/browser-manager';
+import type { VlmAnalyzer } from '@main/browser/vlm-analyzer';
 import { extractOfficeText } from './office-extract';
 
 export interface CapabilityDeps {
@@ -14,6 +15,8 @@ export interface CapabilityDeps {
   emitEvent: (evt: PluginEvent) => void;
   /** Browser automation capability (host-owned; plugins need "browser" permission). */
   browserManager?: BrowserManager;
+  /** Screenshot-based planner for browser.walk (needs a configured VLM model). */
+  vlmAnalyzer?: VlmAnalyzer;
   /** Push a message to the renderer (used by chat.send). */
   sendToRenderer?: (channel: string, payload: unknown) => void;
 }
@@ -32,6 +35,7 @@ export class CapabilityHub {
   private readonly registry: PluginRegistry;
   private readonly emitEvent: (evt: PluginEvent) => void;
   private readonly browserManager?: BrowserManager;
+  private readonly vlmAnalyzer?: VlmAnalyzer;
   private readonly sendToRenderer?: (channel: string, payload: unknown) => void;
   private readonly capabilities = new Map<string, CapabilitySpec>();
 
@@ -39,6 +43,7 @@ export class CapabilityHub {
     this.registry = deps.registry;
     this.emitEvent = deps.emitEvent;
     this.browserManager = deps.browserManager;
+    this.vlmAnalyzer = deps.vlmAnalyzer;
     this.sendToRenderer = deps.sendToRenderer;
 
     this.registerCapabilities();
@@ -330,9 +335,21 @@ export class CapabilityHub {
       permission: 'browser',
       handler: async () => { (await bm()).reload(); return { ok: true }; },
     });
-    this.capabilities.set('browser.getState', {
+    this.capabilities.set('browser.getUrl', {
       permission: 'browser',
       handler: async () => (await bm()).getUrl(),
+    });
+    this.capabilities.set('browser.getState', {
+      permission: 'browser',
+      handler: async () => {
+        const manager = await bm();
+        const state = await manager.getUrl();
+        // The interactive-element snapshot is what makes the page actionable —
+        // without it the agent has a URL but no idea what to click. Failure to
+        // snapshot (odd page, cross-origin frame) must not fail the whole call.
+        const snapshot = await manager.getSnapshot().catch(() => '(unavailable)');
+        return { ...state, snapshot };
+      },
     });
     this.capabilities.set('browser.screenshot', {
       permission: 'browser',
@@ -349,6 +366,46 @@ export class CapabilityHub {
     this.capabilities.set('browser.evaluate', {
       permission: 'browser',
       handler: async ({ params }) => (await bm()).evaluate(String(params.expression ?? '')),
+    });
+    this.capabilities.set('browser.fill', {
+      permission: 'browser',
+      handler: async ({ params }) =>
+        (await bm()).fill(String(params.selector ?? ''), String(params.value ?? '')),
+    });
+    this.capabilities.set('browser.hover', {
+      permission: 'browser',
+      handler: async ({ params }) => (await bm()).hover(String(params.selector ?? '')),
+    });
+    this.capabilities.set('browser.select', {
+      permission: 'browser',
+      handler: async ({ params }) =>
+        (await bm()).selectOption(String(params.selector ?? ''), String(params.value ?? '')),
+    });
+    this.capabilities.set('browser.scroll', {
+      permission: 'browser',
+      handler: async ({ params }) => {
+        const direction = params.direction === 'up' ? 'up' : 'down';
+        const amount = typeof params.amount === 'number' ? params.amount : undefined;
+        return amount !== undefined
+          ? (await bm()).scroll(direction, amount)
+          : (await bm()).scroll(direction);
+      },
+    });
+    this.capabilities.set('browser.find', {
+      permission: 'browser',
+      handler: async ({ params }) => (await bm()).find(String(params.query ?? '')),
+    });
+    this.capabilities.set('browser.walk', {
+      permission: 'browser',
+      handler: async ({ params }) => {
+        if (!this.vlmAnalyzer) {
+          throw new Error('browser.walk unavailable: no VLM model configured');
+        }
+        const maxSteps = typeof params.maxSteps === 'number' ? params.maxSteps : undefined;
+        return maxSteps !== undefined
+          ? (await bm()).walk(String(params.goal ?? ''), this.vlmAnalyzer, maxSteps)
+          : (await bm()).walk(String(params.goal ?? ''), this.vlmAnalyzer);
+      },
     });
   }
 

@@ -1,9 +1,19 @@
 import { join } from 'path';
-import type { BrowserWindow } from 'electron';
+import type { BrowserWindow, WebContents } from 'electron';
 import { WebContentsView, ipcMain } from 'electron';
 import { panelUrl } from '@pi/types';
-import type { LiveViewRegistry } from './liveview';
+import type { BrowserManager } from '@main/browser/browser-manager';
+import type { LiveSlotRegistry } from './slots';
 import type { PluginRegistry } from './registry';
+
+/**
+ * Name of the engine live slot a plugin page can bind with
+ * `piSDK.liveSlot(ENGINE_SLOT_NAME, element)`. The host registers
+ * `<pluginId>:<ENGINE_SLOT_NAME>` for plugins holding the `browser`
+ * permission; the slot's view is the shared browser engine, not a page.
+ * Must not collide with any panel id of that plugin.
+ */
+export const ENGINE_SLOT_NAME = 'page';
 
 /**
  * Plugin web panels as native views.
@@ -32,6 +42,8 @@ export class PluginWebViews {
   private readonly views = new Map<string, WebContentsView>();
   /** Slots we have registered a handler for, so re-registration is cheap. */
   private readonly registered = new Set<string>();
+  /** Engine slots (`<pluginId>:page`) this class registered — cleanup must NOT close their view. */
+  private readonly engineRegistered = new Set<string>();
   /**
    * Last theme the shell pushed. A view created after that push would
    * otherwise never learn the shell's colours, because the shell only
@@ -42,8 +54,9 @@ export class PluginWebViews {
   constructor(
     private readonly opts: {
       registry: PluginRegistry;
-      liveViews: LiveViewRegistry;
+      liveSlots: LiveSlotRegistry;
       getWindow: () => BrowserWindow | null;
+      browserManager?: BrowserManager;
     },
   ) {}
 
@@ -99,23 +112,84 @@ export class PluginWebViews {
   }
 
   /**
-   * Register a liveview slot for every plugin web panel. Called at boot and
-   * again whenever the plugin set changes (install / enable / disable).
+   * Register a live slot for every plugin web panel, plus the engine slot
+   * for plugins holding the `browser` permission. Called at boot and again
+   * whenever the plugin set changes (install / enable / disable / uninstall —
+   * which is also where stale slots get reconciled away).
    */
   sync(): void {
-    const { registry, liveViews } = this.opts;
+    const { registry, liveSlots } = this.opts;
 
     for (const plugin of registry.all()) {
       if (!plugin.enabled || plugin.state === 'incompatible' || plugin.state === 'error') continue;
       const pluginId = plugin.manifest.id;
 
+      // ── Engine slot ──
+      // A plugin page holding `browser` permission may bind the shared browser
+      // engine into its own layout via `piSDK.liveSlot('page', el)`. The view
+      // is the host's singleton — the plugin only positions it.
+      const wantsEngine = (plugin.manifest.permissions ?? []).includes('browser');
+      if (wantsEngine && this.opts.browserManager) {
+        const engineSlotId = `${pluginId}:${ENGINE_SLOT_NAME}`;
+        const panelIds = new Set((plugin.manifest.contributes?.panels ?? []).map((p) => p.id));
+        if (panelIds.has(ENGINE_SLOT_NAME)) {
+          console.warn(
+            `[plugin-view] plugin "${pluginId}" has a panel named "${ENGINE_SLOT_NAME}" — ` +
+              `engine slot not registered (slot ids would collide)`,
+          );
+        } else if (!this.engineRegistered.has(engineSlotId)) {
+          this.engineRegistered.add(engineSlotId);
+          this.registered.add(engineSlotId);
+          const bm = this.opts.browserManager;
+          liveSlots.register(engineSlotId, {
+            attach: () => {
+              if (!bm.isConnected()) bm.connect().catch(() => {});
+            },
+            show: (bounds) => {
+              // `bounds` are the PLUGIN PAGE's local coordinates — the page
+              // measured its own slot div, with the page's top-left as origin.
+              // The engine view is positioned in window-content coordinates,
+              // so translate by whichever panel view currently hosts the page.
+              const host = this.attachedPanelView(pluginId);
+              if (!host) {
+                bm.hide();
+                return;
+              }
+              const hostBounds = host.getBounds();
+              bm.setBounds(
+                hostBounds.x + bounds.x,
+                hostBounds.y + bounds.y,
+                bounds.width,
+                bounds.height,
+              );
+              void bm.setDeviceMetrics(bounds.width, bounds.height).catch(() => {});
+              // The engine view joins the view tree at boot, before any panel
+              // view; a newly attached panel view would paint over it. Re-append
+              // so the engine sits on top of the panel page's slot region.
+              const win = this.opts.getWindow();
+              const view = bm.getView();
+              if (win && view) {
+                try {
+                  win.contentView.removeChildView(view);
+                  win.contentView.addChildView(view);
+                } catch {
+                  /* window or view already gone */
+                }
+              }
+            },
+            hide: () => bm.hide(),
+          });
+        }
+      }
+
+      // ── Panel slots ──
       for (const panel of plugin.manifest.contributes?.panels ?? []) {
         if (!panel.entry) continue;
         const slotId = `${pluginId}:${panel.id}`;
         if (this.registered.has(slotId)) continue;
         this.registered.add(slotId);
 
-        liveViews.register(slotId, {
+        liveSlots.register(slotId, {
           attach: () => {
             this.ensureView(slotId, pluginId, panel.id, panel.entry as string);
           },
@@ -136,10 +210,33 @@ export class PluginWebViews {
               win.contentView.addChildView(view);
               this.attached.add(slotId);
             }
+            // The panel view remounts with its page exactly as it was — no
+            // resize inside the page, so its live slot will not re-report and
+            // the engine view positioned there stays hidden. Replay it.
+            const engineId = `${pluginId}:${ENGINE_SLOT_NAME}`;
+            if (this.engineRegistered.has(engineId)) void liveSlots.reshow(engineId);
           },
           hide: () => this.hideSlot(slotId),
         });
       }
+    }
+
+    this.reconcile();
+  }
+
+  /**
+   * Drop slots whose plugin is gone, hide slots whose plugin is disabled or
+   * broken. Runs at the end of every sync — install / uninstall / rollback /
+   * enable / disable all funnel through `onExtensionsChanged → sync()`.
+   */
+  private reconcile(): void {
+    const { registry } = this.opts;
+    for (const slotId of [...this.registered]) {
+      const pluginId = slotId.slice(0, slotId.lastIndexOf(':'));
+      const plugin = pluginId ? registry.get(pluginId) : undefined;
+      if (!plugin) this.destroyPluginSlots(pluginId);
+      else if (!plugin.enabled || plugin.state === 'incompatible' || plugin.state === 'error')
+        this.hidePluginSlots(pluginId);
     }
   }
 
@@ -158,6 +255,33 @@ export class PluginWebViews {
       }
     }
     this.attached.delete(slotId);
+    // The panel went away, so any engine view positioned inside its page must
+    // go too — a hidden panel with a live engine rectangle would eat clicks.
+    const pluginId = slotId.slice(0, slotId.lastIndexOf(':'));
+    this.detachEngineSlots(pluginId);
+  }
+
+  /** Hide the engine slot(s) of one plugin (handler.hide — the view itself is untouched). */
+  private detachEngineSlots(pluginId: string): void {
+    for (const id of this.engineRegistered) {
+      if (id.startsWith(`${pluginId}:`)) this.opts.liveSlots.detach(id);
+    }
+  }
+
+  /**
+   * The plugin's panel view that is currently on screen — the coordinate
+   * anchor for translating page-local engine-slot bounds into window space.
+   * A plugin page can only report while its view is attached, so exactly one
+   * of these exists whenever an engine slot shows; if none does, the caller
+   * hides the engine rather than positioning it somewhere imaginary.
+   */
+  private attachedPanelView(pluginId: string): WebContentsView | null {
+    for (const slotId of this.attached) {
+      if (!slotId.startsWith(`${pluginId}:`)) continue;
+      const view = this.views.get(slotId);
+      if (view && !view.webContents.isDestroyed()) return view;
+    }
+    return null;
   }
 
   /** Hide every panel view — the stale-overlay guard for renderer reloads. */
@@ -165,7 +289,25 @@ export class PluginWebViews {
     for (const slotId of [...this.attached]) this.hideSlot(slotId);
   }
 
-  /** Tear down a panel's view entirely (plugin disabled / uninstalled). */
+  /**
+   * Hand every surviving panel view of `pluginId` to `wire` — which should
+   * push a fresh backend MessagePort (PluginSystem.ensureUiPort).
+   *
+   * Views are reused across disable/enable and crash restarts: the page never
+   * reloads, so its preload never re-requests the port, and without this the
+   * panel would keep talking into the dead process's port — every
+   * piSDK.request timing out, every backend push silently dropped.
+   */
+  rewirePluginPorts(pluginId: string, wire: (wc: WebContents) => void): void {
+    for (const [slotId, view] of this.views) {
+      if (!slotId.startsWith(`${pluginId}:`)) continue;
+      if (view.webContents.isDestroyed()) continue;
+      wire(view.webContents);
+    }
+  }
+
+  /** Tear down one panel view entirely. Only ever for a plugin that is GONE
+   *  (uninstalled) or a dead webContents being rebuilt — disable keeps views. */
   private destroySlot(slotId: string): void {
     this.hideSlot(slotId);
     const view = this.views.get(slotId);
@@ -175,6 +317,37 @@ export class PluginWebViews {
       view?.webContents.close();
     } catch {
       /* already gone */
+    }
+  }
+
+  /**
+   * Uninstall cleanup: close every panel view of `pluginId` (its webContents
+   * and renderer process go away) and unregister its engine slot handler —
+   * which hides the engine view but must NOT close it, since the engine and
+   * its persisted session belong to the host, not to the plugin.
+   */
+  destroyPluginSlots(pluginId: string): void {
+    for (const slotId of [...this.registered]) {
+      if (!slotId.startsWith(`${pluginId}:`)) continue;
+      if (this.engineRegistered.has(slotId)) {
+        this.opts.liveSlots.unregister(slotId);
+        this.engineRegistered.delete(slotId);
+        this.registered.delete(slotId);
+      } else {
+        this.destroySlot(slotId);
+      }
+    }
+  }
+
+  /**
+   * Disable / error cleanup: hide everything the plugin has on screen — panel
+   * views and engine — but keep views, slots and their pages intact so a
+   * re-enable brings them back exactly as they were (藏而不毁).
+   */
+  hidePluginSlots(pluginId: string): void {
+    for (const slotId of [...this.registered]) {
+      if (!slotId.startsWith(`${pluginId}:`)) continue;
+      this.opts.liveSlots.detach(slotId);
     }
   }
 
@@ -225,11 +398,22 @@ export class PluginWebViews {
     });
 
     // A crashed renderer leaves a blank rectangle above the shell; surface it
-    // rather than letting it silently swallow clicks.
+    // rather than letting it silently swallow clicks. The page is gone, so its
+    // engine slot has no live reporter either — hide the plugin's everything.
     view.webContents.on('render-process-gone', (_e, details) => {
       console.error(`[plugin-view] ${slotId} renderer gone: ${details.reason}`);
+      this.hidePluginSlots(pluginId);
       this.hideSlot(slotId);
       this.views.delete(slotId);
+    });
+
+    // A different-document navigation (incl. reload) tears down the page's
+    // live-slot binding: the fresh page re-binds on load and its first bounds
+    // report re-positions the engine, but until then the old rect must not
+    // linger. Same-document (SPA) navigations keep the page alive — skip them.
+    view.webContents.on('did-start-navigation', (_e, _url, isInPlace, isMainFrame) => {
+      if (!isMainFrame || isInPlace) return;
+      this.detachEngineSlots(pluginId);
     });
 
     this.views.set(slotId, view);

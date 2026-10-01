@@ -5,7 +5,7 @@
 import type { PanelAnchor, PanelRegion } from './manifest.js';
 
 /** Where a plugin was discovered from. Higher priority overrides lower. */
-export type PluginSource = 'dev' | 'user' | 'builtin';
+export type PluginSource = 'dev' | 'user';
 
 export type PluginRuntimeState =
   | 'registered'   // manifest validated, not yet activated

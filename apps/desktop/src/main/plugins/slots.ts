@@ -1,12 +1,17 @@
 import { ipcMain } from 'electron';
 
 /**
- * LiveView panel slots — generic native-view mount points.
+ * Live slots — generic native-view mount points.
  *
- * A liveview panel is backed by a real `WebContentsView` that lives OUTSIDE the
+ * A live slot is backed by a real `WebContentsView` that lives OUTSIDE the
  * renderer's DOM. The renderer therefore cannot lay it out: it only measures the
  * rectangle its slot occupies and reports it here, and the host positions the
  * view to match.
+ *
+ * Naming note: the wire channels below are still `pi:liveview:*` — a historical
+ * name from when this mechanism served the (since removed) liveview panel kind.
+ * The channels are internal, shared with the web build's LiveSlot component;
+ * not worth a breaking rename.
  *
  * Two consequences drive this design:
  *  - A view that is not hidden **occludes the DOM and swallows clicks**. Hiding
@@ -20,35 +25,44 @@ import { ipcMain } from 'electron';
  * drove one shared view).
  *
  * Slots are not a plugin-facing concept. Plugin panels are hosted by
- * `plugin-webview.ts` (one slot per panel, keyed `<pluginId>:<panelId>`); the
- * host's own browser registers its view as `host:browser`. There is no
- * plugin-visible manifest field for either — a plugin just provides a page.
+ * `plugin-webview.ts` (one slot per panel, keyed `<pluginId>:<panelId>`), and a
+ * host engine view (the embedded browser) is registered by `plugin-webview.ts`
+ * the same way under `<pluginId>:<slotName>` when the plugin's page declares a
+ * live slot via `piSDK.liveSlot`. There is no plugin-visible manifest field for
+ * any of this — a plugin just provides a page.
  */
-export interface LiveViewBounds {
+export interface LiveSlotBounds {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-export interface LiveViewHandler {
+export interface LiveSlotHandler {
   /** Called when the slot mounts. Use for one-time warm-up (e.g. connect CDP). */
   attach?(): void | Promise<void>;
   /** Position and reveal the view. Bounds are in window-content coordinates. */
-  show(bounds: LiveViewBounds): void | Promise<void>;
+  show(bounds: LiveSlotBounds): void | Promise<void>;
   /** Hide the view so it neither paints nor intercepts input. */
   hide(): void;
 }
 
-/** Slot id of the host's embedded browser view. */
-export const HOST_BROWSER_SLOT = 'host:browser';
+export class LiveSlotRegistry {
+  private handlers = new Map<string, LiveSlotHandler>();
+  /**
+   * The last non-degenerate bounds each slot was shown at.
+   *
+   * `reshow` replays them for slots whose reporter cannot re-report on its own:
+   * a reused plugin panel view remounts with its page exactly as it was, so its
+   * ResizeObserver never fires again — but the engine view positioned inside
+   * that page must come back. detach/hide deliberately do NOT clear the
+   * memory; only a degenerate setBounds (the "this slot is gone" signal) does.
+   */
+  private lastShown = new Map<string, LiveSlotBounds>();
 
-export class LiveViewRegistry {
-  private handlers = new Map<string, LiveViewHandler>();
-
-  register(slotId: string, handler: LiveViewHandler): void {
+  register(slotId: string, handler: LiveSlotHandler): void {
     if (this.handlers.has(slotId)) {
-      console.warn(`[liveview] slot "${slotId}" is already registered — replacing`);
+      console.warn(`[slots] slot "${slotId}" is already registered — replacing`);
     }
     this.handlers.set(slotId, handler);
   }
@@ -68,31 +82,51 @@ export class LiveViewRegistry {
 
   async attach(slotId: string): Promise<{ ok: boolean; error?: string }> {
     const handler = this.handlers.get(slotId);
-    if (!handler) return { ok: false, error: `unknown liveview slot: ${slotId}` };
+    if (!handler) return { ok: false, error: `unknown live slot: ${slotId}` };
     await handler.attach?.();
     return { ok: true };
   }
 
   async setBounds(
     slotId: string,
-    bounds: LiveViewBounds,
+    bounds: LiveSlotBounds,
   ): Promise<{ ok: boolean; error?: string }> {
     const handler = this.handlers.get(slotId);
-    if (!handler) return { ok: false, error: `unknown liveview slot: ${slotId}` };
+    if (!handler) return { ok: false, error: `unknown live slot: ${slotId}` };
 
     const { x, y, width, height } = bounds;
     // Degenerate bounds mean "not laid out" — a collapsed sidebar, a hidden
     // panel, or an unmounted slot. Hide rather than position a zero-size view.
     if (width <= 0 || height <= 0) {
       handler.hide();
+      this.lastShown.delete(slotId);
       return { ok: true };
     }
-    await handler.show({
+    const shown = {
       x: Math.round(x),
       y: Math.round(y),
       width: Math.round(width),
       height: Math.round(height),
-    });
+    };
+    this.lastShown.set(slotId, shown);
+    await handler.show(shown);
+    return { ok: true };
+  }
+
+  /**
+   * Re-show a hidden slot at its last known bounds.
+   *
+   * For slots whose page cannot re-report (a reused panel view remounts with
+   * the page exactly as it was — no resize, no observer fire). Fails with
+   * `never shown` when there is nothing to replay; callers treat that as
+   * "nothing to do", not as an error to surface.
+   */
+  async reshow(slotId: string): Promise<{ ok: boolean; error?: string }> {
+    const handler = this.handlers.get(slotId);
+    if (!handler) return { ok: false, error: `unknown live slot: ${slotId}` };
+    const bounds = this.lastShown.get(slotId);
+    if (!bounds) return { ok: false, error: 'never shown' };
+    await handler.show(bounds);
     return { ok: true };
   }
 
@@ -111,13 +145,13 @@ export class LiveViewRegistry {
       try {
         handler.hide();
       } catch (err) {
-        console.error('[liveview] hide failed:', err);
+        console.error('[slots] hide failed:', err);
       }
     }
   }
 }
 
-export function registerLiveViewIpcHandlers(registry: LiveViewRegistry): void {
+export function registerLiveSlotIpcHandlers(registry: LiveSlotRegistry): void {
   ipcMain.handle('pi:liveview:attach', (_event, payload: { slotId?: string }) =>
     registry.attach(String(payload?.slotId ?? '')),
   );

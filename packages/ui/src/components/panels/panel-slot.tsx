@@ -6,9 +6,8 @@ import { FileTree } from '@/components/file/file-tree';
 import { SessionList } from '@/components/session/session-list';
 import { SearchView } from '@/components/search/search-view';
 import { ContextPanel } from '@/components/context/context-panel';
-import { BrowserPanel } from '@/components/browser/browser-panel';
 import { ensureRelayInstalled } from '@/components/plugins/panel-relay';
-import { LiveViewSlot } from './live-view-slot';
+import { LiveSlot } from './live-slot';
 
 /**
  * Host panels ("the host is the zeroth contributor") — rendered through the
@@ -22,7 +21,6 @@ const HOST_COMPONENTS: Record<string, ComponentType> = {
   'host:sessions': SessionList,
   'host:search': SearchView,
   'host:context': ContextPanel,
-  'host:browser': BrowserPanel,
 };
 
 /**
@@ -55,7 +53,7 @@ function PluginWebViewPanel({ pluginId, panelId }: { pluginId: string; panelId: 
   useEffect(() => {
     ensureRelayInstalled();
   }, []);
-  return <LiveViewSlot pluginId={pluginId} panelId={panelId} notifyMounted params={params} />;
+  return <LiveSlot pluginId={pluginId} panelId={panelId} notifyMounted params={params} />;
 }
 
 function PanelBody({ panel }: { panel: PanelEntry }) {

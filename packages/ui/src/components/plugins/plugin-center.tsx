@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown, Puzzle, Undo2 } from 'lucide-react';
+import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown, Puzzle, Undo2, Search } from 'lucide-react';
 import type { MarketEntry, PluginInfo, PluginSettingInfo } from '@pi/types';
 import { describePermission } from '@pi/types';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -7,13 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
-const SOURCE_LABEL: Record<string, string> = { dev: '开发', user: '已安装', builtin: '内置' };
+const SOURCE_LABEL: Record<string, string> = { dev: '开发', user: '已安装' };
 const STATE_LABEL: Record<string, string> = {
   active: '运行中', activating: '启动中', registered: '已注册', disabled: '已禁用',
   incompatible: '不兼容', error: '错误', crashed: '已崩溃',
@@ -142,8 +141,10 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
 
   // Only a plugin that actually lives in the user's plugin root can be
   // replaced, rolled back, or uninstalled there — a dev copy's directory is
-  // the checkout's source tree (a builtin's is the app bundle), and removing
-  // either is never what "uninstall" means.
+  // the checkout's source tree, and removing it is never what "uninstall"
+  // means. The trash button is ALWAYS visible (VS Code never hides the
+  // affordance either); for a dev plugin the dialog explains instead of
+  // deleting, and the backend refuses the call regardless.
   const manageable = plugin.source === 'user';
   const inMarket = catalog.some((e) => e.id === plugin.id);
   const broken = plugin.state === 'error' || plugin.state === 'crashed';
@@ -233,41 +234,62 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
           }}
           aria-label={`启用/禁用 ${plugin.name}`}
         />
-        {manageable && (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmOpen(true)} aria-label={`卸载 ${plugin.name}`}>
-            <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
-        )}
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmOpen(true)} aria-label={`卸载 ${plugin.name}`}>
+          <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+        </Button>
       </div>
 
-      {/* Uninstall confirm — data retention opt-out */}
+      {/* Uninstall dialog — two variants.
+        * user copy: confirm, with data retention opt-out.
+        * dev copy: never deletes. The dialog explains where the plugin really
+        * lives and what removal would actually mean — the affordance stays
+        * visible (hiding it just made "how do I uninstall" undiscoverable),
+        * but the repo source tree is not what a dialog gets to rm. */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>卸载「{plugin.name}」?</DialogTitle>
-            <DialogDescription>
-              将删除插件代码目录。插件数据默认保留,重装后可恢复。
-            </DialogDescription>
-          </DialogHeader>
-          <label className="flex items-center gap-2 text-sm">
-            <Switch checked={keepData} onCheckedChange={setKeepData} aria-label="保留插件数据" />
-            保留插件数据(plugins-data/{plugin.id})
-          </label>
-          <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>取消</Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
-                setConfirmOpen(false);
-                setBusy(true);
-                await uninstallPlugin(plugin.id, keepData);
-                setBusy(false);
-              }}
-            >
-              卸载
-            </Button>
-          </DialogFooter>
+          {manageable ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>卸载「{plugin.name}」?</DialogTitle>
+                <DialogDescription>
+                  将删除插件代码目录。插件数据默认保留,重装后可恢复。
+                </DialogDescription>
+              </DialogHeader>
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={keepData} onCheckedChange={setKeepData} aria-label="保留插件数据" />
+                保留插件数据(plugins-data/{plugin.id})
+              </label>
+              <DialogFooter>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>取消</Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={async () => {
+                    setConfirmOpen(false);
+                    setBusy(true);
+                    await uninstallPlugin(plugin.id, keepData);
+                    setBusy(false);
+                  }}
+                >
+                  卸载
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>「{plugin.name}」是开发副本</DialogTitle>
+                <DialogDescription>
+                  它直接运行自仓库源码目录,不是安装副本,因此没有"卸载"可言。
+                  要移除:从仓库 plugins/ 删除对应目录,或把它从 dev 根里拿走;
+                  只想停用的话,用左侧的开关就够了。
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="secondary" size="sm" onClick={() => setConfirmOpen(false)}>知道了</Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
@@ -389,8 +411,10 @@ function InstallButton({
 }
 
 /**
- * Plugin center — host-contributed panel: installed plugin management
- * (enable/disable/uninstall) + marketplace catalog with permission consent.
+ * Plugin center — VS Code-extensions-style: ONE list that flips on the search
+ * box. Empty query shows the installed plugins (enable/disable/uninstall);
+ * typing searches the market (install, with permission consent). No separate
+ * catalog section — the market is only ever seen through search.
  */
 export function PluginCenter() {
   const installed = usePluginStore((s) => s.installed);
@@ -399,59 +423,86 @@ export function PluginCenter() {
   const catalogError = usePluginStore((s) => s.catalogError);
   const loadCatalog = usePluginStore((s) => s.loadCatalog);
   const installPhases = usePluginStore((s) => s.installPhases);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     loadCatalog();
   }, [loadCatalog]);
+
+  const searching = query.trim().length > 0;
 
   const sortedInstalled = useMemo(
     () => [...installed].sort((a, b) => a.name.localeCompare(b.name)),
     [installed],
   );
 
+  // Market search is a client-side filter over the fetched index — the
+  // registry is a flat index.json (file path today, https later), so search
+  // happens here either way. Matches name, id and description; Chinese
+  // substrings work as-is.
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return catalog.filter((e) =>
+      [e.name, e.id, e.description ?? ''].some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [catalog, query]);
+
   return (
     <div className="h-full overflow-auto p-3" data-panel-kind="plugin-center">
-      {/* ── Installed ── */}
-      <div className="mb-1 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">已安装({installed.length})</h3>
-      </div>
-      <div className="flex flex-col gap-2">
-        {sortedInstalled.length === 0 && (
-          <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-            尚未安装任何插件
-          </div>
-        )}
-        {sortedInstalled.map((plugin) => (
-          <InstalledItem key={plugin.id} plugin={plugin} />
-        ))}
-      </div>
-
-      <Separator className="my-4" />
-
-      {/* ── Catalog ── */}
-      <div className="mb-1 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">在线目录({catalog.length})</h3>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => loadCatalog(true)} aria-label="刷新目录">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {searching ? `市场结果(${results.length})` : `已安装(${installed.length})`}
+        </h3>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => loadCatalog(true)} aria-label="刷新市场">
           <RefreshCw className={cn('h-3.5 w-3.5', catalogLoading && 'animate-spin')} />
         </Button>
       </div>
 
+      <div className="relative mb-2">
+        <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="搜索市场插件…"
+          className="h-8 pl-7 text-xs"
+          aria-label="搜索市场插件"
+          data-market-search
+        />
+      </div>
+
       {catalogError ? (
         <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-          目录加载失败:{catalogError}
+          市场加载失败:{catalogError}
         </div>
-      ) : null}
-
-      <div className="flex flex-col gap-2">
-        {catalog.map((entry) => (
-          <CatalogItem key={entry.id} entry={entry} />
-        ))}
-        {!catalogError && catalog.length === 0 && !catalogLoading && (
-          <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-            目录为空
-          </div>
-        )}
-      </div>
+      ) : searching ? (
+        <div className="flex flex-col gap-2">
+          {catalogLoading && (
+            <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+              市场加载中…
+            </div>
+          )}
+          {!catalogLoading && results.map((entry) => (
+            <CatalogItem key={entry.id} entry={entry} />
+          ))}
+          {!catalogLoading && results.length === 0 && (
+            <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+              没有匹配「{query.trim()}」的插件
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {sortedInstalled.map((plugin) => (
+            <InstalledItem key={plugin.id} plugin={plugin} />
+          ))}
+          {sortedInstalled.length === 0 && (
+            <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+              尚未安装插件 —— 用上方搜索框从市场安装
+            </div>
+          )}
+        </div>
+      )}
 
       {Object.keys(installPhases).length > 0 && (
         <div className="mt-3 text-center text-[10px] text-muted-foreground">

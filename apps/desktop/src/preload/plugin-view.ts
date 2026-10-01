@@ -205,6 +205,28 @@ const bridge = {
     ipcRenderer.invoke('pi:plugin:context-menu', pos),
 
   /**
+   * Live-slot binding (piSDK.liveSlot): let a host engine view be positioned
+   * inside the page's layout. The slot id is composed HERE, on the plugin-id
+   * prefix — the page can only name slots inside its own plugin's namespace,
+   * never another plugin's or the host's.
+   */
+  liveAttach: (name: string): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('pi:liveview:attach', { slotId: `${PLUGIN_ID}:${String(name)}` }),
+  liveBounds: (
+    name: string,
+    b: { x: number; y: number; width: number; height: number },
+  ): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('pi:liveview:set-bounds', {
+      slotId: `${PLUGIN_ID}:${String(name)}`,
+      x: b.x,
+      y: b.y,
+      width: b.width,
+      height: b.height,
+    }),
+  liveDetach: (name: string): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('pi:liveview:detach', { slotId: `${PLUGIN_ID}:${String(name)}` }),
+
+  /**
    * Transport counters, for diagnosing a panel that stays blank. Cheap enough
    * to leave in: three integers, and they turn "nothing happened" into a
    * specific broken link (no port / not sent / sent but no reply).

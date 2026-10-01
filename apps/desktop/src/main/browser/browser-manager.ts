@@ -53,7 +53,6 @@ export interface WalkResult {
 }
 
 type UrlChangedCallback = (url: string) => void;
-type SwitchToBrowserTabCallback = () => void;
 
 /**
  * BrowserManager — manages the Electron webview via the debugger API
@@ -68,7 +67,6 @@ export class BrowserManager {
   private mainWindow: BrowserWindow | null = null;
   private debuggerAttached = false;
   private urlChangedCallbacks: UrlChangedCallback[] = [];
-  private switchToBrowserTabCallbacks: SwitchToBrowserTabCallback[] = [];
   private currentZoom = 1;
   private isNavigating = false;
   private zoomComputing = false;
@@ -185,6 +183,22 @@ export class BrowserManager {
   }
 
   /**
+   * The engine view itself, for z-order management: the slot host re-appends
+   * it to the contentView when an engine slot shows, because lazily-created
+   * plugin panel views join the view tree above it and would otherwise paint
+   * over it.
+   */
+  getView(): WebContentsView | null {
+    if (!this.browserView) return null;
+    try {
+      if (this.browserView.webContents.isDestroyed()) return null;
+    } catch {
+      return null;
+    }
+    return this.browserView;
+  }
+
+  /**
    * Set the browser view's bounds (viewport-relative position and size).
    * Call from renderer via IPC to position the native overlay over the placeholder div.
    */
@@ -295,34 +309,6 @@ export class BrowserManager {
     }
   }
 
-  /**
-   * Ensure the browser is connected before executing a command.
-   * If the browser view doesn't exist (browser panel not open), notify the
-   * renderer to switch to the Browser tab.
-   */
-  async ensureConnected(timeoutMs = 15000): Promise<void> {
-    if (this.isConnected()) return;
-
-    // Signal the renderer to switch to the Browser tab
-    console.log('[BrowserManager] Not connected — requesting tab switch');
-    this.switchToBrowserTabCallbacks.forEach((cb) => cb());
-
-    // Wait for connection by polling connect() which handles the full
-    // debugger lifecycle (attach, enable domains, inject helpers).
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-      await new Promise((r) => setTimeout(r, 500));
-      try {
-        await this.connect();
-        if (this.isConnected()) return;
-      } catch {
-        // Keep retrying
-      }
-    }
-
-    throw new Error('Browser panel is not open. Please open the Browser tab in the right panel and try again.');
-  }
-
   /** ─── Toolbar navigation ─── */
 
   /** Navigate back in browsing history. */
@@ -400,11 +386,6 @@ export class BrowserManager {
   /** Measure page content width and compute auto-fit zoom via CDP. */
   /** Measure page content width vs webview width and auto-fit zoom. */
   private webviewWidth = 600;
-
-  /** Set the webview's CSS width (called from renderer via IPC). */
-  setWebviewWidth(width: number): void {
-    this.webviewWidth = width;
-  }
 
   private async computeAutoZoom(): Promise<void> {
     // Re-entrant guard — prevent concurrent zoom computations
@@ -1338,7 +1319,7 @@ export class BrowserManager {
       trigger: triggerSelector,
       matched: null,
       selected: false,
-      error: `No option matching "${optionText}" found in popup triggered by "${triggerSelector}". The popup may have a different structure — try using \`pi-browser snapshot\` to inspect available options.`,
+      error: `No option matching "${optionText}" found in popup triggered by "${triggerSelector}". The popup may have a different structure — use browser_find with the option text to inspect available options.`,
     };
   }
 
@@ -1611,32 +1592,12 @@ export class BrowserManager {
     this.urlChangedCallbacks.push(cb);
   }
 
-  /** Register a callback for switching to the Browser tab (main → renderer signal). */
-  onSwitchToBrowserTab(cb: SwitchToBrowserTabCallback): void {
-    this.switchToBrowserTabCallbacks.push(cb);
-  }
-
   /** ——— Viewport ——— */
 
   /** Override the webview's device metrics to match the panel width. */
   async setDeviceMetrics(width: number, height: number): Promise<void> {
     this.webviewWidth = width;
     await this.computeAutoZoom();
-  }
-
-  /** Set user zoom (0.3–3.0). Combined with auto-fit zoom. */
-  async setZoom(factor: number): Promise<{ zoom: number }> {
-    this.currentZoom = Math.max(0.3, Math.min(3, factor));
-    await this.applyZoom();
-    return { zoom: this.currentZoom };
-  }
-
-  async resetZoom(): Promise<{ zoom: number }> {
-    return await this.setZoom(1);
-  }
-
-  getZoom(): number {
-    return this.currentZoom;
   }
 
   /** ——— Cleanup ——— */

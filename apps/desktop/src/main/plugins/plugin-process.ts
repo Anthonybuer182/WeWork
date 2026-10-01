@@ -144,10 +144,12 @@ export class PluginProcess {
       this.restartCount++;
       this.onStateChange?.('crashed', `exit code ${code}, restarting in ${delay}ms`);
       this.restartTimer = setTimeout(() => {
-        this.start().catch((err) => {
-          console.error(`[plugin:${this.pluginId}] restart failed:`, err);
-          this.onStateChange?.('error', err.message);
-        });
+        this.start()
+          .then(() => this.sendInit())
+          .catch((err) => {
+            console.error(`[plugin:${this.pluginId}] restart failed:`, err);
+            this.onStateChange?.('error', err.message);
+          });
       }, delay);
     } else {
       this.onStateChange?.('error', `exited (code ${code}) and exceeded restart budget`);

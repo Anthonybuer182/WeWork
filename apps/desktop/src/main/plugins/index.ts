@@ -15,6 +15,7 @@ import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { PluginRegistry } from './registry';
 import { parseFrontmatter } from '@earendil-works/pi-coding-agent';
 import { CapabilityHub } from './capability-hub';
+import type { VlmAnalyzer } from '@main/browser/vlm-analyzer';
 import { PluginProcess, spawnBackend } from './plugin-process';
 import { registerPluginProtocolHandler } from './protocol';
 import { PluginMarketplace } from './marketplace';
@@ -66,12 +67,20 @@ export class PluginSystem {
   private uiPortNavigating = new Set<number>();
   /** Notified whenever the aggregate tool/skill set changes. */
   onExtensionsChanged: (() => void) | null = null;
+  /**
+   * A plugin's backend just (re)started — activate, re-enable, or crash
+   * restart. Panel views reused across those events hold ports to the dead
+   * process; the host uses this to push fresh ones (see PluginWebViews.
+   * rewirePluginPorts).
+   */
+  onBackendStarted: ((pluginId: string) => void) | null = null;
   /** Resolves when init() has finished — IPC handlers gate reads on this. */
   private initPromise: Promise<void> | null = null;
 
   constructor(opts?: {
     agentDir?: string;
     browserManager?: BrowserManager;
+    vlmAnalyzer?: VlmAnalyzer;
     sendToRenderer?: (channel: string, payload: unknown) => void;
   }) {
     this.registry = new PluginRegistry({ ...opts, appVersion: app.getVersion() });
@@ -79,6 +88,7 @@ export class PluginSystem {
       registry: this.registry,
       emitEvent: (evt) => this.emitEvent(evt),
       browserManager: opts?.browserManager,
+      vlmAnalyzer: opts?.vlmAnalyzer,
       sendToRenderer: opts?.sendToRenderer,
     });
     this.marketplace = new PluginMarketplace(this.registry);
@@ -133,10 +143,19 @@ export class PluginSystem {
       proc.onStateChange = (state, error) => {
         this.registry.setState(pluginId, state, error);
         this.emitEvent({ type: 'state-changed', pluginId, state, error });
+        // Crash restart: the backend was replaced under the same process object,
+        // so activate() does not run. Panel views survive untouched — their
+        // ports point at the dead process until we rewire.
+        if (state === 'crashed' || state === 'error') this.clearUiPorts(pluginId);
+        if (state === 'active') this.onBackendStarted?.(pluginId);
       };
       this.processes.set(pluginId, proc);
       this.registry.setState(pluginId, 'active');
       this.emitEvent({ type: 'state-changed', pluginId, state: 'active' });
+      // Fresh backend → any panel view kept alive across a disable/enable (or
+      // install/rollback) still holds the OLD backend's port and never
+      // re-requests one (its page did not reload). Let the host push new ports.
+      this.onBackendStarted?.(pluginId);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[plugins] activate ${pluginId} failed:`, message);
@@ -323,8 +342,8 @@ export class PluginSystem {
     const result = await proc.executeTool(name, params);
     // Agent-activity linkage: a tool that just ran means the plugin is doing
     // visible work — surface its primary panel so the effect is shown. Plugins
-    // that contribute no panel (com.pi.browser: its view is the host's own
-    // `host:browser`) have nothing to open, and `openPanelForActivity` no-ops.
+    // that contribute no panel have nothing to open, and `openPanelForActivity`
+    // no-ops.
     this.openPanelForActivity(pluginId);
     return result;
   }
@@ -479,8 +498,8 @@ export class PluginSystem {
     if (!plugin) return { ok: false, error: `"${pluginId}" is not installed` };
     if (plugin.source !== 'user') {
       // rmSync below removes plugin.rootPath — for a dev plugin that is the
-      // checkout's source tree (uncommitted work and all), for a builtin the
-      // app bundle. Neither is an installation; refuse instead of deleting.
+      // checkout's source tree, uncommitted work and all. That is not an
+      // installation; refuse instead of deleting.
       return {
         ok: false,
         error: `"${pluginId}" is a ${plugin.source} plugin, not an installed copy — nothing to uninstall`,
@@ -540,9 +559,8 @@ export class PluginSystem {
   findPreviewHandler(filePath: string): string | null {
     const ext = filePath.toLowerCase().split('.').pop()?.split('?')[0] ?? '';
     if (!ext) return null;
-    // Source priority: dev (under development) > user (market-installed) >
-    // builtin — a user-installed viewer overrides the bundled one for the
-    // extensions it claims.
+    // Source priority: dev (under development) > user (market-installed) — a
+    // higher-priority viewer wins the extensions it claims.
     const ranked = [...this.registry.all()].sort(
       (a, b) => sourcePriority(b.source) - sourcePriority(a.source),
     );
@@ -664,6 +682,6 @@ export class PluginSystem {
   }
 }
 
-function sourcePriority(source: 'dev' | 'user' | 'builtin'): number {
-  return source === 'dev' ? 3 : source === 'user' ? 2 : 1;
+function sourcePriority(source: 'dev' | 'user'): number {
+  return source === 'dev' ? 3 : 2;
 }

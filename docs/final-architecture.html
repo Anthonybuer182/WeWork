@@ -225,7 +225,9 @@
     指南里没有这些 —— 所以它留在这儿。但它描述的<b>面板模型</b>已经被取代：
     <ul style="margin:10px 0 10px 20px;line-height:1.9">
       <li>manifest 里的 <code>kind</code> 字段<b>没了</b>。面板只有一种：一个 <code>entry</code> 指向一张网页，装法由宿主决定。下面的「面板两种 kind」一节，以及 <code>liveview</code> / <code>companionOf</code> / <code>autoHeight</code>，都已作废。</li>
-      <li>浏览器预览不再是插件的 <code>liveview</code> 面板，而是宿主自带的 <code>host:browser</code>；浏览器插件现在只贡献工具。</li>
+      <li>浏览器面板<b>回归插件</b>(com.pi.browser,manifest 声明):面板页里地址栏是插件自己的,
+        页内经 <code>piSDK.liveSlot</code> 嵌入宿主引擎视图(槽 <code>&lt;插件id&gt;:page</code>);
+        引擎与登录态仍归宿主。曾经的 <code>host:browser</code> 宿主面板已退役。</li>
       <li>插件后端统一走 <code>@pi/plugin-sdk</code>，<code>main(parentPort)</code> 那套手写协议没了。</li>
       <li>第一方插件是 <b>5 个</b>（下面表里的 9 个含后来删掉的示例插件）。</li>
     </ul>
@@ -287,7 +289,7 @@
     <tr><td>宿主资源</td><td>文件系统访问、存储、通知、剪贴板、<b>浏览器引擎</b></td><td>经权限门暴露给插件的共享资源</td></tr>
     <tr><td>其它一切</td><td>浏览器自动化、文件中心、待办、邮件、日历、知识库、ERP…</td><td>全部插件,可装卸、可被第三方替代</td></tr>
   </table>
-  <p><strong>浏览器引擎为什么归宿主:</strong>它是单例资源 —— agent 工具、用户点击、<code>pi-browser</code> CLI 三方驱动同一实例、共享同一份持久登录态(persist 会话)。浏览器自动化插件使用它的方式与使用文件系统完全同构:声明 <code>liveview</code> 面板(挂载点)+ <code>browser</code> 权限(能力调用)。</p>
+  <p><strong>浏览器引擎为什么归宿主:</strong>它是单例资源 —— agent 工具与用户点击两方驱动同一实例、共享同一份持久登录态(persist 会话)。浏览器自动化插件使用它的方式与使用文件系统完全同构:<code>browser</code> 权限 + <code>browser.*</code> 能力调用(打开、读快照、点击、填表、截图、按目标导航)。曾经的 <code>pi-browser</code> CLI 与其本地 HTTP 服务已移除 —— 第三条驱动路只服务自己,还留下一个无鉴权端口。</p>
 </section>
 
 <section id="s3">
@@ -305,7 +307,7 @@
 ├─▶ <b>插件 UI ×N</b>(<span class="hl">pi-plugin://&lt;插件id&gt;/ 唯一源沙箱 iframe</span>,站点隔离实测生效)
 │      standard 面板(HTML + piSDK)
 │
-└─▶ <b>浏览器引擎</b>(宿主单例 BrowserView → 待迁 WebContentsView)
+└─▶ <b>浏览器引擎</b>(宿主单例 WebContentsView,persist:pi-browser 会话)
        liveview 面板 = 挂载点;bounds 槽位机制(0×0 上报 / reload 兜底已防御)</div>
   <p>关键防御已内置:后端 crash 重启 ×3;file:// 渲染器秒开竞态(<code>whenReady</code> 门控 + 渲染器重试);数据面 outbox 缓冲(port 握手前事件不丢)。</p>
   <h3>常驻性与定时任务</h3>
@@ -447,8 +449,8 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
   <div class="sec-head"><span class="sec-no">§9</span><h2>分发与路由</h2></div>
   <ul>
     <li><strong>市场:</strong>静态 index.json + zip + sha256 校验 + engines 版本协商 + 原子安装;卸载默认保留数据(重装恢复);授权确认对话框逐条列权限</li>
-    <li><strong>多根扫描:</strong>dev(开发)> user(市场安装)> builtin(内置);同名高优先级覆盖</li>
-    <li><strong>filePreview 路由优先级:</strong>dev > user > builtin —— <b>第三方查看器装上即接管同扩展</b>;无认领类型 → 系统默认应用打开(宿主永不渲染业务内容)</li>
+    <li><strong>多根扫描:</strong>dev(开发)> user(市场安装);同名高优先级覆盖。零内置策略:宿主不随包分发插件</li>
+    <li><strong>filePreview 路由优先级:</strong>dev > user —— <b>后装的查看器在开发态接管同扩展</b>;无认领类型 → 系统默认应用打开(宿主永不渲染业务内容)</li>
     <li><strong>连接器脚手架:</strong><code>templates/connector-plugin/</code>(对接真实 ERP/HR/财务系统的起点)</li>
   </ul>
 </section>
@@ -466,7 +468,7 @@ UI  :按需挂载;iframe 与 WebContentsView 同样随面板生命周期卸载,<
     <tr><td>P8</td><td>生产加固(CSP / autoHeight / 右键桥 / file:// 竞态)</td><td><span class="tag ok">已交付</span></td></tr>
     <tr><td>P9a</td><td>数据通道:filesystem.write(mtime 冲突)+ ws-file(Range/权限门)+ memory-file + 路由优先级</td><td><span class="tag ok">已交付</span></td></tr>
     <tr><td>P9b</td><td>office 高保真渲染 + 面板 params 契约;Monaco/pdf.js/Univer 引擎接入</td><td><span class="tag ok">已交付</span> <span class="tag ok">officecli 已整体移除,改由插件自带 GenOffice 引擎</span></td></tr>
-    <tr><td>P10</td><td><b>开放准备:</b>第一方声明式面板迁 HTML(dogfood)· <code>site-per-process</code> 强制隔离 · liveview 通用化 + <code>nativeview.*</code> 能力 · BrowserView→WebContentsView(Electron 30+ 已废弃)· 面板崩溃自愈(render-process-gone)· <code>agent.trigger</code> 反向触发能力 · 日历定时提醒实证(后端调度 + 补跑)</td><td><span class="tag todo">待办</span></td></tr>
+    <tr><td>P10</td><td><b>开放准备:</b>第一方声明式面板迁 HTML(dogfood)· <code>site-per-process</code> 强制隔离 · liveview 通用化 + <code>nativeview.*</code> 能力 · 面板崩溃自愈(render-process-gone)· <code>agent.trigger</code> 反向触发能力 · 日历定时提醒实证(后端调度 + 补跑)。<b>已完成:</b>BrowserView→WebContentsView 迁移(Electron 30+ 已废弃前者)· agent 浏览器工具面补齐至引擎全量(点击 / 填表 / 选择 / 滚动 / 执行 JS / 按目标导航)· <code>pi-browser</code> CLI 及其本地 HTTP 服务下线</td><td><span class="tag todo">待办</span></td></tr>
     <tr><td>P11</td><td><b>对外文档与试点:</b>文档站(概念→manifest→面板→后端→权限→上架)· 挑 1–2 个第三方照文档写插件验证自解释性 · 市场公开</td><td><span class="tag todo">待办</span></td></tr>
     <tr><td>业务线</td><td>会议纪要、行政人事财务连接器、邮件/日历真实协议(IMAP/SMTP/CalDAV)</td><td><span class="tag todo">待办</span></td></tr>
   </table>

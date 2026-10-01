@@ -280,6 +280,13 @@ __name(plugin, "plugin");
 
 // src/backend/index.ts
 var NAVIGATE_TIMEOUT_MS = 6e4;
+var SNAPSHOT_MAX_CHARS = 8e3;
+var mountedPanels = /* @__PURE__ */ new Set();
+var lastUrl = "";
+function actionResult(prefix, r, extra = "") {
+  return r.error ? `${prefix}\u5931\u8D25: ${r.error}` : `${prefix}\u6210\u529F${extra}`;
+}
+__name(actionResult, "actionResult");
 function normalizeUrl(input) {
   const raw = String(input ?? "").trim();
   if (!raw) throw new Error("missing url");
@@ -288,6 +295,60 @@ function normalizeUrl(input) {
 }
 __name(normalizeUrl, "normalizeUrl");
 plugin({
+  async onInit(ctx) {
+    try {
+      const state = await ctx.call("browser.getUrl");
+      if (state?.url) lastUrl = state.url;
+    } catch {
+    }
+  },
+  async onPanelMounted(panelId, _params, ctx) {
+    mountedPanels.add(panelId);
+    try {
+      const state = await ctx.call("browser.getUrl");
+      if (state?.url) lastUrl = state.url;
+    } catch {
+    }
+    if (lastUrl) ctx.send(panelId, "ui.urlChanged", { url: lastUrl });
+  },
+  async onRequest(panelId, method, params, ctx) {
+    switch (method) {
+      case "navigate": {
+        const result = await ctx.call(
+          "browser.navigate",
+          { url: normalizeUrl(params.url) },
+          { timeoutMs: NAVIGATE_TIMEOUT_MS }
+        );
+        if (result?.url) lastUrl = result.url;
+        return { url: result?.url ?? "", title: result?.title ?? "" };
+      }
+      case "back":
+        await ctx.call("browser.back");
+        return { ok: true };
+      case "forward":
+        await ctx.call("browser.forward");
+        return { ok: true };
+      case "reload":
+        await ctx.call("browser.reload");
+        return { ok: true };
+      case "state.get": {
+        const state = await ctx.call("browser.getUrl");
+        if (state?.url) lastUrl = state.url;
+        return { url: state?.url ?? "", title: state?.title ?? "" };
+      }
+      default:
+        throw new Error(
+          `unknown panel method: ${method} (known: navigate, back, forward, reload, state.get)`
+        );
+    }
+  },
+  async onHostEvent(event, data, ctx) {
+    if (event !== "browser.urlChanged") return;
+    lastUrl = String(data?.url ?? "");
+    for (const panelId of mountedPanels) {
+      ctx.send(panelId, "ui.urlChanged", { url: lastUrl });
+    }
+  },
   async onTool(name, params, ctx) {
     switch (name) {
       case "browser_navigate": {
@@ -302,7 +363,81 @@ plugin({
       }
       case "browser_get_state": {
         const state = await ctx.call("browser.getState");
-        return `\u5F53\u524D\u9875\u9762: ${state?.url ?? "(about:blank)"}${state?.title ? ` \u2014 ${state.title}` : ""}`;
+        const lines = [
+          `\u5F53\u524D\u9875\u9762: ${state?.url ?? "(about:blank)"}${state?.title ? ` \u2014 ${state.title}` : ""}`
+        ];
+        if (state?.snapshot) {
+          const snap = state.snapshot.length > SNAPSHOT_MAX_CHARS ? `${state.snapshot.slice(0, SNAPSHOT_MAX_CHARS)}
+\u2026(\u5FEB\u7167\u5DF2\u622A\u65AD,\u8981\u627E\u5177\u4F53\u5143\u7D20\u7528 browser_find)` : state.snapshot;
+          lines.push("", "\u53EF\u4EA4\u4E92\u5143\u7D20(\u5F15\u7528 ref \u53EF\u76F4\u63A5\u4F20\u7ED9 browser_click / browser_fill):", snap);
+        }
+        return lines.join("\n");
+      }
+      case "browser_find": {
+        const query = String(params.query ?? "").trim();
+        if (!query) throw new Error("missing query");
+        const matches = await ctx.call("browser.find", { query });
+        if (matches.length === 0) return `\u9875\u9762\u4E0A\u6CA1\u6709\u5339\u914D "${query}" \u7684\u5143\u7D20`;
+        return matches.map((m) => `[${m.role}] "${m.text}" (${m.section}, \u5339\u914D\u5EA6 ${m.score})`).join("\n");
+      }
+      case "browser_click": {
+        const selector = String(params.selector ?? "").trim();
+        if (!selector) throw new Error("missing selector");
+        const r = await ctx.call("browser.click", {
+          selector
+        });
+        return actionResult(`\u70B9\u51FB "${selector}"`, r);
+      }
+      case "browser_fill": {
+        const selector = String(params.selector ?? "").trim();
+        if (!selector) throw new Error("missing selector");
+        const r = await ctx.call("browser.fill", {
+          selector,
+          value: String(params.value ?? "")
+        });
+        return actionResult(`\u586B\u5199 "${selector}"`, r);
+      }
+      case "browser_hover": {
+        const selector = String(params.selector ?? "").trim();
+        if (!selector) throw new Error("missing selector");
+        const r = await ctx.call("browser.hover", {
+          selector
+        });
+        return actionResult(`\u60AC\u505C "${selector}"`, r);
+      }
+      case "browser_select": {
+        const selector = String(params.selector ?? "").trim();
+        if (!selector) throw new Error("missing selector");
+        const r = await ctx.call("browser.select", {
+          selector,
+          value: String(params.value ?? "")
+        });
+        return actionResult(`\u5728 "${selector}" \u9009\u4E2D "${params.value}"`, r);
+      }
+      case "browser_scroll": {
+        const r = await ctx.call("browser.scroll", {
+          direction: params.direction,
+          amount: params.amount
+        });
+        return `\u5DF2${r.direction === "up" ? "\u5411\u4E0A" : "\u5411\u4E0B"}\u6EDA\u52A8 ${r.amount}px`;
+      }
+      case "browser_evaluate": {
+        const expression = String(params.expression ?? "");
+        if (!expression.trim()) throw new Error("missing expression");
+        const r = await ctx.call("browser.evaluate", { expression });
+        return typeof r.result === "string" ? r.result : JSON.stringify(r.result);
+      }
+      case "browser_walk": {
+        const goal = String(params.goal ?? "").trim();
+        if (!goal) throw new Error("missing goal");
+        const r = await ctx.call(
+          "browser.walk",
+          { goal, maxSteps: params.maxSteps },
+          { timeoutMs: NAVIGATE_TIMEOUT_MS }
+        );
+        const stepLines = r.steps.map((s, i) => `${i + 1}. \u70B9\u51FB "${s.text}"${s.ok === false ? " \u2717" : ""}`);
+        const head = r.reached ? `\u5DF2\u5230\u8FBE\u76EE\u6807 "${goal}"` : `\u672A\u80FD\u5230\u8FBE\u76EE\u6807 "${goal}"`;
+        return [head, `\u5F53\u524D: ${r.url ?? "?"}`, ...stepLines].join("\n");
       }
       case "browser_screenshot": {
         const shot = await ctx.call("browser.screenshot", {

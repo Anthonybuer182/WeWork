@@ -2,7 +2,6 @@ import { app } from 'electron';
 import { getAgentDir } from '@earendil-works/pi-coding-agent';
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import type { PluginManifest, PluginRuntimeState, PluginSource, PluginInfo } from '@pi/types';
 import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { satisfiesVersion } from './semver';
@@ -33,15 +32,14 @@ export interface PluginsStateFile {
   plugins?: Record<string, { enabled?: boolean }>;
 }
 
-const SOURCE_PRIORITY: Record<PluginSource, number> = { dev: 3, user: 2, builtin: 1 };
+const SOURCE_PRIORITY: Record<PluginSource, number> = { dev: 3, user: 2 };
 
 /**
  * Multi-root plugin discovery with priority resolution.
  *
  * Roots, highest priority first:
- *   1. dev   — paths from the PI_DEV_PLUGINS env var (colon-separated)
- *   2. user  — ~/.pi/agent/plugins/  (installed plugins)
- *   3. builtin — <resources>/plugins (ships empty in the zero-builtin strategy)
+ *   1. dev  — paths from the PI_DEV_PLUGINS env var (colon-separated)
+ *   2. user — ~/.pi/agent/plugins/  (installed plugins)
  */
 export class PluginRegistry {
   private plugins = new Map<string, ResolvedPlugin>();
@@ -104,15 +102,6 @@ export class PluginRegistry {
 
   private get stateFilePath(): string {
     return join(this.agentDir, 'plugins', '_state.json');
-  }
-
-  private getBuiltinRoot(): string {
-    if (app.isPackaged) {
-      return join(process.resourcesPath, 'plugins');
-    }
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    // out/main/plugins → apps/desktop/plugins
-    return resolve(__dirname, '..', '..', 'plugins');
   }
 
   private getDevPaths(): string[] {
@@ -183,7 +172,6 @@ export class PluginRegistry {
     // Priority order matters: later (lower-priority) sources never override.
     for (const p of this.getDevPaths()) collectFrom(resolve(p), 'dev');
     collectFrom(this.pluginsRoot, 'user');
-    collectFrom(this.getBuiltinRoot(), 'builtin');
 
     const enabledMap = this.stateFile.plugins ?? {};
     for (const [id, candidate] of candidates) {

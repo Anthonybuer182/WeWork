@@ -104,7 +104,7 @@ pnpm dev:desktop          # 设 PI_DEV_PLUGINS=<repo>/plugins 后再启动
 
 也可以手动设:`PI_DEV_PLUGINS=/绝对路径/to/plugins`(**冒号分隔**,可给多个)。
 
-插件的查找根按优先级解析 —— **dev > user > builtin**(见
+插件的查找根按优先级解析 —— **dev > user**(见
 `apps/desktop/src/main/plugins/registry.ts` 的 `SOURCE_PRIORITY`)。`dev` 优先级最高,
 会遮蔽 `~/.pi/agent/plugins/` 里的同名副本,所以开发时始终以仓库为准,不会打架。
 
@@ -449,7 +449,7 @@ node packages/plugin-sdk/tests/smoke.mjs
 cd plugins/com.pi.tasks && node scripts/smoke-backend.mjs
 ```
 
-五个插件合计 **126 项检查**(浏览器 9 / 知识库 16 / 邮件 18 / 事项 38 / 文件查看器 45),
+五个插件合计 **138 项检查**(浏览器 21 / 知识库 16 / 邮件 18 / 事项 38 / 文件查看器 45),
 加上 SDK 自己的 21 项契约测试。
 
 ## 面板开发(HTML + piSDK)
@@ -520,6 +520,28 @@ async onRequest(panelId, method, ctx) {
 **选区归你自己**:面板里的文字被选中,宿主不做任何事 —— 没有滑词菜单,也没有选区上报。
 想围绕选区做点什么(浮出一个按钮、送进对话),在你的面板里自己实现。宿主只提供
 `chat.send` 这条能力,怎么触发由你决定。
+
+### 原生槽:piSDK.liveSlot(进阶)
+
+面板页可以把一块**宿主引擎视图**嵌进自己的布局——宿主把原生视图精确摆在你给的矩形里,
+你的页面在它周围自由发挥(浏览器插件就是这样做的:地址栏是页面,下面嵌引擎):
+
+```js
+// 返回 { detach() }。绑定后自动跟随元素尺寸(ResizeObserver + resize,50ms 去抖)。
+const slot = piSDK.liveSlot('page', document.getElementById('page-slot'));
+```
+
+规则与语义:
+
+- **矩形即一切**。元素多大,视图多大;元素 `display:none`/卸载会上报 0×0,即"隐藏视图"。
+  一个看不见却还活着的视图会吞掉真鼠标点击——所以降级矩形也会被如实上报。
+- **槽名空间是插件级的**。槽 id 是 `<插件id>:<name>`,页面改不了前缀;**槽名不得与自己的
+  panel id 重名**(会撞槽)。
+- **不是每个插件都有视图可嵌**。今天:manifest 声明 `browser` 权限的插件自动获得
+  `<插件id>:page` 槽,内容是内嵌浏览器引擎。没有的插件调 `liveSlot` 会在 attach 时被宿主
+  拒绝,SDK 把原因打进 console。
+- iframe/web 构建下是**空操作**(没有原生层可摆),返回同样的句柄但不报错——
+  面板代码不用分平台写。
 
 ## 权限模型
 

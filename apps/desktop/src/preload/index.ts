@@ -69,28 +69,6 @@ export interface ElectronAPI {
     getVersion: () => Promise<string>;
   };
 
-  // ── Browser Automation ──
-  browser: {
-    connect: () => Promise<{ connected: boolean; error?: string }>;
-    navigate: (url: string) => Promise<{ url: string; title: string }>;
-    getUrl: () => Promise<{ url: string; title: string }>;
-    screenshot: () => Promise<{ base64: string }>;
-    setViewport: (width: number, height: number) => Promise<void>;
-    setZoom: (factor: number) => Promise<{ zoom: number }>;
-    resetZoom: () => Promise<{ zoom: number }>;
-    getZoom: () => Promise<{ zoom: number }>;
-    setBounds: (x: number, y: number, width: number, height: number) => Promise<void>;
-    getBounds: () => Promise<{ x: number; y: number; width: number; height: number }>;
-    executeJavaScript: (code: string) => Promise<{ result: unknown }>;
-    goBack: () => Promise<void>;
-    goForward: () => Promise<void>;
-    reload: () => Promise<void>;
-    loadURL: (url: string) => Promise<void>;
-    hide: () => Promise<void>;
-    onUrlChanged: (callback: (url: string) => void) => void;
-    onSwitchToBrowserTab: (callback: () => void) => void;
-  };
-
   // ── Plugin System ──
   // (exposed as a separate `window.pluginBridge` global — see bottom of file)
 }
@@ -172,31 +150,6 @@ const electronAPI: ElectronAPI = {
   app: {
     getPath: (name) => ipcRenderer.invoke('pi:app:getPath', name),
     getVersion: () => ipcRenderer.invoke('pi:app:getVersion'),
-  },
-
-  browser: {
-    connect: () => ipcRenderer.invoke('pi:browser:connect'),
-    navigate: (url) => ipcRenderer.invoke('pi:browser:navigate', url),
-    getUrl: () => ipcRenderer.invoke('pi:browser:getUrl'),
-    screenshot: () => ipcRenderer.invoke('pi:browser:screenshot'),
-    setViewport: (width, height) => ipcRenderer.invoke('pi:browser:setViewport', width, height),
-    setZoom: (factor) => ipcRenderer.invoke('pi:browser:setZoom', factor),
-    resetZoom: () => ipcRenderer.invoke('pi:browser:resetZoom'),
-    getZoom: () => ipcRenderer.invoke('pi:browser:getZoom'),
-    setBounds: (x, y, width, height) => ipcRenderer.invoke('pi:browser:setBounds', x, y, width, height),
-    getBounds: () => ipcRenderer.invoke('pi:browser:getBounds'),
-    executeJavaScript: (code) => ipcRenderer.invoke('pi:browser:executeJavaScript', code),
-    goBack: () => ipcRenderer.invoke('pi:browser:goBack'),
-    goForward: () => ipcRenderer.invoke('pi:browser:goForward'),
-    reload: () => ipcRenderer.invoke('pi:browser:reload'),
-    loadURL: (url) => ipcRenderer.invoke('pi:browser:loadURL', url),
-    hide: () => ipcRenderer.invoke('pi:browser:hide'),
-    onUrlChanged: (callback) => {
-      ipcRenderer.on('pi:browser:urlChanged', (_event, url) => callback(url));
-    },
-    onSwitchToBrowserTab: (callback) => {
-      ipcRenderer.on('pi:browser:switchToBrowserTab', () => callback());
-    },
   },
 
 };
