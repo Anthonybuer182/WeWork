@@ -140,9 +140,10 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
   const [keepData, setKeepData] = useState(true);
   const [busy, setBusy] = useState(false);
 
-  // Only a plugin that actually lives in the user's plugin root can be replaced
-  // or rolled back there — a dev or builtin copy would be shadowed by the very
-  // install these buttons perform, so offering them would do nothing visible.
+  // Only a plugin that actually lives in the user's plugin root can be
+  // replaced, rolled back, or uninstalled there — a dev copy's directory is
+  // the checkout's source tree (a builtin's is the app bundle), and removing
+  // either is never what "uninstall" means.
   const manageable = plugin.source === 'user';
   const inMarket = catalog.some((e) => e.id === plugin.id);
   const broken = plugin.state === 'error' || plugin.state === 'crashed';
@@ -232,9 +233,11 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
           }}
           aria-label={`启用/禁用 ${plugin.name}`}
         />
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmOpen(true)} aria-label={`卸载 ${plugin.name}`}>
-          <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-        </Button>
+        {manageable && (
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmOpen(true)} aria-label={`卸载 ${plugin.name}`}>
+            <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+          </Button>
+        )}
       </div>
 
       {/* Uninstall confirm — data retention opt-out */}

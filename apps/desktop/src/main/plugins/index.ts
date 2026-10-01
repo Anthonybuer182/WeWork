@@ -477,6 +477,16 @@ export class PluginSystem {
   async uninstall(pluginId: string, opts?: { keepData?: boolean }): Promise<InstallResult> {
     const plugin = this.registry.get(pluginId);
     if (!plugin) return { ok: false, error: `"${pluginId}" is not installed` };
+    if (plugin.source !== 'user') {
+      // rmSync below removes plugin.rootPath — for a dev plugin that is the
+      // checkout's source tree (uncommitted work and all), for a builtin the
+      // app bundle. Neither is an installation; refuse instead of deleting.
+      return {
+        ok: false,
+        error: `"${pluginId}" is a ${plugin.source} plugin, not an installed copy — nothing to uninstall`,
+        pluginId,
+      };
+    }
 
     this.stopPlugin(pluginId);
     this.removePluginSkills(pluginId);
