@@ -90,6 +90,33 @@ cp -r manifest.json dist ~/.pi/agent/plugins/com.example.hello/
 
 > 分发给别人走插件市场(见「市场上架」),不是让人手动拷目录。
 
+### 4b · 开发本仓库的首方插件时,不要拷目录
+
+上面那条路装的是**副本**。装完再去改仓库里的 `plugins/<id>/`,不会有任何反应 ——
+应用读的是 `~/.pi/agent/plugins/` 里那份,你改的那份根本没被加载。这个坑的典型症状
+是「我明明改了,怎么没生效」。
+
+开发时把仓库的 `plugins/` 直接设成开发根目录:
+
+```bash
+pnpm dev:desktop          # 设 PI_DEV_PLUGINS=<repo>/plugins 后再启动
+```
+
+也可以手动设:`PI_DEV_PLUGINS=/绝对路径/to/plugins`(**冒号分隔**,可给多个)。
+
+插件的查找根按优先级解析 —— **dev > user > builtin**(见
+`apps/desktop/src/main/plugins/registry.ts` 的 `SOURCE_PRIORITY`)。`dev` 优先级最高,
+会遮蔽 `~/.pi/agent/plugins/` 里的同名副本,所以开发时始终以仓库为准,不会打架。
+
+两个配套注意点:
+
+- `plugins/` **不属 pnpm workspace**,根目录的 `pnpm install` 碰不到它。新 clone 之后
+  先跑一次 `pnpm setup`(它会逐个插件装依赖并构建)。面板插件的入口是
+  `./ui-dist/panel/index.html`,属于构建产物、被插件自己的 `.gitignore` 忽略 ——
+  不构建的话插件会**静默不显示**,不是报错。
+- `~/.pi/agent/plugins/_state.json` 里没有记录的插件**默认启用**。所以全新 clone 上
+  不需要任何用户目录状态,五个插件就会都在。
+
 ### 加一个面板?
 
 在 `manifest.json` 的 `contributes` 里加:

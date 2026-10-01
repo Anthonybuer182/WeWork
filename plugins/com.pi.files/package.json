@@ -12,6 +12,7 @@
     "typecheck": "node scripts/typecheck.mjs",
     "vendor": "node scripts/vendor-genoffice.mjs",
     "vendor:check": "node scripts/vendor-genoffice.mjs --check",
+    "vendor:verify": "node scripts/vendor-genoffice.mjs --verify",
     "build:panel": "node scripts/build-panel.mjs"
   },
   "devDependencies": {

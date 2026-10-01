@@ -19,8 +19,12 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "setup:market": "node scripts/setup.mjs --market",
+    "verify:vendor": "node plugins/com.pi.files/scripts/vendor-genoffice.mjs --verify",
     "dev:web": "turbo run dev --filter=@pi/web",
-    "dev:desktop": "turbo run dev --filter=@pi/desktop",
+    "dev:desktop": "node scripts/dev-plugin.mjs",
+    "dev:desktop:raw": "turbo run dev --filter=@pi/desktop",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",

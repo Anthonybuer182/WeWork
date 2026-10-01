@@ -35,6 +35,7 @@ const DEST = join(PLUGIN_ROOT, 'vendor', 'genoffice');
 const UPSTREAM_JSON = join(PLUGIN_ROOT, 'vendor', 'UPSTREAM.json');
 const BROWSER_SAFE_JSON = join(PLUGIN_ROOT, 'vendor', 'BROWSER_SAFE.json');
 const CHECK = process.argv.includes('--check');
+const VERIFY = process.argv.includes('--verify');
 
 // ── What we take ────────────────────────────────────────────────────────
 // Engine packages are pure TypeScript with no Electron and no DOM (verified:
@@ -329,6 +330,39 @@ function buildBrowserSafe(files) {
 }
 
 // ── Run ─────────────────────────────────────────────────────────────────
+// `--verify` checks the committed tree against UPSTREAM.json, so it needs no
+// upstream checkout — which is the point: the source this tree came from is a
+// /tmp path that does not survive a reboot, so a clean clone has no way to
+// re-derive the files. Handled before the SRC bailout below, which would
+// otherwise exit(2) before we ever got here.
+if (VERIFY) {
+  if (!existsSync(UPSTREAM_JSON)) {
+    console.error('[vendor] --verify: vendor/UPSTREAM.json missing');
+    process.exit(1);
+  }
+  const prev = JSON.parse(readFileSync(UPSTREAM_JSON, 'utf-8'));
+  const problems = [];
+  for (const f of prev.files) {
+    const abs = join(DEST, f.dest);
+    if (!existsSync(abs)) {
+      problems.push(`- ${f.dest}`);
+      continue;
+    }
+    const buf = readFileSync(abs);
+    if (buf.length !== f.bytes) problems.push(`~ ${f.dest} (size ${buf.length} ≠ ${f.bytes})`);
+    else if (sha256(abs) !== f.sha256) problems.push(`~ ${f.dest} (sha256)`);
+  }
+  if (problems.length) {
+    console.error(`[vendor] LOCAL DRIFT — ${problems.length} file(s) missing/modified:`);
+    for (const p of problems.slice(0, 40)) console.error(`  ${p}`);
+    if (problems.length > 40) console.error(`  … ${problems.length - 40} more`);
+    console.error('  The vendored tree is not rebuildable — restore these from git and commit them.');
+    process.exit(1);
+  }
+  console.log(`[vendor] local tree OK (${prev.files.length} files, commit ${prev.commit})`);
+  process.exit(0);
+}
+
 if (!existsSync(SRC)) {
   console.error(`[vendor] source not found: ${SRC}\n  set GENOFFICE_SRC to a genoffice checkout/tarball`);
   process.exit(2);

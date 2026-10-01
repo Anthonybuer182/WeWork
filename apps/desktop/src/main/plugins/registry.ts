@@ -135,7 +135,11 @@ export class PluginRegistry {
 
   private saveState(): void {
     try {
-      mkdirSync(this.agentDir, { recursive: true });
+      // The file lives in `plugins/`, not in `agentDir` itself — on a machine
+      // that has never installed a plugin that subdirectory does not exist yet,
+      // and mkdir'ing only `agentDir` sent this through the catch below as a
+      // silent ENOENT, so the first enable/disable never persisted.
+      mkdirSync(dirname(this.stateFilePath), { recursive: true });
       writeFileSync(this.stateFilePath, JSON.stringify(this.stateFile, null, 2), 'utf-8');
     } catch (err) {
       console.warn('[plugins] Failed to write _state.json:', err);
