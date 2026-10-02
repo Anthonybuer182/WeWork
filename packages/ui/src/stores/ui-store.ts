@@ -12,11 +12,11 @@ interface UIState {
   sidebarOpen: boolean;
   rightPanelOpen: boolean;
   /**
-   * Right panel expanded over the centre area for focused work. Deliberately
-   * not persisted, like `rightPanelOpen` — the panel should not come back
-   * fullscreen on the next launch.
+   * Centre column visibility. Hidden with CSS (`hidden`), never unmounted —
+   * the centre owns the composer, and a plugin `chat.send` still has to reach
+   * it while the column is hidden.
    */
-  rightPanelMaximized: boolean;
+  centerPanelOpen: boolean;
   rightPanelWidth: number;
   leftPanelWidth: number;
   compactMode: boolean;
@@ -35,9 +35,8 @@ interface UIState {
   setActivePreviewFile: (path: string | null) => void;
   toggleSidebar: () => void;
   toggleRightPanel: () => void;
+  toggleCenterPanel: () => void;
   setRightPanelOpen: (open: boolean) => void;
-  toggleRightPanelMaximized: () => void;
-  setRightPanelMaximized: (maximized: boolean) => void;
   setRightPanelWidth: (width: number) => void;
   setLeftPanelWidth: (width: number) => void;
   setCompactMode: (compact: boolean) => void;
@@ -53,7 +52,7 @@ export const useUIStore = create<UIState>()(
       activePreviewFilePath: null,
       sidebarOpen: true,
       rightPanelOpen: false,
-      rightPanelMaximized: false,
+      centerPanelOpen: true,
       rightPanelWidth: 600,
       // Wider than the old hardcoded 260 default: the left sidebar hosts
       // settings as a view, whose forms need the room.
@@ -95,10 +94,11 @@ export const useUIStore = create<UIState>()(
       },
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
-      setRightPanelOpen: (open) =>
-        set(open ? { rightPanelOpen: true } : { rightPanelOpen: false, rightPanelMaximized: false }),
-      toggleRightPanelMaximized: () => set((s) => ({ rightPanelMaximized: !s.rightPanelMaximized })),
-      setRightPanelMaximized: (maximized) => set({ rightPanelMaximized: maximized }),
+      // "Visible" means not closed AND not covered by a maximized right panel —
+      // the toggle's pressed state follows the same definition, so clicking
+      // while maximized reveals the chat by dropping the maximize.
+      toggleCenterPanel: () => set((s) => ({ centerPanelOpen: !s.centerPanelOpen })),
+      setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
       setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),
       setCompactMode: (compact: boolean) => set({ compactMode: compact }),
@@ -119,6 +119,8 @@ export const useUIStore = create<UIState>()(
         // rightPanelOpen is intentionally NOT persisted: the right side
         // defaults to the icon rail only — panels open on explicit action
         // (rail click) or agent event, never restored open across restarts.
+        // centerPanelOpen likewise: the chat is the app's primary surface —
+        // a launch that restores it hidden would read as broken.
         rightPanelWidth: state.rightPanelWidth,
         leftPanelWidth: state.leftPanelWidth,
         compactMode: state.compactMode,

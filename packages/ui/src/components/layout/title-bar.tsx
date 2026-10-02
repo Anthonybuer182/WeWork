@@ -1,5 +1,5 @@
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
-import { Minus, PanelLeft, PanelRight, Square, X } from 'lucide-react';
+import { Columns2, Minus, PanelLeft, PanelRight, Square, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
 import { usePanelStore } from '@/stores/panel-store';
@@ -172,6 +172,8 @@ export function LayoutToggles() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const toggleRightPanel = useUIStore((s) => s.toggleRightPanel);
+  const centerPanelOpen = useUIStore((s) => s.centerPanelOpen);
+  const toggleCenterPanel = useUIStore((s) => s.toggleCenterPanel);
   const panels = usePanelStore((s) => s.panels);
   const runtime = usePanelStore((s) => s.runtime);
 
@@ -206,6 +208,13 @@ export function LayoutToggles() {
         onClick={toggleSidebar}
       >
         <PanelLeft className="h-4 w-4" />
+      </TitleBarButton>
+      <TitleBarButton
+        label={centerPanelOpen ? '隐藏中间栏' : '显示中间栏'}
+        active={centerPanelOpen}
+        onClick={toggleCenterPanel}
+      >
+        <Columns2 className="h-4 w-4" />
       </TitleBarButton>
       {hasRightPanels && (
         <TitleBarButton

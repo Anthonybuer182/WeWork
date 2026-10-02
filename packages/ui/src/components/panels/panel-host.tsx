@@ -1,31 +1,20 @@
 import { PanelRail } from './panel-rail';
-import { PanelChrome } from './panel-chrome';
 import { PanelSlot } from './panel-slot';
 import type { PanelRegion } from '@/stores/panel-store';
 
 export { PanelRail };
 
 /**
- * Sidebar panel host: Rail (switcher) + Chrome (title bar) + Slot (single active
- * panel). All content — host and plugin alike — is contributed through the panel
- * registry.
- *
- * `chrome={false}` drops the title bar for regions whose views render their own
- * header (the left sidebar's file tree and session list both do), which would
- * otherwise stack two headers.
+ * Sidebar panel host: Rail (switcher) + Slot (single active panel). All
+ * content — host and plugin alike — is contributed through the panel
+ * registry. Panels render their own headers; which column is visible at all
+ * is the title bar's layout toggles' business, not the host's.
  */
-export function PanelHost({
-  region = 'right',
-  chrome = true,
-}: {
-  region?: PanelRegion;
-  chrome?: boolean;
-}) {
+export function PanelHost({ region = 'right' }: { region?: PanelRegion }) {
   return (
     <div className="flex h-full w-full">
       <PanelRail region={region} />
       <div className="flex min-w-0 flex-1 flex-col">
-        {chrome && <PanelChrome region={region} />}
         <PanelSlot region={region} />
       </div>
     </div>

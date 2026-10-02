@@ -57,6 +57,5 @@ export { PluginCenter } from './components/plugins/plugin-center';
 export { DeclarativeRenderer } from './components/plugins/declarative/declarative-renderer';
 export type { UiEventContext } from './components/plugins/declarative/declarative-renderer';
 export { PanelHost, PanelRail } from './components/panels/panel-host';
-export { PanelChrome } from './components/panels/panel-chrome';
 export { PanelSlot } from './components/panels/panel-slot';
 export { panelIcon } from './components/panels/panel-icons';

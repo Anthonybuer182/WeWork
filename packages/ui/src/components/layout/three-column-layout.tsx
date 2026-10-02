@@ -24,10 +24,11 @@ interface ThreeColumnLayoutProps {
   rightPanelOpen?: boolean;
   sidebarOpen?: boolean;
   /**
-   * Expand the right panel over the centre area for focused work. The left
-   * sidebar stays visible — it carries the workspace/session context.
+   * Hide the centre chat column. CSS-hidden, never unmounted: the centre owns
+   * the composer, and a plugin `chat.send` from a fullscreen panel must still
+   * reach it.
    */
-  rightPanelMaximized?: boolean;
+  centerPanelOpen?: boolean;
 }
 
 export function ThreeColumnLayout({
@@ -45,7 +46,7 @@ export function ThreeColumnLayout({
   maxRightWidth = 1200,
   rightPanelOpen = true,
   sidebarOpen = true,
-  rightPanelMaximized = false,
+  centerPanelOpen = true,
 }: ThreeColumnLayoutProps) {
   const [currentLeftWidth, setCurrentLeftWidth] = useState(leftWidth);
   const [currentRightWidth, setCurrentRightWidth] = useState(rightWidth);
@@ -117,6 +118,13 @@ export function ThreeColumnLayout({
     [applyLeftWidth, applyRightWidth],
   );
 
+  // Centre hidden + right panel open → the right column absorbs the freed
+  // space instead of leaving a dead gap between the columns: it becomes the
+  // working surface (viewer, browser, plugin panels all want the room).
+  // Two flex-1 siblings would split the space 50/50, so the left column must
+  // collapse to just the sidebar.
+  const rightTakesCenter = !centerPanelOpen && rightPanelOpen;
+
   useEffect(() => {
     if (dragging) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -138,9 +146,10 @@ export function ThreeColumnLayout({
       <div
         className={cn(
           'flex flex-col min-w-0 overflow-hidden',
-          // Maximized: shrink to just the sidebar so the right panel gets all
-          // the remaining width. Two `flex-1` siblings would split it instead.
-          rightPanelMaximized ? 'flex-none' : 'flex-1',
+          // Centre hidden with the right panel absorbing the space: shrink to
+          // just the sidebar. Two `flex-1` siblings would split the free
+          // width instead of handing it all over.
+          rightTakesCenter ? 'flex-none' : 'flex-1',
         )}
       >
         {/* Top bar */}
@@ -200,7 +209,9 @@ export function ThreeColumnLayout({
           {/* Hidden, not unmounted: the centre column owns the composer, and a
               plugin panel can trigger a send from fullscreen (`chat.send`).
               Unmounting would take that path with it. */}
-          <div className={cn('flex-1 min-w-0 overflow-hidden', rightPanelMaximized && 'hidden')}>
+          <div
+            className={cn('flex-1 min-w-0 overflow-hidden', !centerPanelOpen && 'hidden')}
+          >
             {centerPanel}
           </div>
         </div>
@@ -209,7 +220,7 @@ export function ThreeColumnLayout({
       {/* ============== Right column ============== */}
       {rightPanelOpen ? (
         <>
-          {!rightPanelMaximized ? (
+          {!rightTakesCenter ? (
           <div
             className="relative flex-shrink-0 cursor-col-resize group"
             style={{ width: '8px' }}
@@ -231,10 +242,10 @@ export function ThreeColumnLayout({
           </div>
           ) : null}
           <div
-            style={rightPanelMaximized ? undefined : { width: currentRightWidth }}
+            style={rightTakesCenter ? undefined : { width: currentRightWidth }}
             className={cn(
               'overflow-hidden border-l flex flex-col',
-              rightPanelMaximized ? 'flex-1 min-w-0' : 'flex-shrink-0',
+              rightTakesCenter ? 'flex-1 min-w-0' : 'flex-shrink-0',
             )}
           >
             <div className="flex-1 overflow-hidden">{rightPanel}</div>
