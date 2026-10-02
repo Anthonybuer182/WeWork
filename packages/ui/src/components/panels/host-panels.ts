@@ -11,18 +11,18 @@ import type { PanelEntry } from '@/stores/panel-store';
  */
 export const HOST_LEFT_PANELS: PanelEntry[] = [
   {
-    id: 'host:files',
-    title: '文件',
-    icon: 'files',
+    id: 'host:sessions',
+    title: '会话',
+    icon: 'sessions',
     source: 'host',
     keepAlive: 'always',
     region: 'left',
     order: 0,
   },
   {
-    id: 'host:sessions',
-    title: '会话',
-    icon: 'sessions',
+    id: 'host:files',
+    title: '文件',
+    icon: 'files',
     source: 'host',
     keepAlive: 'always',
     region: 'left',
