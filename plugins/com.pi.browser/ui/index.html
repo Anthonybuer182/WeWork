@@ -5,13 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>浏览器</title>
   <style>
+    /* 主题令牌是宿主注入的 Tailwind 风格 HSL 分量(见 packages/ui 的 panel-relay.tsx,
+       内联在 <html> 上,压过这里),所以一切颜色必须写成 hsl(var(--x, <分量兜底>)):
+       注入时跟随应用主题,未注入时落到这里的暗色分量。直接 var(--x) 会在注入后失效。 */
+    :root {
+      --background: 222 19% 7%; --foreground: 220 21% 92%;
+      --card: 222 15% 11%;
+      --muted-foreground: 217 9% 59%;
+      --accent: 221 19% 17%;
+      --border: 218 14% 20%; --ring: 218 100% 65%;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
     body {
       display: flex;
       flex-direction: column;
-      background: var(--background, #fff);
-      color: var(--foreground, #222);
+      background: hsl(var(--background, 222 19% 7%));
+      color: hsl(var(--foreground, 220 21% 92%));
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       font-size: 13px;
       overflow: hidden;
@@ -22,8 +32,8 @@
       align-items: center;
       gap: 6px;
       padding: 6px 8px;
-      border-bottom: 1px solid var(--border, #e5e5e5);
-      background: var(--card, #fafafa);
+      border-bottom: 1px solid hsl(var(--border, 218 14% 20%));
+      background: hsl(var(--card, 222 15% 11%));
     }
     #toolbar button {
       flex: none;
@@ -32,26 +42,26 @@
       border: none;
       border-radius: 6px;
       background: transparent;
-      color: var(--muted-foreground, #666);
+      color: hsl(var(--muted-foreground, 217 9% 59%));
       font-size: 14px;
       line-height: 1;
       cursor: pointer;
     }
-    #toolbar button:hover { background: var(--accent, #eee); }
+    #toolbar button:hover { background: hsl(var(--accent, 221 19% 17%)); }
     #toolbar button:active { transform: scale(0.94); }
     #url {
       flex: 1;
       min-width: 0;
       height: 26px;
       padding: 0 10px;
-      border: 1px solid var(--border, #e5e5e5);
+      border: 1px solid hsl(var(--border, 218 14% 20%));
       border-radius: 6px;
-      background: var(--background, #fff);
-      color: var(--foreground, #222);
+      background: hsl(var(--background, 222 19% 7%));
+      color: hsl(var(--foreground, 220 21% 92%));
       font-size: 12px;
       outline: none;
     }
-    #url:focus { border-color: var(--ring, #888); }
+    #url:focus { border-color: hsl(var(--ring, 218 100% 65%)); }
     /* The engine view is positioned exactly over this region by the host
        (piSDK.liveSlot). Keep it empty — anything painted here is covered. */
     #page-slot { flex: 1; min-height: 0; }
@@ -82,14 +92,14 @@
         });
       }
 
-      document.getElementById('btn-back').addEventListener('click', function () { act('back'); });
-      document.getElementById('btn-forward').addEventListener('click', function () { act('forward'); });
-      document.getElementById('btn-reload').addEventListener('click', function () { act('reload'); });
+      document.getElementById('btn-back').addEventListener('click', function () { act('nav.back'); });
+      document.getElementById('btn-forward').addEventListener('click', function () { act('nav.forward'); });
+      document.getElementById('btn-reload').addEventListener('click', function () { act('nav.reload'); });
 
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
           var value = input.value.trim();
-          if (value) act('navigate', { url: value });
+          if (value) act('nav.open', { url: value });
           input.blur();
         }
       });

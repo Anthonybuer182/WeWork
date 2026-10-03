@@ -305,13 +305,16 @@ async function persist(ctx) {
   render(ctx);
 }
 __name(persist, "persist");
-function render(ctx) {
-  const query = search;
-  ctx.send(PANEL, "ui.render", {
+function viewState() {
+  return {
     total: entries.length,
     search,
-    shown: entries.filter((e) => matches(e, query))
-  });
+    shown: entries.filter((e) => matches(e, search))
+  };
+}
+__name(viewState, "viewState");
+function render(ctx) {
+  ctx.send(PANEL, "ui.render", viewState());
 }
 __name(render, "render");
 function addEntry(title, content) {
@@ -344,6 +347,14 @@ plugin({
   async onPanelMounted(_panelId, _params, ctx) {
     await ensureLoaded(ctx);
     render(ctx);
+  },
+  /** Panel requests. The boot pull; pushes cover everything after it. */
+  async onRequest(_panelId, method, _params, ctx) {
+    if (method === "state.get") {
+      await ensureLoaded(ctx);
+      return viewState();
+    }
+    throw new Error(`unknown method: ${method} (known: state.get)`);
   },
   async onTool(name, params, ctx) {
     switch (name) {

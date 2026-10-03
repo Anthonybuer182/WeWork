@@ -313,7 +313,7 @@ plugin({
   },
   async onRequest(panelId, method, params, ctx) {
     switch (method) {
-      case "navigate": {
+      case "nav.open": {
         const result = await ctx.call(
           "browser.navigate",
           { url: normalizeUrl(params.url) },
@@ -322,13 +322,13 @@ plugin({
         if (result?.url) lastUrl = result.url;
         return { url: result?.url ?? "", title: result?.title ?? "" };
       }
-      case "back":
+      case "nav.back":
         await ctx.call("browser.back");
         return { ok: true };
-      case "forward":
+      case "nav.forward":
         await ctx.call("browser.forward");
         return { ok: true };
-      case "reload":
+      case "nav.reload":
         await ctx.call("browser.reload");
         return { ok: true };
       case "state.get": {
@@ -338,7 +338,7 @@ plugin({
       }
       default:
         throw new Error(
-          `unknown panel method: ${method} (known: navigate, back, forward, reload, state.get)`
+          `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, state.get)`
         );
     }
   },

@@ -137,6 +137,18 @@ const PLUGIN_SDK_SOURCE = String.raw`
       return;
     }
 
+    if (payload.kind === 'event' && payload.event === 'pi.probe') {
+      // The pong for the backend's ctx.panelAlive. SDK-level, like panel.mounted
+      // is on the backend side: an author asking "is the panel there" should not
+      // have to also write the reply. Echo the probe's data (it carries the id)
+      // and do not forward the probe to plugin handlers — nothing to handle.
+      postToHost({
+        kind: 'event', id: 'probe-reply-' + (++seq), panelId: PANEL_ID,
+        event: 'pi.probe.reply', data: payload.data
+      });
+      return;
+    }
+
     for (var i = 0; i < handlers.length; i++) {
       try { handlers[i](payload); } catch (e) { console.error('[pi-sdk] handler error:', e); }
     }

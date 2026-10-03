@@ -71241,9 +71241,13 @@ async function save(ctx) {
     ctx.call("storage.set", { key: "composing", value: composing }).catch(() => {
     })
   ]);
-  ctx.send(PANEL, "ui.render", { composing, drafts });
+  ctx.send(PANEL, "ui.render", panelState());
 }
 __name(save, "save");
+function panelState() {
+  return { composing, drafts };
+}
+__name(panelState, "panelState");
 function createDraft(to, subject, body, cc, bcc) {
   const draft = {
     id: "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -71385,14 +71389,18 @@ plugin({
   },
   async onPanelMounted(_panelId, _params, ctx) {
     await ensureLoaded(ctx);
-    ctx.send(PANEL, "ui.render", { composing, drafts });
+    ctx.send(PANEL, "ui.render", panelState());
   },
   /** Request/response for the panel: account config and mailbox reads. */
   async onRequest(_panelId, method, params, ctx) {
-    if (!["account.get", "account.save", "account.clear", "draft.save", "draft.delete"].includes(method)) {
+    if (!["state.get", "account.get", "account.save", "account.clear", "draft.save", "draft.delete"].includes(method)) {
       await ensureRestored(ctx);
     }
     switch (method) {
+      case "state.get": {
+        await ensureLoaded(ctx);
+        return panelState();
+      }
       case "account.get": {
         const [account, pass] = await Promise.all([loadAccount(ctx), loadPass(ctx)]);
         return {

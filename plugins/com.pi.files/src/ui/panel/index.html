@@ -14,9 +14,12 @@
     -->
     <style>
       /* Before the renderer's stylesheets load, so the panel is not a white
-         flash inside a dark shell. */
+         flash inside a dark shell. The theme tokens are Tailwind-style HSL
+         components streamed by the host (panel-relay.tsx), so the fallback
+         must be components too, wrapped in hsl() — a bare var() goes invalid
+         once the tokens arrive. */
       html, body, #root { height: 100%; margin: 0; }
-      body { background: var(--background, #0f1115); }
+      body { background: hsl(var(--background, 222 19% 7%)); }
     </style>
   </head>
   <body>

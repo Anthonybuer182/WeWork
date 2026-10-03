@@ -1081,6 +1081,14 @@
       }
     });
 
+    // 启动先拉一次草稿状态:首屏不依赖 mounted 推送的时序,推送只负责之后的更新
+    request('state.get')
+      .then((s) => {
+        draftsState = s?.drafts ?? [];
+        if (currentFolder.path === LOCAL_DRAFTS) renderLocalDrafts(); else renderFolders();
+      })
+      .catch(() => {});
+
     boot();
   </script>
 </body>

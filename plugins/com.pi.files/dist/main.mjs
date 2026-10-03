@@ -70934,6 +70934,9 @@ async function onUiRequest(method, params = {}) {
       const { familyVerticalMetrics: familyVerticalMetrics2 } = await Promise.resolve().then(() => (init_src(), src_exports));
       return familyVerticalMetrics2(family) ?? null;
     }
+    case "state.get": {
+      return currentFile ? { path: currentFile } : {};
+    }
     default:
       throw new Error(`unknown ui request: ${method}`);
   }

@@ -48,21 +48,35 @@ function awaitRender(timeoutMs: number): Promise<unknown> {
   });
 }
 
+/**
+ * Boot pull: ask the backend what it is showing, in the same envelope a
+ * `ui.render` carries. Faster than waiting on the mounted push, and the only
+ * source when the panel reloaded without unmounting — the host pushes
+ * `ui.render` on MOUNT only. Falls back to the push (and its 5s cap) when the
+ * pull fails, so an older backend or a lost SDK degrades instead of blanking.
+ */
+async function pullState(): Promise<unknown> {
+  try {
+    const state = (await window.piSDK?.request('state.get')) as { path?: string } | null;
+    if (state && typeof state === 'object') return { event: 'ui.render', data: state };
+  } catch {
+    /* fall through to the push */
+  }
+  return awaitRender(5000);
+}
+
 void (async () => {
   // A reload carries no `ui.render` — the host only sends one when the panel
   // MOUNTS, and this panel never unmounted. So the path the previous load
-  // recorded is the only source, and we wait only briefly for a fresh one.
+  // recorded is the only source, and we do not wait for a fresh one.
   const persisted = readPersistedPath();
   // A reload already knows which file it is for: `reloadForOtherFormat` wrote
   // the path before navigating (see shims/common.ts). So it dispatches at once
-  // instead of waiting for a fresh `ui.render` — the host does not re-raise
-  // `panel.mounted` when the open params are unchanged, so that wait always ran
-  // to its full timeout and cost a flat 1.2s on every file switch, for a
-  // message that never came. If a newer render does arrive, the loaded
-  // renderer handles it exactly as it handles any other switch.
-  const payload = persisted
-    ? null
-    : ((await awaitRender(5000)) as { data?: { path?: string } } | null);
+  // instead of pulling or waiting for a fresh `ui.render` — the host does not
+  // re-raise `panel.mounted` when the open params are unchanged. If a newer
+  // render does arrive, the loaded renderer handles it exactly as it handles
+  // any other switch.
+  const payload = persisted ? null : ((await pullState()) as { data?: { path?: string } } | null);
   const path = payload?.data?.path ?? persisted;
   if (path) persistPendingPath(path);
 

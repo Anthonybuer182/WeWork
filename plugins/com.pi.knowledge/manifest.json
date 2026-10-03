@@ -16,6 +16,7 @@
       {
         "id": "kb",
         "title": "知识库",
+        "icon": "knowledge",
         "entry": "./ui/index.html",
         "keepAlive": "lru"
       }

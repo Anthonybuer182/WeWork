@@ -70,8 +70,10 @@ plugin({
 
   async onRequest(panelId, method, params, ctx) {
     void panelId;
+    // Panel methods follow the `domain.verb` convention the other plugins use;
+    // `state.get` is the shared boot pull.
     switch (method) {
-      case 'navigate': {
+      case 'nav.open': {
         const result = await ctx.call<{ url?: string; title?: string }>(
           'browser.navigate',
           { url: normalizeUrl(params.url) },
@@ -80,13 +82,13 @@ plugin({
         if (result?.url) lastUrl = result.url;
         return { url: result?.url ?? '', title: result?.title ?? '' };
       }
-      case 'back':
+      case 'nav.back':
         await ctx.call('browser.back');
         return { ok: true };
-      case 'forward':
+      case 'nav.forward':
         await ctx.call('browser.forward');
         return { ok: true };
-      case 'reload':
+      case 'nav.reload':
         await ctx.call('browser.reload');
         return { ok: true };
       case 'state.get': {
@@ -96,7 +98,7 @@ plugin({
       }
       default:
         throw new Error(
-          `unknown panel method: ${method} (known: navigate, back, forward, reload, state.get)`,
+          `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, state.get)`,
         );
     }
   },

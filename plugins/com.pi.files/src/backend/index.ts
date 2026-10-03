@@ -559,6 +559,12 @@ async function onUiRequest(method: string, params: Record<string, unknown> = {})
       const { familyVerticalMetrics } = await import('@genoffice/font-metrics');
       return familyVerticalMetrics(family) ?? null;
     }
+    case 'state.get': {
+      // The boot pull — the same payload openFile() pushes, so a panel that
+      // loads late still learns what it should be showing without waiting on
+      // the mounted push.
+      return currentFile ? { path: currentFile } : {};
+    }
     default:
       throw new Error(`unknown ui request: ${method}`);
   }

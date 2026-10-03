@@ -86,13 +86,18 @@ async function refresh(ctx: PluginContext): Promise<void> {
   }
 }
 
-function render(ctx: PluginContext): void {
-  ctx.send(PANEL, 'ui.render', {
+/** What the panel draws. Serves both the boot pull (`state.get`) and every push. */
+function viewState(): Record<string, unknown> {
+  return {
     title: `${PLUGIN_KEY} 记录(${records.length})`,
     keyword,
     error: loadError,
     rows: toListItems(records),
-  });
+  };
+}
+
+function render(ctx: PluginContext): void {
+  ctx.send(PANEL, 'ui.render', viewState());
 }
 
 plugin({
@@ -104,6 +109,13 @@ plugin({
   async onPanelMounted(_panelId, _params, ctx) {
     await refresh(ctx);
     render(ctx);
+  },
+
+  /** Panel requests. `state.get` is the shared boot pull — the panel asks for
+   * this view shape on load instead of racing the mounted push. */
+  async onRequest(_panelId, method) {
+    if (method === 'state.get') return viewState();
+    throw new Error(`unknown method: ${method} (known: state.get)`);
   },
 
   async onTool(name, params, ctx) {

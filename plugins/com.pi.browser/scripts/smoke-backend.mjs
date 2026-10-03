@@ -292,17 +292,17 @@ check(
   JSON.stringify(panelSent),
 );
 
-const navReq = await panelRequest('q1', 'navigate', { url: 'example.org' });
+const navReq = await panelRequest('q1', 'nav.open', { url: 'example.org' });
 check(
-  'panel navigate reaches browser.navigate and answers ok',
+  'panel nav.open reaches browser.navigate and answers ok',
   calls.some((c) => c.method === 'browser.navigate' && c.params.url === 'https://example.org') &&
     navReq?.ok === true && navReq?.result?.url === 'https://example.org',
   JSON.stringify(navReq),
 );
 
-await panelRequest('q2', 'back');
-await panelRequest('q3', 'forward');
-await panelRequest('q4', 'reload');
+await panelRequest('q2', 'nav.back');
+await panelRequest('q3', 'nav.forward');
+await panelRequest('q4', 'nav.reload');
 check(
   'panel back/forward/reload reach their capabilities',
   ['browser.back', 'browser.forward', 'browser.reload'].every((m) => calls.some((c) => c.method === m)),

@@ -72,7 +72,12 @@ async function save(ctx: PluginContext): Promise<void> {
     ctx.call('storage.set', { key: 'drafts', value: drafts }).catch(() => {}),
     ctx.call('storage.set', { key: 'composing', value: composing }).catch(() => {}),
   ]);
-  ctx.send(PANEL, 'ui.render', { composing, drafts });
+  ctx.send(PANEL, 'ui.render', panelState());
+}
+
+/** What the panel draws. Serves both the boot pull (`state.get`) and every push. */
+function panelState(): { composing: Composing; drafts: Draft[] } {
+  return { composing, drafts };
 }
 
 function createDraft(
@@ -256,16 +261,21 @@ plugin({
 
   async onPanelMounted(_panelId, _params, ctx) {
     await ensureLoaded(ctx);
-    ctx.send(PANEL, 'ui.render', { composing, drafts });
+    ctx.send(PANEL, 'ui.render', panelState());
   },
 
   /** Request/response for the panel: account config and mailbox reads. */
   async onRequest(_panelId, method, params, ctx) {
     // Mailbox reads need the account restored first; account.* manage it.
-    if (!['account.get', 'account.save', 'account.clear', 'draft.save', 'draft.delete'].includes(method)) {
+    if (!['state.get', 'account.get', 'account.save', 'account.clear', 'draft.save', 'draft.delete'].includes(method)) {
       await ensureRestored(ctx);
     }
     switch (method) {
+      case 'state.get': {
+        await ensureLoaded(ctx);
+        return panelState();
+      }
+
       case 'account.get': {
         const [account, pass] = await Promise.all([loadAccount(ctx), loadPass(ctx)]);
         return {

@@ -49,13 +49,17 @@ async function persist(ctx: PluginContext): Promise<void> {
   render(ctx);
 }
 
-function render(ctx: PluginContext): void {
-  const query = search;
-  ctx.send(PANEL, 'ui.render', {
+/** What the panel draws. Serves both the boot pull (`state.get`) and every push. */
+function viewState(): { total: number; search: string; shown: Entry[] } {
+  return {
     total: entries.length,
     search,
-    shown: entries.filter((e) => matches(e, query)),
-  });
+    shown: entries.filter((e) => matches(e, search)),
+  };
+}
+
+function render(ctx: PluginContext): void {
+  ctx.send(PANEL, 'ui.render', viewState());
 }
 
 function addEntry(title: string, content: string): Entry {
@@ -100,6 +104,15 @@ plugin({
   async onPanelMounted(_panelId, _params, ctx) {
     await ensureLoaded(ctx);
     render(ctx);
+  },
+
+  /** Panel requests. The boot pull; pushes cover everything after it. */
+  async onRequest(_panelId, method, _params, ctx) {
+    if (method === 'state.get') {
+      await ensureLoaded(ctx);
+      return viewState();
+    }
+    throw new Error(`unknown method: ${method} (known: state.get)`);
   },
 
   async onTool(name, params, ctx) {
