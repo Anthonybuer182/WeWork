@@ -72,8 +72,9 @@ const PLUGIN_SDK_SOURCE = String.raw`
       'Open the panel through the app instead.');
   }
 
-  /** How long a piSDK.request waits before giving up. */
-  var REQUEST_TIMEOUT_MS = 30000;
+  /** How long a piSDK.request waits before giving up. 90s: 深页邮件列表
+   * (大量信封+结构)在大邮箱上会超过 30s,等待上限放宽而不是失败。 */
+  var REQUEST_TIMEOUT_MS = 90000;
 
   var seq = 0;
   var pending = new Map();

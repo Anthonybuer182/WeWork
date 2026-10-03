@@ -1,7 +1,7 @@
 {
   "id": "com.pi.mail",
   "name": "邮件草稿",
-  "description": "官方插件:邮件草稿管理面板 + agent 工具(mail_create_draft / mail_list_drafts)。这一版不会真的发信——没有 SMTP,也没有投递接口",
+  "description": "官方插件:真实邮箱(IMAP 收件/搜索/读取)+ 邮件草稿与 SMTP 真实发送 + 右栏面板(收件箱/草稿箱/账号)",
   "version": "0.1.0",
   "apiVersion": 3,
   "engines": {
@@ -23,14 +23,78 @@
     ],
     "tools": [
       {
+        "name": "mail_list_emails",
+        "description": "List recent emails from a mailbox (default INBOX), newest first, with read/unread state. Use when the user asks what mail they have or wants to check the inbox. Returns uid, subject, sender, date — pass the uid to mail_read.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "mailbox": {
+              "type": "string",
+              "description": "Mailbox/folder name. Default: INBOX"
+            },
+            "limit": {
+              "type": "number",
+              "description": "How many emails to return, 1-50. Default: 20"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "mail_search",
+        "description": "Search emails by matching the query against subject/sender/recipient within a recent window (add since to bound how far back the server scans). Use when the user looks for mail from someone or about something.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Keyword matched against subject and sender/recipient names & addresses"
+            },
+            "since": {
+              "type": "string",
+              "description": "Optional date bound (ISO, e.g. 2026-09-01) limiting how far back to scan"
+            },
+            "mailbox": {
+              "type": "string",
+              "description": "Mailbox/folder name. Default: INBOX"
+            },
+            "limit": {
+              "type": "number",
+              "description": "How many emails to return, 1-50. Default: 20"
+            }
+          },
+          "required": ["query"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "mail_read",
+        "description": "Read one email in full: headers, plain-text body and attachment names. Marks the email as read. The id is the uid from mail_list_emails / mail_search.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "description": "The uid of the email to read"
+            },
+            "mailbox": {
+              "type": "string",
+              "description": "Mailbox/folder the email is in. Default: INBOX"
+            }
+          },
+          "required": ["id"],
+          "additionalProperties": false
+        }
+      },
+      {
         "name": "mail_create_draft",
-        "description": "Create an email draft (to / subject / body). The draft appears in the mail panel for the user to review and send. Use whenever the user asks to write or reply to an email.",
+        "description": "Create an email draft (to / subject / body). The draft appears in the mail panel for the user to review; mail_send_draft delivers it. Use whenever the user asks to write or reply to an email. When replying, quote the original in the body.",
         "inputSchema": {
           "type": "object",
           "properties": {
             "to": {
               "type": "string",
-              "description": "Recipient email address"
+              "description": "Recipient email address (multiple addresses separated by commas)"
             },
             "subject": {
               "type": "string",
@@ -38,7 +102,15 @@
             },
             "body": {
               "type": "string",
-              "description": "Email body text"
+              "description": "Email body text (plain text)"
+            },
+            "cc": {
+              "type": "string",
+              "description": "Optional CC addresses, comma-separated"
+            },
+            "bcc": {
+              "type": "string",
+              "description": "Optional BCC addresses, comma-separated"
             }
           },
           "required": [
@@ -60,7 +132,7 @@
       },
       {
         "name": "mail_send_draft",
-        "description": "Mark an existing draft as sent. NOTHING IS ACTUALLY DELIVERED — this revision has no SMTP and no delivery API; it flags the draft and shows a desktop notification. Say so if the user expects the mail to arrive.",
+        "description": "Deliver an existing draft via SMTP for real. Matches an unsent draft by subject (exact or prefix, most recent wins). Requires a configured account (mail panel → 账号). ONLY call this when the user explicitly asked to send the email — for anything less, create the draft and let the user send it from the panel.",
         "inputSchema": {
           "type": "object",
           "properties": {

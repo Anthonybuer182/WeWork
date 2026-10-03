@@ -29,6 +29,12 @@ const result = await build({
   keepNames: true,
   metafile: true,
   logLevel: 'warning',
+  // CJS deps bundled into an ESM file (imapflow pulls in pino) may still call
+  // `require()` dynamically — esbuild's ESM output has no such global. Wire it
+  // to a real resolver so those calls keep working at runtime.
+  banner: {
+    js: "import { createRequire } from 'node:module';\nconst require = createRequire(import.meta.url);",
+  },
 });
 
 const bytes = Object.values(result.metafile.outputs)[0]?.bytes ?? 0;

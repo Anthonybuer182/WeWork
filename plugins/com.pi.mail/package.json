@@ -7,13 +7,19 @@
   "scripts": {
     "build": "node scripts/build-backend.mjs",
     "typecheck": "node scripts/typecheck.mjs",
-    "test:backend": "node scripts/smoke-backend.mjs"
+    "test:backend": "node scripts/smoke-backend.mjs",
+    "test:imap": "node scripts/smoke-imap.mjs"
   },
   "dependencies": {
-    "@pi/plugin-sdk": "file:../../packages/plugin-sdk"
+    "@pi/plugin-sdk": "file:../../packages/plugin-sdk",
+    "imapflow": "^2.2.1",
+    "mailparser": "^3.9.33",
+    "nodemailer": "^10.0.13"
   },
   "devDependencies": {
+    "@types/mailparser": "^3.9.0",
     "@types/node": "^26.6.3",
+    "@types/nodemailer": "^8.0.2",
     "esbuild": "^0.24.0"
   }
 }

@@ -5,86 +5,1083 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>邮件</title>
 <style>
+  /* 主题变量是宿主注入的 Tailwind 风格 HSL 分量(内联在 <html> 上,压过这里),
+     所以一切颜色都必须 hsl(var(--x, <fallback>)):宿主注入时跟随应用主题,
+     未注入时落到下面的暗色分量。 */
   :root {
-    --background: #0f1115; --foreground: #e6e9ef;
-    --card: #171a21; --card-foreground: #e6e9ef;
-    --border: #2a2f3a; --muted-foreground: #8b93a3;
-    --primary: #4f8cff; --primary-foreground: #ffffff;
+    --background: 222 19% 7%; --foreground: 220 21% 92%;
+    --card: 222 15% 11%; --panel: 222 14% 9%;
+    --border: 218 14% 20%; --muted-foreground: 217 9% 59%;
+    --primary: 218 100% 65%; --primary-foreground: 0 0% 100%;
+    --danger: 0 100% 71%; --ok: 142 69% 58%; --warn: 43 96% 56%;
     --radius: 8px; --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font: 13px/1.6 var(--font-sans); background: var(--background); color: var(--foreground); padding: 14px; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
-  .card h2 { font-size: 12px; font-weight: 600; letter-spacing: .3px; color: var(--muted-foreground); margin-bottom: 9px; }
-  input { width: 100%; font: inherit; color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; outline: none; margin-bottom: 7px; }
-  input:focus { border-color: var(--primary); }
-  button { font: inherit; background: var(--primary); color: var(--primary-foreground); border: 0; border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+  /* hidden 语义必须赢过组件自己的 display 规则(.modal 的 flex、.batchbar 等),
+     否则设了 hidden 的元素仍然渲染 —— 取消按钮关不掉弹窗就是这么来的。 */
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { font: 13px/1.55 var(--font-sans); background: hsl(var(--background)); color: hsl(var(--foreground)); overflow: hidden; }
+  button { font: inherit; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border: 0; border-radius: 6px; padding: 5px 12px; cursor: pointer; }
   button:active { transform: translateY(1px); }
-  ul { list-style: none; }
-  li { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 6px; cursor: pointer; }
-  li:hover { background: rgba(127,127,127,.08); }
-  li .subj { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  li .to { color: var(--muted-foreground); font-size: 12px; }
-  .badge { font-size: 10.5px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted-foreground); flex-shrink: 0; }
-  .badge.ok { color: var(--primary); border-color: var(--primary); }
-  .empty { color: var(--muted-foreground); text-align: center; padding: 16px 0; font-size: 12.5px; }
-  .hint { color: var(--muted-foreground); font-size: 11.5px; }
+  button:disabled { opacity: .55; cursor: default; }
+  button.ghost { background: transparent; color: hsl(var(--muted-foreground)); border: 1px solid hsl(var(--border)); }
+  button.danger { background: transparent; color: hsl(var(--danger)); border: 1px solid hsl(var(--border)); }
+  button.linklike { background: transparent; color: hsl(var(--primary)); border: 0; padding: 2px 4px; }
+  input, textarea, select { font: inherit; color: hsl(var(--foreground)); background: hsl(var(--background)); border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 5px 9px; outline: none; }
+  input:focus, textarea:focus, select:focus { border-color: hsl(var(--primary)); }
+  .empty { color: hsl(var(--muted-foreground)); text-align: center; padding: 24px 8px; font-size: 12.5px; }
+  .hint { color: hsl(var(--muted-foreground)); font-size: 11.5px; }
+  .state { font-size: 11.5px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+  .state::before { content: '● '; }
+  .state.ready { color: hsl(var(--ok)); }
+  .state.bad { color: hsl(var(--danger)); }
+  .state.warn { color: hsl(var(--warn)); }
+  .toast { position: fixed; left: 14px; right: 14px; bottom: 14px; background: hsl(var(--card)); border: 1px solid hsl(var(--danger)); color: hsl(var(--danger)); border-radius: 6px; padding: 8px 12px; font-size: 12px; z-index: 99; }
+  .link-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 8px; }
+  .link-chip { display: inline-flex; align-items: center; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 2px 9px; font-size: 12px; cursor: pointer; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .link-chip:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+  .showimgs { background: hsl(var(--warn)); color: hsl(var(--background)); font-size: 12px; padding: 3px 10px; }
+  .flex1 { flex: 1; min-width: 0; }
+
+  /* ── 客户端三栏 ── */
+  #app { display: flex; height: 100vh; }
+  .rail { width: 148px; flex-shrink: 0; border-right: 1px solid hsl(var(--border)); display: flex; flex-direction: column; padding: 10px 8px; gap: 8px; }
+  #compose-btn { width: 100%; padding: 7px 0; font-weight: 600; }
+  #folders { list-style: none; flex: 1; overflow-y: auto; }
+  #folders li { display: flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: 6px; cursor: pointer; color: hsl(var(--foreground)); }
+  #folders li:hover { background: rgba(127,127,127,.08); }
+  #folders li.active { background: hsl(var(--card)); font-weight: 600; box-shadow: inset 2px 0 0 hsl(var(--primary)); }
+  #folders li .fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #folders li .fcount { font-size: 11px; color: hsl(var(--muted-foreground)); }
+  #folders li .fcount.unread { color: hsl(var(--primary)); font-weight: 700; }
+  .rail-bottom { border-top: 1px solid hsl(var(--border)); padding-top: 8px; display: flex; align-items: center; justify-content: space-between; }
+
+  .listpane { width: 300px; flex-shrink: 0; border-right: 1px solid hsl(var(--border)); display: flex; flex-direction: column; min-width: 0; }
+  .list-head { padding: 8px 8px 6px; border-bottom: 1px solid hsl(var(--border)); display: flex; flex-direction: column; gap: 6px; }
+  .list-head .row1 { display: flex; align-items: center; gap: 6px; }
+  .list-head h2 { font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #search { width: 100%; }
+  .batchbar { display: flex; gap: 4px; align-items: center; font-size: 12px; }
+  .batchbar button { padding: 2px 8px; font-size: 12px; }
+  #msglist { list-style: none; flex: 1; overflow-y: auto; }
+  .load-hint { text-align: center; color: hsl(var(--muted-foreground)); font-size: 11.5px; padding: 9px 0 11px; }
+  #msglist li { display: flex; gap: 8px; padding: 8px 8px 8px 6px; border-bottom: 1px solid hsl(var(--border)); cursor: pointer; align-items: flex-start; }
+  #msglist li:hover { background: rgba(127,127,127,.07); }
+  #msglist li.sel { background: hsl(var(--card)); }
+  #msglist li.current { box-shadow: inset 2px 0 0 hsl(var(--primary)); }
+  #msglist input[type=checkbox] { margin-top: 3px; flex-shrink: 0; }
+  .avatar { width: 30px; height: 30px; border-radius: 99px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; background: hsl(var(--primary)); }
+  .m-main { flex: 1; min-width: 0; }
+  .m-row1 { display: flex; gap: 6px; align-items: baseline; }
+  .m-from { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+  li.unread .m-from { font-weight: 700; }
+  .m-time { font-size: 11px; color: hsl(var(--muted-foreground)); flex-shrink: 0; }
+  .m-subj { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  li.unread .m-subj { font-weight: 600; }
+  .m-snip { font-size: 11.5px; color: hsl(var(--muted-foreground)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .m-flags { display: flex; gap: 3px; flex-shrink: 0; margin-top: 2px; font-size: 11px; color: hsl(var(--warn)); }
+  .draft-badge { font-size: 10.5px; padding: 1px 7px; border-radius: 99px; border: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground)); }
+  .draft-badge.ok { color: hsl(var(--primary)); border-color: hsl(var(--primary)); }
+
+  .reader { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; }
+  #reader-empty { margin: auto; }
+  .reader-actions { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid hsl(var(--border)); align-items: center; position: sticky; top: 0; background: hsl(var(--background)); z-index: 2; }
+  .reader-actions button { padding: 3px 9px; font-size: 12px; }
+  #back { display: none; }
+  #r-subj { font-size: 16px; padding: 12px 14px 4px; line-height: 1.4; }
+  .r-meta { padding: 0 14px 10px; color: hsl(var(--muted-foreground)); font-size: 12px; white-space: pre-wrap; border-bottom: 1px solid hsl(var(--border)); }
+  .r-attbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px; }
+  .att-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 3px 9px; font-size: 12px; cursor: pointer; }
+  .att-chip:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+  .r-note { margin: 8px 14px 0; font-size: 11.5px; color: hsl(var(--warn)); }
+  #r-frame { width: calc(100% - 28px); margin: 10px 14px 14px; border: 1px solid hsl(var(--border)); border-radius: 6px; background: #fff; color: #222; flex: 1; min-height: 320px; overflow: auto; padding: 10px; }
+  #r-text { white-space: pre-wrap; word-break: break-word; padding: 12px 14px; font-size: 13px; }
+  /* 窄面板:阅读覆盖列表 */
+  @media (max-width: 760px) {
+    .listpane { width: 260px; }
+    .reader { position: absolute; inset: 0 0 0 148px; background: hsl(var(--background)); z-index: 3; display: none; }
+    body.reading .reader { display: flex; }
+    #back { display: inline-block; }
+  }
+
+  /* ── 账号视图 ── */
+  #account-view { height: 100vh; overflow-y: auto; padding: 14px; }
+  #account-view .card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; max-width: 560px; }
+  #account-view h2 { font-size: 12px; font-weight: 600; letter-spacing: .3px; color: hsl(var(--muted-foreground)); margin-bottom: 9px; }
+  #account-view input, #account-view select { width: 100%; margin-bottom: 7px; }
+  #account-view .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+
+  /* ── 写邮件弹窗 ── */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .compose-card { width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 7px; }
+  .compose-card h2 { font-size: 13px; color: hsl(var(--muted-foreground)); }
+  .c-row { display: flex; gap: 8px; align-items: center; }
+  .c-label { width: 44px; flex-shrink: 0; font-size: 12px; color: hsl(var(--muted-foreground)); text-align: right; }
+  .c-row input { flex: 1; }
+  .compose-card textarea { width: 100%; min-height: 160px; resize: vertical; font: inherit; }
+  .c-atts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .c-att { display: inline-flex; align-items: center; gap: 5px; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 2px 8px; font-size: 12px; }
+  .c-att .rm { cursor: pointer; color: hsl(var(--muted-foreground)); padding: 0 2px; }
+  .c-att .rm:hover { color: hsl(var(--danger)); }
+  .c-foot { display: flex; align-items: center; gap: 8px; }
+  .attach-label { font-size: 12.5px; color: hsl(var(--primary)); cursor: pointer; }
 </style>
 </head>
 <body>
-  <div class="card">
-    <h2>写邮件</h2>
-    <input id="to" placeholder="收件人…" />
-    <input id="subject" placeholder="主题…" />
-    <input id="body" placeholder="正文…" />
-    <button id="save">保存草稿</button>
-  </div>
-  <div class="card">
-    <h2 id="hd">草稿箱</h2>
-    <ul id="list"></ul>
-    <div class="empty" id="empty" style="display:none">暂无草稿<br>agent 可用 mail_create_draft 工具撰写</div>
-  </div>
-  <div class="hint">点击草稿标记为已发送——这一版不会真的发信,只打一个桌面通知</div>
+  <div id="app" hidden>
+    <div class="rail">
+      <button id="compose-btn">✏️ 写邮件</button>
+      <ul id="folders"></ul>
+      <div class="rail-bottom">
+        <span class="state" id="engstate">未连接</span>
+        <button class="linklike" id="rail-account">账号</button>
+      </div>
+    </div>
 
-  <!-- 宿主在 </head> 前注入 window.piSDK；不用自己打包，也不用写信封。 -->
+    <div class="listpane">
+      <div class="list-head">
+        <div class="row1">
+          <h2 id="folder-title">收件箱</h2>
+          <button id="refresh" class="ghost" title="刷新">↻</button>
+        </div>
+        <input id="search" placeholder="搜索全部文件夹,回车确认;清空恢复列表" />
+        <div class="batchbar" id="batchbar" hidden>
+          <button class="ghost" id="batch-del">删除</button>
+          <button class="ghost" id="batch-read">标已读</button>
+          <button class="ghost" id="batch-unread">标未读</button>
+          <span class="flex1"></span>
+          <span class="hint" id="sel-count"></span>
+        </div>
+      </div>
+      <ul id="msglist"></ul>
+      <div class="empty" id="list-empty" hidden>没有邮件</div>
+    </div>
+
+    <div class="reader" id="reader">
+      <div class="empty" id="reader-empty">选择一封邮件查看<br><span class="hint">点列表明细 → 回复 / 转发 / 下载附件</span></div>
+      <div id="reader-body" hidden style="display:flex;flex-direction:column;flex:1;min-height:0;">
+        <div class="reader-actions">
+          <button id="back" class="ghost">← 列表</button>
+          <button id="act-reply">回复</button>
+          <button id="act-replyall">回复全部</button>
+          <button id="act-forward">转发</button>
+          <button id="act-unread" class="ghost">标未读</button>
+          <button id="act-flag" class="ghost">旗标</button>
+          <button id="act-del" class="danger">删除</button>
+        </div>
+        <h1 id="r-subj"></h1>
+        <div class="r-meta" id="r-meta"></div>
+        <div class="r-attbar" id="r-atts" hidden></div>
+        <div class="r-note" id="r-note" hidden>
+          <span id="r-note-text"></span>
+          <button class="showimgs" id="showimgs" hidden>显示远程图片</button>
+        </div>
+        <div class="link-chips" id="r-links" hidden></div>
+        <!-- 正文直接以消毒后的 HTML 渲染在 div 里:iframe srcdoc 在
+             WebContentsView 里偶发「有尺寸不绘制」的白屏,div 方案没有这类
+             合成层问题;脚本/外域图片由 sanitizeMailHtml 在插入前剥除。 -->
+        <div id="r-frame"></div>
+        <pre id="r-text" hidden></pre>
+      </div>
+    </div>
+  </div>
+
+  <div id="account-view" hidden>
+    <div class="card">
+      <h2>邮箱账号</h2>
+      <select id="preset"></select>
+      <div class="hint" id="preset-hint" style="margin-bottom:7px"></div>
+      <input id="a-email" placeholder="邮箱地址" />
+      <input id="a-user" placeholder="登录名(留空默认同邮箱地址)" />
+      <input id="a-pass" type="password" placeholder="客户端专用密码 / 授权码" />
+      <div id="custom-hosts" hidden>
+        <input id="a-imap-host" placeholder="IMAP 服务器,如 imap.example.com" />
+        <input id="a-imap-port" placeholder="IMAP 端口(默认 993)" />
+        <input id="a-smtp-host" placeholder="SMTP 服务器,如 smtp.example.com" />
+        <input id="a-smtp-port" placeholder="SMTP 端口(默认 465)" />
+      </div>
+      <div class="row">
+        <button id="a-save">保存并连接</button>
+        <button id="a-clear" class="ghost">清除账号</button>
+      </div>
+      <div class="hint" id="a-status" style="margin-top:7px"></div>
+    </div>
+    <div class="hint" style="max-width:560px">点击左侧「返回邮箱」回到收件箱;本地草稿保存在这台电脑上,不依赖服务器。</div>
+    <button id="account-back" class="ghost" style="margin-top:10px">← 返回邮箱</button>
+  </div>
+
+  <div id="compose" class="modal" hidden>
+    <div class="compose-card">
+      <h2 id="c-title">写邮件</h2>
+      <div class="c-row"><span class="c-label">收件人</span><input id="c-to" placeholder="多个地址用逗号分隔" /></div>
+      <div class="c-row" id="c-cc-row" hidden><span class="c-label">抄送</span><input id="c-cc" /></div>
+      <div class="c-row" id="c-bcc-row" hidden><span class="c-label">密送</span><input id="c-bcc" /></div>
+      <button class="linklike" id="c-showcc" style="align-self:flex-start">抄送 / 密送</button>
+      <input id="c-subject" placeholder="主题" />
+      <textarea id="c-body" placeholder="正文…"></textarea>
+      <div class="c-atts" id="c-atts"></div>
+      <div class="c-foot">
+        <label class="attach-label">📎 添加附件<input type="file" id="c-file" multiple hidden /></label>
+        <span class="flex1"></span>
+        <button id="c-del-draft" class="danger" hidden>删除草稿</button>
+        <button id="c-draft" class="ghost">存草稿</button>
+        <button id="c-send">发送</button>
+        <button id="c-cancel" class="ghost">取消</button>
+      </div>
+      <div class="hint" id="c-status"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- 宿主在 </head> 前注入 window.piSDK;不用自己打包,也不用写信封。 -->
   <script>
-    function render(s) {
-      const c = s.composing ?? {};
-      const drafts = s.drafts ?? [];
-      document.getElementById('hd').textContent = `草稿箱(${drafts.length})`;
-      // Only sync input values the user isn't editing (backend owns state).
-      const sync = (id, v) => {
-        const el = document.getElementById(id);
-        if (document.activeElement !== el && el.value !== v) el.value = v ?? '';
-      };
-      sync('to', c.to); sync('subject', c.subject); sync('body', c.body);
-      const list = document.getElementById('list');
-      list.innerHTML = '';
-      for (const d of drafts) {
-        const li = document.createElement('li');
-        li.innerHTML = `<span class="subj"></span><span class="to"></span>` +
-          `<span class="badge${d.sent ? ' ok' : ''}">${d.sent ? '已发送' : '草稿'}</span>`;
-        li.querySelector('.subj').textContent = d.subject;
-        li.querySelector('.to').textContent = `→ ${d.to}`;
-        li.title = '点击发送';
-        li.addEventListener('click', () => piSDK.emit('mail.send', { key: String(d.id) }));
-        list.appendChild(li);
-      }
-      document.getElementById('empty').style.display = drafts.length ? 'none' : 'block';
+    const $ = (id) => document.getElementById(id);
+    const request = (method, params) => piSDK.request(method, params);
+
+    let toastTimer = null;
+    function toast(message) {
+      const el = $('toast');
+      el.textContent = message;
+      el.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.hidden = true; }, 6000);
     }
 
-    const wire = (id, event) => {
-      document.getElementById(id).addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') piSDK.emit(event, e.target.value);
-      });
+    function fmtTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const p = (n) => String(n).padStart(2, '0');
+      const now = new Date();
+      if (d.toDateString() === now.toDateString()) return `${p(d.getHours())}:${p(d.getMinutes())}`;
+      if (d.getFullYear() === now.getFullYear()) return `${d.getMonth() + 1}月${d.getDate()}日`;
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    }
+    function fmtFull(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const p = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    }
+    function fmtSize(b) {
+      if (b >= 1048576) return (b / 1048576).toFixed(1) + 'MB';
+      if (b >= 1024) return Math.round(b / 1024) + 'KB';
+      return b + 'B';
+    }
+    /** 头像底色按地址散列,和主流客户端一样一人一色。 */
+    function avatarColor(addr) {
+      const palette = ['#4f8cff', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f97316', '#6366f1'];
+      let h = 0;
+      for (const c of addr) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+      return palette[h % palette.length];
+    }
+    const initialsOf = (from) => {
+      const name = (from || '?').split('<')[0].trim().replace(/["']/g, '');
+      if (!name) return (from || '?').split('@')[0].slice(0, 1).toUpperCase();
+      if (/[一-龥]/.test(name)) return name.slice(-2);
+      return name.slice(0, 1).toUpperCase();
     };
-    wire('to', 'mail.to'); wire('subject', 'mail.subject'); wire('body', 'mail.body');
-    document.getElementById('save').addEventListener('click', () => piSDK.emit('mail.save'));
+    const shortFrom = (from) => {
+      const name = (from || '').split('<')[0].trim().replace(/["']/g, '');
+      if (name) return name;
+      const addr = (from || '').match(/<([^>]+)>/);
+      return addr ? addr[1] : from || '(未知)';
+    };
 
-    // 后端推来的状态
-    piSDK.onMessage((m) => {
-      if (m && m.event === 'ui.render') render(m.data ?? {});
+    const STATE_TEXT = {
+      ready: ['已连接', 'state ready'], connecting: ['连接中…', 'state warn'],
+      reconnecting: ['重连中…', 'state warn'],
+      'auth-error': ['密码被拒', 'state bad'], error: ['连接失败', 'state bad'],
+      disconnected: ['未连接', 'state'],
+    };
+    function renderEngineState(state, detail) {
+      const [text, cls] = STATE_TEXT[state] ?? ['未知', 'state'];
+      const el = $('engstate');
+      el.textContent = detail && state !== 'ready' ? `${text}(${detail})` : text;
+      el.className = cls;
+    }
+
+    // ── 全局状态 ──
+    let hasAccount = false;
+    let folders = [];
+    let currentFolder = { path: 'INBOX', label: '收件箱' };
+    let currentMessages = [];
+    let selected = new Set();          // 批量勾选,键 = 'mailbox::uid'(跨文件夹唯一)
+    let listPage = 0;                  // 列表页(无限滚动)
+    let hasMore = false;               // 服务器口径:还有没有下一页
+    let loadingMore = false;           // 无限滚动加载中
+    let searching = false;             // 当前列表是否为全局搜索结果
+    let lastDetail = null;             // 阅读中的邮件
+    let lastSummary = null;
+    let draftsState = [];              // 本地草稿
+    let editingDraftId = null;         // compose 正在编辑的本地草稿
+    let composeAttachments = [];       // [{filename, size, base64}]
+    let composeThread = {};            // {inReplyTo, references}
+    const listCache = new Map();       // path → 最近一次列表(切文件夹秒开,后台刷新)
+    let folderRefreshedAt = 0;         // 文件夹计数节流:60s 内不重复刷
+    let unreadCount = null;            // 未读邮件条目的数量(=该视图列表真实长度)
+    let lastSelfCorrectAt = 0;         // 满页却说到底的复核节流
+
+    const LOCAL_DRAFTS = '__local_drafts__';
+    const msgKey = (m) => `${m.mailbox}::${m.uid}`;
+    const ROLE_LABEL = { inbox: '收件箱', sent: '已发送', trash: '已删除', junk: '垃圾邮件', archive: '归档', other: '' };
+
+    // ── 入口:账号未配置 → 账号页;否则客户端 ──
+    /** 面板脚本可能跑在宿主建好 piSDK 端口之前 — 首个请求会静默丢失,
+     *  所以 account.get 带重试,拿到第一个成功应答为止。 */
+    async function getAccountWithRetry() {
+      let lastErr = null;
+      for (let i = 0; i < 25; i++) {
+        try {
+          return await request('account.get');
+        } catch (err) {
+          lastErr = err;
+          await new Promise((r) => setTimeout(r, 400));
+        }
+      }
+      throw lastErr ?? new Error('account.get 一直失败');
+    }
+
+    async function boot() {
+      try {
+        const res = await getAccountWithRetry();
+        hasAccount = Boolean(res.account && res.hasPass);
+        if (hasAccount) {
+          showApp();
+          renderEngineState(res.engineState, res.engineDetail);
+        } else {
+          enterAccountView(res);
+        }
+      } catch (err) {
+        enterAccountView(null);
+      }
+    }
+
+    function showApp() {
+      $('app').hidden = false;
+      $('account-view').hidden = true;
+      loadFolders();
+      openFolder('INBOX', '收件箱');
+    }
+
+    function enterAccountView(res) {
+      $('app').hidden = true;
+      $('account-view').hidden = false;
+      if (res) fillAccountForm(res);
+      else getAccountWithRetry().then(fillAccountForm).catch(() => {});
+    }
+
+    // ── 文件夹栏 ──
+    async function loadFolders(force = false) {
+      // 计数来自逐文件夹 STATUS(每个都是一次服务器往返),60 秒节流;
+      // 新邮件/批量操作后传 force 立即刷。
+      if (!force && Date.now() - folderRefreshedAt < 60_000) return;
+      folderRefreshedAt = Date.now();
+      try {
+        const res = await request('folder.list');
+        folders = (res.folders ?? []).filter((f) => f.role !== 'drafts'); // 草稿箱=本地,不显示服务器草稿
+        renderEngineState(res.engineState);
+        renderFolders();
+        void refreshUnreadCount(); // 未读条目计数(异步,不拖文件夹渲染)
+      } catch (err) {
+        renderEngineState(String(err?.message ?? err).includes('尚未配置') ? 'disconnected' : 'error');
+      }
+    }
+
+    /** 未读数 = 未读视图列表的真实长度,和点进去看到的永远一致。 */
+    async function refreshUnreadCount() {
+      try {
+        const res = await request('box.list', { mailbox: '__unread__', limit: 50 });
+        unreadCount = res.unreadCount ?? (res.messages ?? []).length;
+        renderFolders();
+      } catch { /* 状态照旧 */ }
+    }
+
+    function renderFolders() {
+      const ul = $('folders');
+      ul.innerHTML = '';
+      const make = (path, label, role, count, icon) => {
+        const li = document.createElement('li');
+        if (path === currentFolder.path) li.className = 'active';
+        const name = document.createElement('span'); name.className = 'fname'; name.textContent = `${icon} ${label}`;
+        li.append(name);
+        if (count > 0) {
+          const c = document.createElement('span');
+          c.className = 'fcount' + (role === 'inbox' || path === '__unread__' ? ' unread' : '');
+          c.textContent = String(count);
+          li.append(c);
+        }
+        li.addEventListener('click', () => {
+          if (path === LOCAL_DRAFTS) openLocalDrafts();
+          else openFolder(path, label);
+        });
+        ul.appendChild(li);
+      };
+      make('INBOX', '收件箱', 'inbox', folders.find((f) => f.role === 'inbox')?.unseen ?? 0, '📥');
+      make('__unread__', '未读邮件', 'unread', unreadCount ?? 0, '📬');
+      make(LOCAL_DRAFTS, '草稿箱', 'drafts', draftsState.filter((d) => !d.sent).length, '📝');
+      for (const role of ['sent', 'archive', 'junk', 'trash']) {
+        const f = folders.find((x) => x.role === role);
+        if (f) make(f.path, ROLE_LABEL[role], role, f.unseen, { sent: '📤', archive: '🗄', junk: '🚫', trash: '🗑' }[role]);
+      }
+      for (const f of folders.filter((x) => x.role === 'other')) make(f.path, f.name, 'other', f.unseen, '📁');
+    }
+
+    // ── 列表 ──
+    async function openFolder(path, label) {
+      currentFolder = { path, label };
+      listPage = 0;
+      selected.clear();
+      document.body.classList.remove('reading');
+      closeReader();
+      renderFolders();
+      // 先画缓存(第二次进同一文件夹是瞬开),再后台刷新
+      const cached = listCache.get(path);
+      if (cached?.length) {
+        currentMessages = cached;
+        hasMore = cached.length >= 50; // 缓存不知道服务器口径,整页按可能有下一页算
+        renderList(currentMessages);
+        $('list-empty').hidden = true;
+      } else {
+        currentMessages = [];
+        hasMore = false;
+        renderList([]);
+        $('list-empty').textContent = '加载中…';
+        $('list-empty').hidden = false;
+      }
+      await refreshList();
+    }
+
+    async function refreshList(retries = 2) {
+      const query = $('search').value.trim();
+      searching = Boolean(query);
+      listPage = 0;
+      selected.clear();
+      updateBatchbar();
+      // 注意:这里故意不关阅读器 —— 新邮件推送会频繁触发刷新,
+      // 把正在读信的用户踹回列表是反人类的;关阅读器只属于
+      // openFolder / 返回按钮 / 删除后这些明确动作。
+      $('folder-title').textContent = searching ? `搜索:「${query}」` : currentFolder.label;
+      if (!searching && currentFolder.path === LOCAL_DRAFTS) { renderLocalDrafts(); return; }
+      if (!searching && currentFolder.path === '__unread__') {
+        try {
+          const res = await request('box.list', { mailbox: '__unread__', limit: 50, page: listPage });
+          renderEngineState(res.engineState);
+          currentMessages = res.messages ?? [];
+          unreadCount = res.unreadCount ?? currentMessages.length; // 计数 = 服务器未读总数
+          hasMore = Boolean(res.hasMore);
+          if (listPage === 0) listCache.set('__unread__', currentMessages);
+          renderList(currentMessages);
+          renderFolders();
+        } catch (err) {
+          renderEngineState('error');
+          currentMessages = [];
+          hasMore = false;
+          renderList([]);
+          $('list-empty').textContent = String(err?.message ?? err);
+          $('list-empty').hidden = false;
+        }
+        return;
+      }
+      try {
+        const res = searching
+          ? await request('mail.searchAll', { query })
+          : await request('box.list', { mailbox: currentFolder.path, limit: 50, page: listPage });
+        renderEngineState(res.engineState);
+        currentMessages = res.messages ?? [];
+        if (listPage === 0 && !searching) listCache.set(currentFolder.path, currentMessages);
+        renderList(currentMessages);
+        // hasMore 由服务器口径给出(UID 窗口没到头就还有下一页);搜索结果不分页
+        hasMore = searching ? false : Boolean(res.hasMore);
+        if (!searching) loadFolders(); // 节流:最多 60s 刷一次计数
+        // 服务器视图预热怪癖:刚连上/刚改收信范围的第一个查询可能拿旧视图,
+        // 满页却说"到底"。延迟复核一次,30 秒内最多一次防循环。
+        if (!hasMore && currentMessages.length >= 50 && Date.now() - lastSelfCorrectAt > 30_000) {
+          lastSelfCorrectAt = Date.now();
+          setTimeout(() => { if (!hasMore && currentFolder.path !== LOCAL_DRAFTS) refreshList(0); }, 3000);
+        }
+      } catch (err) {
+        const msg = String(err?.message ?? err);
+        // 启动期请求偶发失败(连接建立/账号恢复的竞态):自动重试,
+        // 而不是把误导性的「已经到底了」留在界面上。
+        if (retries > 0) {
+          await new Promise((r) => setTimeout(r, 1500));
+          return refreshList(retries - 1);
+        }
+        renderEngineState(msg.includes('尚未配置') ? 'disconnected' : 'error');
+        currentMessages = [];
+        hasMore = false;
+        renderList([]);
+        document.getElementById('load-hint')?.remove();
+        $('list-empty').textContent = msg;
+        $('list-empty').hidden = false;
+      }
+    }
+
+    function renderList(messages, keepScroll = false) {
+      const ul = $('msglist');
+      const st = keepScroll ? ul.scrollTop : 0;
+      ul.innerHTML = '';
+      $('list-empty').hidden = messages.length > 0;
+      if (!messages.length) $('list-empty').textContent = currentFolder.path === LOCAL_DRAFTS ? '暂无草稿' : '没有邮件';
+      for (const m of messages) ul.appendChild(messageRow(m));
+      if (keepScroll) ul.scrollTop = st; // 无限滚动追加后停在原处,不被拽回顶部
+      updateLoadHint();
+      updateBatchbar();
+    }
+
+    /** 列表底部的加载状态行:平时提示可下滑加载,加载中转文案,到底了明说。 */
+    function updateLoadHint() {
+      document.getElementById('load-hint')?.remove();
+      if (searching || currentFolder.path === LOCAL_DRAFTS || currentMessages.length === 0) return;
+      const li = document.createElement('li');
+      li.className = 'load-hint';
+      li.id = 'load-hint';
+      li.textContent = loadingMore ? '正在加载更多…'
+        : hasMore ? '↑ 继续下滑加载更多'
+        : '已经到底了';
+      $('msglist').appendChild(li);
+    }
+
+    function messageRow(m) {
+      const li = document.createElement('li');
+      li.dataset.uid = String(m.uid);
+      const key = msgKey(m);
+      li.className = (m.seen ? '' : 'unread ') + (selected.has(key) ? 'sel ' : '') + (lastDetail?.uid === m.uid && lastDetail?.mailbox === m.mailbox ? 'current' : '');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = selected.has(key);
+      cb.addEventListener('click', (e) => e.stopPropagation());
+      cb.addEventListener('change', () => {
+        if (cb.checked) selected.add(key); else selected.delete(key);
+        li.classList.toggle('sel', cb.checked);
+        updateBatchbar();
+      });
+      const av = document.createElement('div');
+      av.className = 'avatar';
+      const addr = (m.from.match(/<([^>]+)>/) ?? [])[1] ?? m.from ?? '?';
+      av.style.background = avatarColor(addr);
+      av.textContent = initialsOf(m.from);
+      const main = document.createElement('div'); main.className = 'm-main';
+      const r1 = document.createElement('div'); r1.className = 'm-row1';
+      const from = document.createElement('span'); from.className = 'm-from'; from.textContent = shortFrom(m.from); from.title = m.from;
+      const time = document.createElement('span'); time.className = 'm-time'; time.textContent = fmtTime(m.date);
+      r1.append(from, time);
+      const subj = document.createElement('div'); subj.className = 'm-subj'; subj.textContent = (m.flagged ? '⭐ ' : '') + (m.hasAttachment ? '📎 ' : '') + m.subject;
+      const snip = document.createElement('div'); snip.className = 'm-snip'; snip.textContent = m.snippet ?? '';
+      main.append(r1, subj, snip);
+      li.append(cb, av, main);
+      li.addEventListener('click', () => openDetail(m, li));
+      return li;
+    }
+
+    function updateBatchbar() {
+      $('batchbar').hidden = selected.size === 0;
+      $('sel-count').textContent = selected.size ? `已选 ${selected.size} 封` : '';
+    }
+
+    // ── 本地草稿 ──
+    function openLocalDrafts() {
+      currentFolder = { path: LOCAL_DRAFTS, label: '草稿箱' };
+      selected.clear();
+      document.body.classList.remove('reading');
+      closeReader();
+      renderFolders();
+      renderLocalDrafts();
+    }
+    function renderLocalDrafts() {
+      $('folder-title').textContent = '草稿箱(本地)';
+      const ul = $('msglist');
+      ul.innerHTML = '';
+      $('list-empty').hidden = draftsState.length > 0;
+      if (!draftsState.length) $('list-empty').textContent = '暂无草稿 — 写邮件里点「存草稿」,或让 agent 用 mail_create_draft';
+      for (const d of draftsState) {
+        const li = document.createElement('li');
+        const main = document.createElement('div'); main.className = 'm-main';
+        const r1 = document.createElement('div'); r1.className = 'm-row1';
+        const subj = document.createElement('span'); subj.className = 'm-from'; subj.textContent = d.subject || '(无主题)';
+        const badge = document.createElement('span'); badge.className = 'draft-badge' + (d.sent ? ' ok' : ''); badge.textContent = d.sent ? '已发送' : '草稿';
+        r1.append(subj, badge);
+        const meta = document.createElement('div'); meta.className = 'm-snip'; meta.textContent = `→ ${d.to || '(未填收件人)'} · ${fmtTime(d.createdAt)}`;
+        main.append(r1, meta);
+        li.append(main);
+        li.title = '点击编辑;' + (d.sent ? '已发送的存档' : '发送将真实投递');
+        li.addEventListener('click', () => openCompose({ mode: 'draft', draft: d }));
+        ul.appendChild(li);
+      }
+      updateBatchbar();
+      $('batchbar').hidden = true;
+    }
+
+    // ── 阅读 ──
+    function closeReader() {
+      lastDetail = null; lastSummary = null;
+      $('reader-body').hidden = true;
+      $('reader-empty').hidden = false;
+    }
+
+    async function openDetail(m, li) {
+      lastSummary = m;
+      document.body.classList.add('reading');
+      [...document.querySelectorAll('#msglist li')].forEach((x) => x.classList.remove('current'));
+      li.classList.add('current');
+      li.classList.remove('unread');
+      m.seen = true;
+      $('reader-empty').hidden = true;
+      $('reader-body').hidden = false;
+      $('r-subj').textContent = '加载中…';
+      $('r-meta').textContent = '';
+      $('r-atts').hidden = true;
+      $('r-note').hidden = true;
+      $('r-text').hidden = true;
+      $('r-frame').hidden = true;
+      $('act-flag').textContent = m.flagged ? '★ 取消旗标' : '☆ 旗标';
+      try {
+        const d = await request('mail.detail', { uid: m.uid, mailbox: m.mailbox });
+        lastDetail = d;
+        renderDetail(d);
+      } catch (err) {
+        $('r-subj').textContent = '读取失败';
+        $('r-meta').textContent = String(err?.message ?? err);
+      }
+    }
+
+    function renderDetail(d) {
+      $('r-subj').textContent = d.subject;
+      $('r-meta').textContent = `发件人:${d.from || '?'}\n${d.cc ? `抄送:${d.cc}\n` : ''}收件人:${d.to || '?'}\n时间:${fmtFull(d.date)}`;
+      const bar = $('r-atts');
+      bar.innerHTML = '';
+      if (d.attachments?.length) {
+        bar.hidden = false;
+        for (const a of d.attachments) {
+          const chip = document.createElement('span');
+          chip.className = 'att-chip';
+          chip.textContent = `📎 ${a.filename}(${fmtSize(a.size)}) ⬇`;
+          chip.title = '下载到 ~/Downloads/pi-mail/';
+          chip.addEventListener('click', () => downloadAtt(a));
+          bar.append(chip);
+        }
+      } else {
+        bar.hidden = true;
+      }
+      const hasRemote = Boolean(d.html && /src=["']?https?:/i.test(d.html));
+      const body = $('r-frame');
+      body.allowImages = false;
+      if (d.html) {
+        body.innerHTML = sanitizeMailHtml(d.html, false);
+        body.hidden = false;
+        $('r-text').hidden = true;
+        $('r-note').hidden = false;
+        $('r-note-text').textContent = hasRemote ? '⚠︎ 外部图片与脚本已被拦截' : '邮件为 HTML 格式,脚本已被拦截';
+        $('showimgs').hidden = !hasRemote;
+      } else {
+        body.hidden = true;
+        body.innerHTML = '';
+        $('r-text').textContent = d.text || '(空正文)';
+        $('r-text').hidden = false;
+        $('r-note').hidden = true;
+        $('showimgs').hidden = true;
+      }
+      // 邮件正文里的链接:沙箱里点不了,抽出来列成可点的条(经系统浏览器打开)
+      const lbar = $('r-links');
+      lbar.innerHTML = '';
+      const links = [...new Set(
+        [...(d.html ?? '').matchAll(/<a\s[^>]*href=["']([^"']+)["'][^>]*>/gi)]
+          .map((x) => x[1]).filter((u) => /^https?:\/\//i.test(u)),
+      )];
+      if (links.length > 0) {
+        lbar.hidden = false;
+        for (const u of links.slice(0, 12)) {
+          const chip = document.createElement('span');
+          chip.className = 'link-chip';
+          let label = u;
+          try {
+            const p = new URL(u);
+            label = p.host + (p.pathname.length > 1 ? p.pathname.slice(0, 22) : '');
+          } catch { /* 保留原串 */ }
+          chip.textContent = `🔗 ${label}`;
+          chip.title = u;
+          chip.addEventListener('click', () =>
+            request('link.open', { url: u }).catch((err) => toast(`打开失败:${err?.message ?? err}`)));
+          lbar.append(chip);
+        }
+      } else {
+        lbar.hidden = true;
+      }
+      $('act-unread').hidden = false;
+    }
+
+    /** 邮件 HTML 消毒(无 iframe 边界,所以这里就是安全边界):
+     *  脚本块、事件属性、js: 链接、嵌套 frame 全剥;<style> 全文样式会
+     *  污染面板,也剥(邮件排版靠的是内联 style,保留);外域图片默认
+     *  剥除(追踪像素),点「显示远程图片」后保留。 */
+    function sanitizeMailHtml(html, allowImages) {
+      let h = html;
+      h = h.replace(/<script[\s\S]*?<\/script\s*>/gi, '');
+      h = h.replace(/<style[\s\S]*?<\/style\s*>/gi, '');
+      h = h.replace(/<(iframe|object|embed|link|meta|base)\b[^>]*>/gi, '');
+      h = h.replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+      h = h.replace(/(href|src)\s*=\s*(["'])\s*javascript:[^"']*\2/gi, '$1="#"');
+      if (!allowImages) {
+        h = h.replace(/<img\b[^>]*src\s*=\s*["']?https?:[^>]*>/gi, '');
+      }
+      // cid: 引用(内嵌附件图)离开邮件客户端就是破图,直接去掉
+      h = h.replace(/<img\b[^>]*src\s*=\s*["']cid:[^>]*>/gi, '');
+      return h;
+    }
+
+    $('showimgs').addEventListener('click', () => {
+      if (!lastDetail?.html) return;
+      const body = $('r-frame');
+      body.allowImages = true;
+      body.innerHTML = sanitizeMailHtml(lastDetail.html, true);
+      $('showimgs').hidden = true;
+      $('r-note-text').textContent = '邮件为 HTML 格式,脚本已被拦截';
     });
+
+    async function downloadAtt(a) {
+      if (!lastDetail) return;
+      toast(`正在下载 ${a.filename}…`);
+      try {
+        const res = await request('att.download', {
+          mailbox: lastDetail.mailbox, uid: lastDetail.uid, partId: a.partId, filename: a.filename,
+        });
+        toast(`已下载:${res.path}`);
+      } catch (err) {
+        toast(`下载失败:${err?.message ?? err}`);
+      }
+    }
+
+    // ── 批量操作(跨文件夹:勾选键是 mailbox::uid,按邮箱分组下发)──
+    function selectedGroups() {
+      const groups = new Map();
+      for (const m of currentMessages) {
+        if (!selected.has(msgKey(m))) continue;
+        if (!groups.has(m.mailbox)) groups.set(m.mailbox, []);
+        groups.get(m.mailbox).push(m.uid);
+      }
+      return groups;
+    }
+    async function batchCall(action, label) {
+      const groups = selectedGroups();
+      if (groups.size === 0) return;
+      try {
+        for (const [mailbox, uids] of groups) await action(mailbox, uids);
+        selected.clear();
+        await refreshList();
+        loadFolders(true); // 已读/删除改变计数,立即刷
+        void refreshUnreadCount();
+      } catch (err) { toast(`${label}失败:${err?.message ?? err}`); }
+    }
+    $('batch-del').addEventListener('click', () => batchCall((mb, uids) => request('msg.delete', { mailbox: mb, uids }), '删除'));
+    $('batch-read').addEventListener('click', () => batchCall((mb, uids) => request('msg.flags', { mailbox: mb, uids, action: 'read' }), '标记'));
+    $('batch-unread').addEventListener('click', () => batchCall((mb, uids) => request('msg.flags', { mailbox: mb, uids, action: 'unread' }), '标记'));
+
+    // ── 无限滚动:滚近列表底部自动追加下一页(空页=UID 空洞,自动跳过)──
+    $('msglist').addEventListener('scroll', () => {
+      const ul = $('msglist');
+      if (ul.scrollTop + ul.clientHeight >= ul.scrollHeight - 240) void loadMore();
+    });
+
+    async function loadMore() {
+      if (loadingMore || !hasMore || searching || currentFolder.path === LOCAL_DRAFTS) return;
+      loadingMore = true;
+      updateLoadHint();
+      try {
+        while (hasMore) {
+          listPage += 1;
+          const res = await request('box.list', { mailbox: currentFolder.path, limit: 50, page: listPage });
+          const older = res.messages ?? [];
+          if (currentFolder.path === '__unread__') {
+            unreadCount = res.unreadCount ?? unreadCount;
+            renderFolders();
+          }
+          hasMore = Boolean(res.hasMore);
+          if (older.length > 0) {
+            currentMessages = currentMessages.concat(older);
+            listCache.set(currentFolder.path, currentMessages);
+            renderList(currentMessages, true); // 追加后保持滚动位置,不被拽回顶部
+          }
+          if (older.length > 0 || !hasMore) break;
+        }
+      } catch (err) {
+        listPage -= 1;
+        toast(`加载失败:${err?.message ?? err}`);
+      } finally {
+        loadingMore = false;
+        updateLoadHint();
+      }
+    }
+
+    // ── 阅读动作 ──
+    $('back').addEventListener('click', () => document.body.classList.remove('reading'));
+    $('refresh').addEventListener('click', refreshList);
+    $('search').addEventListener('keydown', (e) => { if (e.key === 'Enter') refreshList(); });
+
+    function quoteOf(d) {
+      return `\n\n────────── 原邮件 ──────────\n发件人:${d.from}\n时间:${fmtFull(d.date)}\n主题:${d.subject}\n\n${(d.text || '').split('\n').map((l) => '> ' + l).join('\n')}\n`;
+    }
+    $('act-reply').addEventListener('click', () => {
+      const d = lastDetail; if (!d) return;
+      openCompose({
+        mode: 'reply', to: addrOnly(d.from), subject: reSubj(d.subject), quote: quoteOf(d),
+        inReplyTo: d.messageId, references: [d.references, d.messageId].filter(Boolean).join(' '),
+      });
+    });
+    $('act-replyall').addEventListener('click', () => {
+      const d = lastDetail; if (!d) return;
+      const others = (d.to || '').split(/[,;，；]/).map((s) => s.trim()).filter((s) => s && !s.includes(accountEmail()));
+      const cc = (d.cc || '').split(/[,;，；]/).map((s) => s.trim()).filter(Boolean);
+      openCompose({
+        mode: 'reply', to: [addrOnly(d.from), ...others].filter(Boolean).join(', '),
+        cc: cc.join(', '), subject: reSubj(d.subject), quote: quoteOf(d),
+        inReplyTo: d.messageId, references: [d.references, d.messageId].filter(Boolean).join(' '),
+        showCc: cc.length > 0,
+      });
+    });
+    $('act-forward').addEventListener('click', () => {
+      const d = lastDetail; if (!d) return;
+      openCompose({
+        mode: 'forward', subject: fwdSubj(d.subject),
+        quote: `\n\n────────── 转发邮件 ──────────\n发件人:${d.from}\n收件人:${d.to}\n时间:${fmtFull(d.date)}\n主题:${d.subject}\n\n${d.text || ''}\n`,
+      });
+    });
+    $('act-unread').addEventListener('click', async () => {
+      const d = lastDetail; if (!d) return;
+      try {
+        await request('msg.flags', { mailbox: d.mailbox, uids: [d.uid], action: 'unread' });
+        document.body.classList.remove('reading');
+        closeReader();
+        refreshList();
+      } catch (err) { toast(`操作失败:${err?.message ?? err}`); }
+    });
+    $('act-flag').addEventListener('click', async () => {
+      const d = lastDetail; if (!d || !lastSummary) return;
+      const action = lastSummary.flagged ? 'unflag' : 'flag';
+      try {
+        await request('msg.flags', { mailbox: d.mailbox, uids: [d.uid], action });
+        lastSummary.flagged = !lastSummary.flagged;
+        $('act-flag').textContent = lastSummary.flagged ? '★ 取消旗标' : '☆ 旗标';
+        refreshList();
+      } catch (err) { toast(`操作失败:${err?.message ?? err}`); }
+    });
+    $('act-del').addEventListener('click', async () => {
+      const d = lastDetail; if (!d) return;
+      try {
+        await request('msg.delete', { mailbox: d.mailbox, uids: [d.uid] });
+        document.body.classList.remove('reading');
+        closeReader();
+        refreshList();
+        toast('已移入已删除');
+      } catch (err) { toast(`删除失败:${err?.message ?? err}`); }
+    });
+
+    const reSubj = (s) => (/^回复[:：]/.test(s) ? s : `回复:${s}`);
+    const fwdSubj = (s) => (/^转发[:：]/.test(s) ? s : `转发:${s}`);
+    const addrOnly = (from) => (from.match(/<([^>]+)>/) ?? [])[1] ?? from;
+    let accountEmailCache = null;
+    const accountEmail = () => accountEmailCache ?? '';
+
+    // ── 写邮件 ──
+    function openCompose(opt = {}) {
+      editingDraftId = opt.draft?.id ?? null;
+      composeAttachments = [];
+      composeThread = { inReplyTo: opt.inReplyTo, references: opt.references };
+      $('c-title').textContent = { reply: '回复', forward: '转发', draft: '编辑草稿' }[opt.mode] ?? '写邮件';
+      $('c-to').value = opt.to ?? (opt.mode === 'draft' ? opt.draft.to : '');
+      $('c-cc').value = opt.cc ?? (opt.mode === 'draft' ? opt.draft.cc ?? '' : '');
+      $('c-bcc').value = opt.mode === 'draft' ? opt.draft.bcc ?? '' : '';
+      $('c-subject').value = opt.subject ?? (opt.mode === 'draft' ? opt.draft.subject : '');
+      $('c-body').value = (opt.mode === 'draft' ? opt.draft.body : '') + (opt.quote ?? '');
+      const hasCc = Boolean($('c-cc').value) || Boolean($('c-bcc').value) || opt.showCc;
+      $('c-cc-row').hidden = !hasCc;
+      $('c-bcc-row').hidden = !hasCc;
+      $('c-showcc').style.display = hasCc ? 'none' : 'inline-block';
+      $('c-del-draft').hidden = opt.mode !== 'draft';
+      $('c-status').textContent = '';
+      $('c-send').disabled = false;
+      renderComposeAtts();
+      $('compose').hidden = false;
+      $('c-to').focus();
+    }
+    function renderComposeAtts() {
+      const box = $('c-atts');
+      box.innerHTML = '';
+      for (let i = 0; i < composeAttachments.length; i++) {
+        const a = composeAttachments[i];
+        const chip = document.createElement('span');
+        chip.className = 'c-att';
+        chip.textContent = `📎 ${a.filename}(${fmtSize(a.size)})`;
+        const rm = document.createElement('span'); rm.className = 'rm'; rm.textContent = '✕';
+        rm.addEventListener('click', () => { composeAttachments.splice(i, 1); renderComposeAtts(); });
+        chip.append(rm);
+        box.append(chip);
+      }
+    }
+    $('compose-btn').addEventListener('click', () => openCompose({ mode: 'new' }));
+    $('c-showcc').addEventListener('click', () => { $('c-cc-row').hidden = false; $('c-bcc-row').hidden = false; $('c-showcc').style.display = 'none'; });
+    $('c-cancel').addEventListener('click', () => { $('compose').hidden = true; });
+    $('c-file').addEventListener('change', async (e) => {
+      const files = [...(e.target.files ?? [])];
+      e.target.value = '';
+      for (const f of files) {
+        if (f.size > 20 * 1024 * 1024) { toast(`「${f.name}」超过 20MB,已跳过`); continue; }
+        const b64 = await new Promise((resolve) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result).split(',')[1] ?? '');
+          r.onerror = () => resolve('');
+          r.readAsDataURL(f);
+        });
+        if (b64) composeAttachments.push({ filename: f.name, size: f.size, base64: b64 });
+      }
+      renderComposeAtts();
+    });
+
+    async function collectAndValidate() {
+      const out = {
+        to: $('c-to').value.trim(), cc: $('c-cc').value.trim(), bcc: $('c-bcc').value.trim(),
+        subject: $('c-subject').value, body: $('c-body').value,
+        attachments: composeAttachments.map((a) => ({ filename: a.filename, base64: a.base64 })),
+        ...composeThread,
+      };
+      const total = composeAttachments.reduce((s, a) => s + a.size, 0);
+      if (total > 25 * 1024 * 1024) { toast(`附件总计 ${(total / 1048576).toFixed(1)}MB,超过 25MB 上限`); return null; }
+      if (!out.to) { toast('请填写收件人'); return null; }
+      return out;
+    }
+
+    $('c-send').addEventListener('click', async () => {
+      const out = await collectAndValidate();
+      if (!out) return;
+      $('c-send').disabled = true;
+      $('c-status').textContent = '发送中…';
+      try {
+        await request('compose.send', out);
+        if (editingDraftId) await request('draft.delete', { id: editingDraftId }).catch(() => {});
+        $('compose').hidden = true;
+        toast('邮件已发送');
+        loadFolders();
+        if (currentFolder.path !== LOCAL_DRAFTS) refreshList(); else openLocalDrafts();
+      } catch (err) {
+        $('c-status').textContent = '';
+        $('c-send').disabled = false;
+        toast(`发送失败:${err?.message ?? err}`);
+      }
+    });
+
+    $('c-draft').addEventListener('click', async () => {
+      try {
+        await request('draft.save', {
+          id: editingDraftId, to: $('c-to').value.trim(), cc: $('c-cc').value.trim(), bcc: $('c-bcc').value.trim(),
+          subject: $('c-subject').value, body: $('c-body').value,
+        });
+        $('compose').hidden = true;
+        toast('已保存到草稿箱(本地)');
+        if (currentFolder.path === LOCAL_DRAFTS) openLocalDrafts(); else renderFolders();
+      } catch (err) {
+        toast(`保存失败:${err?.message ?? err}`);
+      }
+    });
+
+    $('c-del-draft').addEventListener('click', async () => {
+      if (!editingDraftId) return;
+      try {
+        await request('draft.delete', { id: editingDraftId });
+        $('compose').hidden = true;
+        toast('草稿已删除');
+        if (currentFolder.path === LOCAL_DRAFTS) openLocalDrafts();
+      } catch (err) { toast(`删除失败:${err?.message ?? err}`); }
+    });
+
+    // ── 账号 ──
+    let presets = [];
+    function fillAccountForm(res) {
+      presets = res.presets ?? [];
+      hasAccount = Boolean(res.account && res.hasPass);
+      const sel = $('preset');
+      if (sel.options.length === 0) {
+        for (const p of presets) {
+          const opt = document.createElement('option');
+          opt.value = p.id; opt.textContent = p.label;
+          sel.appendChild(opt);
+        }
+      }
+      const acc = res.account;
+      if (acc) {
+        sel.value = acc.preset;
+        $('a-email').value = acc.email ?? '';
+        $('a-user').value = acc.user ?? '';
+        if (acc.imap) $('a-imap-host').value = acc.imap.host ?? '';
+        if (acc.imap) $('a-imap-port').value = acc.imap.port ?? '';
+        if (acc.smtp) $('a-smtp-host').value = acc.smtp.host ?? '';
+        if (acc.smtp) $('a-smtp-port').value = acc.smtp.port ?? '';
+      }
+      if (res.account?.email) accountEmailCache = res.account.email;
+      $('a-pass').placeholder = res.hasPass ? '已保存(留空则不修改)' : '客户端专用密码 / 授权码';
+      syncPresetHint();
+    }
+    function enterAccount() { $('app').hidden = true; $('account-view').hidden = false; getAccountWithRetry().then(fillAccountForm).catch(() => {}); }
+    $('rail-account').addEventListener('click', enterAccount);
+    $('account-back').addEventListener('click', () => { if (hasAccount) showApp(); else toast('先配置一个账号才能使用邮箱'); });
+    function syncPresetHint() {
+      const p = presets.find((x) => x.id === $('preset').value);
+      $('preset-hint').textContent = p ? p.hint : '';
+      $('custom-hosts').hidden = $('preset').value !== 'custom';
+    }
+    $('preset').addEventListener('change', syncPresetHint);
+    $('a-save').addEventListener('click', async () => {
+      $('a-status').textContent = '保存中…';
+      try {
+        const res = await request('account.save', {
+          preset: $('preset').value, email: $('a-email').value.trim(), user: $('a-user').value.trim(),
+          pass: $('a-pass').value,
+          imap: { host: $('a-imap-host').value.trim(), port: Number($('a-imap-port').value) || 993 },
+          smtp: { host: $('a-smtp-host').value.trim(), port: Number($('a-smtp-port').value) || 465 },
+        });
+        $('a-pass').value = '';
+        $('a-status').textContent = `已保存 ${res.email} — 返回邮箱中…`;
+        hasAccount = true;
+        showApp();
+      } catch (err) {
+        $('a-status').textContent = String(err?.message ?? err);
+      }
+    });
+    $('a-clear').addEventListener('click', async () => {
+      try {
+        await request('account.clear');
+        for (const id of ['a-email', 'a-user', 'a-pass', 'a-imap-host', 'a-imap-port', 'a-smtp-host', 'a-smtp-port']) $(id).value = '';
+        $('a-pass').placeholder = '客户端专用密码 / 授权码';
+        $('a-status').textContent = '已清除账号。';
+        hasAccount = false;
+      } catch (err) { toast(String(err?.message ?? err)); }
+    });
+
+    // ── 后端推送 ──
+    piSDK.onMessage(async (m) => {
+      if (!m) return;
+      if (m.event === 'ui.render') {
+        draftsState = m.data?.drafts ?? [];
+        if (currentFolder.path === LOCAL_DRAFTS) renderLocalDrafts(); else renderFolders();
+      } else if (m.event === 'mail.new') {
+        loadFolders(true); // 未读数立即更新
+        if (currentFolder.path === 'INBOX' && !$('search').value.trim()) refreshList();
+        const cnt = m.data?.count;
+        toast(cnt > 1 ? `收到 ${cnt} 封新邮件` : `新邮件:${m.data?.from ?? ''} — ${m.data?.subject ?? ''}`);
+      } else if (m.event === 'mail.sent') {
+        // 发送成功 → 自动跳「已发送」并打开刚发的那封(眼见为实)
+        const sent = folders.find((f) => f.role === 'sent');
+        if (sent && m.data?.uid) {
+          await openFolder(sent.path, '已发送');
+          const li = document.querySelector(`#msglist li[data-uid="${m.data.uid}"]`);
+          if (li) li.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+      } else if (m.event === 'mail.send-failed') {
+        toast(`发送失败:${m.data?.message ?? '未知错误'}`);
+      }
+    });
+
+    boot();
   </script>
 </body>
 </html>
