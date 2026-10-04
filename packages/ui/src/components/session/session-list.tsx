@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { SessionItem } from './session-item';
@@ -14,6 +16,8 @@ export function SessionList() {
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const activeSessionId = useUIStore((s) => s.activeSessionId);
   const setActiveSession = useUIStore((s) => s.setActiveSession);
+  // Title filter — client-side over the already-loaded list, instant.
+  const [filter, setFilter] = useState('');
 
   const deleteSession = useMutation({
     mutationFn: (id: string) => sdk.session.delete(id),
@@ -47,13 +51,31 @@ export function SessionList() {
   if (error) return <ErrorState description="Failed to load sessions" onRetry={() => refetch()} />;
 
   const items = sessions ?? [];
+  const needle = filter.trim().toLowerCase();
+  const visible = needle
+    ? items.filter((s) => (s.title ?? '').toLowerCase().includes(needle))
+    : items;
 
   return (
     <div className="flex flex-col gap-1 min-h-0 flex-1">
       <SessionCreateButton />
+      <div className="flex items-center gap-2 px-3 py-1">
+        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <input
+          aria-label="搜索会话"
+          placeholder="搜索会话..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          onKeyDown={(e) => e.key === 'Escape' && setFilter('')}
+          className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+        />
+      </div>
+      {needle && visible.length === 0 && (
+        <p className="px-3 py-2 text-xs text-muted-foreground">未找到匹配会话</p>
+      )}
       <Virtuoso
         className="flex-1"
-        data={items}
+        data={visible}
         itemContent={(_index, session: Session) => (
           <SessionItem
             session={session}

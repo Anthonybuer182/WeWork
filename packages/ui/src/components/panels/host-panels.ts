@@ -29,15 +29,6 @@ export const HOST_LEFT_PANELS: PanelEntry[] = [
     order: 1,
   },
   {
-    id: 'host:search',
-    title: '搜索',
-    icon: 'search',
-    source: 'host',
-    keepAlive: 'always',
-    region: 'left',
-    order: 2,
-  },
-  {
     // The agent's standing context. A host panel rather than a plugin because
     // it edits the agent's own configuration — SYSTEM.md, APPEND_SYSTEM.md,
     // AGENTS.md — which is the same kind of thing the settings panel does to

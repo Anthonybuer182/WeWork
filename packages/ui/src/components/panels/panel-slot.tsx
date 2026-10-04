@@ -4,7 +4,6 @@ import { ProviderSettings } from '@/components/settings';
 import { PluginCenter } from '@/components/plugins/plugin-center';
 import { FileTree } from '@/components/file/file-tree';
 import { SessionList } from '@/components/session/session-list';
-import { SearchView } from '@/components/search/search-view';
 import { ContextPanel } from '@/components/context/context-panel';
 import { ensureRelayInstalled } from '@/components/plugins/panel-relay';
 import { LiveSlot } from './live-slot';
@@ -19,7 +18,6 @@ const HOST_COMPONENTS: Record<string, ComponentType> = {
   'host:plugins': PluginCenter,
   'host:files': FileTree,
   'host:sessions': SessionList,
-  'host:search': SearchView,
   'host:context': ContextPanel,
 };
 
