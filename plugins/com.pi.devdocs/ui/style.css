@@ -1,0 +1,242 @@
+/*
+ * com.pi.devdocs panel styles.
+ *
+ * Every colour comes from the shell's theme tokens (pushed by the injected
+ * SDK onto documentElement). The pushed values are Tailwind-style HSL
+ * COMPONENTS ("222.2 84% 4.9%", no hsl() wrapper — see the guide's 面板开发
+ * section), so each reference must be wrapped in hsl() with a matching
+ * component fallback, or the declaration is invalid and silently dropped.
+ * --radius / --font-sans are complete values and take plain var().
+ *
+ * Panel width runs 300–1200px, so the type scale is compact and nothing has
+ * a fixed width.
+ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: hsl(var(--background, 0 0% 100%));
+  color: hsl(var(--foreground, 222.2 84% 4.9%));
+  font-family: var(--font-sans, -apple-system, 'PingFang SC', 'Segoe UI', sans-serif);
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-y: auto;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+
+#topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 14px;
+  background: hsl(var(--background, 0 0% 100%));
+  border-bottom: 1px solid hsl(var(--border, 214.3 31.8% 91.4%));
+}
+
+#doc-title {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#protocol-stamp {
+  flex: none;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: calc(var(--radius, 8px) / 2);
+  background: hsl(var(--secondary, 210 40% 96.1%));
+  color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
+}
+
+/* ── Section chips (this page's TOC) ─────────────────────────────── */
+
+#toc {
+  position: sticky;
+  top: 35px;
+  z-index: 9;
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  overflow-x: auto;
+  background: hsl(var(--background, 0 0% 100%));
+  border-bottom: 1px solid hsl(var(--border, 214.3 31.8% 91.4%));
+  scrollbar-width: none;
+}
+#toc::-webkit-scrollbar { display: none; }
+
+.chip {
+  flex: none;
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 9px;
+  border: 1px solid hsl(var(--border, 214.3 31.8% 91.4%));
+  border-radius: 999px;
+  background: transparent;
+  color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
+  cursor: pointer;
+  white-space: nowrap;
+}
+.chip:hover {
+  background: hsl(var(--accent, 210 40% 96.1%));
+  color: hsl(var(--accent-foreground, 222.2 47.4% 11.2%));
+}
+.chip.active {
+  background: hsl(var(--primary, 222.2 47.4% 11.2%));
+  border-color: hsl(var(--primary, 222.2 47.4% 11.2%));
+  color: hsl(var(--primary-foreground, 210 40% 98%));
+}
+
+/* ── Markdown body ───────────────────────────────────────────────── */
+
+#content {
+  padding: 6px 14px 48px;
+}
+
+.loading { color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%)); text-align: center; padding: 32px 0; }
+
+.errorbox {
+  margin: 24px 0;
+  padding: 12px 14px;
+  border: 1px solid hsl(var(--border, 214.3 31.8% 91.4%));
+  border-left: 3px solid hsl(var(--primary, 222.2 47.4% 11.2%));
+  border-radius: var(--radius, 8px);
+  color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
+  word-break: break-all;
+}
+
+.markdown h1 {
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 14px 0 4px;
+}
+.markdown h2 {
+  font-size: 15px;
+  margin: 26px 0 8px;
+  padding-top: 10px;
+  border-top: 1px solid hsl(var(--border, 214.3 31.8% 91.4%));
+  /* Scroll-spy anchors land here instead of under the sticky bars. */
+  scroll-margin-top: 84px;
+}
+.markdown h3 { font-size: 13.5px; margin: 18px 0 6px; scroll-margin-top: 84px; }
+.markdown h4 { font-size: 13px; margin: 14px 0 4px; scroll-margin-top: 84px; }
+
+.markdown p { margin: 8px 0; }
+.markdown ul, .markdown ol { margin: 8px 0; padding-left: 20px; }
+.markdown li { margin: 3px 0; }
+
+.markdown a {
+  color: hsl(var(--primary, 222.2 47.4% 11.2%));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown blockquote {
+  margin: 10px 0;
+  padding: 2px 12px;
+  border-left: 3px solid hsl(var(--border, 214.3 31.8% 91.4%));
+  color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
+}
+
+.markdown hr { border: none; border-top: 1px solid hsl(var(--border, 214.3 31.8% 91.4%)); margin: 18px 0; }
+
+.markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 12px;
+  display: block;
+  overflow-x: auto;
+}
+.markdown th, .markdown td {
+  border: 1px solid hsl(var(--border, 214.3 31.8% 91.4%));
+  padding: 5px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+.markdown th { background: hsl(var(--muted, 210 40% 96.1%)); font-weight: 600; }
+
+.markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  background: hsl(var(--muted, 210 40% 96.1%));
+  border-radius: 4px;
+  padding: 1.5px 5px;
+  word-break: break-all;
+}
+
+/* Code blocks: wrapper carries the copy button so the pre scrolls under it. */
+.codewrap {
+  position: relative;
+  margin: 10px 0;
+}
+.codewrap pre {
+  margin: 0;
+  padding: 10px 12px;
+  background: hsl(var(--card, 0 0% 100%));
+  border: 1px solid hsl(var(--border, 214.3 31.8% 91.4%));
+  border-radius: var(--radius, 8px);
+  overflow-x: auto;
+}
+.codewrap pre code {
+  background: none;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.55;
+  word-break: normal;
+  white-space: pre;
+}
+.copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font: inherit;
+  font-size: 10px;
+  padding: 2px 8px;
+  border: 1px solid hsl(var(--border, 214.3 31.8% 91.4%));
+  border-radius: 6px;
+  background: hsl(var(--background, 0 0% 100%));
+  color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.codewrap:hover .copy-btn, .copy-btn:focus-visible { opacity: 1; }
+.copy-btn:hover { color: hsl(var(--foreground, 222.2 84% 4.9%)); }
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translate(-50%, 8px);
+  max-width: 86%;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: hsl(var(--foreground, 222.2 84% 4.9%));
+  color: hsl(var(--background, 0 0% 100%));
+  font-size: 11px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#toast.show {
+  opacity: 0.92;
+  transform: translate(-50%, 0);
+}

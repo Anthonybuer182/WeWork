@@ -23,6 +23,14 @@ export interface MarketEntry {
   sha256: string;
   size?: number;
   permissions?: string[];
+  /**
+   * The plugin protocol version the packaged manifest declares, mirrored here
+   * so the plugin center can show "needs a newer app / plugin too old" BEFORE
+   * the download, not as a surprise after installing. The authoritative check
+   * still happens in stageInstall against the manifest inside the zip — a
+   * catalog that lies about this field does not get the plugin installed.
+   */
+  apiVersion?: number;
 }
 
 /** Shape of the static index document. */

@@ -155,6 +155,12 @@ export type PluginPermission = string;
  *
  * History:
  *
+ * 4 — added the `card-event` host→plugin message and the SDK's `onCardEvent`
+ *     callback: declarative cards returned by tools (messageRenderers) can
+ *     now carry interactive Buttons/Inputs, and the interaction flows back to
+ *     the plugin backend. Purely additive — protocol 3 plugins load unchanged
+ *     (their SDK ignores the new message), so the floor stays at 3.
+ *
  * 3 — dropped `selectionActions` and the `selection` permission. The host's
  *     selection menu (滑词菜单) is gone: text selection is the panel's own
  *     business, and the one panel that had a selection UI of its own (the file
@@ -162,7 +168,7 @@ export type PluginPermission = string;
  *     A manifest still declaring `selectionActions` is now rejected rather than
  *     silently ignored — see the `apiVersion` note on PluginManifest.
  */
-export const PLUGIN_PROTOCOL_VERSION = 3;
+export const PLUGIN_PROTOCOL_VERSION = 4;
 
 /**
  * The OLDEST protocol version this build still loads — the lower bound of the

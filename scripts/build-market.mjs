@@ -109,6 +109,7 @@ for (const dir of pluginIds) {
     name: manifest.name,
     description: manifest.description ?? '',
     version: manifest.version,
+    apiVersion: manifest.apiVersion,
     url: zipPath,
     sha256,
     size: zipBytes.length,

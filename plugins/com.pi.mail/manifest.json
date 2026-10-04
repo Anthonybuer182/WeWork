@@ -2,7 +2,7 @@
   "id": "com.pi.mail",
   "name": "邮件草稿",
   "description": "官方插件:真实邮箱(IMAP 收件/搜索/读取)+ 邮件草稿与 SMTP 真实发送 + 右栏面板(收件箱/草稿箱/账号)",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -64,7 +64,9 @@
               "description": "How many emails to return, 1-50. Default: 20"
             }
           },
-          "required": ["query"],
+          "required": [
+            "query"
+          ],
           "additionalProperties": false
         }
       },
@@ -83,13 +85,15 @@
               "description": "Mailbox/folder the email is in. Default: INBOX"
             }
           },
-          "required": ["id"],
+          "required": [
+            "id"
+          ],
           "additionalProperties": false
         }
       },
       {
         "name": "mail_create_draft",
-        "description": "Create an email draft (to / subject / body). The draft appears in the mail panel for the user to review; mail_send_draft delivers it. Use whenever the user asks to write or reply to an email. When replying, quote the original in the body.",
+        "description": "Create an email draft (to / subject / body, optional attachments by absolute path). The draft appears in the mail panel for the user to review; mail_send_draft delivers it. Use whenever the user asks to write or reply to an email. When replying, quote the original in the body.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -112,6 +116,13 @@
             "bcc": {
               "type": "string",
               "description": "Optional BCC addresses, comma-separated"
+            },
+            "attachments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Absolute paths of files to attach, e.g. documents the user asked to send (max 20, 25 MB total). Missing paths fail the tool — verify the file exists first."
             }
           },
           "required": [

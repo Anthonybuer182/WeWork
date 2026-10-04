@@ -125,6 +125,24 @@ export interface PluginHostEventMessage {
   data?: unknown;
 }
 
+/**
+ * Main → backend: the user interacted with a declarative card this plugin's
+ * tool returned into the chat timeline (a Button click, an Input submit —
+ * see DeclarativeRenderer). One-way fire; nothing is expected back. Additive
+ * in protocol 4: SDKs written for protocol 3 ignore unknown host messages
+ * (their pump's default case is a no-op), so an old backend stays healthy.
+ */
+export interface PluginCardEventMessage {
+  type: 'card-event';
+  /** The tool whose result carried the card. */
+  toolName: string;
+  /** The event id the card node declared. */
+  eventId: string;
+  kind: 'click' | 'submit';
+  /** Button: the node's props. Input submit: the entered value. */
+  payload?: unknown;
+}
+
 export interface PluginLogMessage {
   type: 'log';
   level: 'debug' | 'info' | 'warn' | 'error';
@@ -143,6 +161,7 @@ export type HostToPluginMessage =
   | PluginToolCallMessage
   | PluginContextRequestMessage
   | PluginHostEventMessage
+  | PluginCardEventMessage
   | PluginShutdownMessage;
 
 export type PluginToHostMessage =

@@ -15,8 +15,9 @@ import { plugin, type PluginContext } from '@pi/plugin-sdk';
 import { clearAccount, loadAccount, loadPass, saveAccount } from './account';
 import { ImapEngine } from './imap-engine';
 import { execFile } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { PRESETS, resolveAccount } from './presets';
 import { isAuthError, sendDraft, type OutgoingAttachment, type OutgoingDraft } from './smtp-sender';
 import type { MailAccountInput, ResolvedAccount } from './types';
@@ -33,6 +34,8 @@ interface Draft {
   bcc?: string;
   subject: string;
   body: string;
+  /** Resolved at draft-creation time from the paths the agent passed. */
+  attachments?: OutgoingAttachment[];
   sent: boolean;
   createdAt: string;
 }
@@ -80,12 +83,39 @@ function panelState(): { composing: Composing; drafts: Draft[] } {
   return { composing, drafts };
 }
 
+/**
+ * The agent tool passes attachment paths (it knows files, not bytes); the
+ * panel compose path passes ready base64 parts. Resolve paths into the same
+ * shape here so both flows end in one send path. Drafts persist with their
+ * attachments, so the total is capped — base64 inflates 4/3, and a runaway
+ * draft would otherwise quietly bloat the plugin's storage.json.
+ */
+const MAX_ATTACHMENTS_TOTAL_BYTES = 25 * 1024 * 1024;
+
+function resolveAttachments(input: unknown): OutgoingAttachment[] | undefined {
+  if (!Array.isArray(input) || input.length === 0) return undefined;
+  let total = 0;
+  const list = input.slice(0, 20).map((raw) => {
+    const path = String(raw ?? '').trim();
+    if (!path) throw new Error('附件路径不能为空');
+    if (!existsSync(path)) throw new Error(`附件不存在:${path}`);
+    const buf = readFileSync(path);
+    total += buf.length;
+    if (total > MAX_ATTACHMENTS_TOTAL_BYTES) {
+      throw new Error(`附件总大小超过 ${Math.round(MAX_ATTACHMENTS_TOTAL_BYTES / 1024 / 1024)} MB 上限`);
+    }
+    return { filename: basename(path), base64: buf.toString('base64') };
+  });
+  return list.length > 0 ? list : undefined;
+}
+
 function createDraft(
   to: unknown,
   subject: unknown,
   body: unknown,
   cc?: unknown,
   bcc?: unknown,
+  attachments?: OutgoingAttachment[],
 ): Draft {
   const draft: Draft = {
     id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -94,6 +124,7 @@ function createDraft(
     ...(bcc ? { bcc: String(bcc).slice(0, 500) } : {}),
     subject: String(subject ?? '(无主题)').slice(0, 300),
     body: String(body ?? '').slice(0, 20_000),
+    ...(attachments?.length ? { attachments } : {}),
     sent: false,
     createdAt: new Date().toISOString(),
   };
@@ -107,6 +138,9 @@ function draftCard(draft: Draft): unknown {
     ['收件人', draft.to || '(未填)'],
     ...(draft.cc ? ([['抄送', draft.cc]] as Array<[string, string]>) : []),
     ['主题', draft.subject],
+    ...(draft.attachments?.length
+      ? ([['附件', draft.attachments.map((a) => a.filename).join('、')]] as Array<[string, string]>)
+      : []),
     ['状态', draft.sent ? '已发送' : '草稿'],
   ];
   return {
@@ -170,6 +204,7 @@ async function sendAndMark(ctx: PluginContext, draft: Draft): Promise<string> {
     bcc: draft.bcc,
     subject: draft.subject,
     body: draft.body,
+    attachments: draft.attachments,
   });
   draft.sent = true;
   await save(ctx);
@@ -527,7 +562,14 @@ plugin({
       // ── draft tools ──
 
       case 'mail_create_draft': {
-        const draft = createDraft(params.to, params.subject, params.body, params.cc, params.bcc);
+        const draft = createDraft(
+          params.to,
+          params.subject,
+          params.body,
+          params.cc,
+          params.bcc,
+          resolveAttachments(params.attachments),
+        );
         await save(ctx);
         return {
           content: [

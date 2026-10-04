@@ -329,6 +329,25 @@ export class PluginSystem {
     return tools;
   }
 
+  /**
+   * Route a chat-card interaction (Button click / Input submit in a
+   * declarative card) to the plugin that produced the card. Returns false
+   * when the plugin has no backend — the renderer treats that as "event
+   * dropped" and says so in its own console.
+   */
+  sendCardEvent(
+    pluginId: string,
+    toolName: string,
+    eventId: string,
+    kind: 'click' | 'submit',
+    payload?: unknown,
+  ): boolean {
+    const proc = this.processes.get(pluginId);
+    if (!proc) return false;
+    proc.sendCardEvent(toolName, eventId, kind, payload);
+    return true;
+  }
+
   /** Execute one agent tool in its plugin backend (agent loop entry point). */
   async executeTool(
     pluginId: string,

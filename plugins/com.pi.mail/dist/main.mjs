@@ -2630,7 +2630,7 @@ var require_transport = __commonJS({
   "node_modules/pino/lib/transport.js"(exports, module) {
     "use strict";
     var { createRequire } = __require("module");
-    var { existsSync } = __require("node:fs");
+    var { existsSync: existsSync2 } = __require("node:fs");
     var getCallers = require_caller();
     var { join: join2, isAbsolute, sep } = __require("node:path");
     var { fileURLToPath } = __require("node:url");
@@ -2707,7 +2707,7 @@ var require_transport = __commonJS({
           return false;
         }
       }
-      return isAbsolute(path3) && !existsSync(path3);
+      return isAbsolute(path3) && !existsSync2(path3);
     }
     __name(shouldDropPreload, "shouldDropPreload");
     function stripQuotes(value) {
@@ -59298,8 +59298,9 @@ __name(isAuthFailure, "isAuthFailure");
 
 // src/backend/index.ts
 import { execFile } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 // node_modules/nodemailer/dist/esm/mailer/index.js
 import { EventEmitter as EventEmitter2 } from "node:events";
@@ -71248,7 +71249,25 @@ function panelState() {
   return { composing, drafts };
 }
 __name(panelState, "panelState");
-function createDraft(to, subject, body, cc, bcc) {
+var MAX_ATTACHMENTS_TOTAL_BYTES = 25 * 1024 * 1024;
+function resolveAttachments(input) {
+  if (!Array.isArray(input) || input.length === 0) return void 0;
+  let total = 0;
+  const list2 = input.slice(0, 20).map((raw) => {
+    const path3 = String(raw ?? "").trim();
+    if (!path3) throw new Error("\u9644\u4EF6\u8DEF\u5F84\u4E0D\u80FD\u4E3A\u7A7A");
+    if (!existsSync(path3)) throw new Error(`\u9644\u4EF6\u4E0D\u5B58\u5728:${path3}`);
+    const buf = readFileSync(path3);
+    total += buf.length;
+    if (total > MAX_ATTACHMENTS_TOTAL_BYTES) {
+      throw new Error(`\u9644\u4EF6\u603B\u5927\u5C0F\u8D85\u8FC7 ${Math.round(MAX_ATTACHMENTS_TOTAL_BYTES / 1024 / 1024)} MB \u4E0A\u9650`);
+    }
+    return { filename: basename(path3), base64: buf.toString("base64") };
+  });
+  return list2.length > 0 ? list2 : void 0;
+}
+__name(resolveAttachments, "resolveAttachments");
+function createDraft(to, subject, body, cc, bcc, attachments) {
   const draft = {
     id: "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     to: String(to ?? "").slice(0, 500),
@@ -71256,6 +71275,7 @@ function createDraft(to, subject, body, cc, bcc) {
     ...bcc ? { bcc: String(bcc).slice(0, 500) } : {},
     subject: String(subject ?? "(\u65E0\u4E3B\u9898)").slice(0, 300),
     body: String(body ?? "").slice(0, 2e4),
+    ...attachments?.length ? { attachments } : {},
     sent: false,
     createdAt: (/* @__PURE__ */ new Date()).toISOString()
   };
@@ -71268,6 +71288,7 @@ function draftCard(draft) {
     ["\u6536\u4EF6\u4EBA", draft.to || "(\u672A\u586B)"],
     ...draft.cc ? [["\u6284\u9001", draft.cc]] : [],
     ["\u4E3B\u9898", draft.subject],
+    ...draft.attachments?.length ? [["\u9644\u4EF6", draft.attachments.map((a) => a.filename).join("\u3001")]] : [],
     ["\u72B6\u6001", draft.sent ? "\u5DF2\u53D1\u9001" : "\u8349\u7A3F"]
   ];
   return {
@@ -71312,7 +71333,8 @@ async function sendAndMark(ctx, draft) {
     cc: draft.cc,
     bcc: draft.bcc,
     subject: draft.subject,
-    body: draft.body
+    body: draft.body,
+    attachments: draft.attachments
   });
   draft.sent = true;
   await save(ctx);
@@ -71616,7 +71638,14 @@ ${body}${att}` }],
       }
       // ── draft tools ──
       case "mail_create_draft": {
-        const draft = createDraft(params.to, params.subject, params.body, params.cc, params.bcc);
+        const draft = createDraft(
+          params.to,
+          params.subject,
+          params.body,
+          params.cc,
+          params.bcc,
+          resolveAttachments(params.attachments)
+        );
         await save(ctx);
         return {
           content: [

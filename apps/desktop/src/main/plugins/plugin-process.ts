@@ -201,9 +201,19 @@ export class PluginProcess {
     else pending.resolve(msg.result);
   }
 
+  /**
+   * Fire-and-forget: the user interacted with a declarative card this
+   * plugin's tool returned into the chat timeline (ToolCallDisplay → IPC →
+   * here). One-way, like host-event; the backend's onCardEvent decides what
+   * to do with it. A backend written for protocol 3 simply ignores the
+   * message (its pump's default case is a no-op).
+   */
+  sendCardEvent(toolName: string, eventId: string, kind: 'click' | 'submit', payload?: unknown): void {
+    this.post({ type: 'card-event', toolName, eventId, kind, payload });
+  }
+
   /** Execute an agent tool in the backend; resolves with agent-facing result. */
-  executeTool(name: string, params: Record<string, unknown>): Promise<{ content?: PluginToolContent[]; details?: unknown; card?: PluginToolCard }> {
-    if (!this.child) {
+  executeTool(name: string, params: Record<string, unknown>): Promise<{ content?: PluginToolContent[]; details?: unknown; card?: PluginToolCard }> {    if (!this.child) {
       return Promise.reject(new Error('backend not running'));
     }
     const id = 'tool-' + ++this.toolSeq;

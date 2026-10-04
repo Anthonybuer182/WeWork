@@ -60,6 +60,11 @@ interface IncomingMessage {
   error?: string;
   pluginId?: string;
   dataDir?: string;
+  /** card-event (protocol 4). */
+  toolName?: string;
+  eventId?: string;
+  kind?: string;
+  payload?: unknown;
 }
 
 // ── Public API ───────────────────────────────────────────────────────────
@@ -173,6 +178,16 @@ export interface PluginHandlers {
 
   /** The host pushed an event (e.g. browser.urlChanged). */
   onHostEvent?(event: string, data: unknown, ctx: PluginContext): void;
+  /**
+   * The user interacted with a declarative card this plugin's tool returned
+   * into the chat timeline — a Button was clicked (`kind: 'click'`, payload
+   * is the node's props) or an Input was submitted with Enter
+   * (`kind: 'submit'`, payload is the entered value). `eventId` is the id the
+   * card node declared. Fire-and-forget: nothing the handler returns reaches
+   * the card; make the card reflect follow-up state through a NEW tool result.
+   * Requires the manifest to declare a messageRenderer for `toolName`.
+   */
+  onCardEvent?(toolName: string, eventId: string, kind: 'click' | 'submit', payload: unknown, ctx: PluginContext): void;
 }
 
 /** How long a capability call waits before giving up. */
@@ -510,6 +525,29 @@ export function plugin(handlers: PluginHandlers): void {
           log('error', `host event "${String(msg.event)}" handler threw: ${describe(err)}`);
         }
         break;
+
+      case 'card-event': {
+        if (!handlers.onCardEvent) {
+          // The card was rendered because the manifest declares a
+          // messageRenderer, but this backend never wired the handler — a
+          // dead button is exactly the silent failure the SDK exists to
+          // prevent, so it gets a log line with the event id to look for.
+          log('warn', `card event "${String(msg.eventId)}" on ${String(msg.toolName)} ignored — implement onCardEvent`);
+          break;
+        }
+        try {
+          handlers.onCardEvent(
+            msg.toolName ?? '',
+            msg.eventId ?? '',
+            msg.kind === 'submit' ? 'submit' : 'click',
+            msg.payload,
+            ctx,
+          );
+        } catch (err) {
+          log('error', `card event "${String(msg.eventId)}" handler threw: ${describe(err)}`);
+        }
+        break;
+      }
 
       case 'ui-port': {
         const port = event.ports?.[0] as PanelPort | undefined;

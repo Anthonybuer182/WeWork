@@ -92,14 +92,6 @@ function pluginPanelId(pluginId: string, panelId: string): string {
   return `plugin:${pluginId}:${panelId}`;
 }
 
-function keepAliveFor(source: string, declared?: PanelKeepAlive): PanelKeepAlive {
-  // Host panels manage their own mounts — never keep them alive behind the
-  // user's back. Plugin panels default to 'lru' so switching away and back
-  // does not reload the page from scratch.
-  if (source === 'host') return 'never';
-  return declared ?? 'lru';
-}
-
 /** Panels of one region, in rail order: top group first, then bottom. */
 function regionPanels(panels: PanelEntry[], region: PanelRegion): PanelEntry[] {
   return panels
@@ -243,7 +235,10 @@ export const usePanelStore = create<PanelStoreState>()(
                 panelId: panel.id,
                 entry: panel.entry,
                 hidden: panel.hidden === true,
-                keepAlive: keepAliveFor(plugin.id, panel.keepAlive),
+                // Default 'lru' so switching away and back does not reload
+                // the page from scratch. (Host panels carry their own
+                // keepAlive and never route through this mapping.)
+                keepAlive: panel.keepAlive ?? 'lru',
                 region: panel.region ?? 'right',
                 anchor: panel.anchor,
                 order: panel.order,

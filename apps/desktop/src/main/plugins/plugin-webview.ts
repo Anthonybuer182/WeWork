@@ -1,6 +1,6 @@
 import { join } from 'path';
 import type { BrowserWindow, WebContents } from 'electron';
-import { WebContentsView, ipcMain } from 'electron';
+import { WebContentsView, ipcMain, shell } from 'electron';
 import { panelUrl } from '@pi/types';
 import type { BrowserManager } from '@main/browser/browser-manager';
 import type { LiveSlotRegistry } from './slots';
@@ -385,6 +385,33 @@ export class PluginWebViews {
     });
     // Start hidden at 0×0: the renderer reports real bounds in show().
     view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+
+    // A plugin page must not escape the panel system. `window.open` /
+    // target=_blank would pop a child window outside the app's layout, and a
+    // top-frame navigation to the wider web would REPLACE the panel page —
+    // the panel, its backend channel and its open params gone with it. (The
+    // browser engine carries the same two guards for the same reason.)
+    // External http(s) links open in the user's browser instead; navigations
+    // within the plugin's own origin are its own business (multi-page UIs).
+    view.webContents.setWindowOpenHandler(({ url }) => {
+      if (/^https?:/i.test(url)) {
+        void shell.openExternal(url).catch(() => {});
+      }
+      return { action: 'deny' };
+    });
+    view.webContents.on('will-navigate', (event, url) => {
+      let target: URL | null = null;
+      try {
+        target = new URL(url);
+      } catch {
+        /* unparseable → treat as external below */
+      }
+      if (target && target.protocol === 'pi-plugin:' && target.host === pluginId) return;
+      event.preventDefault();
+      if (target && /^https?:$/.test(target.protocol)) {
+        void shell.openExternal(url).catch(() => {});
+      }
+    });
 
     // The pi-plugin:// handler injects __pi_sdk.js into HTML responses, so the
     // page gets the SDK exactly as it did inside an iframe. The panel id on the

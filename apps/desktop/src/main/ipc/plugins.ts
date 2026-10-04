@@ -47,6 +47,19 @@ export function registerPluginIpcHandlers(system: PluginSystem): void {
     }
   });
 
+  // Declarative card interactions from the chat timeline (see ToolCallDisplay
+  // and DeclarativeRenderer). Fire-and-forget: {ok:false} here just means the
+  // plugin has no backend to receive it.
+  ipcMain.handle(
+    'pi:plugin:card-event',
+    (_event, payload: { pluginId?: string; toolName?: string; eventId?: string; kind?: string; payload?: unknown }) => {
+      const { pluginId, toolName, eventId, kind } = payload ?? {};
+      if (!pluginId || !toolName || !eventId) return { ok: false, error: 'missing pluginId, toolName or eventId' };
+      const ok = system.sendCardEvent(pluginId, toolName, eventId, kind === 'submit' ? 'submit' : 'click', payload?.payload);
+      return ok ? { ok: true } : { ok: false, error: `plugin "${pluginId}" has no backend` };
+    },
+  );
+
   // ── Marketplace ──
   ipcMain.handle('pi:plugin:market:catalog', async (_event, payload?: { force?: boolean }) => {
     try {

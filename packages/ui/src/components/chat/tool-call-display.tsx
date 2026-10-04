@@ -1,5 +1,5 @@
 import { Loader2, Sparkles } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { ToolCallBlock, ToolResultBlock } from '@pi/types';
 import { DeclarativeRenderer } from '@/components/plugins/declarative/declarative-renderer';
@@ -69,6 +69,40 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
     [plugins],
   );
   const rendererByType = useMemo(() => new Map(messageRenderers.map((m) => [m.type, m])), [messageRenderers]);
+  // Card interactions route to the plugin that owns the tool, over the same
+  // fire-and-forget IPC the panels' context menu uses. Web build: no host to
+  // route through — events are dropped (the cards render read-only there).
+  const cardEventTarget = useMemo(
+    () => new Map(plugins.flatMap((p) => p.tools.map((t) => [t.name, p.id] as const))),
+    [plugins],
+  );
+  const handleCardEvent = useCallback(
+    (kind: string, event: { eventId?: string }, payload: unknown) => {
+      const eventId = event?.eventId;
+      if (!eventId || !result?.toolName) return;
+      const pluginId = cardEventTarget.get(result.toolName);
+      if (!pluginId) {
+        console.warn(`[card] no plugin owns tool "${result.toolName}" — event "${eventId}" dropped`);
+        return;
+      }
+      const api = (
+        window as unknown as {
+          electronAPI?: { invoke: (channel: string, ...args: unknown[]) => Promise<unknown> };
+        }
+      ).electronAPI;
+      if (!api?.invoke) return;
+      api
+        .invoke('pi:plugin:card-event', { pluginId, toolName: result.toolName, eventId, kind, payload })
+        .then((res) => {
+          const r = res as { ok?: boolean; error?: string } | null;
+          if (r && r.ok === false) {
+            console.warn(`[card] ${result.toolName} event "${eventId}" dropped: ${r.error}`);
+          }
+        })
+        .catch(() => {});
+    },
+    [cardEventTarget, result?.toolName],
+  );
   const hasPluginCard =
     !!result?.card && !!result.toolName && rendererByType.has(result.toolName);
   // Streaming args card: while the tool runs, render its args live
@@ -181,7 +215,7 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
             <Sparkles className="h-3 w-3" />
             {result.toolName}
           </div>
-          <DeclarativeRenderer tree={result.card} onEvent={() => undefined} />
+          <DeclarativeRenderer tree={result.card} onEvent={handleCardEvent} />
         </div>
       )}
 

@@ -48,7 +48,7 @@ function RailIcon({ panel }: { panel: PanelEntry }) {
       />
     );
   }
-  return <Icon className="h-4.5 w-4.5" />;
+  return <Icon className="h-6 w-6" />;
 }
 
 function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion }) {

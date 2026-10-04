@@ -4,6 +4,7 @@ import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import type { MarketEntry, MarketIndex, PluginManifest } from '@pi/types';
+import { MIN_SUPPORTED_API_VERSION, PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import type { PluginRegistry } from './registry';
 import { satisfiesVersion } from './semver';
 import { HOST_ENGINE_KEY } from './registry';
@@ -121,6 +122,22 @@ export class PluginMarketplace {
     if (range && !satisfiesVersion(appVersion, range)) {
       throw new Error(
         `"${manifest.id}" ${manifest.version} requires ${HOST_ENGINE_KEY} ${range}, host is ${appVersion}`,
+      );
+    }
+
+    // apiVersion negotiation — the same range the registry scan enforces,
+    // applied here so an out-of-range plugin fails at INSTALL time with a
+    // message saying which side has to move, instead of landing as an inert
+    // "incompatible" entry the user has to uninstall again.
+    const declared = manifest.apiVersion;
+    if (
+      declared !== undefined &&
+      (declared < MIN_SUPPORTED_API_VERSION || declared > PLUGIN_PROTOCOL_VERSION)
+    ) {
+      throw new Error(
+        declared < MIN_SUPPORTED_API_VERSION
+          ? `"${manifest.id}" ${manifest.version} targets protocol ${declared}, this host supports ${MIN_SUPPORTED_API_VERSION}–${PLUGIN_PROTOCOL_VERSION} — the plugin is too old, update the plugin`
+          : `"${manifest.id}" ${manifest.version} targets protocol ${declared}, this host supports ${MIN_SUPPORTED_API_VERSION}–${PLUGIN_PROTOCOL_VERSION} — update the app`,
       );
     }
 

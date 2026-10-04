@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>开发文档</title>
+<link rel="stylesheet" href="./style.css">
+<!--
+  The host injects pi-plugin://<id>/__pi_sdk.js as the first thing in <head>
+  at serve time — that is where window.piSDK comes from, and where the shell's
+  theme tokens get applied. This page never calls piSDK itself: it is a static
+  document reader, which is exactly the point — a panel is just a web page.
+
+  marked is vendored into ./lib/, the markdown is synced from the repo's
+  docs/ by scripts/sync-devdocs.mjs. Nothing is fetched from the network.
+-->
+</head>
+<body>
+  <header id="topbar">
+    <div id="doc-title">…</div>
+    <span id="protocol-stamp">协议 v3</span>
+  </header>
+  <nav id="toc" aria-label="本页目录"></nav>
+  <main id="content" class="markdown"><p class="loading">加载中…</p></main>
+  <div id="toast"></div>
+  <script src="./lib/marked.umd.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown, Puzzle, Undo2, Search } from 'lucide-react';
 import type { MarketEntry, PluginInfo, PluginSettingInfo } from '@pi/types';
-import { describePermission } from '@pi/types';
+import { describePermission, MIN_SUPPORTED_API_VERSION, PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { usePluginStore } from '@/stores/plugin-store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -330,6 +330,20 @@ function CatalogItem({ entry }: { entry: MarketEntry }) {
   const error = marketErrors[entry.id];
   const updatable = existing && existing.version !== entry.version;
 
+  // Catalog-level apiVersion pre-check (stageInstall enforces the same range
+  // against the manifest inside the zip and stays authoritative — the index
+  // could lie). Saying why beats offering a button that only fails after the
+  // download. Old indexes without apiVersion are simply not checked here.
+  const outOfRange =
+    entry.apiVersion !== undefined &&
+    (entry.apiVersion < MIN_SUPPORTED_API_VERSION || entry.apiVersion > PLUGIN_PROTOCOL_VERSION);
+  const rangeNote =
+    entry.apiVersion === undefined
+      ? null
+      : entry.apiVersion < MIN_SUPPORTED_API_VERSION
+        ? `插件协议过旧(${entry.apiVersion},本机支持 ${MIN_SUPPORTED_API_VERSION}–${PLUGIN_PROTOCOL_VERSION}),请找作者更新`
+        : `插件比客户端新(${entry.apiVersion},本机支持 ${MIN_SUPPORTED_API_VERSION}–${PLUGIN_PROTOCOL_VERSION}),请升级客户端`;
+
   return (
     <div data-catalog-plugin={entry.id} className="flex items-start gap-3 rounded-lg border p-3">
       <div className="min-w-0 flex-1">
@@ -339,6 +353,7 @@ function CatalogItem({ entry }: { entry: MarketEntry }) {
           {existing ? (
             <Badge variant="secondary">{updatable ? `可更新(${existing.version} → ${entry.version})` : '已安装'}</Badge>
           ) : null}
+          {outOfRange ? <Badge variant="destructive">{rangeNote}</Badge> : null}
           {entry.size ? <span className="text-[10px] text-muted-foreground">{formatSize(entry.size)}</span> : null}
         </div>
         {entry.description ? <div className="mt-1 text-xs text-muted-foreground">{entry.description}</div> : null}
@@ -355,7 +370,9 @@ function CatalogItem({ entry }: { entry: MarketEntry }) {
           </div>
         ) : null}
       </div>
-      <InstallButton entry={entry} phase={phase} installed={!!existing} updatable={!!updatable} onInstall={() => installPlugin(entry.id)} />
+      {outOfRange ? null : (
+        <InstallButton entry={entry} phase={phase} installed={!!existing} updatable={!!updatable} onInstall={() => installPlugin(entry.id)} />
+      )}
     </div>
   );
 }
