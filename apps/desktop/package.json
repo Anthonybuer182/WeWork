@@ -12,6 +12,7 @@
     "start": "electron .",
     "pack:mac": "pnpm build && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --mac",
     "pack:win": "pnpm build && node scripts/download-bash-bundle.cjs && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --win",
+    "pack:win:cross": "pnpm build && node scripts/download-bash-bundle.cjs && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --win --config.win.signAndEditExecutable=false",
     "pack:linux": "pnpm build && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --linux",
     "pack:all": "pnpm build && node scripts/download-bash-bundle.cjs && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --mac --win --linux"
   },

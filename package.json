@@ -32,8 +32,21 @@
     "clean": "turbo run clean",
     "pack:mac": "cd apps/desktop && pnpm pack:mac",
     "pack:win": "cd apps/desktop && pnpm pack:win",
+    "pack:win:cross": "cd apps/desktop && pnpm pack:win:cross",
     "pack:linux": "cd apps/desktop && pnpm pack:linux",
     "pack:all": "cd apps/desktop && pnpm pack:all"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "darwin",
+        "win32"
+      ],
+      "cpu": [
+        "x64",
+        "arm64"
+      ]
+    }
   },
   "devDependencies": {
     "adm-zip": "^0.6.1",
