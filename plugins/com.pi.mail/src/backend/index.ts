@@ -376,10 +376,18 @@ plugin({
       case 'link.open': {
         const url = String(params.url ?? '').trim();
         if (!/^https?:\/\//i.test(url)) throw new Error('只允许打开 http(s) 链接');
-        const cmd = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
-        execFile(cmd, [url], (err) => {
-          if (err) ctx.log.warn(`打开链接失败:${err.message}`);
-        });
+        if (process.platform === 'win32') {
+          // `start` 是 cmd 内建命令，没有 start.exe 可执行文件，必须经 cmd 调起；
+          // 第一个空参数是窗口标题，缺了它 URL 会被当成标题。
+          execFile('cmd', ['/c', 'start', '', url], (err) => {
+            if (err) ctx.log.warn(`打开链接失败:${err.message}`);
+          });
+        } else {
+          const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open';
+          execFile(cmd, [url], (err) => {
+            if (err) ctx.log.warn(`打开链接失败:${err.message}`);
+          });
+        }
         return { ok: true };
       }
 
@@ -408,11 +416,16 @@ plugin({
         const uid = Number(params.uid);
         const partId = String(params.partId ?? '');
         if (!Number.isFinite(uid) || !partId) throw new Error('附件参数无效(uid/partId)');
-        const safeName =
-          String(params.filename ?? 'attachment')
-            .replace(/[\/\\:]+/g, '-')
-            .trim()
-            .slice(0, 120) || 'attachment';
+        const sanitized = String(params.filename ?? 'attachment')
+          .replace(/[\/\\:]+/g, '-')
+          // Windows 保留字符与控制字符
+          .replace(/[<>"|?*\u0000-\u001f]/g, '')
+          .replace(/[. ]+$/, '')
+          .trim();
+        // Windows 保留设备名(CON/NUL/COM1…)即使带扩展名也不能作文件名
+        const safeName = (
+          /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(sanitized) ? 'attachment' : sanitized
+        ).slice(0, 120) || 'attachment';
         const dest = join(homedir(), 'Downloads', 'pi-mail', safeName);
         const saved = await engine.downloadAttachment(mailbox, uid, partId, dest);
         await ctx

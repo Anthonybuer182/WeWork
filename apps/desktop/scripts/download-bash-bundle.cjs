@@ -2,10 +2,15 @@
 /**
  * Download MinGit for bundling with the Windows installer.
  *
- * Standard MinGit provides bash.exe (GNU Bash 4.x), git.exe, and GNU coreutils
- * (ls, cat, grep, sed, awk, find, mkdir, rm, etc.) in a ~50 MB zip
- * (~250 MB extracted). The bundle is placed in bash-bundle/ and included as
- * extraResources in the Windows NSIS installer.
+ * The **busybox** MinGit flavor is required here: standard MinGit ships NO
+ * shell at all (no bash.exe, no ash.exe — only dash.exe), and the agent's bash
+ * tool has no cmd.exe fallback, so a standard-MinGit bundle would leave every
+ * clean Windows machine with a dead shell. The busybox flavor provides
+ * ash.exe (busybox shell + coreutils: ls, cat, grep, sed, awk, find, mkdir,
+ * rm, etc.) in a ~40 MB zip. injectBundledShell (src/main/index.ts) searches
+ * mingw64/bin for bash.exe then ash.exe and finds ash.exe here. The bundle is
+ * placed in bash-bundle/ and included as extraResources in the Windows NSIS
+ * installer.
  *
  * Caching:
  *   - bash-bundle/.version tracks the downloaded release tag
@@ -246,7 +251,8 @@ async function main() {
 
   // ── Find asset ──
   const cleanVersion = tag.replace(/^v/, '').replace(/\.windows\.\d+$/, '');
-  const assetName = `MinGit-${cleanVersion}-64-bit.zip`;
+  // busybox flavor — see the header comment for why standard MinGit is not usable.
+  const assetName = `MinGit-${cleanVersion}-busybox-64-bit.zip`;
   const asset = assets.find((a) => a.name === assetName);
 
   if (!asset) {
@@ -308,13 +314,13 @@ async function main() {
   log(`Copying to ${BUNDLE_DIR}...`);
 
   if (copySource === TEMP_DIR) {
-    // Copy each entry individually (cp -R preserves Windows symlinks)
+    // Copy each entry individually.
     for (const entry of entries) {
       const src = path.join(TEMP_DIR, entry.name);
-      execSync(`cp -R "${src}" "${BUNDLE_DIR}/"`, { stdio: 'inherit' });
+      fs.cpSync(src, path.join(BUNDLE_DIR, entry.name), { recursive: true });
     }
   } else {
-    execSync(`cp -R "${copySource}/" "${BUNDLE_DIR}/"`, { stdio: 'inherit' });
+    fs.cpSync(copySource, BUNDLE_DIR, { recursive: true });
   }
 
   // ── Version marker ──

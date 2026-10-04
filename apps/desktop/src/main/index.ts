@@ -222,10 +222,11 @@ function injectBundledShell(settingsManager: SettingsManager): void {
   // The bundled shell is at resources/bash-bundle/ (from extraResources).
   const bundleRoot = join(process.resourcesPath, 'bash-bundle');
 
-  // Standard MinGit ships bash.exe in mingw64/bin/. BusyBox-only builds only
-  // have ash.exe — keep it as a fallback (POSIX sh, limited but functional).
+  // BusyBox MinGit ships ash.exe (POSIX sh, limited but functional) next to
+  // busybox.exe. MinGit ≤2.55 lays this out under mingw64/bin/; 2.56+ moved
+  // to ucrt64/bin/ — search both, plus the generic locations.
   const shellNames = ['bash.exe', 'ash.exe'];
-  const binDirs = ['mingw64/bin', 'bin', 'usr/bin'].map((d) => join(bundleRoot, d));
+  const binDirs = ['mingw64/bin', 'ucrt64/bin', 'bin', 'usr/bin'].map((d) => join(bundleRoot, d));
 
   let shellPath: string | null = null;
   for (const dir of binDirs) {
@@ -245,9 +246,10 @@ function injectBundledShell(settingsManager: SettingsManager): void {
 
   // Integrity check: warn (but proceed) if git.exe is missing — the agent
   // can still run bash commands, but git operations will fail.
-  const gitExe = join(bundleRoot, 'mingw64', 'bin', 'git.exe');
-  if (!existsSync(gitExe)) {
-    console.warn(`[bash-bundle] git.exe not found at ${gitExe}. Git operations may fail.`);
+  const gitCandidates = ['mingw64/bin', 'ucrt64/bin', 'cmd'].map((d) => join(bundleRoot, d, 'git.exe'));
+  const gitExe = gitCandidates.find((p) => existsSync(p));
+  if (!gitExe) {
+    console.warn(`[bash-bundle] git.exe not found (searched ${gitCandidates.join(', ')}). Git operations may fail.`);
   }
 
   console.log(`[bash-bundle] Using shell: ${shellPath}`);
@@ -258,6 +260,7 @@ function injectBundledShell(settingsManager: SettingsManager): void {
   //   C:\foo\bar → /c/foo/bar
   const pathDirs = [
     join(bundleRoot, 'mingw64', 'bin'),
+    join(bundleRoot, 'ucrt64', 'bin'),
     join(bundleRoot, 'usr', 'bin'),
     join(bundleRoot, 'cmd'),
     join(bundleRoot, 'bin'),

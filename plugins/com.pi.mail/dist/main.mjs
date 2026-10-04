@@ -48566,6 +48566,18 @@ function plugin(handlers) {
           log("error", `host event "${String(msg.event)}" handler threw: ${describe(err)}`);
         }
         break;
+      case "card-event": {
+        if (!handlers.onCardEvent) {
+          log("warn", `card event "${String(msg.eventId)}" on ${String(msg.toolName)} ignored \u2014 implement onCardEvent`);
+          break;
+        }
+        try {
+          handlers.onCardEvent(msg.toolName ?? "", msg.eventId ?? "", msg.kind === "submit" ? "submit" : "click", msg.payload, ctx);
+        } catch (err) {
+          log("error", `card event "${String(msg.eventId)}" handler threw: ${describe(err)}`);
+        }
+        break;
+      }
       case "ui-port": {
         const port = event.ports?.[0];
         if (!port)
@@ -71482,10 +71494,16 @@ plugin({
       case "link.open": {
         const url = String(params.url ?? "").trim();
         if (!/^https?:\/\//i.test(url)) throw new Error("\u53EA\u5141\u8BB8\u6253\u5F00 http(s) \u94FE\u63A5");
-        const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-        execFile(cmd, [url], (err) => {
-          if (err) ctx.log.warn(`\u6253\u5F00\u94FE\u63A5\u5931\u8D25:${err.message}`);
-        });
+        if (process.platform === "win32") {
+          execFile("cmd", ["/c", "start", "", url], (err) => {
+            if (err) ctx.log.warn(`\u6253\u5F00\u94FE\u63A5\u5931\u8D25:${err.message}`);
+          });
+        } else {
+          const cmd = process.platform === "darwin" ? "open" : "xdg-open";
+          execFile(cmd, [url], (err) => {
+            if (err) ctx.log.warn(`\u6253\u5F00\u94FE\u63A5\u5931\u8D25:${err.message}`);
+          });
+        }
         return { ok: true };
       }
       case "folder.list":
@@ -71510,7 +71528,8 @@ plugin({
         const uid = Number(params.uid);
         const partId = String(params.partId ?? "");
         if (!Number.isFinite(uid) || !partId) throw new Error("\u9644\u4EF6\u53C2\u6570\u65E0\u6548(uid/partId)");
-        const safeName = String(params.filename ?? "attachment").replace(/[\/\\:]+/g, "-").trim().slice(0, 120) || "attachment";
+        const sanitized = String(params.filename ?? "attachment").replace(/[\/\\:]+/g, "-").replace(/[<>"|?*\u0000-\u001f]/g, "").replace(/[. ]+$/, "").trim();
+        const safeName = (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(sanitized) ? "attachment" : sanitized).slice(0, 120) || "attachment";
         const dest = join(homedir(), "Downloads", "pi-mail", safeName);
         const saved = await engine.downloadAttachment(mailbox, uid, partId, dest);
         await ctx.call("notify.show", { title: "\u9644\u4EF6\u5DF2\u4E0B\u8F7D", body: saved.path }).catch(() => {

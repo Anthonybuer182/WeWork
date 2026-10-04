@@ -1,6 +1,6 @@
 import { protocol } from 'electron';
 import { existsSync, readFileSync, statSync, openSync, readSync, closeSync } from 'fs';
-import { extname, join, resolve, sep } from 'path';
+import { extname, isAbsolute, join, resolve, sep } from 'path';
 import type { PluginRegistry } from './registry';
 import { PANEL_QUERY_PARAM } from '@pi/types';
 import { PI_SDK_FILENAME, buildPluginSdkJs } from './plugin-sdk-js';
@@ -160,7 +160,8 @@ function serveWorkspaceFile(registry: PluginRegistry, pluginId: string, url: URL
     return new Response('Forbidden: plugin lacks filesystem permission', { status: 403 });
   }
   const filePath = url.searchParams.get('path') ?? '';
-  if (!filePath || !filePath.startsWith('/')) {
+  // isAbsolute covers both POSIX (`/Users/…`) and Windows (`C:\Users\…`) forms.
+  if (!filePath || !isAbsolute(filePath)) {
     return new Response('Bad Request: absolute path required', { status: 400 });
   }
   if (!existsSync(filePath)) {
