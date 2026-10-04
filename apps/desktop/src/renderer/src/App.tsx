@@ -149,12 +149,13 @@ function AppContent() {
         const target = panelId ?? usePanelStore.getState().panels.find((p) => p.source === event.pluginId)?.id;
         if (target) {
           openPanel(target, { focus: event.focus });
-          // Surface the panel's own side. Only the right column collapses to a
-          // rail, so only a right-region panel needs to be revealed — pulling
-          // it open for a left-region panel would be simply wrong.
+          // Surface the panel's own side: a backend-opened panel must not land
+          // in a collapsed column the user cannot see. focus=false means
+          // "badge, don't steal focus" — no reveal in that case, either region.
           const region = usePanelStore.getState().panels.find((p) => p.id === target)?.region;
-          if (event.focus !== false && region === 'right') {
-            useUIStore.getState().setRightPanelOpen(true);
+          if (event.focus !== false) {
+            if (region === 'right') useUIStore.getState().setRightPanelOpen(true);
+            else if (region === 'left') useUIStore.getState().setSidebarOpen(true);
           }
         }
       } else if (event.type === 'plugins-changed') {

@@ -36,6 +36,7 @@ interface UIState {
   toggleSidebar: () => void;
   toggleRightPanel: () => void;
   toggleCenterPanel: () => void;
+  setSidebarOpen: (open: boolean) => void;
   setRightPanelOpen: (open: boolean) => void;
   setRightPanelWidth: (width: number) => void;
   setLeftPanelWidth: (width: number) => void;
@@ -98,6 +99,7 @@ export const useUIStore = create<UIState>()(
       // the toggle's pressed state follows the same definition, so clicking
       // while maximized reveals the chat by dropping the maximize.
       toggleCenterPanel: () => set((s) => ({ centerPanelOpen: !s.centerPanelOpen })),
+      setSidebarOpen: (open) => set({ sidebarOpen: open }),
       setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
       setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),

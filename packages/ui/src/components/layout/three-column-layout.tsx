@@ -180,31 +180,38 @@ export function ThreeColumnLayout({
 
         {/* Sidebar + Center */}
         <div className="flex flex-1 overflow-hidden">
+          {/* Hidden, not unmounted, when collapsed — same reasoning as the
+              centre column below. The sidebar hosts the left PanelHost, whose
+              keepAlive:'always' panels (session list, file tree, settings
+              forms) must survive a collapse/expand cycle with their state.
+              Unmounting here silently defeated that policy. The resize handle
+              is chrome, not state, so it still goes away. */}
+          <div
+            style={sidebarOpen ? { width: currentLeftWidth } : undefined}
+            className={cn(
+              'flex-shrink-0 overflow-hidden border-r',
+              !sidebarOpen && 'hidden',
+            )}
+          >
+            {leftSidebar}
+          </div>
           {sidebarOpen && (
-            <>
-              <div
-                style={{ width: currentLeftWidth }}
-                className="flex-shrink-0 overflow-hidden border-r"
-              >
-                {leftSidebar}
-              </div>
-              <Separator
-                orientation="vertical"
-                role="separator"
-                tabIndex={0}
-                aria-label="Resize sidebar"
-                aria-valuenow={currentLeftWidth}
-                aria-valuemin={minLeftWidth}
-                aria-valuemax={maxLeftWidth}
-                aria-orientation="vertical"
-                className="w-1 cursor-col-resize hover:bg-primary/50 transition-colors"
-                onMouseDown={() => setDragging('left')}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowLeft') handleKeyboardResize('left', -10);
-                  if (e.key === 'ArrowRight') handleKeyboardResize('left', 10);
-                }}
-              />
-            </>
+            <Separator
+              orientation="vertical"
+              role="separator"
+              tabIndex={0}
+              aria-label="Resize sidebar"
+              aria-valuenow={currentLeftWidth}
+              aria-valuemin={minLeftWidth}
+              aria-valuemax={maxLeftWidth}
+              aria-orientation="vertical"
+              className="w-1 cursor-col-resize hover:bg-primary/50 transition-colors"
+              onMouseDown={() => setDragging('left')}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft') handleKeyboardResize('left', -10);
+                if (e.key === 'ArrowRight') handleKeyboardResize('left', 10);
+              }}
+            />
           )}
           {/* Hidden, not unmounted: the centre column owns the composer, and a
               plugin panel can trigger a send from fullscreen (`chat.send`).
