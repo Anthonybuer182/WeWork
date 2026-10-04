@@ -61,10 +61,33 @@ export class PluginRegistry {
   /**
    * Marketplace index URL. The environment variable wins, so a dev session can
    * point at a throwaway registry without touching the on-disk state; the
-   * `_state.json` value is what a normal install uses.
+   * `_state.json` value is what a normal install uses. Last resort is the
+   * market bundled inside the install image, so a fresh install can install
+   * the first-party plugins offline.
    */
   get registryUrl(): string | undefined {
-    return process.env.PI_PLUGIN_REGISTRY ?? this.stateFile.registry;
+    return (
+      process.env.PI_PLUGIN_REGISTRY ??
+      this.stateFile.registry ??
+      this.bundledRegistryIndex()
+    );
+  }
+
+  /**
+   * The offline market shipped via extraResources at `<resources>/market`.
+   * In dev, `process.resourcesPath` points into the Electron dist where no
+   * market exists, so this stays undefined and nothing changes. When the
+   * hosted registry (plugins.pi-coding.dev) goes live, its priority relative
+   * to the bundled copy is a deliberate choice to make then — env/state
+   * overrides keep winning either way.
+   */
+  private bundledRegistryIndex(): string | undefined {
+    try {
+      const bundled = join(process.resourcesPath, 'market', 'index.json');
+      return existsSync(bundled) ? bundled : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   get pluginsRoot(): string {

@@ -33,6 +33,12 @@ const EXCLUDED_FILES = /^(\.DS_Store|package-lock\.json|pnpm-lock\.yaml|tsconfig
 
 const outFlag = process.argv.indexOf('--out');
 const OUT = outFlag >= 0 ? resolve(process.argv[outFlag + 1]) : join(REPO, 'market-dist');
+/**
+ * Packaging flow (apps/desktop pack:*) runs this with --skip-state: it wants
+ * the market files on disk but must not repoint the build machine's
+ * _state.json#registry at them as a side effect.
+ */
+const SKIP_STATE = process.argv.includes('--skip-state');
 
 /**
  * One fixed timestamp for every zip entry.
@@ -87,6 +93,21 @@ for (const dir of pluginIds) {
     continue;
   }
 
+  // A manifest entry is a promise about the zip's contents. `ui-dist/` is
+  // gitignored build output, so a clean checkout that skips the plugin build
+  // would otherwise produce a zip with no panel — discovered only at load
+  // time on a user machine. Fail here, where the cause is one command away.
+  const declared = [manifest.backend, manifest.icon]
+    .concat((manifest.contributes?.panels ?? []).map((p) => p.entry))
+    .filter(Boolean);
+  const missing = declared.filter((rel) => !existsSync(join(root, rel)));
+  if (missing.length > 0) {
+    console.error(`  ✗ ${dir}: manifest references missing build outputs:`);
+    for (const rel of missing) console.error(`      ${rel}`);
+    console.error(`      build the plugin first (npm run build inside plugins/${dir})`);
+    process.exit(1);
+  }
+
   const zip = new AdmZip();
   let bytes = 0;
   for (const rel of collectPayload(root)) {
@@ -110,7 +131,11 @@ for (const dir of pluginIds) {
     description: manifest.description ?? '',
     version: manifest.version,
     apiVersion: manifest.apiVersion,
-    url: zipPath,
+    // Relative to the index. An absolute build-machine path would be baked
+    // into the index and then dangle inside a packaged app installed
+    // somewhere else; the marketplace resolves relative entries against the
+    // index URL, so a relocated (bundled or hosted) market keeps working.
+    url: zipName,
     sha256,
     size: zipBytes.length,
     permissions: manifest.permissions ?? [],
@@ -130,19 +155,23 @@ writeFileSync(
 // plugins are enabled — clobbering that would silently re-enable the ones the
 // user turned off.
 const stateFile = join(homedir(), '.pi', 'agent', 'plugins', '_state.json');
-let state = {};
-try {
-  state = JSON.parse(readFileSync(stateFile, 'utf-8'));
-} catch {
-  /* first run: no state file yet */
+if (SKIP_STATE) {
+  console.log('skipping _state.json update (--skip-state)');
+} else {
+  let state = {};
+  try {
+    state = JSON.parse(readFileSync(stateFile, 'utf-8'));
+  } catch {
+    /* first run: no state file yet */
+  }
+  mkdirSync(dirname(stateFile), { recursive: true });
+  writeFileSync(stateFile, `${JSON.stringify({ ...state, registry: indexPath }, null, 2)}\n`);
 }
-mkdirSync(dirname(stateFile), { recursive: true });
-writeFileSync(stateFile, `${JSON.stringify({ ...state, registry: indexPath }, null, 2)}\n`);
 
 const total = entries.reduce((n, e) => n + e.size, 0);
 console.log(`\n${entries.length} plugin(s), ${(total / 1024 / 1024).toFixed(1)} MB total`);
 console.log(`index:  ${indexPath}`);
-console.log(`state:  ${stateFile} → registry`);
+if (!SKIP_STATE) console.log(`state:  ${stateFile} → registry`);
 console.log(`
 next:
   1. make sure nothing is installed from a previous run:

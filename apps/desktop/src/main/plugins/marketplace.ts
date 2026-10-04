@@ -2,7 +2,7 @@ import { net } from 'electron';
 import AdmZip from 'adm-zip';
 import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, isAbsolute } from 'path';
 import type { MarketEntry, MarketIndex, PluginManifest } from '@pi/types';
 import { MIN_SUPPORTED_API_VERSION, PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import type { PluginRegistry } from './registry';
@@ -55,6 +55,20 @@ export class PluginMarketplace {
     return index;
   }
 
+  /**
+   * Catalog entry URLs may be relative: a bundled market ships its zips
+   * beside the index, and the index cannot know the install path ahead of
+   * time (and a hosted market may want to move its zips with the index).
+   * Absolute paths and full URLs pass through untouched.
+   */
+  private resolveEntryUrl(url: string): string {
+    if (isAbsolute(url) || /^[a-z][a-z0-9+.-]*:/i.test(url)) return url;
+    if (/^https?:/i.test(this.registryUrl)) {
+      return this.registryUrl.replace(/[^/]*$/, '') + url.replace(/^\.\//, '');
+    }
+    return join(dirname(this.registryUrl), url);
+  }
+
   private async fetchBytes(url: string): Promise<Buffer> {
     if (/^https?:\/\//i.test(url)) {
       const res = await net.fetch(url);
@@ -76,7 +90,7 @@ export class PluginMarketplace {
     onPhase?: (phase: 'downloading' | 'verifying' | 'installing') => void,
   ): Promise<{ stagedDir: string; manifest: PluginManifest }> {
     onPhase?.('downloading');
-    const zipBytes = await this.fetchBytes(entry.url);
+    const zipBytes = await this.fetchBytes(this.resolveEntryUrl(entry.url));
 
     onPhase?.('verifying');
     // Always. A missing digest used to skip the check silently, so an index

@@ -10,10 +10,10 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf out dist",
     "start": "electron .",
-    "pack:mac": "pnpm build && node scripts/prepare-pack.cjs && electron-builder --mac",
-    "pack:win": "pnpm build && node scripts/download-bash-bundle.cjs && node scripts/prepare-pack.cjs && electron-builder --win",
-    "pack:linux": "pnpm build && node scripts/prepare-pack.cjs && electron-builder --linux",
-    "pack:all": "pnpm build && node scripts/prepare-pack.cjs && electron-builder --mac --win --linux"
+    "pack:mac": "pnpm build && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --mac",
+    "pack:win": "pnpm build && node scripts/download-bash-bundle.cjs && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --win",
+    "pack:linux": "pnpm build && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --linux",
+    "pack:all": "pnpm build && node scripts/download-bash-bundle.cjs && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --mac --win --linux"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.78.1",

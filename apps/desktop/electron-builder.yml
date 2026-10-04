@@ -22,12 +22,12 @@ asarUnpack:
   - "node_modules/@earendil-works/pi-coding-agent/**/*"
   - "node_modules/@mariozechner/clipboard*/**/*"
 
-# ── No built-in plugins, on purpose ──
+# ── No built-in plugins, but a bundled offline market ──
 #
 # Every plugin is distributed through the plugin marketplace and installed to
 # `~/.pi/agent/plugins/` (the registry's `user` root). A packaged app therefore
-# starts with ZERO plugins: two host panels (settings, plugin center) and
-# nothing else, and the user installs what they want.
+# starts with ZERO plugins INSTALLED: two host panels (settings, plugin center)
+# and nothing else, and the user installs what they want.
 #
 # This was not always the case. A release build once shipped with no plugins
 # either, which looked like a bug and was "fixed" by bundling the repo's
@@ -38,10 +38,19 @@ asarUnpack:
 # If you are here because a packaged app has no plugins: that is the intended
 # state. Ship the plugin to the marketplace instead of bundling it.
 #
+# What IS bundled is the market itself (pack scripts run
+# scripts/build-market.mjs into `market-dist/` first): index.json + one zip per
+# first-party plugin, copied to `<resources>/market/`. The registry falls back
+# to it when neither PI_PLUGIN_REGISTRY nor _state.json#registry names another
+# source, so a fresh install can install plugins offline. The zips are
+# referenced by paths relative to the index — an absolute build-machine path
+# would dangle after the install moves.
+#
 # Windows still ships a shell bundle — that is a runtime dependency of the
 # agent's bash tool, not a plugin.
 extraResources:
-  []
+  - from: "market-dist/"
+    to: "market/"
 
 # Office document support used to ship here as a bundled `officecli` skill
 # plus a binary fetched at startup. It is now a plugin (com.pi.files) running
@@ -64,10 +73,16 @@ win:
   # Bundle MinGit BusyBox (shell + git + coreutils) so Windows users
   # get bash-like command execution out of the box.
   # Note: platform-level extraResources OVERRIDE the top-level list rather than
-  # extending it. The top level ships nothing today, so this entry stands alone.
+  # extending it, so the bundled market must be listed here too.
+  #
+  # Build this target on Windows — macOS cross-builds are blocked twice:
+  # rcedit needs wine and makensis ships x86_64-only, both unusable on
+  # Apple Silicon without Rosetta.
   extraResources:
     - from: "bash-bundle/"
       to: "bash-bundle/"
+    - from: "market-dist/"
+      to: "market/"
   target:
     - target: nsis
       arch:
