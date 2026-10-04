@@ -3,7 +3,7 @@ import { getAgentDir } from '@earendil-works/pi-coding-agent';
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, resolve, dirname } from 'path';
 import type { PluginManifest, PluginRuntimeState, PluginSource, PluginInfo } from '@pi/types';
-import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
+import { MIN_SUPPORTED_API_VERSION, PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { satisfiesVersion } from './semver';
 
 /** Host app id used in `engines` negotiation. */
@@ -188,16 +188,22 @@ export class PluginRegistry {
         plugin.state = 'incompatible';
         plugin.error = `requires ${HOST_ENGINE_KEY} ${range}, host is ${this.appVersion}`;
       }
-      // Protocol negotiation. A plugin written against a different protocol
-      // version cannot be trusted to half-work, so it is parked in
-      // `incompatible` with a reason a plugin author can act on — rather than
-      // loading and failing quietly somewhere deep in a panel.
+      // Protocol negotiation against a RANGE, not an exact match — see
+      // MIN_SUPPORTED_API_VERSION / PLUGIN_PROTOCOL_VERSION in @pi/types.
+      // Outside the range the plugin is parked in `incompatible` with a reason
+      // saying WHICH side has to move (update the plugin vs. update the app),
+      // rather than loading and failing quietly somewhere deep in a panel.
       const declared = candidate.manifest.apiVersion;
-      if (plugin.state !== 'incompatible' && declared !== undefined && declared !== PLUGIN_PROTOCOL_VERSION) {
+      if (
+        plugin.state !== 'incompatible' &&
+        declared !== undefined &&
+        (declared < MIN_SUPPORTED_API_VERSION || declared > PLUGIN_PROTOCOL_VERSION)
+      ) {
         plugin.state = 'incompatible';
         plugin.error =
-          `declares apiVersion ${declared}, host speaks ${PLUGIN_PROTOCOL_VERSION}. ` +
-          `See docs/plugin-dev-guide.md.`;
+          declared < MIN_SUPPORTED_API_VERSION
+            ? `declares apiVersion ${declared}, but this host supports ${MIN_SUPPORTED_API_VERSION}–${PLUGIN_PROTOCOL_VERSION}. The plugin targets a retired protocol — update the plugin.`
+            : `declares apiVersion ${declared}, but this host supports ${MIN_SUPPORTED_API_VERSION}–${PLUGIN_PROTOCOL_VERSION}. The plugin is newer than the host — update the app.`;
       }
       this.plugins.set(id, plugin);
     }

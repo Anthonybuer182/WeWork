@@ -133,7 +133,27 @@ export interface PluginContributions {
 export type PluginPermission = string;
 
 /**
- * The protocol version this build of the host speaks.
+ * The protocol version this build of the host speaks — the UPPER bound of the
+ * supported range. Compatibility is a range, not an exact match:
+ *
+ *   plugin loads   ⇔  MIN_SUPPORTED_API_VERSION ≤ manifest.apiVersion ≤ PLUGIN_PROTOCOL_VERSION
+ *
+ * - Additive protocol changes (new manifest fields, new capabilities, new
+ *   lifecycle events) bump ONLY PLUGIN_PROTOCOL_VERSION — every plugin in the
+ *   range keeps loading untouched.
+ * - Breaking changes (a field changes meaning, a feature is removed — as v3
+ *   did to `selectionActions`) bump BOTH: the old current becomes the new
+ *   floor. Plugins below the floor are `incompatible` with a clear
+ *   "too old, update the plugin" reason instead of failing somewhere deep in
+ *   a panel.
+ * - A plugin declaring a version ABOVE the current is `incompatible` too —
+ *   "the plugin is newer than your app, update the app".
+ *
+ * The exact-match policy this replaces meant every protocol bump bricked all
+ * installed third-party plugins at once — untenable the moment the protocol
+ * is opened to outside authors.
+ *
+ * History:
  *
  * 3 — dropped `selectionActions` and the `selection` permission. The host's
  *     selection menu (滑词菜单) is gone: text selection is the panel's own
@@ -144,6 +164,17 @@ export type PluginPermission = string;
  */
 export const PLUGIN_PROTOCOL_VERSION = 3;
 
+/**
+ * The OLDEST protocol version this build still loads — the lower bound of the
+ * supported range. See PLUGIN_PROTOCOL_VERSION for the bump rules.
+ *
+ * A manifest that OMITS `apiVersion` predates versioning itself and loads
+ * unchanged (the field was optional from day one) — but the plugin dev guide
+ * and the marketplace listing both require it, so third-party plugins always
+ * declare it and always get negotiated.
+ */
+export const MIN_SUPPORTED_API_VERSION = 3;
+
 export interface PluginManifest {
   /** Reverse-DNS style id, lowercase. Also the directory name. */
   id: string;
@@ -151,9 +182,11 @@ export interface PluginManifest {
   description?: string;
   version: string;
   /**
-   * The plugin protocol version this plugin was written against.
-   * A mismatch puts the plugin in the `incompatible` state with a clear reason
-   * rather than letting it half-work. See PLUGIN_PROTOCOL_VERSION.
+   * The plugin protocol version this plugin was written against. Loaded iff
+   * it falls inside the host's supported range
+   * (MIN_SUPPORTED_API_VERSION … PLUGIN_PROTOCOL_VERSION); outside the range
+   * puts the plugin in the `incompatible` state with a reason saying which
+   * side has to move. See PLUGIN_PROTOCOL_VERSION.
    */
   apiVersion?: number;
   /** Host version compatibility, semver range. e.g. { "pi-desktop": "^1.0.0" } */
