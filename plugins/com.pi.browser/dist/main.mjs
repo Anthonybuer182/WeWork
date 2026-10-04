@@ -350,6 +350,9 @@ plugin({
     }
   },
   async onTool(name, params, ctx) {
+    const reveal = name === "browser_navigate" || name === "browser_walk" || name === "browser_screenshot";
+    void ctx.openPanel("browser", { focus: reveal }).catch(() => {
+    });
     switch (name) {
       case "browser_navigate": {
         const url = normalizeUrl(params.url);

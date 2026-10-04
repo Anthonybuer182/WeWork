@@ -251,11 +251,9 @@ const PLUGIN_SDK_SOURCE = String.raw`
 
     var stopped = false;
     var lastKey = null;
-    var timer = null;
     var observer = null;
 
     function report() {
-      timer = null;
       if (stopped) return;
       var rect = element.getBoundingClientRect();
       var bounds = {
@@ -277,10 +275,11 @@ const PLUGIN_SDK_SOURCE = String.raw`
       }).catch(function (e) { console.error('[pi-sdk] live slot bounds failed:', e); });
     }
 
-    function schedule() {
-      if (timer) return;
-      timer = setTimeout(report, 50);
-    }
+    // No debounce: ResizeObserver already batches to layout frames and the
+    // lastKey check dedups reports. A trailing debounce made the engine view
+    // trail a panel drag by 50ms steps — the resize looked choppy instead of
+    // tracking the pointer. No feedback loop exists: the engine view lives
+    // outside this page's DOM, so repositioning it never re-fires the observer.
 
     VIEW.liveAttach(name).then(function (res) {
       if (res && res.ok === false) {
@@ -291,17 +290,16 @@ const PLUGIN_SDK_SOURCE = String.raw`
     }).catch(function (e) { console.error('[pi-sdk] live slot attach failed:', e); });
 
     if (typeof ResizeObserver === 'function') {
-      observer = new ResizeObserver(schedule);
+      observer = new ResizeObserver(report);
       observer.observe(element);
     }
-    window.addEventListener('resize', schedule);
+    window.addEventListener('resize', report);
 
     return {
       detach: function () {
         stopped = true;
-        if (timer) { clearTimeout(timer); timer = null; }
         if (observer) { observer.disconnect(); observer = null; }
-        window.removeEventListener('resize', schedule);
+        window.removeEventListener('resize', report);
         lastKey = null;
         VIEW.liveDetach(name).catch(function () {});
       }

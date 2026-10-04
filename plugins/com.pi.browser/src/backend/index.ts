@@ -112,6 +112,13 @@ plugin({
   },
 
   async onTool(name, params, ctx) {
+    // The agent is driving the shared engine — surface the panel, so the user
+    // watches the page the agent works on instead of a silent background
+    // browser. Page-changing tools reveal the column (focus=true); in-page
+    // operations only badge a hidden panel (no-focus-steal: the page is either
+    // already on screen or a rail dot says enough).
+    const reveal = name === 'browser_navigate' || name === 'browser_walk' || name === 'browser_screenshot';
+    void ctx.openPanel('browser', { focus: reveal }).catch(() => {});
     switch (name) {
       case 'browser_navigate': {
         const url = normalizeUrl(params.url);

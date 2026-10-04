@@ -165,13 +165,19 @@ export class PluginWebViews {
               void bm.setDeviceMetrics(bounds.width, bounds.height).catch(() => {});
               // The engine view joins the view tree at boot, before any panel
               // view; a newly attached panel view would paint over it. Re-append
-              // so the engine sits on top of the panel page's slot region.
+              // so the engine sits on top of the panel page's slot region — but
+              // only when that is actually the case: resize streams through
+              // here per frame, and an unconditional remove+add reorders the
+              // view tree every step (visible as flicker).
               const win = this.opts.getWindow();
               const view = bm.getView();
               if (win && view) {
                 try {
-                  win.contentView.removeChildView(view);
-                  win.contentView.addChildView(view);
+                  const children = win.contentView.children;
+                  if (children[children.length - 1] !== view) {
+                    win.contentView.removeChildView(view);
+                    win.contentView.addChildView(view);
+                  }
                 } catch {
                   /* window or view already gone */
                 }

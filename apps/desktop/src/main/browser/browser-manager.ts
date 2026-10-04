@@ -71,7 +71,8 @@ export class BrowserManager {
   private isNavigating = false;
   private zoomComputing = false;
   private lastBounds: { x: number; y: number; width: number; height: number } | null = null;
-  private zoomDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private zoomChainTimers: ReturnType<typeof setTimeout>[] = [];
+  private metricsWidth = 0;
 
   constructor() {}
 
@@ -117,6 +118,22 @@ export class BrowserManager {
       if (url) {
         this.urlChangedCallbacks.forEach((cb) => cb(url));
       }
+    });
+    // Everything navigates in place — there is no second page. The panel is
+    // the observation window for agent work, and every browser.* tool acts on
+    // "the current page"; a popup (or a second tab) would split that story:
+    // the user watches one page while the CDP session the tools speak through
+    // stays on another, so click→get_state reads stale content. injectHelpers
+    // rewrites existing target=_blank links and window.open at load time, but
+    // links injected later, <form target="_blank">, and anything else slips
+    // through — this handler is the backstop that catches what it misses.
+    // about:blank is denied outright: sites open it to grab a window handle,
+    // never to be seen.
+    wc.setWindowOpenHandler(({ url }) => {
+      if (/^https?:/i.test(url)) {
+        void wc.loadURL(url).catch(() => {});
+      }
+      return { action: 'deny' };
     });
     wc.on('did-finish-load', () => {
       if (!this.isNavigating) {
@@ -207,7 +224,7 @@ export class BrowserManager {
       console.warn('[BrowserManager] setBounds called but browserView is null');
       return;
     }
-    console.log('[BrowserManager] setBounds:', { x, y, width, height });
+    // No log: resize streams one call per frame while a panel edge is dragged.
     this.browserView.setBounds({ x, y, width, height });
     this.lastBounds = { x, y, width, height };
     const viewWidth = width;
@@ -365,22 +382,25 @@ export class BrowserManager {
     }
   }
 
-  /** Schedule a debounced auto-zoom computation. Used by the CDP event handler
-   *  to avoid rapid consecutive calls during resource loads on heavy pages. */
+  /**
+   * Re-fit zoom after a load, on a short chain rather than once: pages render
+   * progressively, and the width a page reports 200ms after load is often not
+   * the width it reports once images and late right-hand columns arrive. Each
+   * check is cheap (one CDP evaluate, no zoom reset), so a chain of a few is
+   * fine — extra runs on an already-fitted page are no-ops. Cancelled by
+   * navigation (`cancelScheduledZoom`).
+   */
   private scheduleAutoZoom(): void {
-    if (this.zoomDebounceTimer) clearTimeout(this.zoomDebounceTimer);
-    this.zoomDebounceTimer = setTimeout(() => {
-      this.zoomDebounceTimer = null;
-      this.computeAutoZoom();
-    }, 800);
+    this.cancelScheduledZoom();
+    this.zoomChainTimers = [200, 800, 2000, 4000].map((delay) =>
+      setTimeout(() => void this.computeAutoZoom(), delay),
+    );
   }
 
   /** Cancel any pending scheduled zoom (e.g., when navigate starts). */
   private cancelScheduledZoom(): void {
-    if (this.zoomDebounceTimer) {
-      clearTimeout(this.zoomDebounceTimer);
-      this.zoomDebounceTimer = null;
-    }
+    for (const t of this.zoomChainTimers) clearTimeout(t);
+    this.zoomChainTimers = [];
   }
 
   /** Measure page content width and compute auto-fit zoom via CDP. */
@@ -400,25 +420,48 @@ export class BrowserManager {
     }
     this.zoomComputing = true;
     try {
-      // Reset zoom to 1.0 first to get natural page dimensions
-      try { wc.setZoomFactor(1); } catch {}
-      // Wait for layout to settle after zoom reset
-      await new Promise((r) => setTimeout(r, 100));
-
-      const clientW = this.webviewWidth;
+      const panelW = this.webviewWidth;
+      if (panelW <= 0) return;
+      // Measure at the CURRENT zoom — no reset-to-1, no relayout wait. The
+      // old reset→wait→measure loop was visible as a flash on every resize
+      // step, and its re-entrancy guard silently dropped overlapping fits,
+      // leaving the page at a stale zoom.
       const result = await this.sendCommand('Runtime.evaluate', {
-        expression: `JSON.stringify({scrollW: document.documentElement.scrollWidth || document.body.scrollWidth})`,
+        expression: `JSON.stringify({s: Math.max(
+          document.documentElement ? document.documentElement.scrollWidth : 0,
+          document.body ? document.body.scrollWidth : 0
+        ), c: document.documentElement ? document.documentElement.clientWidth : 0})`,
         returnByValue: true,
       });
-      const dims = JSON.parse((result?.result as { value?: string })?.value ?? '{"scrollW":0}');
-      console.log('[BrowserManager] computeAutoZoom:', {scrollW: dims.scrollW, clientW});
-      if (dims.scrollW > clientW + 2) {
-        this.currentZoom = Math.max(0.3, clientW / dims.scrollW);
-      } else {
-        this.currentZoom = 1;
+      const dims = JSON.parse(
+        (result?.result as { value?: string })?.value ?? '{"s":0,"c":0}',
+      ) as { s: number; c: number };
+      if (!dims.s || !dims.c) return;
+      // `overflow-x: clip` pages report documentElement.scrollWidth ==
+      // clientWidth no matter how wide their content is — comparing the html
+      // element alone concludes "fits" while the right side is being clipped
+      // (baidu's results page does exactly this). body.scrollWidth still sees
+      // through the clip, hence the max. Both sides exclude the scrollbar, so
+      // the comparison does not drift with scrollbar presence.
+      let target = this.currentZoom;
+      if (dims.s > dims.c + 2) {
+        // Content wider than the viewport → shrink so it just fits.
+        target = Math.max(0.3, panelW / dims.s);
+      } else if (dims.s < dims.c - 2) {
+        // Dead margin (fixed-width page seen through a zoom inherited from a
+        // wider one) → grow so the content fills the panel.
+        target = Math.max(0.3, panelW / dims.s);
       }
-      await this.applyZoom();
+      // Exact fit and fluid pages (s == c at any zoom) are fixed points —
+      // left alone. The hysteresis keeps a scrollbar-noise step from
+      // re-applying a ~2% zoom forever.
+      if (Math.abs(target - this.currentZoom) > 0.02) {
+        this.currentZoom = target;
+        await this.applyZoom();
+      }
     } catch (err) {
+      // "Inspected target navigated or closed" lands here when a page
+      // navigates mid-measure — the post-load chain re-checks shortly after.
       console.warn('[BrowserManager] computeAutoZoom error:', err);
     } finally {
       this.zoomComputing = false;
@@ -426,7 +469,7 @@ export class BrowserManager {
   }
 
   private async applyZoom(): Promise<void> {
-    console.log('[BrowserManager] applyZoom:', this.currentZoom);
+    // No log: panel drags apply a zoom per width step.
     try { this.wc?.setZoomFactor(this.currentZoom); } catch {}
   }
 
@@ -1597,6 +1640,12 @@ export class BrowserManager {
   /** Override the webview's device metrics to match the panel width. */
   async setDeviceMetrics(width: number, height: number): Promise<void> {
     this.webviewWidth = width;
+    if (width <= 0 || width === this.metricsWidth) return;
+    this.metricsWidth = width;
+    // Re-fit live: the measure is one cheap CDP evaluate (no zoom reset, no
+    // relayout wait), so a panel drag tracks step by step and each step
+    // converges to the page's current natural width — no cached state to go
+    // stale when a page reflows or lazy-renders.
     await this.computeAutoZoom();
   }
 

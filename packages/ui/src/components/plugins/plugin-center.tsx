@@ -135,6 +135,7 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
   const installPlugin = usePluginStore((s) => s.installPlugin);
   const rollbackPlugin = usePluginStore((s) => s.rollbackPlugin);
   const catalog = usePluginStore((s) => s.catalog);
+  const installPhases = usePluginStore((s) => s.installPhases);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [keepData, setKeepData] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -146,8 +147,14 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
   // affordance either); for a dev plugin the dialog explains instead of
   // deleting, and the backend refuses the call regardless.
   const manageable = plugin.source === 'user';
-  const inMarket = catalog.some((e) => e.id === plugin.id);
+  const marketEntry = catalog.find((e) => e.id === plugin.id);
+  const inMarket = marketEntry !== undefined;
   const broken = plugin.state === 'error' || plugin.state === 'crashed';
+  // Update availability must be visible on the installed list — the market
+  // rows only appear while a search is typed, and an update you can only
+  // find by already knowing to search is not discoverable. Dev copies are
+  // excluded: their version tracks the checkout, not the market.
+  const updatable = manageable && marketEntry != null && marketEntry.version !== plugin.version;
 
   const stateBadge = () => {
     if (plugin.state === 'disabled') return <Badge variant="secondary">已禁用</Badge>;
@@ -167,6 +174,9 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
           <span className="text-xs text-muted-foreground">v{plugin.version}</span>
           <Badge variant="secondary">{SOURCE_LABEL[plugin.source] ?? plugin.source}</Badge>
           {stateBadge()}
+          {updatable && marketEntry ? (
+            <Badge variant="secondary">可更新({plugin.version} → {marketEntry.version})</Badge>
+          ) : null}
         </div>
         {plugin.description ? <div className="mt-1 text-xs text-muted-foreground">{plugin.description}</div> : null}
         {plugin.error ? (
@@ -190,8 +200,20 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
           `回到上一版`, which only exists after an upgrade; the label names the
           version so it is clear what the button would do.
         */}
-        {manageable && (broken || plugin.previousVersion) ? (
+        {manageable && (broken || plugin.previousVersion || updatable) ? (
           <div className="mt-2 flex flex-wrap items-center gap-2">
+            {/* Update goes through the market row's InstallButton so the
+                permission-consent dialog applies to updates too — a new
+                version may declare new permissions. */}
+            {updatable && marketEntry ? (
+              <InstallButton
+                entry={marketEntry}
+                phase={installPhases[plugin.id]}
+                installed
+                updatable
+                onInstall={() => installPlugin(plugin.id)}
+              />
+            ) : null}
             {broken && inMarket ? (
               <Button
                 variant="outline"

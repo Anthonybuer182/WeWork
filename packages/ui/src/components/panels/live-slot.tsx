@@ -53,7 +53,6 @@ export function LiveSlot({
 
     const slotId = `${pluginId}:${panelId}`;
     let lastBounds = '';
-    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const reportBounds = () => {
       const el = containerRef.current;
@@ -95,22 +94,20 @@ export function LiveSlot({
         setError(err instanceof Error ? err.message : String(err));
       });
 
-    const observer = new ResizeObserver(() => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(reportBounds, 50);
-    });
+    // No debounce: ResizeObserver already batches callbacks to layout frames,
+    // and the `lastBounds` key dedups redundant reports. A trailing debounce
+    // here made the view chase a column drag in 50ms steps — visibly lagging
+    // the layout instead of tracking it. There is no feedback loop to fear:
+    // the native view sits OUTSIDE the DOM, so positioning it never re-triggers
+    // this observer.
+    const observer = new ResizeObserver(reportBounds);
     if (containerRef.current) observer.observe(containerRef.current);
     // Also observe window resizes (layout shifts without element resize).
-    const onWindowResize = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(reportBounds, 50);
-    };
-    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('resize', reportBounds);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', onWindowResize);
-      if (timer) clearTimeout(timer);
+      window.removeEventListener('resize', reportBounds);
       api.invoke('pi:liveview:detach', { slotId }).catch(() => {});
     };
   }, [pluginId, panelId]);
