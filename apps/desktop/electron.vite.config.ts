@@ -5,10 +5,14 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin({
-      // Only bundle our own workspace code. Externalize all npm packages,
-      // especially @earendil-works/pi-coding-agent which contains native
-      // .node addons and WASM files that cannot be bundled by Vite.
-      exclude: ['@pi/sdk-wrapper'],
+      // Bundle our own workspace code: the packaged app ships no
+      // node_modules/@pi (prepare-pack removes the workspace symlinks and
+      // electron-builder collects nothing for workspace:* entries), so a
+      // bare import here becomes ERR_MODULE_NOT_FOUND in the packaged
+      // main process — a crash dialog on first launch. Externalize all npm
+      // packages, especially @earendil-works/pi-coding-agent which contains
+      // native .node addons and WASM files that cannot be bundled by Vite.
+      exclude: ['@pi/sdk-wrapper', '@pi/types'],
     })],
     resolve: {
       alias: {
