@@ -1,8 +1,8 @@
 {
   "id": "com.pi.devdocs",
-  "name": "开发文档",
+  "name": "插件开发文档",
   "description": "官方插件:插件开发文档 — manifest 规范、面板 API、后端 ctx、调试与发布,在客户端内直接阅读。它本身就是一个最小的纯 UI 插件:manifest + 一张网页,没有后端、没有构建步骤。",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -12,7 +12,7 @@
     "panels": [
       {
         "id": "docs",
-        "title": "开发文档",
+        "title": "插件开发文档",
         "icon": "knowledge",
         "entry": "./ui/index.html",
         "keepAlive": "lru",

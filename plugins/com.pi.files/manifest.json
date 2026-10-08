@@ -162,6 +162,7 @@
         }
       }
     ],
+    "messageRenderers": [{ "type": "office_edit", "streaming": false }],
     "filePreview": [
       {
         "match": [

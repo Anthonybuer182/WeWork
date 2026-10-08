@@ -26,7 +26,7 @@
 import { plugin, type PluginContext, type ToolResult } from '@pi/plugin-sdk';
 import { mkdir, readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve as resolvePath } from 'node:path';
+import { basename, join, resolve as resolvePath } from 'node:path';
 import { createBlankPptx, openPptx, savePptx } from '@genoffice/pptx-engine';
 import { applyXlsxEdits, planXlsxEdits, readXlsxStructure, type CellOp } from './xlsx';
 import { DOCX_OP_GROUPS, docxGuide, planDocxCommands, type DocxOp } from './docx';
@@ -172,6 +172,34 @@ const text = (t: string, details?: unknown): ToolResult => ({
 });
 
 /**
+ * Declarative card for office_edit (messageRenderer): what changed, plus a
+ * one-click open in the viewer. The file path rides in the Button's props —
+ * the click event loops it back as the payload — so each card opens ITS
+ * document even when several edits are stacked in one conversation. Cards
+ * render only what the host can draw from data; the plugin ships no UI code.
+ */
+const docCard = (filePath: string, opCount: number, ext: string): unknown => ({
+  component: 'Card',
+  props: { title: '文档已更新' },
+  children: [
+    {
+      component: 'Row',
+      props: { gap: 2 },
+      children: [
+        { component: 'Text', props: { text: basename(filePath), weight: 'bold' } },
+        { component: 'Badge', props: { text: ext.toUpperCase() } },
+      ],
+    },
+    { component: 'Text', props: { text: `已应用 ${opCount} 个操作并保存`, variant: 'muted' } },
+    {
+      component: 'Button',
+      props: { label: '在查看器中打开', path: filePath },
+      events: { onClick: 'open_viewer' },
+    },
+  ],
+});
+
+/**
  * The op vocabulary is served as DATA, not as one tool per op.
  *
  * `contributes.tools` is aggregated into the agent's tool list at session
@@ -312,10 +340,13 @@ async function toolEdit(p: Record<string, unknown>): Promise<ToolResult> {
     }
     const next = await applyXlsxEdits(bytes, cellOps);
     const written = await writeOfficeBytes(path, next, info.mtimeMs);
-    return text(`applied ${cellOps.length} op(s) to ${path} and saved (${next.length} bytes)`, {
-      applied: true,
-      mtime: (written as { mtime?: number })?.mtime,
-    });
+    return {
+      ...text(`applied ${cellOps.length} op(s) to ${path} and saved (${next.length} bytes)`, {
+        applied: true,
+        mtime: (written as { mtime?: number })?.mtime,
+      }),
+      card: docCard(path, cellOps.length, ext),
+    };
   }
   if (ext === 'docx') {
     // GenOffice's editor bridge does the work — see backend/docx.ts for why
@@ -345,12 +376,15 @@ async function toolEdit(p: Record<string, unknown>): Promise<ToolResult> {
       | undefined;
     if (saved?.ok !== true) throw new Error(`office_edit: the document could not be saved to ${path}`);
     const info = await stat(path).catch(() => null);
-    return text(`applied ${ops.length} op(s) to ${path} and saved`, {
-      applied: true,
-      path,
-      mtime: info?.mtimeMs,
-      steps,
-    });
+    return {
+      ...text(`applied ${ops.length} op(s) to ${path} and saved`, {
+        applied: true,
+        path,
+        mtime: info?.mtimeMs,
+        steps,
+      }),
+      card: docCard(path, ops.length, ext),
+    };
   }
   if (ext !== 'pptx') {
     return text(`office_edit: "${ext}" is not wired yet — pptx, xlsx and docx are. Do not retry; this format has no structural editing yet.`);
@@ -394,10 +428,13 @@ async function toolEdit(p: Record<string, unknown>): Promise<ToolResult> {
 
   const bytes = await savePptx(opened);
   const written = await writeOfficeBytes(path, bytes, info.mtimeMs);
-  return text(
-    `applied ${result.records?.length ?? ops.length} op(s) to ${path} and saved (${bytes.length} bytes)`,
-    { applied: true, records: result.records ?? [], mtime: (written as { mtime?: number })?.mtime },
-  );
+  return {
+    ...text(
+      `applied ${result.records?.length ?? ops.length} op(s) to ${path} and saved (${bytes.length} bytes)`,
+      { applied: true, records: result.records ?? [], mtime: (written as { mtime?: number })?.mtime },
+    ),
+    card: docCard(path, result.records?.length ?? ops.length, ext),
+  };
 }
 
 // ── Tool dispatch ────────────────────────────────────────────────────
@@ -630,6 +667,25 @@ plugin({
 
   onRequest(_panelId, method, params) {
     return onUiRequest(method, params);
+  },
+
+  /**
+   * Card buttons from the office_edit result card (messageRenderer). The path
+   * comes back in the clicked node's props, so an old card still opens its
+   * own document. Not async: the SDK calls this fire-and-forget without
+   * awaiting, so a rejection here would escape the SDK's try/catch — handle
+   * errors inline instead.
+   */
+  onCardEvent(_toolName, eventId, kind, payload) {
+    if (kind !== 'click' || eventId !== 'open_viewer') return;
+    const target = String((payload as { path?: string } | undefined)?.path ?? '') || currentFile;
+    if (!target) return;
+    void ctx
+      .call('panel.open', { panelId: 'viewer', focus: true })
+      .then(() => openFile(target))
+      .catch((err: unknown) => {
+        ctx.log.error(`open_viewer failed: ${err instanceof Error ? err.message : String(err)}`);
+      });
   },
 
   onEvent,
