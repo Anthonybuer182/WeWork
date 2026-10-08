@@ -50,19 +50,31 @@ export class CapabilityHub {
   }
 
   private registerCapabilities(): void {
-    // ── chat.send (always allowed) ──
+    // ── chat.send (always allowed, but attributed) ──
     // Deliberately unpermissioned: this is precisely what the user typing in
     // the composer does, and the plugin already runs with the user's
     // authority. The renderer owns the composer, so the message is relayed
     // there and sent through the same path as a keystroke — streaming, tool
     // calls and persistence behave identically. The plugin owns the input UI;
     // the host only provides the ability to reach the conversation.
+    //
+    // What a plugin does NOT get is the user's VOICE. The message is prefixed
+    // with an attribution line before it reaches the conversation, so the
+    // agent and the transcript can tell a plugin-sent message from a typed
+    // one. Without this, a misbehaving plugin could inject instructions that
+    // read as the user's own intent — the one trust boundary the rest of this
+    // permissioned architecture cannot afford to leave open.
     this.capabilities.set('chat.send', {
-      handler: ({ params }) => {
+      handler: ({ pluginId, params }) => {
         const text = String(params.text ?? '').trim();
         if (!text) throw new Error('chat.send: text is required');
         if (!this.sendToRenderer) throw new Error('chat.send: no renderer attached');
-        this.sendToRenderer('pi:chat:send', { text });
+        const plugin = this.registry.get(pluginId);
+        const name = plugin?.manifest.name ?? pluginId;
+        this.sendToRenderer('pi:chat:send', {
+          text: `[插件消息 · 来自 ${name}（${pluginId}）]\n${text}`,
+          pluginId,
+        });
         return { ok: true };
       },
     });

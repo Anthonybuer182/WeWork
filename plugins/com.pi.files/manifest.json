@@ -3,7 +3,7 @@
   "name": "文件中心",
   "description": "文件中心 — 自包含的 office 引擎（创建/编辑/预览 docx/pptx/xlsx/pdf），基于内置的 GenOffice 引擎（Apache-2.0），无需外部工具或联网安装",
   "version": "0.3.0",
-  "apiVersion": 3,
+  "apiVersion": 5,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },
@@ -25,7 +25,8 @@
     "tools": [
       {
         "name": "office_guide",
-        "description": "The op vocabulary for this plugin's engine. pptx has a grouped op list — call with no group for the grouped names and a one-line signature for each, or with a group for that group's field tables, examples and common mistakes. docx returns its op shape and op list. xlsx has no op registry: its ops are plain cell edits, and this tool returns their shape. Read this BEFORE writing ops — guessing field names is the usual cause of a rejected batch.",
+        "description": "The op vocabulary for this engine (pptx / docx / xlsx). Call before writing office_edit ops; pass group for that group's field tables, examples and common mistakes.",
+        "readOnly": true,
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -58,7 +59,8 @@
       },
       {
         "name": "office_read",
-        "description": "Read a document's structure: pptx slides and their elements, xlsx sheets and their cells, or a docx document's blocks. Ids, cell addresses and block indexes are what office_edit takes — read first, then edit. For docx the document must already be open in the file viewer.",
+        "description": "Read a document's structure — pptx slides and elements, xlsx sheets and cells, docx blocks. The ids it returns are what office_edit targets: read first, then edit.",
+        "readOnly": true,
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -74,7 +76,7 @@
       },
       {
         "name": "office_edit",
-        "description": "Apply a batch of ops to a document and save it. The batch is atomic: if any op is rejected, nothing is written and the failures say what to fix. Use dryRun to validate a batch without touching the file. Get the shape of each op from office_guide — pptx ops are named operations, xlsx ops are cell edits, docx ops are {op, target, fields} records. For docx the document must already be open in the file viewer: its ops drive the live editor, so there is no headless path.",
+        "description": "Apply a batch of ops to a document and save it. The batch is atomic: use dryRun to validate without writing. Op shapes come from office_guide.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -128,6 +130,7 @@
       {
         "name": "files_probe_read",
         "description": "P9a 验收:read a file via the filesystem.read capability, returning content + mtime.",
+        "readOnly": true,
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -143,6 +146,7 @@
       {
         "name": "files_probe_open",
         "description": "P9a 验收:programmatically open a panel via panel.open. Defaults to the viewer; pass panelId to open another contributed panel.",
+        "readOnly": true,
         "inputSchema": {
           "type": "object",
           "properties": {

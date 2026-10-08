@@ -23,6 +23,8 @@ export interface AgentCustomTool {
   pluginId?: string;
   description: string;
   parameters: unknown;
+  /** From the manifest contribution — true = the tool only observes state. */
+  readOnly?: boolean;
   execute: (toolCallId: string, params: Record<string, unknown>) => Promise<{
     content: Array<{ type: 'text'; text: string } | { type: 'image'; data: string; mimeType?: string }>;
     details: unknown;

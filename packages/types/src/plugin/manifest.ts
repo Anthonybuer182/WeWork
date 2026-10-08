@@ -68,6 +68,14 @@ export interface ToolContribution {
   description?: string;
   /** JSON Schema for the tool parameters. */
   inputSchema?: Record<string, unknown>;
+  /**
+   * True when the tool only observes state — it never writes files, sends
+   * messages, or mutates anything the user would care about. The host may use
+   * this to skip confirmation or badge the tool; declare honestly, because a
+   * wrong `true` teaches the host to trust a writer. Mirrors MCP's
+   * `readOnlyHint` annotation.
+   */
+  readOnly?: boolean;
 }
 
 export interface CommandContribution {
@@ -155,6 +163,16 @@ export type PluginPermission = string;
  *
  * History:
  *
+ * 5 — tool-name namespace tightened and `chat.send` attributed. Tool names
+ *     are now unique across all plugins: a duplicate WITHIN one manifest
+ *     rejects the manifest at scan; a collision ACROSS plugins keeps the
+ *     first contributor (dev > user, matching plugin-id shadowing) and names
+ *     the loser in the log instead of silently dropping it. `chat.send`
+ *     messages now carry an attribution line — a plugin can reach the
+ *     conversation but can no longer speak AS the user. Also added
+ *     `readOnly` on tool contributions (mirrors MCP's `readOnlyHint`). All
+ *     additive — protocol 3/4 plugins load unchanged, floor stays 3.
+ *
  * 4 — added the `card-event` host→plugin message and the SDK's `onCardEvent`
  *     callback: declarative cards returned by tools (messageRenderers) can
  *     now carry interactive Buttons/Inputs, and the interaction flows back to
@@ -168,7 +186,7 @@ export type PluginPermission = string;
  *     A manifest still declaring `selectionActions` is now rejected rather than
  *     silently ignored — see the `apiVersion` note on PluginManifest.
  */
-export const PLUGIN_PROTOCOL_VERSION = 4;
+export const PLUGIN_PROTOCOL_VERSION = 5;
 
 /**
  * The OLDEST protocol version this build still loads — the lower bound of the

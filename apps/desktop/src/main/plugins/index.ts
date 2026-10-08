@@ -299,10 +299,24 @@ export class PluginSystem {
   /** All agent tools contributed by enabled plugins (for customTools). */
   aggregateTools(): AgentCustomTool[] {
     const tools: AgentCustomTool[] = [];
+    // Tool names are one flat namespace across all plugins (authors prefix
+    // their own names; the host does not rewrite them). On a cross-plugin
+    // collision the first contributor wins — registry order is dev > user,
+    // the same rule that governs plugin-id shadowing — and the loser is
+    // named in the log rather than silently dropped.
+    const seen = new Map<string, string>();
     for (const plugin of this.registry.all()) {
       if (!plugin.enabled || plugin.state === 'incompatible') continue;
       for (const tool of plugin.manifest.contributes?.tools ?? []) {
         const pluginId = plugin.manifest.id;
+        const owner = seen.get(tool.name);
+        if (owner !== undefined) {
+          console.error(
+            `[plugins] tool name collision: "${tool.name}" is contributed by both ${owner} and ${pluginId} — keeping ${owner}'s, ignoring ${pluginId}'s`,
+          );
+          continue;
+        }
+        seen.set(tool.name, pluginId);
         tools.push({
           name: tool.name,
           label: tool.name,
@@ -312,6 +326,7 @@ export class PluginSystem {
           // registry.
           pluginId,
           description: tool.description ?? `Plugin tool from ${pluginId}`,
+          readOnly: tool.readOnly,
           parameters: tool.inputSchema ?? { type: 'object', properties: {}, additionalProperties: false },
           execute: async (_toolCallId, params) => {
             const result = await this.executeTool(pluginId, tool.name, params ?? {});

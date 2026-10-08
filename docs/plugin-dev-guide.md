@@ -196,7 +196,7 @@ description: "查看和编辑 Office 文档（docx / pptx / xlsx / pdf）——�
 | `id` | ✅ | 反向 DNS 格式(`com.company.plugin`),也是目录名 |
 | `name` | ✅ | 显示名称 |
 | `version` | ✅ | 你自己的版本号,semver |
-| `apiVersion` | ✅* | 你照哪一版协议写的。宿主按**支持区间**判定:当前区间是 **3 – 4**,落在区间内即可加载;低于下限提示「插件太旧,请更新插件」,高于上限提示「插件太新,请升级客户端」(市场目录里就会标出来,装到一半才失败的事不会发生)。协议只加功能时只抬上限,你的插件不受影响;只有破坏性变更才抬下限。(*文档示例请务必写上;省略时按历史遗留插件放行) |
+| `apiVersion` | ✅* | 你照哪一版协议写的。宿主按**支持区间**判定:当前区间是 **3 – 5**,落在区间内即可加载;低于下限提示「插件太旧,请更新插件」,高于上限提示「插件太新,请升级客户端」(市场目录里就会标出来,装到一半才失败的事不会发生)。协议只加功能时只抬上限,你的插件不受影响;只有破坏性变更才抬下限。(*文档示例请务必写上;省略时按历史遗留插件放行) |
 | `description` | — | 一句话说明 |
 | `engines` | — | 宿主版本约束 `{ "pi-desktop": ">=0.1.0" }` |
 | `backend` | — | 后端入口(相对路径);省略则纯 UI 插件 |
@@ -270,6 +270,7 @@ MCP 格式的 `inputSchema`:
   "tools": [{
     "name": "query_orders",
     "description": "Query orders by status",
+    "readOnly": true,
     "inputSchema": {
       "type": "object",
       "properties": { "status": { "type": "string" } },
@@ -278,6 +279,18 @@ MCP 格式的 `inputSchema`:
   }]
 }
 ```
+
+**命名规则**:工具名在**所有插件之间**是同一个命名空间。给工具名带一个稳定前缀
+(通常取自你的插件 id,如 `office_read`)。同一个 manifest 里重名 → manifest 整个
+被拒绝;跨插件重名 → 先注册的赢(dev 优先级高于 user,和插件 id 的遮蔽规则一致),
+后到的被忽略并打进日志——所以别指望靠后加载覆盖别人的工具。
+
+**`readOnly`**:声明这个工具只观察状态、不写任何东西(不写文件、不发消息、不改用户
+在乎的数据)。宿主可以据此跳过确认或在插件中心打标——声明要诚实,错的 `true` 等于
+教宿主信任一个会写数据的工具。与 MCP 的 `readOnlyHint` 注解对齐。
+
+**description 写一句话就够**:它每次对话都进上下文,是触发线(「是什么、什么时候调」),
+不是说明书。操作细节、顺序、坑,写进你的 `PLUGIN.md`——那里按需加载,不占常驻成本。
 
 #### commands — 斜杠命令
 
@@ -389,6 +402,11 @@ await ctx.call('network.fetch', { url, method: 'GET' });
 await ctx.call('notify.show', { title, body });
 await ctx.call('storage.set', { key, value });
 await ctx.call('panel.open', { panelId, focus: true });
+
+// 发进对话的消息会带上来源标注(「插件消息 · 来自 你的插件名」),agent 和用户
+// 都看得出这不是用户亲手打的。插件够得着对话,但拿不到用户的声音——别指望它
+// 替用户下达指令。
+await ctx.call('chat.send', { text: '该喝水了' });
 
 // 让用户选文件只能用宿主对话框:插件拿不到路径,只能拿到用户选中的结果。
 // 这两个不需要权限——用户亲手选就是授权。

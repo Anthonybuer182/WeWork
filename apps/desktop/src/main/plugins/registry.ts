@@ -284,6 +284,19 @@ export class PluginRegistry {
       panel.entry = panel.entry.replace(/^\/+/, '');
     }
 
+    // Tool names must be unique within one manifest. The aggregated tool
+    // table is keyed by name across ALL plugins, so an intra-manifest
+    // duplicate would silently shadow one of the two — reject the manifest,
+    // same as any other malformed contribution.
+    const toolNames = new Set<string>();
+    for (const tool of manifest.contributes?.tools ?? []) {
+      if (toolNames.has(tool.name)) {
+        console.warn(`[plugins] Duplicate tool name "${tool.name}" in ${dir}`);
+        return null;
+      }
+      toolNames.add(tool.name);
+    }
+
     // Backend entry must exist when declared.
     if (manifest.backend && !existsSync(join(dir, manifest.backend))) {
       console.warn(`[plugins] Backend entry "${manifest.backend}" not found in ${dir}`);
