@@ -23,6 +23,11 @@ function formatSize(bytes?: number): string {
   return bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
+/** Search matches name, id and description; Chinese substrings work as-is. */
+function matchesQuery(text: string | undefined, q: string): boolean {
+  return (text ?? '').toLowerCase().includes(q);
+}
+
 /** ── Auto-generated settings form (contributes.settings) ── */
 function PluginSettingsSection({ pluginId, settings }: { pluginId: string; settings: PluginSettingInfo[] }) {
   const loadPluginSettings = usePluginStore((s) => s.loadPluginSettings);
@@ -150,10 +155,10 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
   const marketEntry = catalog.find((e) => e.id === plugin.id);
   const inMarket = marketEntry !== undefined;
   const broken = plugin.state === 'error' || plugin.state === 'crashed';
-  // Update availability must be visible on the installed list — the market
-  // rows only appear while a search is typed, and an update you can only
-  // find by already knowing to search is not discoverable. Dev copies are
-  // excluded: their version tracks the checkout, not the market.
+  // Update availability lives here on the installed row — installed plugins
+  // are excluded from the market section below, so this badge is the only
+  // place version drift shows. Dev copies are excluded from the comparison:
+  // their version tracks the checkout, not the market.
   const updatable = manageable && marketEntry != null && marketEntry.version !== plugin.version;
 
   const stateBadge = () => {
@@ -318,17 +323,21 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
   );
 }
 
-/** ── Catalog entry row ── */
+/**
+ * Catalog row. Only ever rendered for entries that are NOT installed — the
+ * market section excludes installed ids, so the「已安装/可更新」badges this
+ * row used to carry live on the installed row instead, and each plugin
+ * appears in exactly one section. While an install runs the phase spinner
+ * takes the button's place; on success the row migrates to the installed
+ * section above.
+ */
 function CatalogItem({ entry }: { entry: MarketEntry }) {
-  const installed = usePluginStore((s) => s.installed);
   const installPhases = usePluginStore((s) => s.installPhases);
   const marketErrors = usePluginStore((s) => s.marketErrors);
   const installPlugin = usePluginStore((s) => s.installPlugin);
 
-  const existing = installed.find((p) => p.id === entry.id);
   const phase = installPhases[entry.id];
   const error = marketErrors[entry.id];
-  const updatable = existing && existing.version !== entry.version;
 
   // Catalog-level apiVersion pre-check (stageInstall enforces the same range
   // against the manifest inside the zip and stays authoritative — the index
@@ -350,9 +359,6 @@ function CatalogItem({ entry }: { entry: MarketEntry }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">{entry.name}</span>
           <span className="text-xs text-muted-foreground">v{entry.version}</span>
-          {existing ? (
-            <Badge variant="secondary">{updatable ? `可更新(${existing.version} → ${entry.version})` : '已安装'}</Badge>
-          ) : null}
           {outOfRange ? <Badge variant="destructive">{rangeNote}</Badge> : null}
           {entry.size ? <span className="text-[10px] text-muted-foreground">{formatSize(entry.size)}</span> : null}
         </div>
@@ -371,7 +377,7 @@ function CatalogItem({ entry }: { entry: MarketEntry }) {
         ) : null}
       </div>
       {outOfRange ? null : (
-        <InstallButton entry={entry} phase={phase} installed={!!existing} updatable={!!updatable} onInstall={() => installPlugin(entry.id)} />
+        <InstallButton entry={entry} phase={phase} installed={false} updatable={false} onInstall={() => installPlugin(entry.id)} />
       )}
     </div>
   );
@@ -450,10 +456,14 @@ function InstallButton({
 }
 
 /**
- * Plugin center — VS Code-extensions-style: ONE list that flips on the search
- * box. Empty query shows the installed plugins (enable/disable/uninstall);
- * typing searches the market (install, with permission consent). No separate
- * catalog section — the market is only ever seen through search.
+ * Plugin center — two sections over one join of installed × market:
+ * 「已安装」 first (enable / disable / uninstall / update), then「市场可用」
+ * — every catalog entry NOT installed, installable with permission consent.
+ * The search box filters both sections in place; it is a filter over what
+ * is on screen, not a mode flip, so installing never yanks the list out
+ * from under you. An empty query shows everything, which is what a fresh
+ * install needs: zero installed plugins opens straight onto a browsable
+ * market instead of an empty list behind a search box.
  */
 export function PluginCenter() {
   const installed = usePluginStore((s) => s.installed);
@@ -468,31 +478,37 @@ export function PluginCenter() {
     loadCatalog();
   }, [loadCatalog]);
 
-  const searching = query.trim().length > 0;
+  const q = query.trim().toLowerCase();
+  const searching = q.length > 0;
 
   const sortedInstalled = useMemo(
     () => [...installed].sort((a, b) => a.name.localeCompare(b.name)),
     [installed],
   );
 
-  // Market search is a client-side filter over the fetched index — the
-  // registry is a flat index.json (file path today, https later), so search
-  // happens here either way. Matches name, id and description; Chinese
-  // substrings work as-is.
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return catalog.filter((e) =>
-      [e.name, e.id, e.description ?? ''].some((t) => t.toLowerCase().includes(q)),
+  const visibleInstalled = useMemo(
+    () =>
+      searching
+        ? sortedInstalled.filter((p) => [p.name, p.id, p.description].some((t) => matchesQuery(t, q)))
+        : sortedInstalled,
+    [searching, sortedInstalled, q],
+  );
+
+  // Market order is the catalog's array order — build-market writes it, and
+  // for an official index that order IS the recommendation ranking.
+  const visibleMarket = useMemo(() => {
+    const installedIds = new Set(installed.map((p) => p.id));
+    return catalog.filter(
+      (e) =>
+        !installedIds.has(e.id) &&
+        (!searching || [e.name, e.id, e.description].some((t) => matchesQuery(t, q))),
     );
-  }, [catalog, query]);
+  }, [catalog, installed, searching, q]);
 
   return (
     <div className="h-full overflow-auto p-3" data-panel-kind="plugin-center">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {searching ? `市场结果(${results.length})` : `已安装(${installed.length})`}
-        </h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">插件中心</h3>
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => loadCatalog(true)} aria-label="刷新市场">
           <RefreshCw className={cn('h-3.5 w-3.5', catalogLoading && 'animate-spin')} />
         </Button>
@@ -503,45 +519,58 @@ export function PluginCenter() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="搜索市场插件…"
+          placeholder="搜索插件…"
           className="h-8 pl-7 text-xs"
-          aria-label="搜索市场插件"
+          aria-label="搜索插件"
           data-market-search
         />
       </div>
 
-      {catalogError ? (
-        <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-          市场加载失败:{catalogError}
-        </div>
-      ) : searching ? (
-        <div className="flex flex-col gap-2">
-          {catalogLoading && (
-            <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-              市场加载中…
-            </div>
-          )}
-          {!catalogLoading && results.map((entry) => (
-            <CatalogItem key={entry.id} entry={entry} />
-          ))}
-          {!catalogLoading && results.length === 0 && (
-            <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-              没有匹配「{query.trim()}」的插件
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {sortedInstalled.map((plugin) => (
-            <InstalledItem key={plugin.id} plugin={plugin} />
-          ))}
-          {sortedInstalled.length === 0 && (
-            <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-              尚未安装插件 —— 用上方搜索框从市场安装
-            </div>
-          )}
-        </div>
+      {visibleInstalled.length > 0 && (
+        <section className="mb-3">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            已安装({visibleInstalled.length})
+          </h3>
+          <div className="flex flex-col gap-2">
+            {visibleInstalled.map((plugin) => (
+              <InstalledItem key={plugin.id} plugin={plugin} />
+            ))}
+          </div>
+        </section>
       )}
+
+      {/* The market section carries its own failure/loading states — a catalog
+          error must not take the installed list down with it. */}
+      <section>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {searching ? `市场结果(${visibleMarket.length})` : `市场可用(${visibleMarket.length})`}
+        </h3>
+        {catalogError ? (
+          <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+            市场加载失败:{catalogError}
+          </div>
+        ) : catalogLoading ? (
+          <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+            市场加载中…
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {visibleMarket.map((entry) => (
+              <CatalogItem key={entry.id} entry={entry} />
+            ))}
+            {!searching && visibleMarket.length === 0 && (
+              <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                市场目录为空
+              </div>
+            )}
+            {searching && visibleInstalled.length === 0 && visibleMarket.length === 0 && (
+              <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                没有匹配「{query.trim()}」的插件
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       {Object.keys(installPhases).length > 0 && (
         <div className="mt-3 text-center text-[10px] text-muted-foreground">

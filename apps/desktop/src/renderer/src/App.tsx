@@ -162,7 +162,14 @@ function AppContent() {
         // Install/uninstall/enable/disable — refresh discovery + panels.
         usePluginStore.getState().loadPlugins();
       } else if (event.type === 'install-phase') {
-        usePluginStore.getState().setInstallPhase(event.pluginId, event.phase);
+        // Progress events and the install reply travel on different IPC
+        // channels with no ordering guarantee — a late event can outlive its
+        // install and resurrect a dead phase (a failed row stuck on its
+        // spinner). A real install sets its phase optimistically before any
+        // event can arrive, so an event landing on a phaseless plugin is
+        // stale by definition.
+        const { installPhases, setInstallPhase } = usePluginStore.getState();
+        if (installPhases[event.pluginId]) setInstallPhase(event.pluginId, event.phase);
       }
     });
   }, [setPanelStatus, openPanel]);
