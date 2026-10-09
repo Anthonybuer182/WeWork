@@ -1,4 +1,10 @@
 import { create } from 'zustand';
+import type { PermissionDecision, PermissionMode, PermissionRequest } from '@pi/types';
+
+// Shared with main through @pi/types (it is the enforcer; the drift risk of
+// two definitions is exactly what moving them there removes). Re-exported so
+// the store stays the renderer's import surface for them.
+export type { PermissionMode, PermissionDecision, PermissionRequest };
 
 /**
  * Session-scoped permission modes, mirrored from main.
@@ -8,20 +14,6 @@ import { create } from 'zustand';
  * ToolCallDisplay looks up pending approvals by toolCallId to render the
  * inline approval card. In-memory on both sides — a restart resets everything.
  */
-export type PermissionMode = 'default' | 'full';
-
-export type PermissionDecision = 'once' | 'always' | 'deny';
-
-/** main → renderer: a tool call is waiting for the user's verdict. */
-export interface PermissionRequest {
-  requestId: string;
-  sessionId: string;
-  toolCallId: string;
-  toolName: string;
-  args?: Record<string, unknown>;
-  /** One-line summary (command / path / …) prepared by main. */
-  summary: string;
-}
 
 function electronApi():
   | { invoke: (channel: string, ...args: unknown[]) => Promise<unknown>; on: (channel: string, cb: (...args: unknown[]) => void) => void }

@@ -1,19 +1,7 @@
 import { ShieldAlert } from 'lucide-react';
+import { permissionAlwaysScope } from '@pi/types';
 import { Button } from '@/components/ui/button';
 import { usePermissionStore, type PermissionRequest } from '@/stores/permission-store';
-
-/**
- * What the user is agreeing to when they click 总是允许, in the same coarse
- * units main actually remembers: bash by first word, everything else by tool.
- */
-function alwaysScope(request: PermissionRequest): string {
-  const command = request.args?.command;
-  if (request.toolName === 'bash' && typeof command === 'string') {
-    const firstWord = command.trim().split(/\s+/)[0];
-    if (firstWord) return `本会话内放行所有以 ${firstWord} 开头的命令`;
-  }
-  return `本会话内放行 ${request.toolName} 的所有调用`;
-}
 
 /**
  * The inline approval card, rendered inside the waiting tool call's block —
@@ -56,14 +44,14 @@ export function PermissionRequestCard({ request }: { request: PermissionRequest 
               size="sm"
               variant="outline"
               className="h-6 px-2 text-[11px]"
-              title={alwaysScope(request)}
+              title={permissionAlwaysScope(request.toolName, request.args)}
               onClick={() => resolve(request, 'always')}
             >
               总是允许
             </Button>
           </div>
           <div className="mt-1.5 text-[10px] text-muted-foreground/70">
-            总是允许：{alwaysScope(request)}
+            总是允许：{permissionAlwaysScope(request.toolName, request.args)}
           </div>
         </div>
       </div>

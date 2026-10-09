@@ -29,7 +29,9 @@ export const liveSlots = new LiveSlotRegistry();
 // can connect to the app's own webContents (including the embedded browser
 // view) via CDP. Sibling forks of this project bind the same default port —
 // PI_CDP_PORT lets a dev run step aside instead of silently losing the race.
-app.commandLine.appendSwitch('remote-debugging-port', process.env.PI_CDP_PORT ?? '19222');
+// `||` not `??`: an empty-string env var (a common shell-script accident)
+// must fall back to 19222, not hand Chromium an unbindable empty port.
+app.commandLine.appendSwitch('remote-debugging-port', process.env.PI_CDP_PORT || '19222');
 
 // Contract-level plugin isolation: force every site (each pi-plugin:// origin)
 // into its own renderer process. Site isolation is Chromium's default, but

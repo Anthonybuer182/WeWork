@@ -1,6 +1,18 @@
 import { ipcMain } from 'electron';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
+import {
+  isPermissionDecision,
+  permissionRuleKey,
+  type PermissionDecision,
+  type PermissionMode,
+  type PermissionRequest as PermissionRequestPayload,
+} from '@pi/types';
 import { appendAuditRecord } from './audit';
+
+// The mode/decision/request types and the always-allow scope rule are shared
+// with the renderer through @pi/types — re-exported here so the gate's own
+// surface stays where it has always been.
+export type { PermissionMode, PermissionDecision, PermissionRequestPayload };
 
 /**
  * Session-scoped permission modes.
@@ -15,20 +27,6 @@ import { appendAuditRecord } from './audit';
  * 完全访问 must never survive a restart, or it stops being a per-session
  * decision and becomes a permanently open door.
  */
-export type PermissionMode = 'default' | 'full';
-
-export type PermissionDecision = 'once' | 'always' | 'deny';
-
-/** main → renderer: a tool call is waiting for the user's verdict. */
-export interface PermissionRequestPayload {
-  requestId: string;
-  sessionId: string;
-  toolCallId: string;
-  toolName: string;
-  args: Record<string, unknown> | undefined;
-  /** One-line summary shown on the approval card (command / path / …). */
-  summary: string;
-}
 
 /**
  * Tools that only ever read — auto-allowed in both modes. Everything else
@@ -87,7 +85,7 @@ export class PermissionService {
     const summary = summarizeCall(argsRecord);
 
     // 总是允许 from earlier this session — allow without asking again.
-    if (this.remembered.get(sessionKey)?.has(ruleKeyFor(toolName, argsRecord))) {
+    if (this.remembered.get(sessionKey)?.has(permissionRuleKey(toolName, argsRecord))) {
       return undefined;
     }
 
@@ -114,6 +112,12 @@ export class PermissionService {
       signal,
     });
 
+    // The verdict came over IPC and types do not survive that crossing. This
+    // is the enforcement point, so anything unrecognized fails CLOSED: a
+    // typo'd 'Allow' from a future caller must not read as permission.
+    if (!isPermissionDecision(decision)) {
+      return { block: true, reason: `无法识别的审批结果（${String(decision)}）— 已按拒绝处理` };
+    }
     if (decision === 'deny') {
       return { block: true, reason: `用户拒绝了本次 ${toolName} 调用` };
     }
@@ -123,7 +127,7 @@ export class PermissionService {
         set = new Set();
         this.remembered.set(sessionKey, set);
       }
-      set.add(ruleKeyFor(toolName, argsRecord));
+      set.add(permissionRuleKey(toolName, argsRecord));
     }
     return undefined;
   }
@@ -152,6 +156,12 @@ export class PermissionService {
     summary: string;
     signal?: AbortSignal;
   }): Promise<PermissionDecision> {
+    // The run can abort in the window between the agent loop's own abort check
+    // and this gate call. An addEventListener on an already-aborted signal
+    // never fires, so registering would orphan the pending entry and hang the
+    // run even after the user hits 停止 — settle immediately instead.
+    if (input.signal?.aborted) return Promise.resolve('deny');
+
     return new Promise((resolve) => {
       const requestId = `perm-${Date.now()}-${++this.requestCounter}`;
       const payload: PermissionRequestPayload = {
@@ -183,19 +193,6 @@ export class PermissionService {
       this.sendRequest(payload);
     });
   }
-}
-
-/**
- * The "always allow" scope, shown on the card so the user knows what they are
- * agreeing to. bash remembers its first word (all `git …` commands), every
- * other tool remembers the tool name.
- */
-export function ruleKeyFor(toolName: string, args: Record<string, unknown> | undefined): string {
-  if (toolName === 'bash' && typeof args?.command === 'string') {
-    const firstWord = args.command.trim().split(/\s+/)[0] ?? '';
-    if (firstWord) return `bash:${firstWord}`;
-  }
-  return `tool:${toolName}`;
 }
 
 /** One-line human summary of the call — card header and audit log share it. */
@@ -257,6 +254,15 @@ export function registerPermissionIpc(service: PermissionService): void {
   ipcMain.handle(
     'pi:permission:resolve',
     (_event, payload: { requestId: string; decision: PermissionDecision }) => {
+      // TS types end at the channel boundary. An unrecognized decision must
+      // not be forwarded as if it were consent — deny and say why in the log.
+      if (!isPermissionDecision(payload?.decision)) {
+        console.warn(
+          `[permissions] resolve(${payload?.requestId}) got unrecognized decision ${JSON.stringify(payload?.decision)} — treating as deny`,
+        );
+        service.resolve(payload?.requestId ?? '', 'deny');
+        return;
+      }
       service.resolve(payload.requestId, payload.decision);
     },
   );

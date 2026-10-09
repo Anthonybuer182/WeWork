@@ -201,7 +201,9 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
 
       {/* ── Inline approval card: the gate is holding this call ── */}
       {awaitingApproval && pendingRequest && (
-        <PermissionRequestCard request={pendingRequest} />
+        <div data-permission-inline={pendingRequest.requestId}>
+          <PermissionRequestCard request={pendingRequest} />
+        </div>
       )}
 
       {/* ── Streaming args card (tool running, args arriving live) ── */}

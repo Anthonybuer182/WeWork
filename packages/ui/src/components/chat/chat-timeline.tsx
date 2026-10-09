@@ -12,8 +12,10 @@ import { EmptyChat } from './empty-chat';
 import { StreamingIndicator } from './streaming-indicator';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { ErrorState } from '@/components/common/error-state';
-import type { Message, ContentBlock, TokenUsage } from '@pi/types';
+import type { Message, ContentBlock, TokenUsage, ToolCallBlock } from '@pi/types';
 import type { AssistantMessage } from '@pi/types';
+import { usePermissionStore } from '@/stores/permission-store';
+import { PermissionRequestCard } from './permission-request-card';
 
 /** Shared empty map so non-active messages keep a stable prop identity. */
 const EMPTY_TOOL_TIMINGS = new Map<string, number>();
@@ -99,6 +101,37 @@ function makeStreamingMessage(
     createdAt,
     updatedAt: new Date().toISOString(),
   } as AssistantMessage;
+}
+
+/**
+ * The fallback host for approval requests.
+ *
+ * The inline approval card lives inside the waiting tool call's block — but
+ * that block only exists in the timeline while its streaming chunks do. After
+ * a renderer reload or a session switch the blocks are gone, while main's gate
+ * is still holding the call: without a second mount point the agent would stay
+ * blocked forever with nothing on screen to answer. Anything in the pending
+ * map that no visible tool-call block claims renders here, above the composer.
+ */
+function PendingApprovalFallback({ hostedToolCallIds }: { hostedToolCallIds: Set<string> }) {
+  const pendingByToolCall = usePermissionStore((s) => s.pendingByToolCall);
+  const orphaned = Object.values(pendingByToolCall).filter(
+    (req) => !hostedToolCallIds.has(req.toolCallId),
+  );
+  if (orphaned.length === 0) return null;
+  return (
+    <div className="mx-4 mb-2 flex flex-col gap-2">
+      {orphaned.map((req) => (
+        <div
+          key={req.requestId}
+          data-permission-fallback={req.requestId}
+          className="overflow-hidden rounded-md border border-amber-400/50 shadow-sm"
+        >
+          <PermissionRequestCard request={req} />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // ----------------------------------------------------------------
@@ -188,6 +221,20 @@ export function ChatTimeline() {
     }
     return storedMessages;
   }, [storedMessages, isStreaming, streamingBlocks]);
+
+  // Tool-call blocks that currently host an inline approval card. ONLY the
+  // live streaming blocks qualify: the inline card renders inside a running
+  // ToolCallDisplay (isStreaming && !result), and after a reload or session
+  // switch that exists nowhere — the same block persisted in the session tree
+  // renders without a running state, so counting it would make the fallback
+  // abstain and the approval would be lost between the two mount points.
+  const hostedToolCallIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const b of streamingBlocks) {
+      if (b.type === 'tool_call') ids.add((b as ToolCallBlock).toolCallId);
+    }
+    return ids;
+  }, [streamingBlocks]);
 
   // When streaming starts, the optimistic user message and StreamingIndicator
   // Footer (~40px) are added to Virtuoso's scrollHeight AFTER followOutput's
@@ -394,6 +441,10 @@ export function ChatTimeline() {
           }}
         />
       </div>
+
+      {/* Approvals no visible tool-call block is hosting (e.g. after a reload
+          or a session switch mid-approval) — answerable here, not lost. */}
+      <PendingApprovalFallback hostedToolCallIds={hostedToolCallIds} />
 
       {/* Floating scroll-to-bottom button */}
       {isStreaming && !isAtBottom && (

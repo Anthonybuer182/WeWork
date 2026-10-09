@@ -46,12 +46,21 @@ export function PermissionModeButton() {
         <Button
           size="sm"
           variant="ghost"
+          // No session yet: the mode would land on main's 'default' key, which
+          // the gate never consults once the real session exists — a picked
+          // 完全访问 would silently vanish. Disabled beats silently dropped;
+          // the composer auto-creates a session, so this window is brief.
+          disabled={!activeSessionId}
           className={
             isFull
               ? 'h-8 gap-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400'
               : 'h-8 gap-1.5 text-xs text-muted-foreground'
           }
-          title="权限模式（仅当前会话生效，重启后恢复默认）"
+          title={
+            !activeSessionId
+              ? '会话创建后可设置权限模式'
+              : '权限模式（仅当前会话生效，重启后恢复默认）'
+          }
         >
           {isFull ? (
             <ShieldAlert className="h-3.5 w-3.5" />
