@@ -7,7 +7,7 @@ import {
   createRealConfigService,
   createRealChatService,
 } from '@pi/sdk-wrapper/adapters';
-import type { PluginDoc } from '@pi/sdk-wrapper/adapters';
+import type { PluginDoc, RealChatServiceOptions } from '@pi/sdk-wrapper/adapters';
 import type { WorkspaceService, SessionService, FileService, ConfigService, ChatService, SendMessageParams, FileSearchOptions } from '@pi/sdk-wrapper';
 import { setActiveWorkspace } from '@main/agent-tools';
 
@@ -30,6 +30,8 @@ export interface RegisterIpcHandlersOptions {
   customToolsProvider?: () => unknown[];
   /** Supplies the installed-plugins index (each plugin's PLUGIN.md) for the system prompt. */
   pluginDocsProvider?: () => PluginDoc[];
+  /** Per-session host hook (e.g. the permission gate) — see RealChatServiceOptions. */
+  onSessionCreated?: RealChatServiceOptions['onSessionCreated'];
 }
 
 export function registerIpcHandlers(
@@ -52,6 +54,7 @@ export function registerIpcHandlers(
   chatService = createRealChatService(defaultCwd, sharedModelRegistry, settingsManager, {
     customToolsProvider: options?.customToolsProvider,
     pluginDocsProvider: options?.pluginDocsProvider,
+    onSessionCreated: options?.onSessionCreated,
   });
 
   // The renderer owns "which workspace is on screen" — a view fact, not a

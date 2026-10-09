@@ -116,6 +116,14 @@ export interface RealChatServiceOptions {
   customToolsProvider?: () => unknown[];
   /** Enabled plugins' PLUGIN.md index. Read per session, so installs take effect without a restart. */
   pluginDocsProvider?: () => PluginDoc[];
+  /**
+   * Called once for every agent session this service creates (including
+   * rebuilds after a workspace/skill change). Lets the host install
+   * process-level hooks on the raw session — e.g. a permission gate that
+   * wraps `session.agent.beforeToolCall`. Receives the resolved session key
+   * ('default' when the caller had no session id yet).
+   */
+  onSessionCreated?: (session: AgentSession, info: { sessionKey: string; cwd: string }) => void;
 }
 
 export function createRealChatService(
@@ -234,6 +242,10 @@ export function createRealChatService(
       settingsManager,         // share settings so shell path is respected
       customTools: (options?.customToolsProvider?.() ?? []) as never,
     });
+
+    // Host-level per-session hooks (permission gate, audit, …). Runs before the
+    // session is cached so the gate is live for the very first prompt.
+    options?.onSessionCreated?.(session, { sessionKey: key, cwd: workCwd });
 
     const unsubscribe = session.subscribe((_event) => {
       // Events are handled at the call site level

@@ -1,9 +1,11 @@
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, ShieldAlert, Sparkles } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { ToolCallBlock, ToolResultBlock } from '@pi/types';
 import { DeclarativeRenderer } from '@/components/plugins/declarative/declarative-renderer';
 import { usePluginStore } from '@/stores/plugin-store';
+import { usePermissionStore } from '@/stores/permission-store';
+import { PermissionRequestCard } from './permission-request-card';
 import './chat-animations.css';
 
 interface ToolCallDisplayProps {
@@ -39,6 +41,10 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
   const [expanded, setExpanded] = useState(false);
   const [userCollapsed, setUserCollapsed] = useState(false);
   const isRunning = isStreaming && !result;
+  // An approval request for this exact call means the gate in main is holding
+  // it before execution — show the inline card instead of a running spinner.
+  const pendingRequest = usePermissionStore((s) => s.pendingByToolCall[block.toolCallId]);
+  const awaitingApproval = isRunning && !!pendingRequest;
   const hasError = result?.isError;
   const rawResult = result?.result;
   const resultText = rawResult == null
@@ -123,9 +129,11 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
     <div className={cn(
       'my-1 rounded-md border overflow-hidden text-xs',
       !isStreaming && 'animate-streaming-in',
-      isRunning
-        ? 'border-emerald-400/40 bg-emerald-50/30 dark:bg-emerald-950/10'
-        : statusColor,
+      awaitingApproval
+        ? 'border-amber-400/50 bg-amber-50/30 dark:bg-amber-950/10'
+        : isRunning
+          ? 'border-emerald-400/40 bg-emerald-50/30 dark:bg-emerald-950/10'
+          : statusColor,
     )}>
       {/* ── Header row ── */}
       <button
@@ -133,7 +141,9 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
         onClick={handleToggle}
       >
         {/* Status icon */}
-        {isRunning ? (
+        {awaitingApproval ? (
+          <ShieldAlert className="h-3 w-3 animate-pulse text-amber-600 dark:text-amber-400 shrink-0" />
+        ) : isRunning ? (
           <Loader2 className="h-3 w-3 animate-spin text-emerald-600 dark:text-emerald-400 shrink-0" />
         ) : (
           <span className={cn(
@@ -158,7 +168,12 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
         )}
 
         {/* Running indicator (only when collapsed) */}
-        {isRunning && !expanded && (
+        {awaitingApproval && !expanded && (
+          <span className="text-amber-600/80 dark:text-amber-400/70 animate-pulse shrink-0 ml-auto">
+            等待批准
+          </span>
+        )}
+        {isRunning && !awaitingApproval && !expanded && (
           <span className="text-emerald-600/70 dark:text-emerald-400/50 animate-pulse shrink-0 ml-auto">
             running...
           </span>
@@ -183,6 +198,11 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
           <polyline points="2 3.5 5 6.5 8 3.5" />
         </svg>
       </button>
+
+      {/* ── Inline approval card: the gate is holding this call ── */}
+      {awaitingApproval && pendingRequest && (
+        <PermissionRequestCard request={pendingRequest} />
+      )}
 
       {/* ── Streaming args card (tool running, args arriving live) ── */}
       {hasStreamingCard && (

@@ -11,6 +11,7 @@ import { registerPluginIpcHandlers } from '@main/ipc/plugins';
 import { registerLiveSlotIpcHandlers, LiveSlotRegistry } from '@main/plugins/slots';
 import { PluginWebViews } from '@main/plugins/plugin-webview';
 import { createHostAgentTools, type AgentCustomTool } from '@main/agent-tools';
+import { PermissionService, installPermissionGate, registerPermissionIpc } from '@main/permissions';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -26,8 +27,9 @@ export const liveSlots = new LiveSlotRegistry();
 
 // Enable Chrome DevTools Protocol so external tooling (Playwright, DevTools)
 // can connect to the app's own webContents (including the embedded browser
-// view) via CDP.
-app.commandLine.appendSwitch('remote-debugging-port', '19222');
+// view) via CDP. Sibling forks of this project bind the same default port —
+// PI_CDP_PORT lets a dev run step aside instead of silently losing the race.
+app.commandLine.appendSwitch('remote-debugging-port', process.env.PI_CDP_PORT ?? '19222');
 
 // Contract-level plugin isolation: force every site (each pi-plugin:// origin)
 // into its own renderer process. Site isolation is Chromium's default, but
@@ -168,9 +170,27 @@ if (!gotLock) {
     // provider is only *called* when a session is created — so the array is
     // filled in below and read through this closure.
     let hostTools: AgentCustomTool[] = [];
+
+    // Session-scoped permission modes (默认 / 完全访问). All state lives here in
+    // main, keyed by session — nothing persists, so a restart always lands on
+    // the safe default. High-risk calls in default mode block the agent until
+    // the renderer's inline approval card answers; 完全访问 lets everything
+    // through but leaves an audit line behind.
+    const permissionService = new PermissionService(
+      (payload) => {
+        mainWindow?.webContents.send('pi:permission:request', payload);
+      },
+      (payload) => {
+        mainWindow?.webContents.send('pi:permission:cancelled', payload);
+      },
+    );
+    registerPermissionIpc(permissionService);
+
     const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {
       customToolsProvider: () => [...hostTools, ...pluginSystem.aggregateTools()],
       pluginDocsProvider: () => pluginSystem.listPluginDocs(),
+      onSessionCreated: (session, info) =>
+        installPermissionGate(session, info.sessionKey, permissionService),
     });
     hostTools = createHostAgentTools({
       readContextConfig: chatService.getAgentContextConfig.bind(chatService),

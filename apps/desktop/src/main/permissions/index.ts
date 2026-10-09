@@ -1,0 +1,267 @@
+import { ipcMain } from 'electron';
+import type { AgentSession } from '@earendil-works/pi-coding-agent';
+import { appendAuditRecord } from './audit';
+
+/**
+ * Session-scoped permission modes.
+ *
+ * - 'default': high-risk tool calls (everything beyond read-only tools) wait
+ *   for an inline approval card in the renderer before executing.
+ * - 'full': nothing is intercepted, but every call that default mode WOULD
+ *   have intercepted is written to the audit log first.
+ *
+ * All state is in-memory and keyed by session key — a restart resets every
+ * session to 'default' and forgets remembered approvals. That is deliberate:
+ * 完全访问 must never survive a restart, or it stops being a per-session
+ * decision and becomes a permanently open door.
+ */
+export type PermissionMode = 'default' | 'full';
+
+export type PermissionDecision = 'once' | 'always' | 'deny';
+
+/** main → renderer: a tool call is waiting for the user's verdict. */
+export interface PermissionRequestPayload {
+  requestId: string;
+  sessionId: string;
+  toolCallId: string;
+  toolName: string;
+  args: Record<string, unknown> | undefined;
+  /** One-line summary shown on the approval card (command / path / …). */
+  summary: string;
+}
+
+/**
+ * Tools that only ever read — auto-allowed in both modes. Everything else
+ * (bash, edit, write, plugin tools, future built-ins) counts as high-risk.
+ * The two-tier rule is deliberately coarse: parsing shell commands to rank
+ * risk is a game the attacker always wins (`rm -rf` has a thousand spellings),
+ * so the line is drawn at "does it touch the world at all".
+ */
+const READ_ONLY_TOOLS = new Set(['read', 'ls', 'find', 'grep']);
+
+export class PermissionService {
+  /** session key → mode. Missing key = 'default'. */
+  private modes = new Map<string, PermissionMode>();
+  /** session key → rule keys approved with 总是允许 (this session only). */
+  private remembered = new Map<string, Set<string>>();
+  /** request id → payload + resolver, for every call currently waiting. */
+  private pending = new Map<
+    string,
+    { payload: PermissionRequestPayload; resolve: (decision: PermissionDecision) => void }
+  >();
+  private requestCounter = 0;
+
+  constructor(
+    /** Delivers an approval request to the renderer (webContents.send). */
+    private sendRequest: (payload: PermissionRequestPayload) => void,
+    /** Notifies the renderer that a pending request died without a verdict (abort). */
+    private sendCancelled: (payload: { requestId: string }) => void = () => {},
+  ) {}
+
+  getMode(sessionKey: string): PermissionMode {
+    return this.modes.get(sessionKey) ?? 'default';
+  }
+
+  setMode(sessionKey: string, mode: PermissionMode): void {
+    this.modes.set(sessionKey, mode);
+  }
+
+  /**
+   * The tool gate handed to `installPermissionGate`. Returns a blocking
+   * verdict to stop the call, or undefined to let it run.
+   */
+  async check(input: {
+    sessionKey: string;
+    toolCallId: string;
+    toolName: string;
+    args: unknown;
+    signal?: AbortSignal;
+  }): Promise<{ block: true; reason: string } | undefined> {
+    const { sessionKey, toolCallId, toolName, args, signal } = input;
+
+    if (READ_ONLY_TOOLS.has(toolName)) return undefined;
+
+    const argsRecord = (args && typeof args === 'object' ? args : undefined) as
+      | Record<string, unknown>
+      | undefined;
+    const summary = summarizeCall(argsRecord);
+
+    // 总是允许 from earlier this session — allow without asking again.
+    if (this.remembered.get(sessionKey)?.has(ruleKeyFor(toolName, argsRecord))) {
+      return undefined;
+    }
+
+    if (this.getMode(sessionKey) === 'full') {
+      // The call WOULD have been intercepted in default mode — leave a trace,
+      // then let it through. Best-effort by design; never throws.
+      appendAuditRecord({
+        sessionId: sessionKey,
+        toolName,
+        summary,
+        mode: 'full',
+        reason: '完全访问模式自动放行（default 档会拦截审批）',
+      });
+      return undefined;
+    }
+
+    // ── default mode: ask the renderer, wait for the verdict ──
+    const decision = await this.ask({
+      sessionKey,
+      toolCallId,
+      toolName,
+      args: argsRecord,
+      summary,
+      signal,
+    });
+
+    if (decision === 'deny') {
+      return { block: true, reason: `用户拒绝了本次 ${toolName} 调用` };
+    }
+    if (decision === 'always') {
+      let set = this.remembered.get(sessionKey);
+      if (!set) {
+        set = new Set();
+        this.remembered.set(sessionKey, set);
+      }
+      set.add(ruleKeyFor(toolName, argsRecord));
+    }
+    return undefined;
+  }
+
+  /** User clicked one of the three buttons on the approval card. */
+  resolve(requestId: string, decision: PermissionDecision): void {
+    const entry = this.pending.get(requestId);
+    if (!entry) return;
+    this.pending.delete(requestId);
+    entry.resolve(decision);
+  }
+
+  /** Full state for one session — lets a reloaded renderer rebuild its UI. */
+  sync(sessionKey: string): {
+    mode: PermissionMode;
+    pending: PermissionRequestPayload[];
+  } {
+    return { mode: this.getMode(sessionKey), pending: [...this.pending.values()].map((e) => e.payload) };
+  }
+
+  private ask(input: {
+    sessionKey: string;
+    toolCallId: string;
+    toolName: string;
+    args: Record<string, unknown> | undefined;
+    summary: string;
+    signal?: AbortSignal;
+  }): Promise<PermissionDecision> {
+    return new Promise((resolve) => {
+      const requestId = `perm-${Date.now()}-${++this.requestCounter}`;
+      const payload: PermissionRequestPayload = {
+        requestId,
+        sessionId: input.sessionKey,
+        toolCallId: input.toolCallId,
+        toolName: input.toolName,
+        args: input.args,
+        summary: input.summary,
+      };
+      this.pending.set(requestId, { payload, resolve });
+
+      // The user may never answer: stopping the session aborts the agent, and
+      // the gate must unblock on that signal (a deny is harmless — the run is
+      // over anyway). The renderer is told as well, so its card doesn't linger.
+      if (input.signal) {
+        input.signal.addEventListener(
+          'abort',
+          () => {
+            if (this.pending.delete(requestId)) {
+              this.sendCancelled({ requestId });
+              resolve('deny');
+            }
+          },
+          { once: true },
+        );
+      }
+
+      this.sendRequest(payload);
+    });
+  }
+}
+
+/**
+ * The "always allow" scope, shown on the card so the user knows what they are
+ * agreeing to. bash remembers its first word (all `git …` commands), every
+ * other tool remembers the tool name.
+ */
+export function ruleKeyFor(toolName: string, args: Record<string, unknown> | undefined): string {
+  if (toolName === 'bash' && typeof args?.command === 'string') {
+    const firstWord = args.command.trim().split(/\s+/)[0] ?? '';
+    if (firstWord) return `bash:${firstWord}`;
+  }
+  return `tool:${toolName}`;
+}
+
+/** One-line human summary of the call — card header and audit log share it. */
+function summarizeCall(args: Record<string, unknown> | undefined): string {
+  if (args) {
+    if (typeof args.command === 'string') return trunc(args.command);
+    if (typeof args.path === 'string') return trunc(args.path);
+    if (typeof args.file_path === 'string') return trunc(args.file_path);
+    if (typeof args.url === 'string') return trunc(args.url);
+  }
+  try {
+    return args ? trunc(JSON.stringify(args)) : '';
+  } catch {
+    return '';
+  }
+}
+
+function trunc(s: string, n = 200): string {
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
+
+/**
+ * Wrap the session's existing `beforeToolCall` — never replace it. The SDK
+ * assigns the same property itself for its extension system, so overwriting
+ * would silently break plugin tool_call handlers; wrapping keeps both, with
+ * the permission gate running first (a user denial should not spend the
+ * extension's budget on a call that will not happen).
+ */
+export function installPermissionGate(
+  session: AgentSession,
+  sessionKey: string,
+  service: PermissionService,
+): void {
+  const prev = session.agent.beforeToolCall;
+  session.agent.beforeToolCall = async (ctx, signal) => {
+    const verdict = await service.check({
+      sessionKey,
+      toolCallId: ctx.toolCall.id,
+      toolName: ctx.toolCall.name,
+      args: ctx.args,
+      signal,
+    });
+    if (verdict) return verdict;
+    return prev?.(ctx, signal);
+  };
+}
+
+/** IPC surface consumed by the renderer's permission store. */
+export function registerPermissionIpc(service: PermissionService): void {
+  ipcMain.handle(
+    'pi:permission:set-mode',
+    (_event, payload: { sessionId?: string; mode: PermissionMode }) => {
+      const key = payload.sessionId ?? 'default';
+      service.setMode(key, payload.mode);
+      return service.getMode(key);
+    },
+  );
+
+  ipcMain.handle(
+    'pi:permission:resolve',
+    (_event, payload: { requestId: string; decision: PermissionDecision }) => {
+      service.resolve(payload.requestId, payload.decision);
+    },
+  );
+
+  ipcMain.handle('pi:permission:sync', (_event, sessionId?: string) =>
+    service.sync(sessionId ?? 'default'),
+  );
+}

@@ -11,6 +11,8 @@ import {
   usePluginStore,
   usePanelStore,
   useCommandStore,
+  usePermissionStore,
+  initPermissionBridge,
   getPluginBridge,
 } from '@pi/ui';
 import { AppShell } from '@pi/ui';
@@ -173,6 +175,19 @@ function AppContent() {
       }
     });
   }, [setPanelStatus, openPanel]);
+
+  // ── Permission modes: bridge + per-session sync ──
+  // The bridge forwards approval requests / cancellations from main into the
+  // store; the sync pulls the current session's mode and any requests that
+  // were already in flight (covers a renderer reload mid-approval).
+  useEffect(() => {
+    initPermissionBridge();
+  }, []);
+
+  const activeSessionId = useUIStore((s) => s.activeSessionId);
+  useEffect(() => {
+    usePermissionStore.getState().sync(activeSessionId ?? 'default');
+  }, [activeSessionId]);
 
   useEffect(() => {
     sdk.connect().then(() => {

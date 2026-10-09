@@ -27,6 +27,8 @@ export { cn, isTextEditableFile, isPreviewableInRightPanel, openWithSystemApp } 
 export { useUIStore } from './stores/ui-store';
 export { useThemeStore } from './stores/theme-store';
 export { useComposerStore } from './stores/composer-store';
+export { usePermissionStore, initPermissionBridge } from './stores/permission-store';
+export type { PermissionMode, PermissionDecision, PermissionRequest } from './stores/permission-store';
 export { usePluginStore, getPluginBridge } from './stores/plugin-store';
 export { usePanelStore, pluginPanelId, usePanelActivation } from './stores/panel-store';
 export type { PanelEntry, PanelKeepAlive, PanelRuntimeState, PanelRegion, PanelAnchor } from './stores/panel-store';

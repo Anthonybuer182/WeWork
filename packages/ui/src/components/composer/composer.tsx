@@ -21,6 +21,8 @@ import { ModelSelector } from '../model/model-selector';
 import { ThinkLevelSelector } from '../model/think-level-selector';
 import { SkillSelector } from '../model/skill-selector';
 import { CompactToggle } from '../model/compact-toggle';
+import { PermissionModeButton } from './permission-mode-button';
+import { usePermissionStore } from '@/stores/permission-store';
 import { useCommandStore, type RegisteredCommand } from '@/stores/command-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import type { ContentBlock, Config, Skill } from '@pi/types';
@@ -34,6 +36,10 @@ export function Composer() {
   const executePluginCommand = usePluginStore((s) => s.executePluginCommand);
   const activeSessionId = useUIStore((s) => s.activeSessionId);
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
+  // Session-scoped permission mode (默认 / 完全访问) — mirrored from main.
+  const permissionMode = usePermissionStore(
+    (s) => s.modeBySession[activeSessionId ?? 'default'] ?? 'default',
+  );
   const compactMode = useUIStore((s) => s.compactMode);
   const setCompactMode = useUIStore((s) => s.setCompactMode);
   const selectedSkills = useUIStore((s) => s.selectedSkills);
@@ -1102,6 +1108,9 @@ export function Composer() {
     <div
       className={cn(
         'rounded-xl border bg-card shadow-lg mx-4 mb-4 overflow-visible',
+        // 完全访问 keeps the door visibly open for as long as it is open —
+        // the red ring is the state, not a decoration.
+        !isDragging && permissionMode === 'full' && 'ring-2 ring-destructive/40 border-destructive/50',
         isDragging && 'ring-2 ring-primary/50 border-primary',
       )}
     >
@@ -1202,6 +1211,10 @@ export function Composer() {
           onToggle={toggleSkill}
         />
         <CompactToggle compact={compactMode} onToggle={setCompactMode} />
+        {/* Session permission mode — left side of the toolbar because the right
+            side is replaced by Steer/Stop while streaming, and tools run
+            exactly then. */}
+        <PermissionModeButton />
         <div className="flex items-center gap-1 shrink-0 ml-auto">
         {isStreaming ? (
           <>
