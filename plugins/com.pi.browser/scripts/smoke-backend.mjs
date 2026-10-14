@@ -2,11 +2,11 @@
 /**
  * Drive the built backend with a fake host — no Electron, no app.
  *
- * This plugin has no panel, so this is the only way to check it short of
- * asking the agent to drive a real browser: it runs `dist/main.mjs`, the
- * artifact that actually ships, against a stub that answers the same `call`
- * messages the host does, and asserts each tool's result and the capability it
- * reached for.
+ * This plugin's backend has no Electron dependency of its own, so this is the
+ * only way to check it short of asking the agent to drive a real browser: it
+ * runs `dist/main.mjs`, the artifact that actually ships, against a stub that
+ * answers the same `call` messages the host does, and asserts each tool's
+ * result and the capability it reached for.
  *
  * Usage: node scripts/smoke-backend.mjs
  */
@@ -15,6 +15,66 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+// Storage keys the backend persists under — asserted at the bottom.
+const HISTORY_KEY = 'history.entries';
+const FAVORITES_KEY = 'favorites.items';
+const CLIPS_KEY = 'clips.items';
+
+/** What chat.send said — the agent half of the selection-popup round trip. */
+const sentChats = [];
+
+/**
+ * The fake page's selection-popup globals. `browser.evaluate` is the plugin's
+ * ONLY channel into the page, so the fake reads the expression to tell which
+ * injected global it touches, and answers the way the real page would.
+ */
+const fakePage = { installed: false, action: null, notes: [], toasts: [], clips: [], disabled: 0 };
+
+function fakeEvaluate(expression) {
+  // Order matters: the inject source also mentions __piSelDisable (it defines
+  // it), so the install/disable checks must be anchored on their own shapes.
+  if (expression.includes('data-pi-sel-host')) {
+    const was = fakePage.installed;
+    fakePage.installed = true;
+    return was ? 'already' : 'installed';
+  }
+  if (/__piSelDisable \?/.test(expression)) {
+    fakePage.installed = false;
+    fakePage.disabled++;
+    return true;
+  }
+  if (expression.includes('__piNoteShow')) {
+    const m = expression.match(/__piNoteShow\((\{.*\})\)/s);
+    fakePage.notes.push(m ? JSON.parse(m[1]) : { state: 'unparsed' });
+    return true;
+  }
+  if (expression.includes('__piRenderClips')) {
+    // Two JSON arguments: the list, and the id of the clip just kept.
+    const m = expression.match(/__piRenderClips\((\[.*?\]), (null|"[^"]*")\)/s);
+    fakePage.clips.push(m ? { list: JSON.parse(m[1]), newestId: JSON.parse(m[2]) } : { unparsed: expression.slice(0, 80) });
+    return true;
+  }
+  if (expression.includes('__piToast')) {
+    const m = expression.match(/__piToast\((\".*\")\)/s);
+    fakePage.toasts.push(m ? JSON.parse(m[1]) : '');
+    return true;
+  }
+  if (expression.includes('__piSelAction')) {
+    // The poll expression: hand over a pending click (and clear it), or
+    // report whether the popup is still installed.
+    if (fakePage.action) {
+      const a = JSON.stringify(fakePage.action);
+      fakePage.action = null;
+      return a;
+    }
+    return fakePage.installed ? '' : 'REINSTALL';
+  }
+  if (expression.includes('document.title')) {
+    return { h1: currentTitle };
+  }
+  return { result: 'smoke-default' };
+}
 
 let failures = 0;
 function check(label, ok, detail = '') {
@@ -43,6 +103,9 @@ function sendToBackend(msg) {
 let currentUrl = 'about:blank';
 let currentTitle = '';
 let snapshotText = '[button] "登录" ref=[1]\n[input] "搜索" ref=[2]';
+
+/** The fake storage.* store, shared by all keys. */
+const store = {};
 
 function handleFromBackend(msg) {
   switch (msg.type) {
@@ -101,7 +164,11 @@ function handleFromBackend(msg) {
           });
           break;
         case 'browser.evaluate':
-          sendToBackend({ type: 'call-result', id: msg.id, result: { result: { h1: 'Example Domain' } } });
+          sendToBackend({ type: 'call-result', id: msg.id, result: { result: fakeEvaluate(msg.params.expression) } });
+          break;
+        case 'chat.send':
+          sentChats.push(String(msg.params.text ?? ''));
+          sendToBackend({ type: 'call-result', id: msg.id, result: { ok: true } });
           break;
         case 'browser.walk':
           sendToBackend({
@@ -118,6 +185,13 @@ function handleFromBackend(msg) {
           break;
         case 'browser.screenshot':
           sendToBackend({ type: 'call-result', id: msg.id, result: { base64: 'aGVsbG8=' } });
+          break;
+        case 'storage.get':
+          sendToBackend({ type: 'call-result', id: msg.id, result: store[msg.params.key] });
+          break;
+        case 'storage.set':
+          store[msg.params.key] = msg.params.value;
+          sendToBackend({ type: 'call-result', id: msg.id, result: { ok: true } });
           break;
         default:
           sendToBackend({ type: 'call-result', id: msg.id, error: `no such capability: ${msg.method}` });
@@ -331,6 +405,260 @@ check(
   'browser.urlChanged host event is relayed to the mounted panel',
   panelSent.some((m) => m.kind === 'event' && m.event === 'ui.urlChanged' && m.data?.url === 'https://agent-opened.example'),
   JSON.stringify(panelSent),
+);
+
+// ── omnibox: history, favorites, private mode ──
+// lastUrl is https://agent-opened.example at this point (the host event above),
+// which is what a star click with no explicit url means.
+
+const fav = await panelRequest('f1', 'favorites.toggle', {});
+check(
+  'favorites.toggle with no url favorites the current page',
+  fav?.ok === true && fav?.result?.favorited === true && fav?.result?.url === 'https://agent-opened.example',
+  JSON.stringify(fav),
+);
+check(
+  'toggling a favorite is announced to the panel (star + list follow)',
+  panelSent.some((m) => m.event === 'ui.favoritesChanged') &&
+    panelSent.some((m) => m.event === 'ui.urlChanged' && m.data?.favorited === true),
+  JSON.stringify(panelSent.filter((m) => m.kind === 'event').map((m) => m.event)),
+);
+
+const omni = await panelRequest('f2', 'omnibox.search', { query: '' });
+check(
+  'omnibox.search with an empty query returns the favorite',
+  omni?.ok === true && omni.result.favorites.length === 1 && omni.result.favorites[0].url === 'https://agent-opened.example',
+  JSON.stringify(omni),
+);
+const omniMiss = await panelRequest('f3', 'omnibox.search', { query: '没有这个站点' });
+check(
+  'omnibox.search filters by every word of the query',
+  omniMiss?.ok === true && omniMiss.result.favorites.length === 0 && omniMiss.result.history.length === 0,
+  JSON.stringify(omniMiss),
+);
+
+const favList = await callTool('browser_favorites_list', {});
+check(
+  'browser_favorites_list names the starred page',
+  /agent-opened\.example/.test(favList.content?.[0]?.text ?? ''),
+  favList.content?.[0]?.text,
+);
+
+const historyTool = await callTool('browser_history_search', { query: 'agent-opened' });
+check(
+  'browser_history_search finds a visit recorded from the host event',
+  /agent-opened\.example/.test(historyTool.content?.[0]?.text ?? '') && /访问 1 次/.test(historyTool.content?.[0]?.text ?? ''),
+  historyTool.content?.[0]?.text,
+);
+
+// Same page, different anchor: did-navigate-in-page fires for these, and none
+// of them is a new visit.
+sendToBackend({ type: 'host-event', event: 'browser.urlChanged', data: { url: 'https://agent-opened.example#section' } });
+await new Promise((r) => setTimeout(r, 60));
+const dedup = await callTool('browser_history_search', { query: 'agent-opened' });
+check(
+  'an anchor jump on the same page is not counted as another visit',
+  /访问 1 次/.test(dedup.content?.[0]?.text ?? ''),
+  dedup.content?.[0]?.text,
+);
+
+// The title arrives after did-navigate; the backend asks the engine again and
+// backfills it instead of leaving every visit untitled.
+currentUrl = 'https://second.example/page';
+sendToBackend({ type: 'host-event', event: 'browser.urlChanged', data: { url: currentUrl } });
+await new Promise((r) => setTimeout(r, 60));
+currentTitle = '第二页';
+await new Promise((r) => setTimeout(r, 1500));
+const titled = await callTool('browser_history_search', { query: 'second.example' });
+check(
+  'a visit learns its page title a beat after the navigation',
+  /第二页/.test(titled.content?.[0]?.text ?? ''),
+  titled.content?.[0]?.text,
+);
+
+const private_on = await panelRequest('f4', 'settings.setPrivate', { private: true });
+await new Promise((r) => setTimeout(r, 20));
+panelSent.length = 0;
+sendToBackend({ type: 'host-event', event: 'browser.urlChanged', data: { url: 'https://secret.example/x' } });
+await new Promise((r) => setTimeout(r, 60));
+const secret = await callTool('browser_history_search', { query: 'secret.example' });
+check(
+  'private mode stops recording visits',
+  private_on?.result?.private === true && /没有匹配/.test(secret.content?.[0]?.text ?? ''),
+  secret.content?.[0]?.text,
+);
+check(
+  'private mode still pushes the page to the panel (it is a state, not a blackout)',
+  panelSent.some((m) => m.event === 'ui.urlChanged' && m.data?.private === true),
+  JSON.stringify(panelSent.filter((m) => m.kind === 'event').map((m) => m.event)),
+);
+await panelRequest('f5', 'settings.setPrivate', { private: false });
+
+const stateReq2 = await panelRequest('f6', 'state.get');
+check(
+  'state.get reports the star state and private flag alongside the url',
+  stateReq2?.ok === true && stateReq2.result.favorited === false && stateReq2.result.private === false,
+  JSON.stringify(stateReq2),
+);
+
+const cleared = await panelRequest('f7', 'history.clear');
+const afterClear = await callTool('browser_history_search', {});
+check(
+  'history.clear empties the history the agent reads',
+  cleared?.ok === true && /历史记录是空的/.test(afterClear.content?.[0]?.text ?? ''),
+  afterClear.content?.[0]?.text,
+);
+check(
+  'clearing history leaves favorites alone (they are explicit, not incidental)',
+  store[FAVORITES_KEY]?.length === 1 && store[HISTORY_KEY]?.length === 0,
+  JSON.stringify(store),
+);
+
+const removed = await panelRequest('f8', 'favorites.remove', { url: 'https://agent-opened.example' });
+const favList2 = await callTool('browser_favorites_list', {});
+check(
+  'favorites.remove drops it from the list',
+  removed?.ok === true && /还没有收藏/.test(favList2.content?.[0]?.text ?? ''),
+  favList2.content?.[0]?.text,
+);
+
+// A fresh backend must read all of it back — persistence, not just memory.
+const persisted = await panelRequest('f9', 'favorites.toggle', { url: 'https://persisted.example', title: '持久化' });
+check(
+  'favorites are written through to storage',
+  persisted?.result?.favorited === true &&
+    Array.isArray(store[FAVORITES_KEY]) &&
+    store[FAVORITES_KEY][0].title === '持久化' &&
+    store[FAVORITES_KEY][0].url === 'https://persisted.example',
+  JSON.stringify(store[FAVORITES_KEY]),
+);
+
+// ── selection popup: inject → click → poll → act → show ──
+
+await panelRequest('s1', 'settings.setSelPopup', { on: true });
+await new Promise((r) => setTimeout(r, 900)); // let an injection attempt land
+check('the popup is installed into the page', fakePage.installed === true, JSON.stringify(fakePage));
+
+// The user clicks 收藏 on the popup — the list comes back into the popup.
+fakePage.action = { action: '收藏', text: '选中的这段话', url: 'https://example.com/', title: 'Example Domain' };
+await new Promise((r) => setTimeout(r, 900)); // one poll tick carries it back
+check(
+  'a 收藏 click reaches the backend through the poll and is stored as a clip',
+  Array.isArray(store[CLIPS_KEY]) && store[CLIPS_KEY][0]?.text === '选中的这段话',
+  JSON.stringify(store[CLIPS_KEY]),
+);
+check(
+  'the popup gets the clips list back, with the new one marked as newest',
+  fakePage.clips.length === 1 && fakePage.clips[0].list[0]?.text === '选中的这段话' &&
+    fakePage.clips[0].newestId === fakePage.clips[0].list[0].id,
+  JSON.stringify(fakePage.clips),
+);
+
+// Deleting from that list is the only clip-management path there is.
+const doomedId = store[CLIPS_KEY][0].id;
+fakePage.action = { action: 'removeClip', id: doomedId };
+await new Promise((r) => setTimeout(r, 900));
+check(
+  'the ✕ in the list deletes the clip and redraws the list',
+  store[CLIPS_KEY].length === 0 && fakePage.clips.length === 2 && fakePage.clips[1].list.length === 0,
+  JSON.stringify({ clips: store[CLIPS_KEY], rendered: fakePage.clips }),
+);
+
+// 发送 (the question field, Enter or the button) carries the chip's quote separately.
+sentChats.length = 0;
+fakePage.action = { action: 'chat', text: '这段话的第二句是什么意思?', quote: '引用的原始段落。', url: 'https://example.com/' };
+await new Promise((r) => setTimeout(r, 900));
+check(
+  '发送 puts the question and the chip quote into the conversation, with its source',
+  sentChats.length === 1 &&
+    /第二句是什么意思/.test(sentChats[0]) &&
+    /「引用」引用的原始段落。/.test(sentChats[0]) &&
+    /https:\/\/example\.com/.test(sentChats[0]),
+  JSON.stringify(sentChats),
+);
+sentChats.length = 0;
+fakePage.action = { action: 'chat', text: '', quote: '只发引用不打问题', url: 'https://example.com/' };
+await new Promise((r) => setTimeout(r, 900));
+check(
+  '发送 with the chip alone is a quote-only opener',
+  sentChats.length === 1 && /「引用」只发引用不打问题/.test(sentChats[0]) && !/undefined/.test(sentChats[0]),
+  JSON.stringify(sentChats),
+);
+
+// 翻译: the click must reach the agent — and the popup must say it is working.
+fakePage.notes.length = 0;
+sentChats.length = 0;
+fakePage.action = { action: '翻译', text: 'Hello world', url: 'https://example.com/', title: 'Example Domain' };
+await new Promise((r) => setTimeout(r, 900));
+check(
+  '翻译 asks the agent, naming browser_show as the way to answer',
+  sentChats.some((t) => /Hello world/.test(t) && /browser_show/.test(t)),
+  JSON.stringify(sentChats),
+);
+check(
+  'the popup card shows a pending state while the agent works',
+  fakePage.notes.some((n) => n.state === 'pending' && n.kind === 'translate'),
+  JSON.stringify(fakePage.notes),
+);
+
+const shown = await callTool('browser_show', { text: '你好,世界', kind: 'translate' });
+check(
+  'browser_show renders the agent result in the page card',
+  /已展示/.test(shown.content?.[0]?.text ?? '') && fakePage.notes.some((n) => n.state === 'done' && n.text === '你好,世界'),
+  JSON.stringify({ result: shown.content?.[0]?.text, notes: fakePage.notes }),
+);
+
+// A pending 翻译 that outlives 10s tells the user about the permission gate —
+// from the popup, "翻译中… forever" is exactly how a gated call reads as dead.
+// (The hint TEXT lives in the injected script; here we assert the state fires.)
+fakePage.notes.length = 0;
+fakePage.action = { action: '翻译', text: 'Hello again', url: 'https://example.com/' };
+await new Promise((r) => setTimeout(r, 900)); // pendingNote set
+const realNow = Date.now;
+Date.now = () => realNow() + 15_000; // age the pending note past the hint threshold
+await new Promise((r) => setTimeout(r, 900)); // one poll tick with the aged clock
+Date.now = realNow;
+check(
+  'a slow answer fires the pending-hint state (names the permission gate in the popup)',
+  fakePage.notes.some((n) => n.state === 'pending-hint'),
+  JSON.stringify(fakePage.notes),
+);
+check(
+  'the hint fires once, not every tick',
+  fakePage.notes.filter((n) => n.state === 'pending-hint').length === 1,
+  JSON.stringify(fakePage.notes),
+);
+
+// Re-keeping the text means the list is the only place the user can undo it.
+fakePage.action = { action: '收藏', text: '选中的这段话', url: 'https://example.com/', title: 'Example Domain' };
+await new Promise((r) => setTimeout(r, 900));
+
+const clipsTool = await callTool('browser_clips_list', {});
+check(
+  'browser_clips_list shows the agent what the user kept',
+  /选中的这段话/.test(clipsTool.content?.[0]?.text ?? ''),
+  clipsTool.content?.[0]?.text,
+);
+
+// Off switch: the live page must lose the popup.
+const selOff = await panelRequest('s2', 'settings.setSelPopup', { on: false });
+check(
+  'turning the switch off removes the popup from the live page',
+  selOff?.result?.selPopup === false && fakePage.disabled > 0 && fakePage.installed === false,
+  JSON.stringify({ result: selOff?.result, disabled: fakePage.disabled, installed: fakePage.installed }),
+);
+await panelRequest('s3', 'settings.setSelPopup', { on: true });
+
+// A page that drops the popup is healed by the next poll, not left broken.
+fakePage.installed = false;
+await new Promise((r) => setTimeout(r, 900));
+check('a page that lost the popup gets it back on the next poll', fakePage.installed === true, JSON.stringify(fakePage));
+
+const stateReq3 = await panelRequest('s4', 'state.get');
+check(
+  'state.get carries the selection-popup switch for the panel footer',
+  stateReq3?.result?.selPopup === true,
+  JSON.stringify(stateReq3),
 );
 
 check('every capability call carried a method and params', calls.every((c) => typeof c.method === 'string'));

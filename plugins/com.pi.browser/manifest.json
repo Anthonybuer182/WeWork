@@ -1,15 +1,16 @@
 {
   "id": "com.pi.browser",
   "name": "浏览器自动化",
-  "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
-  "version": "0.3.1",
+  "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航;面板地址栏带收藏和历史;网页里划词弹出复合框(引用标签 + 问题输入框,翻译/解释/收藏,回车把问题连同引用发送到对话),翻译与解释由 agent 完成后回显在框内。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
+  "version": "0.7.1",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
   },
   "backend": "./dist/main.mjs",
   "permissions": [
-    "browser"
+    "browser",
+    "storage"
   ],
   "contributes": {
     "panels": [
@@ -22,6 +23,72 @@
       }
     ],
     "tools": [
+      {
+        "name": "browser_show",
+        "description": "Show a result to the user inside the browser — the card in the web page (or the panel). This is the ONLY way to deliver something the user asked to see there: when they select page text and pick 翻译 / 解释, the popup waits for this call, so answer with it instead of replying in the conversation. Also use it for any other content you were asked to display in the browser (a summary of the page, a rewritten paragraph).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The content to display — the full translation or explanation, not a summary of it."
+            },
+            "title": {
+              "type": "string",
+              "description": "Short heading for the card, e.g. \"译文\" or \"要点\". Optional."
+            },
+            "kind": {
+              "type": "string",
+              "description": "What this is: \"translate\" or \"explain\" when answering a selection-popup request, so the card is labelled correctly."
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_clips_list",
+        "description": "List the pieces of page text the user kept with the selection popup's 收藏 button. Use it when they ask what they saved while reading, or refer to \"我收藏的那段话\".",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Words to match against the saved text and the page it came from. Empty returns the most recent clips."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_history_search",
+        "description": "Search the pages this browser has visited. Use it when the user refers to a site they (or you) opened before — \"再打开上次那个网站\" — instead of asking them to retype the address. Returns each match's title, URL, when it was last visited, and how often.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Words to match against page titles and URLs, e.g. \"招聘\" or \"github react\" — every word must appear. Empty returns the most recent visits."
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum entries to return. Defaults to 20."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_favorites_list",
+        "description": "List the sites the user starred in the browser panel. Use it to resolve \"打开我常用的那个网站\" into a real URL, or to see which sites the user cares about before navigating.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
       {
         "name": "browser_navigate",
         "description": "Navigate the built-in browser to a URL and wait for it to load. Returns the final URL and page title.",

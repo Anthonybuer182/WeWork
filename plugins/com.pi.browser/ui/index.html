@@ -49,6 +49,9 @@
     }
     #toolbar button:hover { background: hsl(var(--accent, 221 19% 17%)); }
     #toolbar button:active { transform: scale(0.94); }
+    #toolbar button:disabled { opacity: 0.4; cursor: default; }
+    #toolbar button:disabled:hover { background: transparent; }
+    #btn-star.on { color: hsl(43 90% 62%); }
     #url {
       flex: 1;
       min-width: 0;
@@ -62,6 +65,89 @@
       outline: none;
     }
     #url:focus { border-color: hsl(var(--ring, 218 100% 65%)); }
+
+    /* 下拉列表(收藏 + 历史)必须长在文档流里,不能绝对定位悬浮在页面上:
+       引擎视图是宿主进程里的原生 WebContentsView,永远盖在页面 DOM 之上、
+       吞掉落在它身上的点击(见 apps/desktop/src/main/plugins/slots.ts)。
+       下拉展开时挤占 #page-slot,piSDK.liveSlot 的 ResizeObserver 会上报新
+       矩形、把引擎视图挪到下拉下面,露出并让出这块区域的点击。 */
+    #omnibox {
+      flex: none;
+      max-height: min(320px, 45vh);
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid hsl(var(--border, 218 14% 20%));
+      background: hsl(var(--card, 222 15% 11%));
+      overflow: hidden;
+    }
+    #omnibox[hidden] { display: none; }
+    #omni-list { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0; }
+    .sec {
+      padding: 5px 12px 3px;
+      font-size: 11px;
+      letter-spacing: 0.02em;
+      color: hsl(var(--muted-foreground, 217 9% 59%));
+      user-select: none;
+    }
+    .row { display: flex; align-items: center; gap: 8px; padding: 5px 12px; cursor: pointer; }
+    .row.active, .row:hover { background: hsl(var(--accent, 221 19% 17%)); }
+    .row-main { flex: 1; min-width: 0; }
+    .row-title {
+      font-size: 12.5px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .row-url {
+      font-size: 11px;
+      color: hsl(var(--muted-foreground, 217 9% 59%));
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .row-side { flex: none; font-size: 11px; color: hsl(var(--muted-foreground, 217 9% 59%)); }
+    .row-x {
+      flex: none;
+      width: 18px; height: 18px;
+      border: none; border-radius: 4px;
+      background: transparent;
+      color: hsl(var(--muted-foreground, 217 9% 59%));
+      font-size: 11px; line-height: 1;
+      cursor: pointer;
+      visibility: hidden;
+    }
+    .row:hover .row-x, .row.active .row-x { visibility: visible; }
+    .row-x:hover { background: hsl(var(--border, 218 14% 20%)); color: hsl(var(--foreground, 220 21% 92%)); }
+    .empty {
+      padding: 16px 12px;
+      font-size: 12px;
+      color: hsl(var(--muted-foreground, 217 9% 59%));
+      text-align: center;
+      user-select: none;
+    }
+    #omni-foot {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px;
+      border-top: 1px solid hsl(var(--border, 218 14% 20%));
+    }
+    #omni-foot label {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px;
+      cursor: pointer; user-select: none;
+      white-space: nowrap;
+    }
+    #chk-private, #chk-sel { accent-color: hsl(var(--ring, 218 100% 65%)); cursor: pointer; }
+    #btn-clear {
+      margin-left: auto;
+      border: none; border-radius: 4px;
+      background: transparent;
+      color: hsl(var(--muted-foreground, 217 9% 59%));
+      font-size: 12px;
+      padding: 2px 6px;
+      cursor: pointer;
+    }
+    #btn-clear:hover { background: hsl(var(--accent, 221 19% 17%)); }
+    #btn-clear.armed { color: hsl(0 72% 62%); }
+
     /* The engine view is positioned exactly over this region by the host
        (piSDK.liveSlot). Keep it empty — anything painted here is covered. */
     #page-slot { flex: 1; min-height: 0; }
@@ -72,14 +158,35 @@
     <button id="btn-back" title="后退" aria-label="后退">←</button>
     <button id="btn-forward" title="前进" aria-label="前进">→</button>
     <button id="btn-reload" title="刷新" aria-label="刷新">⟳</button>
-    <input id="url" type="text" spellcheck="false" placeholder="输入网址,回车打开" />
+    <button id="btn-star" title="收藏此页" aria-label="收藏此页" aria-pressed="false">☆</button>
+    <input id="url" type="text" spellcheck="false" placeholder="输入网址,回车打开" autocomplete="off" />
   </div>
+
+  <div id="omnibox" hidden>
+    <div id="omni-list"></div>
+    <div id="omni-foot">
+      <label id="private-wrap" title="开启后,访问过的页面不再进入历史记录">
+        <input type="checkbox" id="chk-private" /> 无痕
+      </label>
+      <label id="sel-wrap" title="开启后,在网页里选中文字会在选区下方弹出操作条">
+        <input type="checkbox" id="chk-sel" /> 划词
+      </label>
+      <button id="btn-clear" title="删除全部历史记录">清空历史</button>
+    </div>
+  </div>
+
   <div id="page-slot"></div>
 
   <script>
     (function () {
       var input = document.getElementById('url');
       var slot = document.getElementById('page-slot');
+      var omnibox = document.getElementById('omnibox');
+      var list = document.getElementById('omni-list');
+      var btnStar = document.getElementById('btn-star');
+      var chkPrivate = document.getElementById('chk-private');
+      var chkSel = document.getElementById('chk-sel');
+      var btnClear = document.getElementById('btn-clear');
 
       // Bind the host engine view into the empty region below the toolbar.
       // The host refused (no browser permission / slot name clash) → the SDK
@@ -92,28 +199,322 @@
         });
       }
 
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      // ── Panel state ──
+      var state = {
+        url: '',
+        title: '',
+        favorited: false,
+        private: false,
+        selPopup: true,
+        favorites: [],   // last omnibox.search answer
+        history: [],
+        active: -1       // highlighted row across both sections
+      };
+      var searchSeq = 0;
+
+      function displayUrl(u) {
+        return String(u || '').replace(/^https?:\/\//i, '');
+      }
+
+      function flatItems() {
+        return state.favorites.concat(state.history);
+      }
+
+      function isRecordable(u) {
+        return /^https?:\/\//i.test(String(u || ''));
+      }
+
+      /**
+       * What to search for. The address bar holds the current page's URL, so
+       * taking it at face value would filter the list down to nothing the
+       * moment you click the bar — the launcher (favorites + recent) is what
+       * an untouched bar should show. Only text the user actually typed
+       * counts as a query.
+       */
+      function queryOf() {
+        var value = input.value.trim();
+        if (!value || value === state.url) return '';
+        return value;
+      }
+
+      function updateStar() {
+        var usable = isRecordable(state.url);
+        btnStar.disabled = !usable;
+        btnStar.textContent = state.favorited ? '★' : '☆';
+        btnStar.classList.toggle('on', state.favorited);
+        btnStar.setAttribute('aria-pressed', state.favorited ? 'true' : 'false');
+        btnStar.title = state.favorited ? '取消收藏' : '收藏此页';
+      }
+
+      // ── Omnibox ──
+      function openOmnibox() {
+        if (omnibox.hidden) {
+          omnibox.hidden = false;
+          refreshList();
+        }
+      }
+
+      function closeOmnibox() {
+        omnibox.hidden = true;
+        state.active = -1;
+        disarmClear();
+      }
+
+      function refreshList() {
+        var seq = ++searchSeq;
+        return window.piSDK.request('omnibox.search', { query: queryOf() })
+          .then(function (res) {
+            if (seq !== searchSeq) return;  // a newer keystroke already answered
+            state.favorites = (res && res.favorites) || [];
+            state.history = (res && res.history) || [];
+            // Keep the highlight where it was (clamped) rather than clearing
+            // it: the answer is one IPC round-trip behind the keystroke that
+            // asked for it, and ArrowDown on a closed omnibox asks for a
+            // highlight before the rows it points at exist.
+            state.active = Math.max(-1, Math.min(state.active, flatItems().length - 1));
+            renderList();
+            setActive(state.active);
+          })
+          .catch(function () {});
+      }
+
+      function renderList() {
+        var rows = [];
+        var i;
+
+        if (state.favorites.length) {
+          rows.push('<div class="sec">★ 收藏</div>');
+          for (i = 0; i < state.favorites.length; i++) {
+            rows.push(rowHtml(state.favorites[i], i, true));
+          }
+        }
+        if (state.history.length) {
+          rows.push('<div class="sec">最近访问</div>');
+          for (i = 0; i < state.history.length; i++) {
+            rows.push(rowHtml(state.history[i], state.favorites.length + i, false));
+          }
+        }
+        if (!rows.length) {
+          rows.push('<div class="empty">' +
+            (queryOf()
+              ? '没有匹配的收藏或历史记录'
+              : '收藏和历史记录会出现在这里') +
+            '</div>');
+        }
+        list.innerHTML = rows.join('');
+      }
+
+      function rowHtml(item, index, isFav) {
+        var title = item.title || displayUrl(item.url);
+        var side = isFav ? '' : '<span class="row-side">' + esc(whenLabel(item.lastVisitedAt)) + '</span>';
+        var x = isFav ? '<button class="row-x" data-remove="' + index + '" title="取消收藏">✕</button>' : '';
+        return (
+          '<div class="row" data-open="' + index + '">' +
+            '<div class="row-main">' +
+              '<div class="row-title">' + esc(title) + '</div>' +
+              '<div class="row-url">' + esc(displayUrl(item.url)) + '</div>' +
+            '</div>' +
+            side + x +
+          '</div>'
+        );
+      }
+
+      function whenLabel(ts) {
+        var d = new Date(ts || 0);
+        if (isNaN(d.getTime())) return '';
+        var now = new Date();
+        var sameDay = function (a, b) {
+          return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        };
+        var hm = function (x) {
+          return ('0' + x.getHours()).slice(-2) + ':' + ('0' + x.getMinutes()).slice(-2);
+        };
+        if (sameDay(d, now)) return '今天 ' + hm(d);
+        var y = new Date(now); y.setDate(y.getDate() - 1);
+        if (sameDay(d, y)) return '昨天 ' + hm(d);
+        return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+      }
+
+      function setActive(i) {
+        var items = flatItems();
+        state.active = Math.max(-1, Math.min(i, items.length - 1));
+        var rows = list.querySelectorAll('.row');
+        for (var k = 0; k < rows.length; k++) {
+          rows[k].classList.toggle('active', Number(rows[k].getAttribute('data-open')) === state.active);
+        }
+        // .sec headers are not .row, so this NodeList lines up with flatItems()
+        // one for one — index it directly, no offset for the headers.
+        var el = rows.length ? rows[state.active] : null;
+        if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+      }
+
+      function choose(item) {
+        if (!item || !item.url) return;
+        act('nav.open', { url: item.url });
+        closeOmnibox();
+        input.blur();
+      }
+
+      // mousedown inside the dropdown must not move focus, or the input's blur
+      // would close the list before the click lands (the classic combobox trap).
+      omnibox.addEventListener('mousedown', function (e) { e.preventDefault(); });
+
+      list.addEventListener('click', function (e) {
+        var target = e.target;
+        var xBtn = target.closest ? target.closest('[data-remove]') : null;
+        if (xBtn) {
+          var idx = Number(xBtn.getAttribute('data-remove'));
+          var item = flatItems()[idx];
+          if (item) {
+            act('favorites.remove', { url: item.url }).then(refreshList);
+          }
+          return;
+        }
+        var row = target.closest ? target.closest('[data-open]') : null;
+        if (row) choose(flatItems()[Number(row.getAttribute('data-open'))]);
+      });
+
+      // ── Toolbar ──
+      btnStar.addEventListener('click', function () {
+        if (!isRecordable(state.url)) return;
+        window.piSDK.request('favorites.toggle', { url: state.url, title: state.title })
+          .then(function (res) {
+            if (res && typeof res.favorited === 'boolean') {
+              state.favorited = res.favorited;
+              updateStar();
+            }
+          })
+          .catch(function (e) { console.warn('favorites.toggle', e && e.message ? e.message : e); });
+      });
+
       document.getElementById('btn-back').addEventListener('click', function () { act('nav.back'); });
       document.getElementById('btn-forward').addEventListener('click', function () { act('nav.forward'); });
       document.getElementById('btn-reload').addEventListener('click', function () { act('nav.reload'); });
 
+      // ── Address bar ──
+      input.addEventListener('focus', function () {
+        openOmnibox();
+        // Like a real address bar: the first click selects the URL so typing
+        // replaces it; clicking again (already focused, so no second focus
+        // event) drops the caret where you clicked, for editing it instead.
+        input.select();
+      });
+      input.addEventListener('input', function () {
+        openOmnibox();
+        refreshList();
+      });
       input.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          closeOmnibox();
+          input.blur();
+          return;
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          openOmnibox();
+          setActive(state.active + 1);
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setActive(state.active - 1);
+          return;
+        }
         if (e.key === 'Enter') {
+          var items = flatItems();
+          if (state.active >= 0 && state.active < items.length) {
+            choose(items[state.active]);
+            return;
+          }
           var value = input.value.trim();
           if (value) act('nav.open', { url: value });
+          closeOmnibox();
           input.blur();
         }
       });
+      // Clicking into the page (the native engine view) steals focus without
+      // our page hearing a click — window blur is the only signal we get.
+      window.addEventListener('blur', closeOmnibox);
 
-      // Agent-driven navigation arrives as a backend push; keep the address
-      // bar in sync either way.
+      // ── Footer: private mode + selection popup + clear history ──
+      chkPrivate.addEventListener('change', function () {
+        window.piSDK.request('settings.setPrivate', { private: chkPrivate.checked })
+          .then(function (res) {
+            state.private = !!(res && res.private);
+            chkPrivate.checked = state.private;
+          })
+          .catch(function () { chkPrivate.checked = state.private; });
+      });
+
+      chkSel.addEventListener('change', function () {
+        window.piSDK.request('settings.setSelPopup', { on: chkSel.checked })
+          .then(function (res) {
+            state.selPopup = !!(res && res.selPopup);
+            chkSel.checked = state.selPopup;
+          })
+          .catch(function () { chkSel.checked = state.selPopup; });
+      });
+
+      var clearArmed = false;
+      var clearTimer = null;
+      function disarmClear() {
+        clearArmed = false;
+        if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
+        btnClear.textContent = '清空历史';
+        btnClear.classList.remove('armed');
+      }
+      btnClear.addEventListener('click', function () {
+        if (!clearArmed) {
+          // Two-step confirm: no dialogs in a native-view panel, so arm the
+          // button instead — one stray click must not erase the history.
+          clearArmed = true;
+          btnClear.textContent = '确认清空?';
+          btnClear.classList.add('armed');
+          clearTimer = setTimeout(disarmClear, 3000);
+          return;
+        }
+        disarmClear();
+        act('history.clear').then(refreshList);
+      });
+
+      // ── Backend pushes ──
       window.piSDK.onMessage(function (msg) {
-        if (msg && msg.event === 'ui.urlChanged' && msg.data) {
+        if (!msg || !msg.event || !msg.data) return;
+        if (msg.event === 'ui.urlChanged') {
           input.value = String(msg.data.url || '');
+          state.url = String(msg.data.url || '');
+          state.title = String(msg.data.title || '');
+          state.favorited = msg.data.favorited === true;
+          updateStar();
+          if (!omnibox.hidden) refreshList();
+        } else if (msg.event === 'ui.favoritesChanged' || msg.event === 'ui.historyCleared') {
+          if (!omnibox.hidden) refreshList();
+        } else if (msg.event === 'ui.settingsChanged') {
+          state.private = msg.data.private === true;
+          chkPrivate.checked = state.private;
+          state.selPopup = msg.data.selPopup !== false;
+          chkSel.checked = state.selPopup;
         }
       });
 
-      window.piSDK.request('state.get').then(function (state) {
-        if (state && state.url) input.value = String(state.url);
+      // ── Boot: the shared state pull ──
+      window.piSDK.request('state.get').then(function (s) {
+        if (!s) return;
+        input.value = String(s.url || '');
+        state.url = String(s.url || '');
+        state.title = String(s.title || '');
+        state.favorited = s.favorited === true;
+        state.private = s.private === true;
+        state.selPopup = s.selPopup !== false;
+        chkPrivate.checked = state.private;
+        chkSel.checked = state.selPopup;
+        updateStar();
       }).catch(function () {});
     })();
   </script>

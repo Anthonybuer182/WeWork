@@ -896,5 +896,38 @@ export const BROWSER_HELPERS_JS = `
       summary: summary
     };
   };
+
+  // ── Manual zoom requests (ctrl+wheel / trackpad pinch) ──
+  // The page cannot zoom itself — zoomFactor is a main-process property — and
+  // the host hears no page events. This console line IS the channel: the host
+  // watches console-message for the "__pi-zoom:" prefix and applies the zoom.
+  //
+  // Feel: the FIRST ctrl+wheel event of a gesture reports immediately (zoom
+  // must react with zero perceived lag), then a 100ms throttle folds the rest
+  // of the burst into follow-up steps — a sustained scroll keeps stepping
+  // every 100ms instead of collapsing into one giant step after a debounce.
+  // Pinch reports every 5% of accumulated scale, which reads as continuous.
+  if (!window.__piZoomHook) {
+    window.__piZoomHook = true;
+    var piZoomLast = 0;
+    var piZoomRef = 1;
+    function piZoomReport(direction) { console.log('__pi-zoom:' + direction); }
+    window.addEventListener('wheel', function (e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var now = Date.now();
+      if (now - piZoomLast < 100) return;
+      piZoomLast = now;
+      piZoomReport(e.deltaY < 0 ? 'in' : 'out');
+    }, { passive: false });
+    // macOS trackpad pinch arrives as WebKit-style gesture events.
+    window.addEventListener('gesturestart', function () { piZoomRef = 1; });
+    window.addEventListener('gesturechange', function (e) {
+      var total = piZoomRef * (e.scale || 1);
+      if (total >= piZoomRef * 1.05) { piZoomReport('in'); piZoomRef = total; }
+      else if (total <= piZoomRef / 1.05) { piZoomReport('out'); piZoomRef = total; }
+    });
+    window.addEventListener('gestureend', function () { piZoomRef = 1; });
+  }
 })();
 `;

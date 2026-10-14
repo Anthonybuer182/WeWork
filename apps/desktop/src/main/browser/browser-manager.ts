@@ -74,6 +74,27 @@ export class BrowserManager {
   private zoomChainTimers: ReturnType<typeof setTimeout>[] = [];
   private metricsWidth = 0;
 
+  /** ─── Manual zoom (ctrl+wheel / pinch), Chrome-style ─── */
+
+  private static readonly ZOOM_MIN = 0.5;
+  private static readonly ZOOM_MAX = 3;
+  private static readonly ZOOM_STEP = 1.1;
+  /**
+   * Auto-fit never shrinks below this: a desktop page wider than the panel
+   * scrolls horizontally instead of rendering at ant size — the 0.3 floor used
+   * to make every wide page unreadable. Manual zoom can still go lower; the
+   * user asked for it.
+   */
+  private static readonly AUTO_FIT_MIN = 0.75;
+
+  /**
+   * The user's manual zoom, remembered per origin like a browser remembers it:
+   * it survives navigation, page loads and panel resizes, and outranks
+   * auto-fit — auto-fit computes where the content WOULD sit, the user says
+   * where they want it. Cleared per origin with Cmd+0 / Ctrl+0.
+   */
+  private userZoomByOrigin = new Map<string, number>();
+
   constructor() {}
 
   /** ——— Browser view lifecycle ——— */
@@ -107,6 +128,28 @@ export class BrowserManager {
     const ses = session.fromPartition('persist:pi-browser');
     ses.setPermissionRequestHandler((_wc, _permission, callback) => {
       callback(true);
+    });
+
+    // ── Manual zoom wiring ──
+    // Chromium routes ctrl+wheel and trackpad pinch to the embedder's
+    // ContentsZoomChange; Electron re-emits that here WITHOUT applying a
+    // zoom. Whether that delegation fires varies by input path, so the
+    // deterministic channel is the helpers' zoom hook (see browser-helpers):
+    // the page reports gestures as console lines and this watches for them.
+    wc.on('zoom-changed', (_event, zoomDirection: 'in' | 'out') => {
+      this.applyManualZoom(zoomDirection === 'in' ? BrowserManager.ZOOM_STEP : 1 / BrowserManager.ZOOM_STEP);
+    });
+    wc.on('console-message', (_event, _level, message) => {
+      if (message === '__pi-zoom:in') this.applyManualZoom(BrowserManager.ZOOM_STEP);
+      else if (message === '__pi-zoom:out') this.applyManualZoom(1 / BrowserManager.ZOOM_STEP);
+    });
+    // Cmd+0 / Ctrl+0 — Chrome's reset: drop this site's manual zoom and
+    // re-fit. (Keyboard is the one input before-input-event can see.)
+    wc.on('before-input-event', (event, input) => {
+      if (input.type === 'keyDown' && (input.meta || input.control) && input.key === '0') {
+        event.preventDefault();
+        this.resetManualZoom();
+      }
     });
 
     wc.on('did-navigate', (_event, url) => {
@@ -382,6 +425,44 @@ export class BrowserManager {
     }
   }
 
+  /** ─── Manual zoom ─── */
+
+  private currentOrigin(): string {
+    try {
+      // Opaque origins (error pages) stringify as "null" — not a site, not a
+      // zoom to remember.
+      const origin = new URL(this.wc?.getURL() ?? '').origin;
+      return origin && origin !== 'null' ? origin : '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * One notch of user zoom (a ctrl+wheel step or a pinch). The choice is
+   * remembered per origin — auto-fit stops touching this site until reset.
+   */
+  private applyManualZoom(factor: number): void {
+    const origin = this.currentOrigin();
+    if (!origin) return;
+    const base = this.userZoomByOrigin.get(origin) ?? this.currentZoom;
+    const next = Math.min(BrowserManager.ZOOM_MAX, Math.max(BrowserManager.ZOOM_MIN, base * factor));
+    this.userZoomByOrigin.set(origin, next);
+    this.currentZoom = next;
+    this.applyZoom();
+    // A load's auto-fit chain may still be pending; the map check in
+    // computeAutoZoom would neutralize it anyway, but skip the work.
+    this.cancelScheduledZoom();
+  }
+
+  /** Cmd+0 / Ctrl+0: forget this site's manual zoom and re-fit. */
+  private resetManualZoom(): void {
+    this.userZoomByOrigin.delete(this.currentOrigin());
+    this.currentZoom = 1;
+    this.applyZoom();
+    this.scheduleAutoZoom();
+  }
+
   /**
    * Re-fit zoom after a load, on a short chain rather than once: pages render
    * progressively, and the width a page reports 200ms after load is often not
@@ -422,6 +503,16 @@ export class BrowserManager {
     try {
       const panelW = this.webviewWidth;
       if (panelW <= 0) return;
+      // The user's manual zoom outranks the fit: apply it and leave the page
+      // alone — they zoomed on purpose, and re-fitting would fight them.
+      const userZoom = this.userZoomByOrigin.get(this.currentOrigin());
+      if (userZoom !== undefined) {
+        if (Math.abs(userZoom - this.currentZoom) > 0.01) {
+          this.currentZoom = userZoom;
+          await this.applyZoom();
+        }
+        return;
+      }
       // Measure at the CURRENT zoom — no reset-to-1, no relayout wait. The
       // old reset→wait→measure loop was visible as a flash on every resize
       // step, and its re-entrancy guard silently dropped overlapping fits,
@@ -446,11 +537,11 @@ export class BrowserManager {
       let target = this.currentZoom;
       if (dims.s > dims.c + 2) {
         // Content wider than the viewport → shrink so it just fits.
-        target = Math.max(0.3, panelW / dims.s);
+        target = Math.max(BrowserManager.AUTO_FIT_MIN, panelW / dims.s);
       } else if (dims.s < dims.c - 2) {
         // Dead margin (fixed-width page seen through a zoom inherited from a
         // wider one) → grow so the content fills the panel.
-        target = Math.max(0.3, panelW / dims.s);
+        target = Math.max(BrowserManager.AUTO_FIT_MIN, panelW / dims.s);
       }
       // Exact fit and fluid pages (s == c at any zoom) are fixed points —
       // left alone. The hysteresis keeps a scrollbar-noise step from
