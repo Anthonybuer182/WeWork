@@ -15,17 +15,21 @@ import { appendAuditRecord } from './audit';
 export type { PermissionMode, PermissionDecision, PermissionRequestPayload };
 
 /**
- * Session-scoped permission modes.
+ * Permission modes.
  *
  * - 'default': high-risk tool calls (everything beyond read-only tools) wait
  *   for an inline approval card in the renderer before executing.
  * - 'full': nothing is intercepted, but every call that default mode WOULD
  *   have intercepted is written to the audit log first.
  *
- * All state is in-memory and keyed by session key — a restart resets every
- * session to 'default' and forgets remembered approvals. That is deliberate:
- * 完全访问 must never survive a restart, or it stops being a per-session
- * decision and becomes a permanently open door.
+ * The last mode picked during this app run seeds every session with no
+ * explicit choice, so new conversations inherit it. Nothing reaches disk:
+ * a restart resets to 'default', keeping 完全访问 a per-run decision that is
+ * re-confirmed each launch. While a run lasts, the red shield in the composer
+ * and the audit trail are the standing visibility.
+ *
+ * Remembered 总是允许 approvals are scoped to one conversation and reset the
+ * same way.
  */
 
 /**
@@ -38,8 +42,10 @@ export type { PermissionMode, PermissionDecision, PermissionRequestPayload };
 const READ_ONLY_TOOLS = new Set(['read', 'ls', 'find', 'grep']);
 
 export class PermissionService {
-  /** session key → mode. Missing key = 'default'. */
+  /** session key → mode. Missing key = the last mode picked this run. */
   private modes = new Map<string, PermissionMode>();
+  /** Seeds sessions with no explicit choice; stays 'default' until someone picks. */
+  private fallbackMode: PermissionMode = 'default';
   /** session key → rule keys approved with 总是允许 (this session only). */
   private remembered = new Map<string, Set<string>>();
   /** request id → payload + resolver, for every call currently waiting. */
@@ -57,11 +63,14 @@ export class PermissionService {
   ) {}
 
   getMode(sessionKey: string): PermissionMode {
-    return this.modes.get(sessionKey) ?? 'default';
+    return this.modes.get(sessionKey) ?? this.fallbackMode;
   }
 
   setMode(sessionKey: string, mode: PermissionMode): void {
     this.modes.set(sessionKey, mode);
+    // Sessions created afterwards (and the keyless 'default' bucket) follow
+    // the last pick — in-memory only, so a restart resets the seed too.
+    this.fallbackMode = mode;
   }
 
   /**

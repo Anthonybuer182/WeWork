@@ -173,11 +173,12 @@ if (!gotLock) {
     // filled in below and read through this closure.
     let hostTools: AgentCustomTool[] = [];
 
-    // Session-scoped permission modes (默认 / 完全访问). All state lives here in
-    // main, keyed by session — nothing persists, so a restart always lands on
-    // the safe default. High-risk calls in default mode block the agent until
-    // the renderer's inline approval card answers; 完全访问 lets everything
-    // through but leaves an audit line behind.
+    // Permission modes (默认 / 完全访问). Per-session choices live in main,
+    // keyed by session; the last picked mode seeds every session with no
+    // explicit choice, and a restart resets everything to 'default' — 完全访问
+    // stays a per-run decision. High-risk calls in default mode block the
+    // agent until the renderer's inline approval card answers; 完全访问 lets
+    // everything through but leaves an audit line behind.
     const permissionService = new PermissionService(
       (payload) => {
         mainWindow?.webContents.send('pi:permission:request', payload);

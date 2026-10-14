@@ -15,9 +15,10 @@ const MODE_LABELS: Record<PermissionMode, { title: string; hint: string }> = {
 };
 
 /**
- * The session-scoped permission mode toggle, in the composer's bottom tools
- * row. Quiet in default mode (icon only); loud in 完全访问 (red icon + label)
- * because an open door must stay visible, not remembered.
+ * The permission mode toggle, in the composer's bottom tools row. Quiet in
+ * default mode (icon only); loud in 完全访问 (red icon + label) because an
+ * open door must stay visible — the choice carries to new sessions within a
+ * run, and a restart closes the door again.
  *
  * Hidden in the web build: there is no main process to enforce anything, and
  * a toggle that only pretends would be worse than none.
@@ -59,7 +60,7 @@ export function PermissionModeButton() {
           title={
             !activeSessionId
               ? '会话创建后可设置权限模式'
-              : '权限模式（仅当前会话生效，重启后恢复默认）'
+              : '权限模式（新会话沿用上次选择，重启后恢复默认）'
           }
         >
           {isFull ? (

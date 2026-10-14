@@ -12,7 +12,9 @@ export type { PermissionMode, PermissionDecision, PermissionRequest };
  * Main owns the truth (mode table + pending approvals); this store is the
  * renderer's projection: the composer reads the mode for its badge, and
  * ToolCallDisplay looks up pending approvals by toolCallId to render the
- * inline approval card. In-memory on both sides — a restart resets everything.
+ * inline approval card. The last picked mode seeds sessions with no explicit
+ * choice (in-memory only — a restart resets everything); remembered 总是允许
+ * approvals stay scoped to one conversation.
  */
 
 function electronApi():
@@ -22,7 +24,7 @@ function electronApi():
 }
 
 interface PermissionState {
-  /** Session key → mode. Missing key = 'default' (also main's fallback). */
+  /** Session key → mode. Missing key falls back to main's last-picked mode. */
   modeBySession: Record<string, PermissionMode>;
   /** Pending approval keyed by toolCallId — matches the tool_call block in the timeline. */
   pendingByToolCall: Record<string, PermissionRequest>;
