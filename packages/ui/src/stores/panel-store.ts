@@ -55,15 +55,31 @@ export interface PanelRuntimeState {
  */
 const LRU_KEEP = 2;
 
+/**
+ * Hidden OPEN tabs mounted per region, on top of the active one. A tab is a
+ * promise that switching back restores state, so open tabs mount
+ * unconditionally up to this cap; the coldest tabs past it hibernate — they
+ * keep their strip slot and reload on the next activation. Each mounted
+ * plugin panel is a renderer process (plus possibly a browser engine view),
+ * which is why the cap exists at all.
+ */
+const TAB_MOUNT_CAP = 6;
+
 /** Preferred right-region panel when there is no prior selection. */
 const DEFAULT_ACTIVE_PANEL = 'host:plugins';
 
 const EMPTY_ACTIVE: Record<PanelRegion, string | null> = { left: null, right: null };
+const EMPTY_TABS: Record<PanelRegion, string[]> = { left: [], right: [] };
 
 interface PanelStoreState {
   panels: PanelEntry[];
-  /** Active panel per region — each column has its own selection. */
+  /** Focused panel per region — always a member of that region's tab list. */
   activePanelIds: Record<PanelRegion, string | null>;
+  /**
+   * Open tabs per region, in strip order. The tab strip renders this list;
+   * closing a panel removes it (and unmounts it once it leaves the LRU).
+   */
+  openPanelIds: Record<PanelRegion, string[]>;
   /** Panels currently mounted (visible or hidden-kept-alive). Flat; filter by region at render. */
   mountedIds: string[];
   /** Last-activation order for LRU bookkeeping (most recent first). */
@@ -77,13 +93,22 @@ interface PanelStoreState {
    * focus on activation must depend on this instead.
    */
   activationNonces: Record<string, number>;
+  /**
+   * Whether the plugin registry has contributed its panels at least once.
+   * Runtime-only (not persisted): reset false at boot, set by the first
+   * `setPluginPanels`. Gates reconcile's pruning of unknown tab ids — see
+   * its doc comment.
+   */
+  pluginPanelsSynced: boolean;
 
   setHostPanels: (panels: PanelEntry[]) => void;
   setPluginPanels: (infos: PluginInfo[]) => void;
   /** Open a panel. focus=false → badge/pending only, never steals the active panel. */
   openPanel: (id: string, opts?: { focus?: boolean; params?: Record<string, unknown> }) => void;
-  /** Close the active panel of one region. */
-  closePanel: (region: PanelRegion) => void;
+  /** Close one tab (the × on a tab / middle-click). */
+  closeTab: (region: PanelRegion, id: string) => void;
+  /** Move a tab within its strip (drag reorder). */
+  reorderTabs: (region: PanelRegion, from: number, to: number) => void;
   setPanelStatus: (status: PluginPanelStatus) => void;
   clearPending: (id: string) => void;
 }
@@ -120,13 +145,15 @@ function activeIdSet(activePanelIds: Record<PanelRegion, string | null>): Set<st
 /**
  * Recompute which panels stay mounted after an activation/deactivation.
  *
- * Takes EVERY region's active id: with a flat `mountedIds`, recomputing with
- * only one region's selection would drop the other region's active panel and
- * silently unmount it (losing file-tree expansion, list scroll, etc).
+ * Takes EVERY region's active id and tab list: with a flat `mountedIds`,
+ * recomputing with only one region's selection would drop the other region's
+ * panels and silently unmount them (losing file-tree expansion, list scroll,
+ * etc).
  */
 function computeMounted(
   panels: PanelEntry[],
   activeIds: Set<string>,
+  openPanelIds: Record<PanelRegion, string[]>,
   recency: string[],
 ): string[] {
   const byId = new Map(panels.map((p) => [p.id, p]));
@@ -145,17 +172,42 @@ function computeMounted(
     if (panel.keepAlive === 'always') mounted.add(panel.id);
   }
 
+  // Open tabs mount within the per-region cap; the coldest go first
+  // (hibernation — the tab keeps its strip slot and reloads when used).
+  // 'never' keeps its contract even as a tab: it unmounts while hidden.
+  const rank = new Map(recency.map((id, i) => [id, i]));
+  const rankOf = (id: string) => rank.get(id) ?? Number.MAX_SAFE_INTEGER;
+  for (const region of ['left', 'right'] as PanelRegion[]) {
+    const hiddenTabs = openPanelIds[region]
+      .filter(
+        (id) =>
+          byId.has(id) &&
+          !mounted.has(id) &&
+          byId.get(id)!.keepAlive !== 'never',
+      )
+      .sort((a, b) => rankOf(a) - rankOf(b));
+    let budget = TAB_MOUNT_CAP;
+    for (const id of hiddenTabs) {
+      if (budget <= 0) break;
+      mounted.add(id);
+      budget--;
+    }
+  }
+
+  // Closed panels stay warm through the small LRU budget: closing a tab by
+  // mistake and reopening it restores without a reload.
+  const openIds = new Set([...openPanelIds.left, ...openPanelIds.right]);
   let lruBudget = LRU_KEEP;
   for (const id of recency) {
-    // Actives and 'always' panels are already mounted; neither may consume the
-    // LRU budget, which exists only to bound hidden 'lru' panels.
-    if (activeIds.has(id) || !byId.has(id)) continue;
+    // Actives, 'always' panels and open tabs are already mounted; neither may
+    // consume the LRU budget, which exists only for recently-closed 'lru'
+    // panels. 'never' → never mounted while hidden.
+    if (mounted.has(id) || openIds.has(id) || !byId.has(id)) continue;
     const panel = byId.get(id)!;
     if (panel.keepAlive === 'lru' && lruBudget > 0) {
       mounted.add(id);
       lruBudget--;
     }
-    // 'never' → never mounted while hidden
   }
   return [...mounted];
 }
@@ -166,39 +218,65 @@ function computeMounted(
  * must go through this — otherwise `mountedIds`/`activePanelIds` keep pointing
  * at panels that no longer exist, or at panels that changed region.
  *
- * Per region: keep the current selection if it still exists AND still belongs
- * to that region, else the most recently used survivor, else the default.
+ * Per region: keep the focused tab if it survived, else focus the last
+ * remaining tab. A region left with no tabs behaves differently: left re-seeds
+ * its default view (a single-select container has no meaningful empty state
+ * and no close gesture), right stays empty — the column-open effect opens the
+ * fallback as a real tab, so "nothing is open" stays honest.
+ *
+ * Unknown ids (panel not in the list yet) survive until the plugin registry
+ * has synced once: at boot, host panels register before plugin panels, and
+ * every `set` writes straight through to storage — pruning on the first
+ * reconcile would clobber the persisted tab list before the plugin list
+ * exists. After the first sync, an unknown id really is an uninstalled panel.
  */
 function reconcile(
   panels: PanelEntry[],
-  prev: { activePanelIds: Record<PanelRegion, string | null>; recency: string[] },
+  prev: {
+    activePanelIds: Record<PanelRegion, string | null>;
+    openPanelIds: Record<PanelRegion, string[]>;
+    recency: string[];
+    pluginPanelsSynced: boolean;
+  },
 ): {
   panels: PanelEntry[];
   recency: string[];
   activePanelIds: Record<PanelRegion, string | null>;
+  openPanelIds: Record<PanelRegion, string[]>;
   mountedIds: string[];
 } {
   const recency = prev.recency.filter((id) => panels.some((p) => p.id === id));
 
-  const pick = (region: PanelRegion): string | null => {
+  const pick = (region: PanelRegion): { active: string | null; tabs: string[] } => {
     const inRegion = regionPanels(panels, region);
+    const tabs = prev.openPanelIds[region].filter((id) => {
+      if (inRegion.some((p) => p.id === id)) return true;
+      return !prev.pluginPanelsSynced;
+    });
     const current = prev.activePanelIds[region];
-    if (current && inRegion.some((p) => p.id === current)) return current;
-    const recent = recency.find((id) => inRegion.some((p) => p.id === id));
-    if (recent) return recent;
-    return defaultActiveFor(panels, region);
+    if (current && tabs.includes(current)) return { active: current, tabs };
+    if (tabs.length > 0) return { active: tabs[tabs.length - 1], tabs };
+    if (region === 'left') {
+      const fallback = defaultActiveFor(panels, 'left');
+      return { active: fallback, tabs: fallback ? [fallback] : [] };
+    }
+    return { active: null, tabs: [] };
   };
 
+  const left = pick('left');
+  const right = pick('right');
   const activePanelIds: Record<PanelRegion, string | null> = {
-    left: pick('left'),
-    right: pick('right'),
+    left: left.active,
+    right: right.active,
   };
+  const openPanelIds: Record<PanelRegion, string[]> = { left: left.tabs, right: right.tabs };
 
   return {
     panels,
     recency,
     activePanelIds,
-    mountedIds: computeMounted(panels, activeIdSet(activePanelIds), recency),
+    openPanelIds,
+    mountedIds: computeMounted(panels, activeIdSet(activePanelIds), openPanelIds, recency),
   };
 }
 
@@ -207,11 +285,13 @@ export const usePanelStore = create<PanelStoreState>()(
     (set, get) => ({
       panels: [],
       activePanelIds: EMPTY_ACTIVE,
+      openPanelIds: EMPTY_TABS,
       mountedIds: [],
       recency: [],
       runtime: {},
       params: {},
       activationNonces: {},
+      pluginPanelsSynced: false,
 
       setHostPanels: (hostPanels) =>
         set((s) =>
@@ -245,7 +325,16 @@ export const usePanelStore = create<PanelStoreState>()(
               })),
           );
           const hostPanels = s.panels.filter((p) => p.source === 'host');
-          return reconcile([...hostPanels, ...pluginPanels], s);
+          // The registry is now authoritative: sync BEFORE reconciling so this
+          // very call prunes stale tab ids (an uninstalled plugin's tabs), and
+          // every reconcile after it does too.
+          return {
+            ...reconcile(
+              [...hostPanels, ...pluginPanels],
+              { ...s, pluginPanelsSynced: true },
+            ),
+            pluginPanelsSynced: true,
+          };
         }),
 
       openPanel: (id, opts) =>
@@ -262,32 +351,67 @@ export const usePanelStore = create<PanelStoreState>()(
           // events) is plugin-owned, and plugin panels always live on the right.
           const region = s.panels.find((p) => p.id === id)?.region ?? 'right';
           const recency = [id, ...s.recency.filter((r) => r !== id)].slice(0, 12);
+          // Opening a panel without a tab opens one; opening one that already
+          // has a tab just focuses it — the strip never shows duplicates.
+          const tabs = s.openPanelIds[region];
+          const openPanelIds = tabs.includes(id)
+            ? s.openPanelIds
+            : { ...s.openPanelIds, [region]: [...tabs, id] };
           const activePanelIds = { ...s.activePanelIds, [region]: id };
           delete runtime[id];
           return {
             activePanelIds,
+            openPanelIds,
             recency,
             runtime,
             params,
             // Bump on every explicit activation — including re-activating the
             // panel that is already active, so its input can re-take focus.
             activationNonces: { ...s.activationNonces, [id]: (s.activationNonces[id] ?? 0) + 1 },
-            mountedIds: computeMounted(s.panels, activeIdSet(activePanelIds), recency),
+            mountedIds: computeMounted(s.panels, activeIdSet(activePanelIds), openPanelIds, recency),
           };
         }),
 
-      // Right: clear the selection — the callers (panel chrome, the title bar
-      // toggle) collapse the right side, leaving only the rail.
-      // Left: a single-select view container has no meaningful empty state and
-      // no collapse gesture, so fall back to the region's default view.
-      closePanel: (region) =>
+      /**
+       * Close one tab. Focus falls to the tab on its left (browser habit),
+       * then to the one that slid into the closed slot. A right region left
+       * without tabs shows its empty state and the column collapses (the tab
+       * strip calls the collapse); left re-seeds its default view instead.
+       */
+      closeTab: (region, id) =>
         set((s) => {
-          const nextActive = region === 'left' ? defaultActiveFor(s.panels, 'left') : null;
-          const activePanelIds = { ...s.activePanelIds, [region]: nextActive };
+          const idx = s.openPanelIds[region].indexOf(id);
+          if (idx === -1) return s;
+          let tabs = s.openPanelIds[region].filter((t) => t !== id);
+          let active: string | null = s.activePanelIds[region];
+          if (active === id) {
+            active = tabs[Math.max(0, idx - 1)] ?? null;
+          }
+          if (tabs.length === 0 && region === 'left') {
+            const fallback = defaultActiveFor(s.panels, 'left');
+            tabs = fallback ? [fallback] : tabs;
+            active = fallback ?? null;
+          }
+          const activePanelIds = { ...s.activePanelIds, [region]: active };
+          const openPanelIds = { ...s.openPanelIds, [region]: tabs };
           return {
             activePanelIds,
-            mountedIds: computeMounted(s.panels, activeIdSet(activePanelIds), s.recency),
+            openPanelIds,
+            mountedIds: computeMounted(s.panels, activeIdSet(activePanelIds), openPanelIds, s.recency),
           };
+        }),
+
+      // Reorder does not touch mountedIds — the mounted set is unchanged, and
+      // tab-cap eviction ranks by recency, not by strip order.
+      reorderTabs: (region, from, to) =>
+        set((s) => {
+          const tabs = [...s.openPanelIds[region]];
+          if (from < 0 || from >= tabs.length || to < 0 || to >= tabs.length || from === to) {
+            return s;
+          }
+          const [moved] = tabs.splice(from, 1);
+          tabs.splice(to, 0, moved);
+          return { openPanelIds: { ...s.openPanelIds, [region]: tabs } };
         }),
 
       setPanelStatus: (status) =>
@@ -318,14 +442,29 @@ export const usePanelStore = create<PanelStoreState>()(
     }),
     {
       name: 'pi-panel-storage',
-      version: 2,
-      partialize: (state) => ({ activePanelIds: state.activePanelIds }),
+      version: 3,
+      partialize: (state) => ({
+        activePanelIds: state.activePanelIds,
+        openPanelIds: state.openPanelIds,
+      }),
       migrate: (persisted) => {
         const p = (persisted ?? {}) as {
           activePanelId?: string | null;
           activePanelIds?: Record<PanelRegion, string | null>;
         };
-        if (p.activePanelIds) return p as never;
+        if (p.activePanelIds) {
+          // v2 → v3: the region's single active panel becomes its only tab.
+          // Tabs pointing at since-uninstalled panels are pruned later, by the
+          // reconcile that runs when the panel list registers.
+          const ids = p.activePanelIds;
+          return {
+            activePanelIds: ids,
+            openPanelIds: {
+              left: ids.left ? [ids.left] : [],
+              right: ids.right ? [ids.right] : [],
+            },
+          } as never;
+        }
 
         // v0/v1 stored a single string id from the old ui-store tab model.
         // Migrate the legacy values, then place the survivor in a region.
@@ -338,7 +477,10 @@ export const usePanelStore = create<PanelStoreState>()(
         // Region is unknowable here — `panels` is still empty during migration.
         // Seed it on the right; reconcile re-homes or drops it once panels are
         // registered (that is why `setHostPanels` reconciles).
-        return { activePanelIds: { left: null, right: id } } as never;
+        return {
+          activePanelIds: { left: null, right: id },
+          openPanelIds: { left: [], right: id ? [id] : [] },
+        } as never;
       },
     },
   ),

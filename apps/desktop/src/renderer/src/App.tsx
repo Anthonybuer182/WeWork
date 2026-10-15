@@ -100,17 +100,23 @@ function AppContent() {
   // ── Plugin system: discovery + events + command contributions ──
   const loadPlugins = usePluginStore((s) => s.loadPlugins);
   const plugins = usePluginStore((s) => s.plugins);
+  // `plugins` starts empty while discovery is in flight. Contributing that
+  // empty list would make the panel registry treat every persisted plugin tab
+  // as uninstalled (and write the loss to storage) — hold off until the
+  // first real sync.
+  const pluginsLoaded = usePluginStore((s) => s.loaded);
 
   useEffect(() => {
     loadPlugins();
   }, [loadPlugins]);
 
   useEffect(() => {
+    if (!pluginsLoaded) return;
     setPluginPanels(plugins);
     for (const plugin of plugins) {
       setPluginCommands(plugin.id, plugin.commands ?? []);
     }
-  }, [plugins, setPluginPanels, setPluginCommands]);
+  }, [plugins, pluginsLoaded, setPluginPanels, setPluginCommands]);
 
   // ── Tell main which workspace is on screen ──
   // Which workspace is active is a view fact that only the renderer holds, and
