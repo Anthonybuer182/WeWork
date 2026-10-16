@@ -8,6 +8,7 @@ import {
   type PermissionRequest as PermissionRequestPayload,
 } from '@pi/types';
 import { appendAuditRecord } from './audit';
+import { recordToolSession } from '../plugins/session-context';
 
 // The mode/decision/request types and the always-allow scope rule are shared
 // with the renderer through @pi/types — re-exported here so the gate's own
@@ -237,6 +238,11 @@ export function installPermissionGate(
 ): void {
   const prev = session.agent.beforeToolCall;
   session.agent.beforeToolCall = async (ctx, signal) => {
+    // Correlate the call with its session for plugin execution: the gate is
+    // the only place that sees both, and plugin tool handlers are
+    // session-scoped (concurrent conversations must not share "the current
+    // document/page"). Best-effort — the plugin path tolerates a miss.
+    recordToolSession(ctx.toolCall.id, sessionKey);
     const verdict = await service.check({
       sessionKey,
       toolCallId: ctx.toolCall.id,

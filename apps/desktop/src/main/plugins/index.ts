@@ -17,6 +17,7 @@ import { parseFrontmatter } from '@earendil-works/pi-coding-agent';
 import { CapabilityHub } from './capability-hub';
 import type { VlmAnalyzer } from '@main/browser/vlm-analyzer';
 import { PluginProcess, spawnBackend } from './plugin-process';
+import { takeToolSession } from './session-context';
 import { registerPluginProtocolHandler } from './protocol';
 import { PluginMarketplace } from './marketplace';
 import type { BrowserManager } from '@main/browser/browser-manager';
@@ -76,6 +77,13 @@ export class PluginSystem {
   onBackendStarted: ((pluginId: string) => void) | null = null;
   /** Resolves when init() has finished — IPC handlers gate reads on this. */
   private initPromise: Promise<void> | null = null;
+  /**
+   * The conversation the renderer has on screen. A view fact only the renderer
+   * holds (set-active-session); session-scoped backends resolve "the current
+   * document/page" against it, and freshly spawned ones get it replayed —
+   * broadcasts only reach processes that already run.
+   */
+  private activeSessionId: string | null = null;
 
   constructor(opts?: {
     agentDir?: string;
@@ -147,7 +155,10 @@ export class PluginSystem {
         // so activate() does not run. Panel views survive untouched — their
         // ports point at the dead process until we rewire.
         if (state === 'crashed' || state === 'error') this.clearUiPorts(pluginId);
-        if (state === 'active') this.onBackendStarted?.(pluginId);
+        if (state === 'active') {
+          this.onBackendStarted?.(pluginId);
+          this.pushSessionSnapshot(proc);
+        }
       };
       this.processes.set(pluginId, proc);
       this.registry.setState(pluginId, 'active');
@@ -156,6 +167,7 @@ export class PluginSystem {
       // install/rollback) still holds the OLD backend's port and never
       // re-requests one (its page did not reload). Let the host push new ports.
       this.onBackendStarted?.(pluginId);
+      this.pushSessionSnapshot(proc);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[plugins] activate ${pluginId} failed:`, message);
@@ -284,12 +296,38 @@ export class PluginSystem {
     return docs;
   }
 
-  /** Push a host event to every running backend holding the permission. */
-  pushHostEvent(event: string, permission: string, data?: unknown): void {
+  /** Record the conversation the renderer put on screen. */
+  setActiveSession(sessionId: string | null): void {
+    this.activeSessionId = sessionId;
+  }
+
+  /** The conversation currently on screen (null = none). */
+  getActiveSession(): string | null {
+    return this.activeSessionId;
+  }
+
+  /**
+   * Hand a (re)started backend the current session. Host events broadcast only
+   * to processes that already run, so without this replay a backend spawned
+   * after the last session switch — first boot, enable, crash restart — would
+   * resolve every "current document/page" against the wrong conversation.
+   */
+  private pushSessionSnapshot(proc: PluginProcess): void {
+    try {
+      proc.pushHostEvent('session.changed', { sessionId: this.activeSessionId });
+    } catch { /* best-effort — the backend re-learns on the next switch */ }
+  }
+
+  /**
+   * Push a host event to every running backend holding the permission — or,
+   * without a permission, to every running backend (e.g. session.changed,
+   * which every session-scoped backend needs regardless of its capabilities).
+   */
+  pushHostEvent(event: string, permission: string | undefined, data?: unknown): void {
     for (const [pluginId, proc] of this.processes) {
       const plugin = this.registry.get(pluginId);
       if (!plugin?.enabled) continue;
-      if (!(plugin.manifest.permissions ?? []).includes(permission)) continue;
+      if (permission !== undefined && !(plugin.manifest.permissions ?? []).includes(permission)) continue;
       try {
         proc.pushHostEvent(event, data);
       } catch { /* best-effort */ }
@@ -329,7 +367,13 @@ export class PluginSystem {
           readOnly: tool.readOnly,
           parameters: tool.inputSchema ?? { type: 'object', properties: {}, additionalProperties: false },
           execute: async (_toolCallId, params) => {
-            const result = await this.executeTool(pluginId, tool.name, params ?? {});
+            // The permission gate correlated this call with its session; the
+            // handler is session-scoped (concurrent conversations must not
+            // share "the current document/page"). A miss (direct test
+            // invocation) yields undefined — handlers fall back to global
+            // state, which is exactly the pre-session-scoping behaviour.
+            const sessionId = takeToolSession(_toolCallId);
+            const result = await this.executeTool(pluginId, tool.name, params ?? {}, sessionId);
             const content = (result.content ?? []).map((c) =>
               c.type === 'image' && c.data
                 ? { type: 'image' as const, data: c.data, mimeType: c.mimeType ?? 'image/png' }
@@ -368,12 +412,13 @@ export class PluginSystem {
     pluginId: string,
     name: string,
     params: Record<string, unknown>,
+    sessionId?: string,
   ): Promise<{ content?: PluginToolContent[]; details?: unknown; card?: UiNode }> {
     const proc = this.processes.get(pluginId);
     if (!proc) {
       throw new Error(`plugin "${pluginId}" has no backend (tool "${name}")`);
     }
-    const result = await proc.executeTool(name, params);
+    const result = await proc.executeTool(name, params, sessionId);
     // Agent-activity linkage: a tool that just ran means the plugin is doing
     // visible work — surface its primary panel so the effect is shown. Plugins
     // that contribute no panel have nothing to open, and `openPanelForActivity`

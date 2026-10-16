@@ -198,6 +198,25 @@ function AppContent() {
     usePermissionStore.getState().sync(activeSessionId ?? 'default');
   }, [activeSessionId]);
 
+  // ── Tell main which conversation is on screen ──
+  // Same view-fact reasoning as the workspace above: only the renderer knows.
+  // Session-scoped plugin backends (browser, viewer) resolve "the current
+  // document/page" per conversation with it — concurrent conversations must
+  // not share one.
+  useEffect(() => {
+    const api = (
+      window as unknown as {
+        electronAPI?: { invoke: (channel: string, ...args: unknown[]) => Promise<unknown> };
+      }
+    ).electronAPI;
+    if (!api) return;
+    api
+      .invoke('pi:agent:set-active-session', { id: activeSessionId ?? undefined })
+      .catch(() => {
+        /* kernel may not be up yet; the next change re-sends */
+      });
+  }, [activeSessionId]);
+
   // ── Session-scoped panels follow the conversation ──
   // enterSession is idempotent; re-running it once the plugin registry has
   // synced re-classifies tabs whose scope was unknown at first entry.

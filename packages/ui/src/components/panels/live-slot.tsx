@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MonitorX } from 'lucide-react';
+import { useUIStore } from '@/stores/ui-store';
 
 /**
  * Live slot: a native WebContentsView mount point. The component
@@ -29,6 +30,11 @@ export function LiveSlot({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  // Which conversation is on screen. Sent alongside (never inside) the open
+  // params — params is a store reference, and folding the session into it
+  // would change that reference on every switch. Re-firing on session change
+  // is the point: the backend learns the panel now serves the new session.
+  const sessionId = useUIStore((s) => s.activeSessionId);
 
   useEffect(() => {
     if (!notifyMounted) return;
@@ -38,8 +44,10 @@ export function LiveSlot({
     if (!api?.invoke) return;
     // Re-fires whenever params change; the view's preload queues it if the
     // panel's page (and its port) are not up yet.
-    api.invoke('pi:plugin:panel-mounted', { pluginId, panelId, params }).catch(() => {});
-  }, [pluginId, panelId, params, notifyMounted]);
+    api
+      .invoke('pi:plugin:panel-mounted', { pluginId, panelId, params, sessionId })
+      .catch(() => {});
+  }, [pluginId, panelId, params, sessionId, notifyMounted]);
 
   useEffect(() => {
     const api = (window as unknown as {

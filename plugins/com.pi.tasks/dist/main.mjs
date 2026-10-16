@@ -3460,7 +3460,9 @@ function plugin(handlers) {
       return;
     }
     try {
-      const result = await handlers.onTool(name, msg.params ?? {}, ctx2);
+      const result = await handlers.onTool(name, msg.params ?? {}, ctx2, {
+        sessionId: msg.sessionId
+      });
       if (result === void 0 || result === null) {
         post({
           type: "tool-result",
@@ -3551,7 +3553,8 @@ function plugin(handlers) {
           return;
         }
         try {
-          await handlers.onPanelMounted(panelId, msg.data?.params, ctx2);
+          const data = msg.data ?? {};
+          await handlers.onPanelMounted(panelId, data.params, ctx2, { sessionId: data.sessionId });
         } catch (err) {
           log("error", `onPanelMounted for "${panelId}" threw: ${describe(err)}`);
         }
@@ -3615,6 +3618,18 @@ function plugin(handlers) {
           log("error", `host event "${String(msg.event)}" handler threw: ${describe(err)}`);
         }
         break;
+      case "card-event": {
+        if (!handlers.onCardEvent) {
+          log("warn", `card event "${String(msg.eventId)}" on ${String(msg.toolName)} ignored \u2014 implement onCardEvent`);
+          break;
+        }
+        try {
+          handlers.onCardEvent(msg.toolName ?? "", msg.eventId ?? "", msg.kind === "submit" ? "submit" : "click", msg.payload, ctx2);
+        } catch (err) {
+          log("error", `card event "${String(msg.eventId)}" handler threw: ${describe(err)}`);
+        }
+        break;
+      }
       case "ui-port": {
         const port = event.ports?.[0];
         if (!port)

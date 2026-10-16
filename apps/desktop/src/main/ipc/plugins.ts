@@ -16,6 +16,19 @@ import type { PluginSystem } from '@main/plugins';
  *   pi:plugin:event           ← push channel (status/state/plugins-changed/install-phase)
  */
 export function registerPluginIpcHandlers(system: PluginSystem): void {
+  // The renderer owns "which conversation is on screen" — a view fact, not a
+  // session one (the same reasoning as the workspace in registerIpcHandlers,
+  // but this handler needs the PluginSystem). Broadcast as a host event so
+  // session-scoped backends can re-target "the current document/page" to the
+  // conversation on screen; the value is also recorded for backends spawned
+  // later, which replay it instead of missing the broadcast.
+  ipcMain.handle('pi:agent:set-active-session', (_event, session: { id?: string } | null) => {
+    system.setActiveSession(session?.id ?? null);
+    system.pushHostEvent('session.changed', undefined, {
+      sessionId: session?.id ?? null,
+    });
+  });
+
   // `list`/`list-all`/`ensure-port` gate on kernel boot — in packaged builds the
   // file:// renderer fires its first plugin IPC within milliseconds, possibly
   // before `PluginSystem.init()` (spawn backends, protocol) has finished.

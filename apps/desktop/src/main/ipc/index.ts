@@ -67,6 +67,10 @@ export function registerIpcHandlers(
     },
   );
 
+  // Same view-fact reasoning for the conversation: the renderer switches
+  // sessions, main has no other way to learn it. The handler lives with the
+  // other plugin IPC (registerPluginIpcHandlers), which holds the PluginSystem.
+
   // ── Standard request/response ──
   ipcMain.handle('pi:sdk:request', async (_event, request: SdkRequest) => {
     const { id, method, params } = request;

@@ -52,6 +52,7 @@ interface IncomingMessage {
   args?: string;
   event?: string;
   data?: unknown;
+  sessionId?: string;
   actionId?: string;
   text?: string;
   providerId?: string;
@@ -156,18 +157,34 @@ export interface PluginHandlers {
    * This is where a panel's first paint belongs. `onInit` runs when the BACKEND
    * starts — long before anyone opens the panel — so anything pushed there is
    * sent with nothing listening. `params` carries whatever the host opened the
-   * panel with (e.g. `{ file }`).
+   * panel with (e.g. `{ file }`). `meta.sessionId` is the conversation the
+   * panel serves right now — a session-scoped panel re-mounts (same event)
+   * when the user switches conversations, so re-resolve per-conversation state
+   * from it rather than caching one global "current" value.
    *
    * Handled before `onEvent`: `panel.mounted` is a lifecycle step, not a
    * plugin-defined event, so the author never sees it in `onEvent`.
    */
-  onPanelMounted?(panelId: string, params: unknown, ctx: PluginContext): void | Promise<void>;
+  onPanelMounted?(
+    panelId: string,
+    params: unknown,
+    ctx: PluginContext,
+    meta?: { sessionId?: string },
+  ): void | Promise<void>;
 
-  /** The agent called one of this plugin's tools. */
+  /**
+   * The agent called one of this plugin's tools.
+   *
+   * `call.sessionId` is the calling conversation's session key, when the call
+   * came through an agent session. Session-scoped handlers (current document,
+   * current page) resolve their target per conversation with it — concurrent
+   * sessions must not share one. Direct invocations (tests) omit it.
+   */
   onTool?(
     name: string,
     args: Record<string, unknown>,
     ctx: PluginContext,
+    call: { sessionId?: string },
   ): ToolResult | string | void | Promise<ToolResult | string | void>;
 
   /** A contributed slash command ran. */
@@ -329,7 +346,9 @@ export function plugin(handlers: PluginHandlers): void {
       return;
     }
     try {
-      const result = await handlers.onTool(name, msg.params ?? {}, ctx);
+      const result = await handlers.onTool(name, msg.params ?? {}, ctx, {
+        sessionId: msg.sessionId,
+      });
       // A handler that returns nothing is almost always a forgotten `return`,
       // and the agent would see an empty tool result with no explanation.
       if (result === undefined || result === null) {
@@ -449,7 +468,8 @@ export function plugin(handlers: PluginHandlers): void {
           return;
         }
         try {
-          await handlers.onPanelMounted(panelId, (msg.data as { params?: unknown })?.params, ctx);
+          const data = (msg.data ?? {}) as { params?: unknown; sessionId?: string };
+          await handlers.onPanelMounted(panelId, data.params, ctx, { sessionId: data.sessionId });
         } catch (err) {
           log('error', `onPanelMounted for "${panelId}" threw: ${describe(err)}`);
         }

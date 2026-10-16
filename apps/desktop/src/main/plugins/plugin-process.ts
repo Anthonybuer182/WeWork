@@ -213,7 +213,12 @@ export class PluginProcess {
   }
 
   /** Execute an agent tool in the backend; resolves with agent-facing result. */
-  executeTool(name: string, params: Record<string, unknown>): Promise<{ content?: PluginToolContent[]; details?: unknown; card?: PluginToolCard }> {    if (!this.child) {
+  executeTool(
+    name: string,
+    params: Record<string, unknown>,
+    sessionId?: string,
+  ): Promise<{ content?: PluginToolContent[]; details?: unknown; card?: PluginToolCard }> {
+    if (!this.child) {
       return Promise.reject(new Error('backend not running'));
     }
     const id = 'tool-' + ++this.toolSeq;
@@ -223,7 +228,7 @@ export class PluginProcess {
         reject(new Error(`tool ${name} timed out`));
       }, TOOL_TIMEOUT_MS);
       this.toolPending.set(id, { resolve, reject, timer });
-      this.post({ type: 'tool-call', id, name, params });
+      this.post({ type: 'tool-call', id, name, params, sessionId });
     });
   }
 

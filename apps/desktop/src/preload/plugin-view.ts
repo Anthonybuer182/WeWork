@@ -134,12 +134,14 @@ function toBackend(payload: unknown): void {
  */
 ipcRenderer.on(
   'pi:plugin:panel-mounted',
-  (_event, msg: { panelId?: string; params?: unknown }) => {
+  (_event, msg: { panelId?: string; params?: unknown; sessionId?: string }) => {
     toBackend({
       kind: 'event',
       event: 'panel.mounted',
       panelId: msg?.panelId,
-      data: { panelId: msg?.panelId, params: msg?.params },
+      // sessionId rides in `data` (NOT in params): it identifies the
+      // conversation the panel now serves, it is not an open param.
+      data: { panelId: msg?.panelId, params: msg?.params, sessionId: msg?.sessionId },
     });
   },
 );

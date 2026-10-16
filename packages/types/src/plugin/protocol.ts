@@ -78,6 +78,13 @@ export interface PluginToolCallMessage {
   id: string;
   name: string;
   params: Record<string, unknown>;
+  /**
+   * The calling conversation's session key, when the call came through an
+   * agent session (direct/test invocations omit it). Session-scoped backends
+   * use it to resolve "the current document/page" per conversation —
+   * concurrent sessions must not share one.
+   */
+  sessionId?: string;
 }
 
 /** A text/image content block returned by plugin tools (agent-facing). */

@@ -96,7 +96,7 @@ export class PluginWebViews {
      */
     ipcMain.handle(
       'pi:plugin:panel-mounted',
-      (_event, msg: { pluginId?: string; panelId?: string; params?: unknown }) => {
+      (_event, msg: { pluginId?: string; panelId?: string; params?: unknown; sessionId?: string }) => {
         const slotId = `${msg?.pluginId}:${msg?.panelId}`;
         const view = this.views.get(slotId);
         if (!view || view.webContents.isDestroyed()) {
@@ -105,6 +105,7 @@ export class PluginWebViews {
         view.webContents.send('pi:plugin:panel-mounted', {
           panelId: msg?.panelId,
           params: msg?.params,
+          sessionId: msg?.sessionId,
         });
         return { ok: true };
       },

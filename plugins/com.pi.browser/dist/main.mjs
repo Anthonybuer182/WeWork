@@ -99,7 +99,9 @@ function plugin(handlers) {
       return;
     }
     try {
-      const result = await handlers.onTool(name, msg.params ?? {}, ctx);
+      const result = await handlers.onTool(name, msg.params ?? {}, ctx, {
+        sessionId: msg.sessionId
+      });
       if (result === void 0 || result === null) {
         post({
           type: "tool-result",
@@ -190,7 +192,8 @@ function plugin(handlers) {
           return;
         }
         try {
-          await handlers.onPanelMounted(panelId, msg.data?.params, ctx);
+          const data = msg.data ?? {};
+          await handlers.onPanelMounted(panelId, data.params, ctx, { sessionId: data.sessionId });
         } catch (err) {
           log("error", `onPanelMounted for "${panelId}" threw: ${describe(err)}`);
         }
