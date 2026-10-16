@@ -8,6 +8,7 @@ import { deleteFileWithMtimeGuard, writeFileWithMtimeGuard } from '@pi/sdk-wrapp
 import type { PluginRegistry } from './registry';
 import type { BrowserManager } from '@main/browser/browser-manager';
 import type { VlmAnalyzer } from '@main/browser/vlm-analyzer';
+import { TabRegistry } from '@main/browser/tab-registry';
 import { extractOfficeText } from './office-extract';
 
 export interface CapabilityDeps {
@@ -38,11 +39,17 @@ export class CapabilityHub {
   private readonly vlmAnalyzer?: VlmAnalyzer;
   private readonly sendToRenderer?: (channel: string, payload: unknown) => void;
   private readonly capabilities = new Map<string, CapabilitySpec>();
+  /**
+   * The tab→conversation map. The host owns it because views live and die
+   * here; backends mirror it (pull on init, follow session.changed).
+   */
+  readonly tabRegistry: TabRegistry;
 
   constructor(deps: CapabilityDeps) {
     this.registry = deps.registry;
     this.emitEvent = deps.emitEvent;
     this.browserManager = deps.browserManager;
+    this.tabRegistry = new TabRegistry(deps.browserManager!);
     this.vlmAnalyzer = deps.vlmAnalyzer;
     this.sendToRenderer = deps.sendToRenderer;
 
@@ -316,6 +323,12 @@ export class CapabilityHub {
     });
 
     // ── browser.* (permission: browser) — host-owned BrowserManager ──
+    // Page-level calls take an optional `tabId` (default: the manager's
+    // active tab — the backend resolves the conversation's focused tab and
+    // passes it explicitly). The four tab-management capabilities are the
+    // ones that need the CONVERSATION: the bucket mapping lives in the host.
+    const tabIdOf = (params: Record<string, unknown>): string | undefined =>
+      typeof params.tabId === 'string' && params.tabId ? params.tabId : undefined;
     const bm = async () => {
       if (!this.browserManager) throw new Error('browser capability unavailable');
       // The legacy flow connected CDP from the preview panel mount; plugin
@@ -331,67 +344,69 @@ export class CapabilityHub {
         const url = String(params.url ?? '');
         if (!url) throw new Error('missing url');
         const manager = await bm();
-        const result = await manager.navigate(url, undefined);
+        const result = await manager.navigate(url, undefined, tabIdOf(params));
         return result;
       },
     });
     this.capabilities.set('browser.back', {
       permission: 'browser',
-      handler: async () => { (await bm()).navigateBack(); return { ok: true }; },
+      handler: async ({ params }) => { (await bm()).navigateBack(tabIdOf(params)); return { ok: true }; },
     });
     this.capabilities.set('browser.forward', {
       permission: 'browser',
-      handler: async () => { (await bm()).navigateForward(); return { ok: true }; },
+      handler: async ({ params }) => { (await bm()).navigateForward(tabIdOf(params)); return { ok: true }; },
     });
     this.capabilities.set('browser.reload', {
       permission: 'browser',
-      handler: async () => { (await bm()).reload(); return { ok: true }; },
+      handler: async ({ params }) => { (await bm()).reload(tabIdOf(params)); return { ok: true }; },
     });
     this.capabilities.set('browser.getUrl', {
       permission: 'browser',
-      handler: async () => (await bm()).getUrl(),
+      handler: async ({ params }) => (await bm()).getUrl(tabIdOf(params)),
     });
     this.capabilities.set('browser.getState', {
       permission: 'browser',
-      handler: async () => {
+      handler: async ({ params }) => {
         const manager = await bm();
-        const state = await manager.getUrl();
+        const state = await manager.getUrl(tabIdOf(params));
         // The interactive-element snapshot is what makes the page actionable —
         // without it the agent has a URL but no idea what to click. Failure to
         // snapshot (odd page, cross-origin frame) must not fail the whole call.
-        const snapshot = await manager.getSnapshot().catch(() => '(unavailable)');
+        const snapshot = await manager.getSnapshot(tabIdOf(params)).catch(() => '(unavailable)');
         return { ...state, snapshot };
       },
     });
     this.capabilities.set('browser.screenshot', {
       permission: 'browser',
-      handler: async ({ params }) => (await bm()).screenshot({ fullPage: params?.fullPage === true }),
+      handler: async ({ params }) =>
+        (await bm()).screenshot({ fullPage: params?.fullPage === true }, tabIdOf(params)),
     });
     this.capabilities.set('browser.click', {
       permission: 'browser',
-      handler: async ({ params }) => (await bm()).click(String(params.selector ?? '')),
+      handler: async ({ params }) => (await bm()).click(String(params.selector ?? ''), tabIdOf(params)),
     });
     this.capabilities.set('browser.getText', {
       permission: 'browser',
-      handler: async ({ params }) => (await bm()).getText(params.selector ? String(params.selector) : undefined),
+      handler: async ({ params }) =>
+        (await bm()).getText(params.selector ? String(params.selector) : undefined, tabIdOf(params)),
     });
     this.capabilities.set('browser.evaluate', {
       permission: 'browser',
-      handler: async ({ params }) => (await bm()).evaluate(String(params.expression ?? '')),
+      handler: async ({ params }) => (await bm()).evaluate(String(params.expression ?? ''), tabIdOf(params)),
     });
     this.capabilities.set('browser.fill', {
       permission: 'browser',
       handler: async ({ params }) =>
-        (await bm()).fill(String(params.selector ?? ''), String(params.value ?? '')),
+        (await bm()).fill(String(params.selector ?? ''), String(params.value ?? ''), tabIdOf(params)),
     });
     this.capabilities.set('browser.hover', {
       permission: 'browser',
-      handler: async ({ params }) => (await bm()).hover(String(params.selector ?? '')),
+      handler: async ({ params }) => (await bm()).hover(String(params.selector ?? ''), tabIdOf(params)),
     });
     this.capabilities.set('browser.select', {
       permission: 'browser',
       handler: async ({ params }) =>
-        (await bm()).selectOption(String(params.selector ?? ''), String(params.value ?? '')),
+        (await bm()).selectOption(String(params.selector ?? ''), String(params.value ?? ''), tabIdOf(params)),
     });
     this.capabilities.set('browser.scroll', {
       permission: 'browser',
@@ -399,13 +414,13 @@ export class CapabilityHub {
         const direction = params.direction === 'up' ? 'up' : 'down';
         const amount = typeof params.amount === 'number' ? params.amount : undefined;
         return amount !== undefined
-          ? (await bm()).scroll(direction, amount)
-          : (await bm()).scroll(direction);
+          ? (await bm()).scroll(direction, amount, tabIdOf(params))
+          : (await bm()).scroll(direction, 500, tabIdOf(params));
       },
     });
     this.capabilities.set('browser.find', {
       permission: 'browser',
-      handler: async ({ params }) => (await bm()).find(String(params.query ?? '')),
+      handler: async ({ params }) => (await bm()).find(String(params.query ?? ''), tabIdOf(params)),
     });
     this.capabilities.set('browser.walk', {
       permission: 'browser',
@@ -415,8 +430,42 @@ export class CapabilityHub {
         }
         const maxSteps = typeof params.maxSteps === 'number' ? params.maxSteps : undefined;
         return maxSteps !== undefined
-          ? (await bm()).walk(String(params.goal ?? ''), this.vlmAnalyzer, maxSteps)
-          : (await bm()).walk(String(params.goal ?? ''), this.vlmAnalyzer);
+          ? (await bm()).walk(String(params.goal ?? ''), this.vlmAnalyzer, maxSteps, tabIdOf(params))
+          : (await bm()).walk(String(params.goal ?? ''), this.vlmAnalyzer, 5, tabIdOf(params));
+      },
+    });
+    // ── tab management: the conversation-scoped view of the engine ──
+    this.capabilities.set('browser.tabList', {
+      permission: 'browser',
+      handler: async ({ params }) =>
+        this.tabRegistry.list(String(params.sessionId ?? 'default')),
+    });
+    this.capabilities.set('browser.newTab', {
+      permission: 'browser',
+      handler: async ({ params }) => {
+        const t = this.tabRegistry.newTab(String(params.sessionId ?? 'default'), {
+          url: params.url ? String(params.url) : undefined,
+          activate: params.activate !== false,
+        });
+        return { tabId: t.id, url: t.url };
+      },
+    });
+    this.capabilities.set('browser.activateTab', {
+      permission: 'browser',
+      handler: async ({ params }) => {
+        const tabId = String(params.tabId ?? '');
+        if (!tabId) throw new Error('missing tabId');
+        this.tabRegistry.activateTab(String(params.sessionId ?? 'default'), tabId);
+        return { ok: true };
+      },
+    });
+    this.capabilities.set('browser.closeTab', {
+      permission: 'browser',
+      handler: async ({ params }) => {
+        const tabId = String(params.tabId ?? '');
+        if (!tabId) throw new Error('missing tabId');
+        this.tabRegistry.closeTab(tabId);
+        return { ok: true };
       },
     });
   }

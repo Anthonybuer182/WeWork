@@ -38,11 +38,21 @@ export interface LiveSlotBounds {
   height: number;
 }
 
+/**
+ * WHICH engine view the slot wants, when the view behind a slot is one of a
+ * set (the multi-tab browser's tabs). Empty string = "no preference" — the
+ * host falls back to whatever it currently considers active.
+ */
+export type LiveSlotTag = string;
+
 export interface LiveSlotHandler {
   /** Called when the slot mounts. Use for one-time warm-up (e.g. connect CDP). */
   attach?(): void | Promise<void>;
-  /** Position and reveal the view. Bounds are in window-content coordinates. */
-  show(bounds: LiveSlotBounds): void | Promise<void>;
+  /**
+   * Position and reveal the view. Bounds are in window-content coordinates.
+   * `tag` names the target engine view, for slots backed by a set of them.
+   */
+  show(bounds: LiveSlotBounds, tag?: LiveSlotTag): void | Promise<void>;
   /** Hide the view so it neither paints nor intercepts input. */
   hide(): void;
 }
@@ -50,15 +60,17 @@ export interface LiveSlotHandler {
 export class LiveSlotRegistry {
   private handlers = new Map<string, LiveSlotHandler>();
   /**
-   * The last non-degenerate bounds each slot was shown at.
+   * The last non-degenerate bounds each slot was shown at, with the tag that
+   * named the target engine view.
    *
    * `reshow` replays them for slots whose reporter cannot re-report on its own:
    * a reused plugin panel view remounts with its page exactly as it was, so its
    * ResizeObserver never fires again — but the engine view positioned inside
-   * that page must come back. detach/hide deliberately do NOT clear the
-   * memory; only a degenerate setBounds (the "this slot is gone" signal) does.
+   * that page must come back, showing the SAME tab it left on. detach/hide
+   * deliberately do NOT clear the memory; only a degenerate setBounds (the
+   * "this slot is gone" signal) does.
    */
-  private lastShown = new Map<string, LiveSlotBounds>();
+  private lastShown = new Map<string, { bounds: LiveSlotBounds; tag?: LiveSlotTag }>();
 
   register(slotId: string, handler: LiveSlotHandler): void {
     if (this.handlers.has(slotId)) {
@@ -90,6 +102,7 @@ export class LiveSlotRegistry {
   async setBounds(
     slotId: string,
     bounds: LiveSlotBounds,
+    tag?: LiveSlotTag,
   ): Promise<{ ok: boolean; error?: string }> {
     const handler = this.handlers.get(slotId);
     if (!handler) return { ok: false, error: `unknown live slot: ${slotId}` };
@@ -108,13 +121,13 @@ export class LiveSlotRegistry {
       width: Math.round(width),
       height: Math.round(height),
     };
-    this.lastShown.set(slotId, shown);
-    await handler.show(shown);
+    this.lastShown.set(slotId, { bounds: shown, tag });
+    await handler.show(shown, tag);
     return { ok: true };
   }
 
   /**
-   * Re-show a hidden slot at its last known bounds.
+   * Re-show a hidden slot at its last known bounds (and tag).
    *
    * For slots whose page cannot re-report (a reused panel view remounts with
    * the page exactly as it was — no resize, no observer fire). Fails with
@@ -124,9 +137,9 @@ export class LiveSlotRegistry {
   async reshow(slotId: string): Promise<{ ok: boolean; error?: string }> {
     const handler = this.handlers.get(slotId);
     if (!handler) return { ok: false, error: `unknown live slot: ${slotId}` };
-    const bounds = this.lastShown.get(slotId);
-    if (!bounds) return { ok: false, error: 'never shown' };
-    await handler.show(bounds);
+    const last = this.lastShown.get(slotId);
+    if (!last) return { ok: false, error: 'never shown' };
+    await handler.show(last.bounds, last.tag);
     return { ok: true };
   }
 
@@ -160,14 +173,18 @@ export function registerLiveSlotIpcHandlers(registry: LiveSlotRegistry): void {
     'pi:liveview:set-bounds',
     (
       _event,
-      payload: { slotId?: string; x?: number; y?: number; width?: number; height?: number },
+      payload: { slotId?: string; x?: number; y?: number; width?: number; height?: number; tag?: string },
     ) =>
-      registry.setBounds(String(payload?.slotId ?? ''), {
-        x: payload?.x ?? 0,
-        y: payload?.y ?? 0,
-        width: payload?.width ?? 0,
-        height: payload?.height ?? 0,
-      }),
+      registry.setBounds(
+        String(payload?.slotId ?? ''),
+        {
+          x: payload?.x ?? 0,
+          y: payload?.y ?? 0,
+          width: payload?.width ?? 0,
+          height: payload?.height ?? 0,
+        },
+        payload?.tag || undefined,
+      ),
   );
 
   ipcMain.handle('pi:liveview:detach', (_event, payload: { slotId?: string }) =>

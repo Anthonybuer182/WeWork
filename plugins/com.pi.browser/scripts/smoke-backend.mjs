@@ -104,6 +104,10 @@ let currentUrl = 'about:blank';
 let currentTitle = '';
 let snapshotText = '[button] "登录" ref=[1]\n[input] "搜索" ref=[2]';
 
+/** The fake multi-tab engine: one live tab, per the smoke flow's needs. */
+const smokeTab = { id: 't1', url: 'about:blank', title: '', active: true, focused: true };
+let smokeTabSeq = 1;
+
 /** The fake storage.* store, shared by all keys. */
 const store = {};
 
@@ -118,9 +122,20 @@ function handleFromBackend(msg) {
     case 'call':
       calls.push(msg);
       switch (msg.method) {
+        case 'browser.tabList':
+          sendToBackend({ type: 'call-result', id: msg.id, result: [{ ...smokeTab, url: currentUrl, title: currentTitle }] });
+          break;
+        case 'browser.newTab': {
+          const tabId = `t${++smokeTabSeq}`;
+          smokeTab.id = tabId;
+          smokeTab.url = msg.params.url ?? 'about:blank';
+          sendToBackend({ type: 'call-result', id: msg.id, result: { tabId, url: smokeTab.url } });
+          break;
+        }
         case 'browser.navigate':
           currentUrl = msg.params.url;
           currentTitle = 'Example Domain';
+          smokeTab.url = currentUrl;
           sendToBackend({ type: 'call-result', id: msg.id, result: { url: currentUrl, title: currentTitle } });
           break;
         case 'browser.getUrl':

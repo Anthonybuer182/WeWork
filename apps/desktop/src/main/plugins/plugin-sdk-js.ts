@@ -238,7 +238,12 @@ const PLUGIN_SDK_SOURCE = String.raw`
   // rectangle where the host positions a native view (today: the embedded
   // browser, for plugins holding the browser permission). Only meaningful
   // in a native view — an iframe/web panel has no native layer to position.
-  function liveSlot(name, element) {
+  //
+  // getTag (optional) names WHICH engine view the slot wants — the multi-tab
+  // browser's active tab id. It rides on every bounds report, so a tab switch
+  // (which changes no DOM size, so no observer fires) is one refresh() call
+  // away, and the host always knows the rect AND its target atomically.
+  function liveSlot(name, element, getTag) {
     var noop = { detach: function () {} };
     if (!IN_VIEW || !VIEW.liveAttach) {
       console.error('[pi-sdk] liveSlot needs a native view container (a desktop panel hosted in a WebContentsView).');
@@ -253,6 +258,10 @@ const PLUGIN_SDK_SOURCE = String.raw`
     var lastKey = null;
     var observer = null;
 
+    function tagOf() {
+      try { return getTag ? String(getTag() || '') : ''; } catch (e) { return ''; }
+    }
+
     function report() {
       if (stopped) return;
       var rect = element.getBoundingClientRect();
@@ -264,11 +273,12 @@ const PLUGIN_SDK_SOURCE = String.raw`
       };
       // Report even when degenerate: 0×0 is the "hide the view" signal — a
       // display:none slot must not leave a stale engine rectangle up there,
-      // invisibly eating real mouse clicks.
-      var key = bounds.x + ',' + bounds.y + ',' + bounds.width + ',' + bounds.height;
+      // invisibly eating real mouse clicks. The tag is part of the key: a tab
+      // switch keeps the rect but must still re-report.
+      var key = bounds.x + ',' + bounds.y + ',' + bounds.width + ',' + bounds.height + ',' + tagOf();
       if (key === lastKey) return;
       lastKey = key;
-      VIEW.liveBounds(name, bounds).then(function (res) {
+      VIEW.liveBounds(name, bounds, tagOf()).then(function (res) {
         if (res && res.ok === false) {
           console.error('[pi-sdk] live slot "' + name + '" rejected by host: ' + (res.error || 'unknown reason'));
         }
@@ -302,6 +312,12 @@ const PLUGIN_SDK_SOURCE = String.raw`
         window.removeEventListener('resize', report);
         lastKey = null;
         VIEW.liveDetach(name).catch(function () {});
+      },
+      // Re-report immediately (bounds + current tag). The switch-tabs case:
+      // DOM size unchanged, so no observer fires — refresh() is the signal.
+      refresh: function () {
+        lastKey = null;
+        report();
       }
     };
   }

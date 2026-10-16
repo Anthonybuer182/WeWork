@@ -146,43 +146,26 @@ export class PluginWebViews {
             attach: () => {
               if (!bm.isConnected()) bm.connect().catch(() => {});
             },
-            show: (bounds) => {
+            show: (bounds, tag) => {
               // `bounds` are the PLUGIN PAGE's local coordinates — the page
               // measured its own slot div, with the page's top-left as origin.
               // The engine view is positioned in window-content coordinates,
               // so translate by whichever panel view currently hosts the page.
+              // `tag` names WHICH engine tab to show (the panel's active one);
+              // without it the manager's active tab shows. showTab enforces the
+              // one-visible invariant (all other tabs to 0×0, target re-topped).
               const host = this.attachedPanelView(pluginId);
               if (!host) {
                 bm.hide();
                 return;
               }
               const hostBounds = host.getBounds();
-              bm.setBounds(
-                hostBounds.x + bounds.x,
-                hostBounds.y + bounds.y,
-                bounds.width,
-                bounds.height,
-              );
-              void bm.setDeviceMetrics(bounds.width, bounds.height).catch(() => {});
-              // The engine view joins the view tree at boot, before any panel
-              // view; a newly attached panel view would paint over it. Re-append
-              // so the engine sits on top of the panel page's slot region — but
-              // only when that is actually the case: resize streams through
-              // here per frame, and an unconditional remove+add reorders the
-              // view tree every step (visible as flicker).
-              const win = this.opts.getWindow();
-              const view = bm.getView();
-              if (win && view) {
-                try {
-                  const children = win.contentView.children;
-                  if (children[children.length - 1] !== view) {
-                    win.contentView.removeChildView(view);
-                    win.contentView.addChildView(view);
-                  }
-                } catch {
-                  /* window or view already gone */
-                }
-              }
+              bm.showTab(tag ?? undefined, {
+                x: hostBounds.x + bounds.x,
+                y: hostBounds.y + bounds.y,
+                width: bounds.width,
+                height: bounds.height,
+              });
             },
             hide: () => bm.hide(),
           });

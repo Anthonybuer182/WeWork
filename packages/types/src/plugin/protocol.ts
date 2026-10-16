@@ -251,6 +251,16 @@ export type CapabilityMethod =
   | 'browser.click'
   | 'browser.getText'
   | 'browser.evaluate'
+  /**
+   * Tab management for the multi-tab engine. `sessionId` names the
+   * conversation whose bucket the tab belongs to (these four are the only
+   * capabilities that need it — page-level calls take an optional `tabId`
+   * and default to the conversation's focused tab).
+   */
+  | 'browser.tabList'
+  | 'browser.newTab'
+  | 'browser.activateTab'
+  | 'browser.closeTab'
   | 'network.fetch'
   /** Put a message into the conversation, exactly as typing it would. */
   | 'chat.send';

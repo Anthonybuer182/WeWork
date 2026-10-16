@@ -28,7 +28,7 @@ export interface PageAnalysis {
 export interface WalkStep {
   /** The text label that was searched for */
   action: string;
-  /** How the element was clicked */
+  /** The element that was clicked */
   selector: string;
   /** Whether this step succeeded */
   success: boolean;
@@ -52,27 +52,116 @@ export interface WalkResult {
   page: PageAnalysis;
 }
 
-type UrlChangedCallback = (url: string) => void;
+/** One live tab, as reported by tabList(). */
+export interface TabInfo {
+  id: string;
+  url: string;
+  title: string;
+  /** Whether this tab is the visible one. */
+  active: boolean;
+  /** True when the tab was closed by the LRU cap — re-activation reloads `url`. */
+  evicted?: boolean;
+}
+
+type UrlChangedCallback = (tabId: string, url: string) => void;
+type WindowOpenCallback = (url: string, disposition: string, sourceTabId: string) => void;
 
 /**
- * BrowserManager — manages the Electron webview via the debugger API
- * and browser automation.
+ * Web preferences shared by every engine view — one Chromium profile
+ * (cookies/storage), one renderer process per tab.
+ */
+const ENGINE_WEB_PREFS = {
+  partition: 'persist:pi-browser',
+  contextIsolation: true,
+  sandbox: true,
+  backgroundThrottling: false,
+} as const;
+
+/** Spoof a standard Chrome UA — zhipin.com and similar CDNs drop Electron's default. */
+const ENGINE_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ' +
+  'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+
+/**
+ * Hard ceiling on live engine views — each tab is a renderer process
+ * (~tens of MB). Past it the least-recently-shown tab is closed, keeping its
+ * URL so re-activation reloads rather than resurrecting.
+ */
+const MAX_TABS = 8;
+
+/**
+ * One browser tab: a live engine view plus everything scoped to it. The
+ * manager owns the tab SET and the one-visible invariant; a tab never manages
+ * its own visibility or lifecycle.
+ */
+class BrowserTab {
+  readonly id: string;
+  readonly view: WebContentsView;
+  readonly wc: Electron.WebContents;
+  /** CDP debugger attached — lazily, on first automation command. */
+  debuggerAttached = false;
+  /** Live zoom factor of this tab's page. */
+  currentZoom = 1;
+  /** A navigate() is in flight — load handlers skip their work. */
+  isNavigating = false;
+  zoomComputing = false;
+  zoomChainTimers: ReturnType<typeof setTimeout>[] = [];
+  metricsWidth = 0;
+  /** The panel width this tab last knew — the fit target. */
+  webviewWidth = 600;
+  /** Last non-degenerate bounds — the compositor-refresh restore target. */
+  lastBounds: { x: number; y: number; width: number; height: number } | null = null;
+  refreshCompositorTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Millis of the last show — the LRU eviction rank. */
+  lastShownAt = 0;
+
+  constructor(id: string, view: WebContentsView) {
+    this.id = id;
+    this.view = view;
+    this.wc = view.webContents;
+  }
+
+  alive(): boolean {
+    try {
+      return !this.wc.isDestroyed();
+    } catch {
+      return false;
+    }
+  }
+}
+
+/**
+ * BrowserManager — the tab set of the embedded browser engine.
+ *
+ * Each tab is one `WebContentsView` on the host window's contentView, one
+ * renderer process, one lazily-attached CDP debugger session. The invariant
+ * the whole host relies on: **at most one tab has non-zero bounds at any
+ * moment, and that view sits last in the contentView's children** (native
+ * views stack in child order; a stale non-zero view would paint over the
+ * visible panel and eat real clicks). `showTab` is the only writer of
+ * non-zero bounds; `hide` and every switch go through it.
+ *
+ * Session configuration (UA, permission handlers, the shared partition) is
+ * per-profile, applied once; everything page-scoped — zoom, navigation state,
+ * compositor repairs — is per tab.
  *
  * Uses Electron's webContents.debugger API instead of Playwright's
  * page enumeration because Playwright's connectOverCDP does not expose
  * `type: "webview"` CDP targets (Electron 38).
  */
 export class BrowserManager {
-  private browserView: WebContentsView | null = null;
   private mainWindow: BrowserWindow | null = null;
-  private debuggerAttached = false;
+  private tabs = new Map<string, BrowserTab>();
+  private tabSeq = 0;
+  private activeTabId: string | null = null;
+  /** Profile-level session config applied once (UA, permissions, cert policy). */
+  private sessionConfigured = false;
   private urlChangedCallbacks: UrlChangedCallback[] = [];
-  private currentZoom = 1;
-  private isNavigating = false;
-  private zoomComputing = false;
-  private lastBounds: { x: number; y: number; width: number; height: number } | null = null;
-  private zoomChainTimers: ReturnType<typeof setTimeout>[] = [];
-  private metricsWidth = 0;
+  private windowOpenCallbacks: WindowOpenCallback[] = [];
+  /** Tabs closed by the LRU cap: their URL survives so re-activation reloads. */
+  private evictedTabs = new Map<string, { url: string; title: string }>();
+  /** Serializes surface borrows (see withTabSurface). */
+  private surfaceChain: Promise<unknown> = Promise.resolve();
 
   /** ─── Manual zoom (ctrl+wheel / pinch), Chrome-style ─── */
 
@@ -91,44 +180,265 @@ export class BrowserManager {
    * The user's manual zoom, remembered per origin like a browser remembers it:
    * it survives navigation, page loads and panel resizes, and outranks
    * auto-fit — auto-fit computes where the content WOULD sit, the user says
-   * where they want it. Cleared per origin with Cmd+0 / Ctrl+0.
+   * where they want it. Cleared per origin with Cmd+0 / Ctrl+0. Per PROFILE
+   * (not per tab): it is the site the user remembers, whichever tab shows it.
    */
   private userZoomByOrigin = new Map<string, number>();
 
   constructor() {}
 
-  /** ——— Browser view lifecycle ——— */
+  /** ——— Host window / tab lifecycle ——— */
 
-  /** Set the embedded browser view and wire navigation events. Call once at startup. */
-  setBrowserView(bv: WebContentsView, mainWindow: BrowserWindow): void {
-    this.browserView = bv;
+  /** Give the manager the window tabs attach to. Call once at startup. */
+  attach(mainWindow: BrowserWindow): void {
     this.mainWindow = mainWindow;
-    const wc = bv.webContents;
+  }
 
-    // Spoof a standard Chrome User-Agent — zhipin.com and similar CDNs
-    // drop TLS connections from Electron's default UA string.
-    wc.setUserAgent(
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ' +
-      'AppleWebKit/537.36 (KHTML, like Gecko) ' +
-      'Chrome/130.0.0.0 Safari/537.36',
-    );
+  /** Resolve a tab by id, or the active one when omitted. */
+  private tab(tabId?: string): BrowserTab | null {
+    if (tabId) return this.tabs.get(tabId) ?? null;
+    return (this.activeTabId && this.tabs.get(this.activeTabId)) || null;
+  }
+
+  private requireTab(tabId?: string): BrowserTab {
+    const t = this.tab(tabId);
+    if (!t) {
+      throw new Error(tabId ? `no such browser tab: ${tabId}` : 'no active browser tab');
+    }
+    return t;
+  }
+
+  /**
+   * Create a tab. `activate: true` (default) makes it the target of the next
+   * show; the slot's bounds report positions it. The LRU cap closes the
+   * least-recently-shown other tab first.
+   */
+  createTab(opts: { url?: string; activate?: boolean; id?: string } = {}): BrowserTab {
+    if (!this.mainWindow) {
+      throw new Error('BrowserManager.attach() has not been called');
+    }
+    if (opts.id && this.tabs.has(opts.id)) return this.tabs.get(opts.id)!;
+
+    this.evictIfNeeded();
+
+    const id = opts.id ?? `t${++this.tabSeq}`;
+    const view = new WebContentsView({ webPreferences: { ...ENGINE_WEB_PREFS } });
+    const t = new BrowserTab(id, view);
+    this.wireTab(t);
+    // Hidden until the slot shows it: a fresh view must never paint anywhere.
+    view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+    this.mainWindow.contentView.addChildView(view);
+    this.tabs.set(id, t);
+    t.wc.loadURL(opts.url ?? 'about:blank').catch(() => {});
+    if (opts.activate !== false) {
+      this.activeTabId = id;
+      t.lastShownAt = Date.now();
+    }
+    return t;
+  }
+
+  /** Close a tab. `keepRecord` (LRU eviction) keeps the URL for re-activation. */
+  closeTab(tabId: string, opts: { keepRecord?: boolean } = {}): void {
+    const t = this.tabs.get(tabId);
+    if (!t) return;
+    if (opts.keepRecord) {
+      let title = '';
+      try {
+        title = t.wc.getTitle() ?? '';
+      } catch {
+        /* destroyed */
+      }
+      this.evictedTabs.set(tabId, { url: t.wc.getURL() ?? '', title });
+    }
+    try {
+      if (t.debuggerAttached) t.wc.debugger.detach();
+    } catch { /* ignore */ }
+    try {
+      this.mainWindow?.contentView.removeChildView(t.view);
+      t.wc.close();
+    } catch { /* ignore */ }
+    this.tabs.delete(tabId);
+    if (this.activeTabId === tabId) this.activeTabId = null;
+  }
+
+  /**
+   * Past the cap, close the least-recently-shown tab that is not the active
+   * one — its URL is kept so the tab strip can bring it back.
+   */
+  private evictIfNeeded(): void {
+    if (this.tabs.size < MAX_TABS) return;
+    let coldest: BrowserTab | null = null;
+    for (const t of this.tabs.values()) {
+      if (t.id === this.activeTabId) continue;
+      if (!coldest || t.lastShownAt < coldest.lastShownAt) coldest = t;
+    }
+    if (coldest) {
+      console.log(`[BrowserManager] LRU: closing tab ${coldest.id} (${coldest.wc.getURL()})`);
+      this.closeTab(coldest.id, { keepRecord: true });
+    }
+  }
+
+  /** All tabs, live and LRU-evicted, in creation order. */
+  tabList(): TabInfo[] {
+    const live: TabInfo[] = [];
+    for (const t of this.tabs.values()) {
+      live.push({
+        id: t.id,
+        url: t.wc.getURL() ?? '',
+        title: ((): string => {
+          try {
+            return t.wc.getTitle() ?? '';
+          } catch {
+            return '';
+          }
+        })(),
+        active: t.id === this.activeTabId,
+      });
+    }
+    for (const [id, rec] of this.evictedTabs) {
+      live.push({ id, url: rec.url, title: rec.title, active: false, evicted: true });
+    }
+    return live;
+  }
+
+  /**
+   * Focus a tab. If it was LRU-evicted, it is recreated from its kept URL —
+   * page state is lost (that is what eviction means) but the address survives.
+   */
+  activateTab(tabId: string): void {
+    if (this.tabs.has(tabId)) {
+      this.activeTabId = tabId;
+      this.tabs.get(tabId)!.lastShownAt = Date.now();
+      return;
+    }
+    const rec = this.evictedTabs.get(tabId);
+    if (!rec) throw new Error(`no such browser tab: ${tabId}`);
+    this.evictedTabs.delete(tabId);
+    this.createTab({ id: tabId, url: rec.url, activate: true });
+  }
+
+  /** The currently focused tab, if any. */
+  activeTab(): BrowserTab | null {
+    return this.tab();
+  }
+
+  /**
+   * Show a tab at `bounds` — the ONLY writer of non-zero bounds. Enforces the
+   * one-visible invariant: every other view goes to 0×0 first, then the target
+   * is sized and re-topped (native views stack in child order — the engine
+   * must sit above panel views or clicks land on the DOM beneath).
+   */
+  showTab(tabId: string | undefined, bounds: { x: number; y: number; width: number; height: number }): void {
+    const t = this.tab(tabId);
+    if (!t) return;
+    const others = [...this.tabs.values()].filter((x) => x !== t);
+    for (const o of others) {
+      try {
+        o.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+      } catch { /* ignore */ }
+    }
+    try {
+      t.view.setBounds(bounds);
+      t.lastBounds = { ...bounds };
+      t.lastShownAt = Date.now();
+      this.activeTabId = t.id;
+      // Re-top: if a panel view joined the tree after this engine view, it
+      // would paint over the engine — re-append to keep the engine last.
+      const children = this.mainWindow?.contentView.children ?? [];
+      if (children.length > 0 && children[children.length - 1] !== t.view) {
+        this.mainWindow!.contentView.removeChildView(t.view);
+        this.mainWindow!.contentView.addChildView(t.view);
+      }
+      void this.setDeviceMetrics(bounds.width, bounds.height, t).catch(() => {});
+    } catch (err) {
+      console.warn('[BrowserManager] showTab failed:', err);
+    }
+  }
+
+  /** Hide every tab (set zero-size bounds). The slot reports a degenerate rect. */
+  hide(): void {
+    for (const t of this.tabs.values()) {
+      try {
+        t.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+        t.lastBounds = null;
+      } catch { /* ignore */ }
+    }
+  }
+
+  /**
+   * Borrow the visible surface for a background tab's operation. Some CDP
+   * work (viewport screenshots, VLM walk) needs a real painted surface; a
+   * 0×0 view has none. The visible tab is hidden for the duration and
+   * restored after. Borrowings serialize — two walks must not fight over the
+   * one rectangle. DOM-level automation (click/fill/evaluate/snapshot) does
+   * NOT go through this and runs on any tab concurrently.
+   */
+  private withTabSurface<T>(t: BrowserTab, fn: () => Promise<T>): Promise<T> {
+    const run = async (): Promise<T> => {
+      const visible = this.activeTabId ? this.tabs.get(this.activeTabId) : null;
+      const borrow = t !== visible;
+      const restore = visible?.lastBounds ?? null;
+      if (borrow) {
+        if (visible && restore) {
+          try {
+            visible.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+          } catch { /* ignore */ }
+        }
+        const bounds = restore ?? { x: 0, y: 0, width: 800, height: 600 };
+        try {
+          t.view.setBounds(bounds);
+          const children = this.mainWindow?.contentView.children ?? [];
+          if (children.length > 0 && children[children.length - 1] !== t.view) {
+            this.mainWindow!.contentView.removeChildView(t.view);
+            this.mainWindow!.contentView.addChildView(t.view);
+          }
+        } catch { /* ignore */ }
+      }
+      try {
+        return await fn();
+      } finally {
+        if (borrow) {
+          try {
+            t.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+          } catch { /* ignore */ }
+          if (visible && restore) {
+            try {
+              visible.view.setBounds(restore);
+            } catch { /* ignore */ }
+          }
+        }
+      }
+    };
+    const next = this.surfaceChain.then(run, run);
+    this.surfaceChain = next.catch(() => undefined);
+    return next;
+  }
+
+  /** Wire a fresh tab's webContents to the profile-level policies and events. */
+  private wireTab(t: BrowserTab): void {
+    const wc = t.wc;
+
+    wc.setUserAgent(ENGINE_UA);
 
     // Ignore certificate errors for user-browsed content (equivalent to
-    // clicking "Proceed anyway" in a regular browser). the browser view
-    // loads arbitrary user-chosen URLs, so strict cert rejection is
+    // clicking "Proceed anyway" in a regular browser). The browser loads
+    // arbitrary user-chosen URLs, so strict cert rejection is
     // counterproductive.
     wc.on('certificate-error', (event, _url, _error, _certificate, callback) => {
       event.preventDefault();
       callback(true); // proceed
     });
 
-    // Configure the session: allow permissions for user-browsed content,
-    // and allow running insecure content (HTTP subresources on HTTPS pages)
+    // Configure the shared profile once: allow permissions for user-browsed
+    // content, and allow insecure content (HTTP subresources on HTTPS pages)
     // which is common on Chinese sites like zhipin.com.
-    const ses = session.fromPartition('persist:pi-browser');
-    ses.setPermissionRequestHandler((_wc, _permission, callback) => {
-      callback(true);
-    });
+    if (!this.sessionConfigured) {
+      const ses = session.fromPartition('persist:pi-browser');
+      ses.setPermissionRequestHandler((_wc, _permission, callback) => {
+        callback(true);
+      });
+      this.sessionConfigured = true;
+    }
 
     // ── Manual zoom wiring ──
     // Chromium routes ctrl+wheel and trackpad pinch to the embedder's
@@ -137,58 +447,54 @@ export class BrowserManager {
     // deterministic channel is the helpers' zoom hook (see browser-helpers):
     // the page reports gestures as console lines and this watches for them.
     wc.on('zoom-changed', (_event, zoomDirection: 'in' | 'out') => {
-      this.applyManualZoom(zoomDirection === 'in' ? BrowserManager.ZOOM_STEP : 1 / BrowserManager.ZOOM_STEP);
+      this.applyManualZoom(t, zoomDirection === 'in' ? BrowserManager.ZOOM_STEP : 1 / BrowserManager.ZOOM_STEP);
     });
     wc.on('console-message', (_event, _level, message) => {
-      if (message === '__pi-zoom:in') this.applyManualZoom(BrowserManager.ZOOM_STEP);
-      else if (message === '__pi-zoom:out') this.applyManualZoom(1 / BrowserManager.ZOOM_STEP);
+      if (message === '__pi-zoom:in') this.applyManualZoom(t, BrowserManager.ZOOM_STEP);
+      else if (message === '__pi-zoom:out') this.applyManualZoom(t, 1 / BrowserManager.ZOOM_STEP);
     });
     // Cmd+0 / Ctrl+0 — Chrome's reset: drop this site's manual zoom and
     // re-fit. (Keyboard is the one input before-input-event can see.)
     wc.on('before-input-event', (event, input) => {
       if (input.type === 'keyDown' && (input.meta || input.control) && input.key === '0') {
         event.preventDefault();
-        this.resetManualZoom();
+        this.resetManualZoom(t);
       }
     });
 
     wc.on('did-navigate', (_event, url) => {
       if (url && !url.startsWith('about:')) {
-        this.urlChangedCallbacks.forEach((cb) => cb(url));
+        this.urlChangedCallbacks.forEach((cb) => cb(t.id, url));
       }
     });
     wc.on('did-navigate-in-page', (_event, url) => {
       if (url) {
-        this.urlChangedCallbacks.forEach((cb) => cb(url));
+        this.urlChangedCallbacks.forEach((cb) => cb(t.id, url));
       }
     });
-    // Everything navigates in place — there is no second page. The panel is
-    // the observation window for agent work, and every browser.* tool acts on
-    // "the current page"; a popup (or a second tab) would split that story:
-    // the user watches one page while the CDP session the tools speak through
-    // stays on another, so click→get_state reads stale content. injectHelpers
-    // rewrites existing target=_blank links and window.open at load time, but
-    // links injected later, <form target="_blank">, and anything else slips
-    // through — this handler is the backstop that catches what it misses.
-    // about:blank is denied outright: sites open it to grab a window handle,
-    // never to be seen.
-    wc.setWindowOpenHandler(({ url }) => {
+    // Popups open as a NEW TAB rather than hijacking the current page — the
+    // multi-tab engine can afford it, and `target=_blank` links mean "new
+    // page" exactly. The handler stays deny (the host creates the view), and
+    // the url is handed to whoever registered interest (main wires it to
+    // createTab + a host event). about:blank is dropped outright: sites open
+    // it to grab a window handle, never to be seen.
+    wc.setWindowOpenHandler(({ url, disposition }) => {
       if (/^https?:/i.test(url)) {
-        void wc.loadURL(url).catch(() => {});
+        this.windowOpenCallbacks.forEach((cb) => cb(url, disposition ?? 'foreground-tab', t.id));
       }
       return { action: 'deny' };
     });
     wc.on('did-finish-load', () => {
-      if (!this.isNavigating) {
-        this.injectHelpers();
-        this.scheduleAutoZoom();
+      if (!t.isNavigating) {
+        this.injectHelpers(t);
+        this.scheduleAutoZoom(t);
       }
       // embedded-view compositing workaround: after a page load (especially
       // SPA navigations like zhipin.com's anti-bot triggered ones), the
       // native composited surface can go blank while the webContents still
       // has rendered content. Re-applying the bounds nudges the compositor
       // to redraw the surface.
-      this.refreshCompositor();
+      this.refreshCompositor(t);
     });
 
     // Log renderer crashes for diagnosis (GPU/renderer process death causes
@@ -204,118 +510,98 @@ export class BrowserManager {
     });
   }
 
-  private refreshCompositorTimer: ReturnType<typeof setTimeout> | null = null;
-
   /**
-   * Force the embedded view's compositor to redraw by re-applying the
-   * current bounds. This fixes the "page loads then goes white" issue
-   * caused by Chromium's compositor culling the embedded view's surface
-   * after certain navigations. Debounced to avoid hammering during
-   * rapid SPA route changes (zhipin.com triggers many of these).
+   * Force a tab's compositor to redraw by re-applying its bounds. This fixes
+   * the "page loads then goes white" issue caused by Chromium's compositor
+   * culling the embedded view's surface after certain navigations. Debounced
+   * to avoid hammering during rapid SPA route changes (zhipin.com triggers
+   * many of these).
    */
-  private refreshCompositor(): void {
-    if (!this.browserView || !this.lastBounds) return;
-    const { x, y, width, height } = this.lastBounds;
+  private refreshCompositor(t: BrowserTab): void {
+    if (!t.lastBounds) return;
+    const { x, y, width, height } = t.lastBounds;
     if (width <= 0 || height <= 0) return;
-    if (this.refreshCompositorTimer) clearTimeout(this.refreshCompositorTimer);
-    this.refreshCompositorTimer = setTimeout(() => {
-      this.refreshCompositorTimer = null;
+    if (t.refreshCompositorTimer) clearTimeout(t.refreshCompositorTimer);
+    t.refreshCompositorTimer = setTimeout(() => {
+      t.refreshCompositorTimer = null;
       try {
         // Nudge bounds by 1px then restore — forces the compositor to
         // re-evaluate and redraw the embedded view's surface.
-        this.browserView!.setBounds({ x, y, width: width + 1, height });
-        this.browserView!.setBounds({ x, y, width, height });
+        t.view.setBounds({ x, y, width: width + 1, height });
+        t.view.setBounds({ x, y, width, height });
       } catch {
         // ignore
       }
     }, 50);
   }
 
-  /** Get the embedded browser view's webContents. */
-  private get wc(): Electron.WebContents | null {
-    if (!this.browserView) return null;
-    try {
-      if (this.browserView.webContents.isDestroyed()) return null;
-    } catch {
-      return null;
-    }
-    return this.browserView.webContents;
-  }
-
   /**
-   * The engine view itself, for z-order management: the slot host re-appends
+   * The active tab's view, for z-order management: the slot host re-appends
    * it to the contentView when an engine slot shows, because lazily-created
    * plugin panel views join the view tree above it and would otherwise paint
    * over it.
    */
   getView(): WebContentsView | null {
-    if (!this.browserView) return null;
-    try {
-      if (this.browserView.webContents.isDestroyed()) return null;
-    } catch {
-      return null;
-    }
-    return this.browserView;
+    const t = this.tab();
+    if (!t || !t.alive()) return null;
+    return t.view;
   }
 
   /**
-   * Set the browser view's bounds (viewport-relative position and size).
-   * Call from renderer via IPC to position the native overlay over the placeholder div.
+   * Set the ACTIVE tab's bounds (viewport-relative position and size).
+   * Call from renderer via IPC to position the native overlay over the
+   * placeholder div. showTab() is the multi-tab-aware writer; this stays for
+   * the single-slot geometry path.
    */
   setBounds(x: number, y: number, width: number, height: number): void {
-    if (!this.browserView) {
-      console.warn('[BrowserManager] setBounds called but browserView is null');
+    const t = this.tab();
+    if (!t) {
+      console.warn('[BrowserManager] setBounds called but no tab exists');
       return;
     }
     // No log: resize streams one call per frame while a panel edge is dragged.
-    this.browserView.setBounds({ x, y, width, height });
-    this.lastBounds = { x, y, width, height };
-    const viewWidth = width;
-    if (viewWidth > 0 && this.webviewWidth !== viewWidth) {
-      this.webviewWidth = viewWidth;
+    t.view.setBounds({ x, y, width, height });
+    t.lastBounds = { x, y, width, height };
+    if (width > 0 && t.webviewWidth !== width) {
+      t.webviewWidth = width;
     }
   }
 
-  /** Hide the browser view (set zero-size bounds). */
-  hide(): void {
-    if (!this.browserView) return;
-    this.browserView.setBounds({ x: 0, y: 0, width: 0, height: 0 });
-    this.lastBounds = null;
-  }
-
-  /** Get current browser view bounds. */
+  /** Get the active tab's bounds. */
   getBounds(): { x: number; y: number; width: number; height: number } {
-    if (!this.browserView) return { x: 0, y: 0, width: 0, height: 0 };
-    return this.browserView.getBounds();
+    const t = this.tab();
+    if (!t) return { x: 0, y: 0, width: 0, height: 0 };
+    return t.view.getBounds();
   }
 
   /** ─── Connection ─── */
 
-  /** Connect to the browser view's webContents via the debugger API. */
-  async connect(): Promise<void> {
-    const wc = this.wc;
-    if (!wc) {
-      throw new Error('Browser view not initialized. Call setBrowserView() first.');
+  /**
+   * Ensure a debugger session on a tab (creating the initial tab when there
+   * is none). Debugger sessions are per tab and attach lazily — eight tabs
+   * must not hold eight idle CDP sessions from boot.
+   */
+  async connect(tabId?: string): Promise<void> {
+    let t = this.tab(tabId);
+    if (!t) {
+      t = this.createTab({ activate: true });
     }
-
+    const wc = t.wc;
     // Increase max listeners
     wc.setMaxListeners(50);
-
-    // Inject helpers (window.open override)
-    this.injectHelpers();
 
     // Detach any existing debugger session before attaching (handles
     // dangling sessions left after CDP errors like "target navigated").
     try { wc.debugger.detach(); } catch {}
-    this.debuggerAttached = false;
+    t.debuggerAttached = false;
 
     // Attach the debugger
     try {
       wc.debugger.attach('1.3');
-      this.debuggerAttached = true;
+      t.debuggerAttached = true;
     } catch (err) {
       if (err instanceof Error && err.message.includes('already attached')) {
-        this.debuggerAttached = true;
+        t.debuggerAttached = true;
       } else {
         throw err;
       }
@@ -327,83 +613,77 @@ export class BrowserManager {
         const frame = params.frame as { url?: string };
         const url = frame.url || '';
         if (url && !url.startsWith('about:')) {
-          this.urlChangedCallbacks.forEach((cb) => cb(url));
+          this.urlChangedCallbacks.forEach((cb) => cb(t.id, url));
         }
-        if (!this.isNavigating) {
-          this.injectHelpers();
-          this.scheduleAutoZoom();
+        if (!t.isNavigating) {
+          this.injectHelpers(t);
+          this.scheduleAutoZoom(t);
         }
       }
 
       if (method === 'Page.loadEventFired') {
         console.log('[BrowserManager] Page.loadEventFired');
-        if (!this.isNavigating) {
-          this.injectHelpers();
-          this.scheduleAutoZoom();
+        if (!t.isNavigating) {
+          this.injectHelpers(t);
+          this.scheduleAutoZoom(t);
         }
         // Refresh compositor surface after every load event (fixes the
         // "page loads then goes white" compositing bug on sites like
         // zhipin.com that trigger multiple sub-frame loads).
-        this.refreshCompositor();
+        this.refreshCompositor(t);
       }
     });
 
     // Enable necessary CDP domains
-    await this.sendCommand('Page.enable');
-    await this.sendCommand('Runtime.enable');
-    await this.sendCommand('Accessibility.enable');
+    await this.sendCommand(t, 'Page.enable');
+    await this.sendCommand(t, 'Runtime.enable');
+    await this.sendCommand(t, 'Accessibility.enable');
 
     // Inject the helpers immediately
-    this.injectHelpers();
+    this.injectHelpers(t);
 
-    console.log('[BrowserManager] Connected to browser view via debugger API');
+    console.log('[BrowserManager] Connected to tab', t.id, 'via debugger API');
   }
 
-  /** Check if the debugger is attached and the browser view is alive. */
-  isConnected(): boolean {
-    if (!this.browserView || !this.debuggerAttached) return false;
-    try {
-      return !this.browserView.webContents.isDestroyed();
-    } catch {
-      return false;
-    }
+  /** Check if the debugger is attached to the target tab and it is alive. */
+  isConnected(tabId?: string): boolean {
+    const t = this.tab(tabId);
+    if (!t || !t.debuggerAttached) return false;
+    return t.alive();
   }
 
-  /** ─── Toolbar navigation ─── */
+  /** ——— Toolbar navigation ——— */
 
   /** Navigate back in browsing history. */
-  navigateBack(): void {
-    if (this.wc && this.wc.canGoBack()) {
-      this.wc.goBack();
+  navigateBack(tabId?: string): void {
+    const t = this.tab(tabId);
+    if (t && t.wc.canGoBack()) {
+      t.wc.goBack();
     }
   }
 
   /** Navigate forward in browsing history. */
-  navigateForward(): void {
-    if (this.wc && this.wc.canGoForward()) {
-      this.wc.goForward();
+  navigateForward(tabId?: string): void {
+    const t = this.tab(tabId);
+    if (t && t.wc.canGoForward()) {
+      t.wc.goForward();
     }
   }
 
   /** Reload the current page. */
-  reload(): void {
-    this.wc?.reload();
+  reload(tabId?: string): void {
+    this.tab(tabId)?.wc.reload();
   }
 
   /** Load a URL directly via webContents (handles redirects natively). */
-  loadURL(url: string): void {
-    this.wc?.loadURL(url);
+  loadURL(url: string, tabId?: string): void {
+    this.tab(tabId)?.wc.loadURL(url).catch(() => {});
   }
 
-  /** Inject JS helpers (selector resolver, snapshot, window.open override) into the page. */
-  private injectHelpers(): void {
-    const wc = this.wc;
-    if (!wc) return;
-    try {
-      if (wc.isDestroyed()) return;
-    } catch {
-      return;
-    }
+  /** Inject JS helpers (selector resolver, snapshot, window.open override) into a tab. */
+  private injectHelpers(t: BrowserTab): void {
+    const wc = t.wc;
+    if (!t.alive()) return;
     try {
       // Inject the helpers (idempotent — checks window.__piHelpers)
       wc.executeJavaScript(BROWSER_HELPERS_JS).catch(() => {});
@@ -427,11 +707,11 @@ export class BrowserManager {
 
   /** ─── Manual zoom ─── */
 
-  private currentOrigin(): string {
+  private currentOrigin(t: BrowserTab): string {
     try {
       // Opaque origins (error pages) stringify as "null" — not a site, not a
       // zoom to remember.
-      const origin = new URL(this.wc?.getURL() ?? '').origin;
+      const origin = new URL(t.wc.getURL() ?? '').origin;
       return origin && origin !== 'null' ? origin : '';
     } catch {
       return '';
@@ -442,25 +722,25 @@ export class BrowserManager {
    * One notch of user zoom (a ctrl+wheel step or a pinch). The choice is
    * remembered per origin — auto-fit stops touching this site until reset.
    */
-  private applyManualZoom(factor: number): void {
-    const origin = this.currentOrigin();
+  private applyManualZoom(t: BrowserTab, factor: number): void {
+    const origin = this.currentOrigin(t);
     if (!origin) return;
-    const base = this.userZoomByOrigin.get(origin) ?? this.currentZoom;
+    const base = this.userZoomByOrigin.get(origin) ?? t.currentZoom;
     const next = Math.min(BrowserManager.ZOOM_MAX, Math.max(BrowserManager.ZOOM_MIN, base * factor));
     this.userZoomByOrigin.set(origin, next);
-    this.currentZoom = next;
-    this.applyZoom();
+    t.currentZoom = next;
+    this.applyZoom(t);
     // A load's auto-fit chain may still be pending; the map check in
     // computeAutoZoom would neutralize it anyway, but skip the work.
-    this.cancelScheduledZoom();
+    this.cancelScheduledZoom(t);
   }
 
   /** Cmd+0 / Ctrl+0: forget this site's manual zoom and re-fit. */
-  private resetManualZoom(): void {
-    this.userZoomByOrigin.delete(this.currentOrigin());
-    this.currentZoom = 1;
-    this.applyZoom();
-    this.scheduleAutoZoom();
+  private resetManualZoom(t: BrowserTab): void {
+    this.userZoomByOrigin.delete(this.currentOrigin(t));
+    t.currentZoom = 1;
+    this.applyZoom(t);
+    this.scheduleAutoZoom(t);
   }
 
   /**
@@ -471,45 +751,36 @@ export class BrowserManager {
    * fine — extra runs on an already-fitted page are no-ops. Cancelled by
    * navigation (`cancelScheduledZoom`).
    */
-  private scheduleAutoZoom(): void {
-    this.cancelScheduledZoom();
-    this.zoomChainTimers = [200, 800, 2000, 4000].map((delay) =>
-      setTimeout(() => void this.computeAutoZoom(), delay),
+  private scheduleAutoZoom(t: BrowserTab): void {
+    this.cancelScheduledZoom(t);
+    t.zoomChainTimers = [200, 800, 2000, 4000].map((delay) =>
+      setTimeout(() => void this.computeAutoZoom(t), delay),
     );
   }
 
   /** Cancel any pending scheduled zoom (e.g., when navigate starts). */
-  private cancelScheduledZoom(): void {
-    for (const t of this.zoomChainTimers) clearTimeout(t);
-    this.zoomChainTimers = [];
+  private cancelScheduledZoom(t: BrowserTab): void {
+    for (const timer of t.zoomChainTimers) clearTimeout(timer);
+    t.zoomChainTimers = [];
   }
 
-  /** Measure page content width and compute auto-fit zoom via CDP. */
   /** Measure page content width vs webview width and auto-fit zoom. */
-  private webviewWidth = 600;
-
-  private async computeAutoZoom(): Promise<void> {
-    // Re-entrant guard — prevent concurrent zoom computations
-    if (this.zoomComputing) return;
-    const wc = this.wc;
-    if (!wc) return;
-    // Guard against destroyed webContents
+  private async computeAutoZoom(t: BrowserTab): Promise<void> {
+    // Re-entrant guard — prevent concurrent zoom computations on one tab
+    if (t.zoomComputing) return;
+    const wc = t.wc;
+    if (!t.alive()) return;
+    t.zoomComputing = true;
     try {
-      if (wc.isDestroyed()) return;
-    } catch {
-      return;
-    }
-    this.zoomComputing = true;
-    try {
-      const panelW = this.webviewWidth;
+      const panelW = t.webviewWidth;
       if (panelW <= 0) return;
       // The user's manual zoom outranks the fit: apply it and leave the page
       // alone — they zoomed on purpose, and re-fitting would fight them.
-      const userZoom = this.userZoomByOrigin.get(this.currentOrigin());
+      const userZoom = this.userZoomByOrigin.get(this.currentOrigin(t));
       if (userZoom !== undefined) {
-        if (Math.abs(userZoom - this.currentZoom) > 0.01) {
-          this.currentZoom = userZoom;
-          await this.applyZoom();
+        if (Math.abs(userZoom - t.currentZoom) > 0.01) {
+          t.currentZoom = userZoom;
+          await this.applyZoom(t);
         }
         return;
       }
@@ -517,7 +788,7 @@ export class BrowserManager {
       // old reset→wait→measure loop was visible as a flash on every resize
       // step, and its re-entrancy guard silently dropped overlapping fits,
       // leaving the page at a stale zoom.
-      const result = await this.sendCommand('Runtime.evaluate', {
+      const result = await this.sendCommand(t, 'Runtime.evaluate', {
         expression: `JSON.stringify({s: Math.max(
           document.documentElement ? document.documentElement.scrollWidth : 0,
           document.body ? document.body.scrollWidth : 0
@@ -534,7 +805,7 @@ export class BrowserManager {
       // (baidu's results page does exactly this). body.scrollWidth still sees
       // through the clip, hence the max. Both sides exclude the scrollbar, so
       // the comparison does not drift with scrollbar presence.
-      let target = this.currentZoom;
+      let target = t.currentZoom;
       if (dims.s > dims.c + 2) {
         // Content wider than the viewport → shrink so it just fits.
         target = Math.max(BrowserManager.AUTO_FIT_MIN, panelW / dims.s);
@@ -546,42 +817,48 @@ export class BrowserManager {
       // Exact fit and fluid pages (s == c at any zoom) are fixed points —
       // left alone. The hysteresis keeps a scrollbar-noise step from
       // re-applying a ~2% zoom forever.
-      if (Math.abs(target - this.currentZoom) > 0.02) {
-        this.currentZoom = target;
-        await this.applyZoom();
+      if (Math.abs(target - t.currentZoom) > 0.02) {
+        t.currentZoom = target;
+        await this.applyZoom(t);
       }
     } catch (err) {
       // "Inspected target navigated or closed" lands here when a page
       // navigates mid-measure — the post-load chain re-checks shortly after.
       console.warn('[BrowserManager] computeAutoZoom error:', err);
     } finally {
-      this.zoomComputing = false;
+      t.zoomComputing = false;
     }
   }
 
-  private async applyZoom(): Promise<void> {
+  private async applyZoom(t: BrowserTab): Promise<void> {
     // No log: panel drags apply a zoom per width step.
-    try { this.wc?.setZoomFactor(this.currentZoom); } catch {}
+    try { t.wc.setZoomFactor(t.currentZoom); } catch {}
   }
 
   /** ——— CDP communication ——— */
 
   /**
-   * Send a CDP command via Electron's debugger API.
+   * Send a CDP command to a tab via Electron's debugger API, attaching the
+   * session lazily on first use.
    * Electron automatically manages CDP message IDs and routes responses.
    */
-  private sendCommand(method: string, params: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
-    const wc = this.wc;
-    if (!wc || !this.debuggerAttached) {
-      return Promise.reject(new Error('Debugger not attached'));
+  private async sendCommand(
+    t: BrowserTab,
+    method: string,
+    params: Record<string, unknown> = {},
+  ): Promise<Record<string, unknown>> {
+    if (!t.debuggerAttached) {
+      await this.connect(t.id);
     }
-
+    if (!t.debuggerAttached) {
+      throw new Error('Debugger not attached');
+    }
     // Wrap with timeout
     const timeoutMs = 30000;
     return Promise.race([
-      wc.debugger.sendCommand(method, params),
+      t.wc.debugger.sendCommand(method, params),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`CDP command "${method}" timed out`)), timeoutMs)
+        setTimeout(() => reject(new Error(`CDP command "${method}" timed out`)), timeoutMs),
       ),
     ]) as Promise<Record<string, unknown>>;
   }
@@ -597,25 +874,26 @@ export class BrowserManager {
   async navigate(
     url: string,
     options?: { autoHandleGate?: boolean; maxGateRetries?: number },
+    tabId?: string,
   ): Promise<{ url: string; title: string; page: PageAnalysis }> {
+    const t = this.requireTab(tabId);
     const autoHandleGate = options?.autoHandleGate !== false;
     const maxGateRetries = options?.maxGateRetries ?? 2;
 
-    this.isNavigating = true;
-    this.cancelScheduledZoom();
+    t.isNavigating = true;
+    this.cancelScheduledZoom(t);
     try {
       // Use webContents.loadURL() for navigation — handles redirects natively
-      const wc = this.wc;
-      if (!wc) throw new Error('Browser view not available');
-      wc.loadURL(url);
+      if (!t.alive()) throw new Error('Browser tab not available');
+      t.wc.loadURL(url);
       // Wait for page to load (DOM complete)
-      await this.waitForPageLoad();
+      await this.waitForPageLoad(t);
       // Extra wait for SPA rendering (JS-heavy pages like WeChat, DingTalk)
-      await this.waitForSpaReady();
-      let title = await this.getTitle();
-      let currentUrl = await this.getCurrentUrl();
+      await this.waitForSpaReady(t);
+      let title = await this.getTitle(t);
+      let currentUrl = await this.getCurrentUrl(t);
       // Analyze page to help LLM determine next action
-      let page = await this.analyzePage();
+      let page = await this.analyzePage(t);
 
       // Auto-handle gate pages: click low-risk actions (login, agree, confirm, etc.)
       if (autoHandleGate) {
@@ -625,19 +903,19 @@ export class BrowserManager {
           if (!lowRiskAction) break;
 
           console.log('[BrowserManager] Gate page detected, auto-clicking:', lowRiskAction.text);
-          const clickResult = await this.click(`text="${lowRiskAction.text}"`);
+          const clickResult = await this.click(`text="${lowRiskAction.text}"`, t.id);
           if (!clickResult.clicked) {
             console.warn('[BrowserManager] Auto-click failed:', clickResult.error);
             break;
           }
 
           // Wait for page to change after click
-          await this.waitForPageLoad();
-          await this.waitForSpaReady();
+          await this.waitForPageLoad(t);
+          await this.waitForSpaReady(t);
 
-          title = await this.getTitle();
-          currentUrl = await this.getCurrentUrl();
-          page = await this.analyzePage();
+          title = await this.getTitle(t);
+          currentUrl = await this.getCurrentUrl(t);
+          page = await this.analyzePage(t);
           retries++;
         }
 
@@ -652,25 +930,26 @@ export class BrowserManager {
 
       // Re-inject helpers and compute auto-zoom now that navigation is complete.
       // This compensates for skipped calls in the CDP event handler during navigation.
-      this.injectHelpers();
-      await this.computeAutoZoom();
+      this.injectHelpers(t);
+      await this.computeAutoZoom(t);
 
       return { url: currentUrl, title, page };
     } finally {
-      this.isNavigating = false;
+      t.isNavigating = false;
     }
   }
 
   /** Get the current URL. */
-  async getUrl(): Promise<{ url: string; title: string }> {
-    const [url, title] = await Promise.all([this.getCurrentUrl(), this.getTitle()]);
+  async getUrl(tabId?: string): Promise<{ url: string; title: string }> {
+    const t = this.requireTab(tabId);
+    const [url, title] = await Promise.all([this.getCurrentUrl(t), this.getTitle(t)]);
     return { url, title };
   }
 
   /** Get the current page title via CDP. */
-  private async getTitle(): Promise<string> {
+  private async getTitle(t: BrowserTab): Promise<string> {
     try {
-      const result = await this.sendCommand('Runtime.evaluate', {
+      const result = await this.sendCommand(t, 'Runtime.evaluate', {
         expression: 'document.title',
         returnByValue: true,
       });
@@ -681,9 +960,9 @@ export class BrowserManager {
   }
 
   /** Get the current page URL via CDP. */
-  private async getCurrentUrl(): Promise<string> {
+  private async getCurrentUrl(t: BrowserTab): Promise<string> {
     try {
-      const result = await this.sendCommand('Runtime.evaluate', {
+      const result = await this.sendCommand(t, 'Runtime.evaluate', {
         expression: 'window.location.href',
         returnByValue: true,
       });
@@ -694,11 +973,11 @@ export class BrowserManager {
   }
 
   /** Wait for the page to finish loading (domcontentloaded). */
-  private async waitForPageLoad(timeoutMs = 30000): Promise<void> {
+  private async waitForPageLoad(t: BrowserTab, timeoutMs = 30000): Promise<void> {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       try {
-        const result = await this.sendCommand('Runtime.evaluate', {
+        const result = await this.sendCommand(t, 'Runtime.evaluate', {
           expression: 'document.readyState',
           returnByValue: true,
         });
@@ -723,7 +1002,7 @@ export class BrowserManager {
    * bootstrap the framework and render the actual UI. We wait a minimum
    * time, then poll for DOM stability (no new children added).
    */
-  private async waitForSpaReady(timeoutMs = 8000): Promise<void> {
+  private async waitForSpaReady(t: BrowserTab, timeoutMs = 8000): Promise<void> {
     const minWaitMs = 1500; // Minimum time for SPA to bootstrap
     const stabilityPollMs = 500;
     const stableThreshold = 2; // Consecutive stable polls needed
@@ -742,7 +1021,7 @@ export class BrowserManager {
 
     while (Date.now() - start < timeoutMs) {
       try {
-        const result = await this.sendCommand('Runtime.evaluate', {
+        const result = await this.sendCommand(t, 'Runtime.evaluate', {
           expression: 'document.body ? document.body.children.length : 0',
           returnByValue: true,
         });
@@ -767,14 +1046,14 @@ export class BrowserManager {
    * Analyze the current page state. Runs `piAnalyzePage()` in the page context
    * to classify the page type and extract core actions the LLM might want to take.
    */
-  private async analyzePage(): Promise<PageAnalysis> {
+  private async analyzePage(t: BrowserTab): Promise<PageAnalysis> {
     try {
       // Ensure helpers are injected
-      await this.sendCommand('Runtime.evaluate', {
+      await this.sendCommand(t, 'Runtime.evaluate', {
         expression: BROWSER_HELPERS_JS,
         returnByValue: true,
       });
-      const result = await this.sendCommand('Runtime.evaluate', {
+      const result = await this.sendCommand(t, 'Runtime.evaluate', {
         expression: 'window.piAnalyzePage ? JSON.stringify(window.piAnalyzePage()) : null',
         returnByValue: true,
       });
@@ -796,14 +1075,15 @@ export class BrowserManager {
   /** ——— Snapshot / accessibility ——— */
 
   /** Take a snapshot of interactive elements with ref IDs for easy targeting. */
-  async getSnapshot(): Promise<string> {
+  async getSnapshot(tabId?: string): Promise<string> {
+    const t = this.requireTab(tabId);
     try {
       // Ensure helpers are injected
-      await this.sendCommand('Runtime.evaluate', {
+      await this.sendCommand(t, 'Runtime.evaluate', {
         expression: BROWSER_HELPERS_JS,
         returnByValue: true,
       });
-      const result = await this.sendCommand('Runtime.evaluate', {
+      const result = await this.sendCommand(t, 'Runtime.evaluate', {
         expression: 'window.piSnapshot ? window.piSnapshot() : "(helpers not loaded)"',
         returnByValue: true,
       });
@@ -815,13 +1095,14 @@ export class BrowserManager {
 
   /** Search for interactive elements matching a semantic query.
    *  Returns scored matches with text, role, ref ID, and page section. */
-  async find(query: string): Promise<Array<{ score: number; role: string; text: string; section: string }>> {
+  async find(query: string, tabId?: string): Promise<Array<{ score: number; role: string; text: string; section: string }>> {
+    const t = this.requireTab(tabId);
     try {
-      await this.sendCommand('Runtime.evaluate', {
+      await this.sendCommand(t, 'Runtime.evaluate', {
         expression: BROWSER_HELPERS_JS,
         returnByValue: true,
       });
-      const result = await this.sendCommand('Runtime.evaluate', {
+      const result = await this.sendCommand(t, 'Runtime.evaluate', {
         expression: `window.piFind ? JSON.stringify(window.piFind(${JSON.stringify(query)})) : null`,
         returnByValue: true,
       });
@@ -834,13 +1115,14 @@ export class BrowserManager {
   }
 
   /** Take a snapshot grouped by page section (sidebar, header, main, footer). */
-  async getStructuredSnapshot(): Promise<string> {
+  async getStructuredSnapshot(tabId?: string): Promise<string> {
+    const t = this.requireTab(tabId);
     try {
-      await this.sendCommand('Runtime.evaluate', {
+      await this.sendCommand(t, 'Runtime.evaluate', {
         expression: BROWSER_HELPERS_JS,
         returnByValue: true,
       });
-      const result = await this.sendCommand('Runtime.evaluate', {
+      const result = await this.sendCommand(t, 'Runtime.evaluate', {
         expression: 'window.piSnapshotStructured ? window.piSnapshotStructured() : "(structured snapshot unavailable)"',
         returnByValue: true,
       });
@@ -862,44 +1144,51 @@ export class BrowserManager {
     goal: string,
     vlmAnalyzer: VlmAnalyzer,
     maxSteps = 5,
+    tabId?: string,
   ): Promise<WalkResult> {
-    const startUrl = await this.getCurrentUrl();
-    const startTitle = await this.getTitle();
+    const t = this.requireTab(tabId);
+
+    const startUrl = await this.getCurrentUrl(t);
+    const startTitle = await this.getTitle(t);
     const steps: WalkStep[] = [];
 
-    // Step 1: Plan the path with VLM
-    const screenshot = await this.screenshot();
-    const snapshot = await this.getSnapshot().catch(() => '(unavailable)');
+    // Step 1: Plan the path with VLM. The screenshot needs a painted surface —
+    // a hidden tab borrows the visible one for the planning pass (restored
+    // after), while the execution clicks go through CDP and need no surface.
+    const pathPlan = await this.withTabSurface(t, async () => {
+      const screenshot = await this.screenshot(undefined, t.id);
+      const snapshot = await this.getSnapshot(t.id).catch(() => '(unavailable)');
 
-    const pathPlanPrompt =
-      `You are a navigation planner. The user wants to reach: "${goal}".\n\n` +
-      `The current page snapshot shows these interactive elements:\n${snapshot.slice(0, 2500)}\n\n` +
-      `Look at the screenshot and plan a path of clicks to reach the goal. ` +
-      `Return ONLY a JSON array like [{"text":"Label","where":"sidebar"},...] ` +
-      `where "text" is the exact visible text to click and "where" is optional context ` +
-      `(sidebar, header, main, footer). Be concise — plan the shortest path. ` +
-      `If the goal is already reached (page appears to be the destination), return [].`;
+      const pathPlanPrompt =
+        `You are a navigation planner. The user wants to reach: "${goal}".\n\n` +
+        `The current page snapshot shows these interactive elements:\n${snapshot.slice(0, 2500)}\n\n` +
+        `Look at the screenshot and plan a path of clicks to reach the goal. ` +
+        `Return ONLY a JSON array like [{"text":"Label","where":"sidebar"},...] ` +
+        `where "text" is the exact visible text to click and "where" is optional context ` +
+        `(sidebar, header, main, footer). Be concise — plan the shortest path. ` +
+        `If the goal is already reached (page appears to be the destination), return [].`;
 
-    let pathPlan: Array<{ text: string; where?: string }> = [];
-
-    try {
-      const rawPlan = await vlmAnalyzer.analyze(screenshot.base64, pathPlanPrompt);
-      if (rawPlan) {
-        // Try to extract JSON from the response (it may be wrapped in markdown)
-        const jsonMatch = rawPlan.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          pathPlan = JSON.parse(jsonMatch[0]);
+      let plan: Array<{ text: string; where?: string }> = [];
+      try {
+        const rawPlan = await vlmAnalyzer.analyze(screenshot.base64, pathPlanPrompt);
+        if (rawPlan) {
+          // Try to extract JSON from the response (it may be wrapped in markdown)
+          const jsonMatch = rawPlan.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            plan = JSON.parse(jsonMatch[0]);
+          }
         }
+      } catch (err) {
+        console.warn('[walk] VLM path planning failed, falling back to heuristic', err);
       }
-    } catch (err) {
-      console.warn('[walk] VLM path planning failed, falling back to heuristic', err);
-    }
+      return plan;
+    });
 
     // Heuristic fallback: if VLM returned nothing, split goal into keywords
     if (pathPlan.length === 0 && goal) {
       const keywords = goal.split(/[\s,，、]+/).filter(k => k.length > 1);
       for (const keyword of keywords.slice(0, maxSteps)) {
-        const matches = await this.find(keyword);
+        const matches = await this.find(keyword, t.id);
         if (matches.length > 0 && matches[0].score >= 30) {
           pathPlan.push({ text: matches[0].text, where: matches[0].section });
         }
@@ -914,19 +1203,19 @@ export class BrowserManager {
         title: startTitle,
         reached: false,
         steps: [],
-        page: await this.analyzePage().catch(() => ({ type: 'unknown' } as unknown as PageAnalysis)),
+        page: await this.analyzePage(t).catch(() => ({ type: 'unknown' } as unknown as PageAnalysis)),
       };
     }
 
     // Step 2: Execute the path
     for (const plannedStep of pathPlan) {
       // Try exact text match first
-      let clickResult = await this.click(`text="${plannedStep.text}"`);
+      let clickResult = await this.click(`text="${plannedStep.text}"`, t.id);
       // On failure, try fuzzy find
       if (!clickResult.clicked) {
-        const matches = await this.find(plannedStep.text);
+        const matches = await this.find(plannedStep.text, t.id);
         if (matches.length > 0 && matches[0].score >= 30) {
-          clickResult = await this.click(`text="${matches[0].text}"`);
+          clickResult = await this.click(`text="${matches[0].text}"`, t.id);
         }
       }
 
@@ -940,12 +1229,12 @@ export class BrowserManager {
       if (!clickResult.clicked) break; // Stop on first failure
 
       // Wait for navigation / SPA transition
-      await this.waitForPageLoad().catch(() => {});
-      await this.waitForSpaReady().catch(() => {});
+      await this.waitForPageLoad(t).catch(() => {});
+      await this.waitForSpaReady(t).catch(() => {});
     }
 
-    const finalUrl = await this.getCurrentUrl().catch(() => startUrl);
-    const finalTitle = await this.getTitle().catch(() => startTitle);
+    const finalUrl = await this.getCurrentUrl(t).catch(() => startUrl);
+    const finalTitle = await this.getTitle(t).catch(() => startTitle);
 
     return {
       goal,
@@ -953,7 +1242,7 @@ export class BrowserManager {
       title: finalTitle,
       reached: steps.every(s => s.success),
       steps,
-      page: await this.analyzePage().catch(() => ({ type: 'unknown' } as unknown as PageAnalysis)),
+      page: await this.analyzePage(t).catch(() => ({ type: 'unknown' } as unknown as PageAnalysis)),
     };
   }
 
@@ -965,15 +1254,22 @@ export class BrowserManager {
   }
 
   /** Wait for an element to exist and be visible, with timeout. Returns true if found. */
-  async waitForElement(selector: string, timeoutMs = 5000): Promise<boolean> {
+  async waitForElement(selector: string, timeoutMs: number | undefined, tabId?: string): Promise<boolean>;
+  async waitForElement(selector: string, timeoutMs: number | undefined, t: BrowserTab): Promise<boolean>;
+  async waitForElement(
+    selector: string,
+    timeoutMs: number | undefined = 5000,
+    target?: string | BrowserTab,
+  ): Promise<boolean> {
+    const t = target instanceof BrowserTab ? target : this.requireTab(target);
     const expr = this.buildExpression(`(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
       return !!el;
     })()`);
     const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
+    while (Date.now() - start < (timeoutMs ?? 5000)) {
       try {
-        const result = await this.sendCommand('Runtime.evaluate', {
+        const result = await this.sendCommand(t, 'Runtime.evaluate', {
           expression: expr,
           returnByValue: true,
         });
@@ -987,14 +1283,15 @@ export class BrowserManager {
   }
 
   /** Click an element by selector. Supports CSS, :has-text(), role=, text=, and [N] ref. */
-  async click(selector: string): Promise<{ selector: string; clicked: boolean; error?: string }> {
+  async click(selector: string, tabId?: string): Promise<{ selector: string; clicked: boolean; error?: string }> {
+    const t = this.requireTab(tabId);
     // Auto-wait: poll for element up to 5s
-    const found = await this.waitForElement(selector, 5000);
+    const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
       // Get suggestions for similar elements
       let suggestions = '';
       try {
-        const sugResult = await this.sendCommand('Runtime.evaluate', {
+        const sugResult = await this.sendCommand(t, 'Runtime.evaluate', {
           expression: this.buildExpression(`(window.piFindSimilar ? window.piFindSimilar(${JSON.stringify(selector)}, 5) : []).join('\\n')`),
           returnByValue: true,
         });
@@ -1013,7 +1310,7 @@ export class BrowserManager {
       el.click();
       return true;
     })()`);
-    const result = await this.sendCommand('Runtime.evaluate', {
+    const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
@@ -1022,8 +1319,9 @@ export class BrowserManager {
   }
 
   /** Fill an input by selector. Uses native value setter for React/Vue. Supports all selector formats. */
-  async fill(selector: string, value: string): Promise<{ selector: string; value: string; error?: string }> {
-    const found = await this.waitForElement(selector, 5000);
+  async fill(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; error?: string }> {
+    const t = this.requireTab(tabId);
+    const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
       return { selector, value, error: `Element not found: "${selector}"` };
     }
@@ -1036,7 +1334,7 @@ export class BrowserManager {
       var r = el.getBoundingClientRect();
       return {x: r.left + r.width/2, y: r.top + r.height/2, width: r.width, height: r.height};
     })()`);
-    const rectResult = await this.sendCommand('Runtime.evaluate', {
+    const rectResult = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: rectExpr,
       returnByValue: true,
     });
@@ -1047,14 +1345,14 @@ export class BrowserManager {
 
     // Click 3 times to select all text (triple-click)
     for (let i = 0; i < 3; i++) {
-      await this.sendCommand('Input.dispatchMouseEvent', {
+      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
         type: 'mousePressed',
         x: rect.x,
         y: rect.y,
         button: 'left',
         clickCount: i + 1,
       });
-      await this.sendCommand('Input.dispatchMouseEvent', {
+      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
         type: 'mouseReleased',
         x: rect.x,
         y: rect.y,
@@ -1064,14 +1362,15 @@ export class BrowserManager {
     }
 
     // Step 2: Type the new value via Input.insertText (triggers React onChange via browser input pipeline)
-    await this.sendCommand('Input.insertText', { text: value });
+    await this.sendCommand(t, 'Input.insertText', { text: value });
 
     return { selector, value };
   }
 
   /** Hover over an element by selector. */
-  async hover(selector: string): Promise<{ selector: string; hovered: boolean; error?: string }> {
-    const found = await this.waitForElement(selector, 5000);
+  async hover(selector: string, tabId?: string): Promise<{ selector: string; hovered: boolean; error?: string }> {
+    const t = this.requireTab(tabId);
+    const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
       return { selector, hovered: false, error: `Element not found: "${selector}"` };
     }
@@ -1088,7 +1387,7 @@ export class BrowserManager {
       });
       return true;
     })()`);
-    const result = await this.sendCommand('Runtime.evaluate', {
+    const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
@@ -1096,8 +1395,9 @@ export class BrowserManager {
   }
 
   /** Select an option in a <select> element by value or visible text. */
-  async selectOption(selector: string, value: string): Promise<{ selector: string; value: string; selected: boolean; error?: string }> {
-    const found = await this.waitForElement(selector, 5000);
+  async selectOption(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; selected: boolean; error?: string }> {
+    const t = this.requireTab(tabId);
+    const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
       return { selector, value, selected: false, error: `Element not found: "${selector}"` };
     }
@@ -1116,7 +1416,7 @@ export class BrowserManager {
       el.dispatchEvent(new Event('change', {bubbles: true}));
       return true;
     })()`);
-    const result = await this.sendCommand('Runtime.evaluate', {
+    const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
@@ -1137,9 +1437,11 @@ export class BrowserManager {
     text: string,
     optionMatcher: string,
     waitMs = 1500,
+    tabId?: string,
   ): Promise<{ selector: string; typed: string; matched: string | null; selected: boolean; error?: string }> {
+    const t = this.requireTab(tabId);
     // 1. Focus and clear the input
-    const found = await this.waitForElement(selector, 5000);
+    const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
       return { selector, typed: text, matched: null, selected: false, error: `Input element not found: "${selector}"` };
     }
@@ -1152,7 +1454,7 @@ export class BrowserManager {
       var r = el.getBoundingClientRect();
       return {x: r.left + r.width/2, y: r.top + r.height/2, width: r.width, height: r.height};
     })()`);
-    const rectResult = await this.sendCommand('Runtime.evaluate', {
+    const rectResult = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: rectExpr,
       returnByValue: true,
     });
@@ -1163,19 +1465,19 @@ export class BrowserManager {
 
     // Triple-click to select all existing text (same as fill())
     for (let i = 0; i < 3; i++) {
-      await this.sendCommand('Input.dispatchMouseEvent', {
+      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
         type: 'mousePressed', x: rect.x, y: rect.y, button: 'left', clickCount: i + 1,
       });
-      await this.sendCommand('Input.dispatchMouseEvent', {
+      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
         type: 'mouseReleased', x: rect.x, y: rect.y, button: 'left', clickCount: i + 1,
       });
     }
 
     // 2. Type the text using CDP insertText
-    await this.sendCommand('Input.insertText', { text });
+    await this.sendCommand(t, 'Input.insertText', { text });
 
     // Dispatch DOM input/change events so React/Vue/vanilla JS listeners fire (e.g., autocomplete dropdowns)
-    await this.sendCommand('Runtime.evaluate', {
+    await this.sendCommand(t, 'Runtime.evaluate', {
       expression: this.buildExpression(`(function(){
         var el = window.piResolveSelector(${JSON.stringify(selector)});
         if (el) {
@@ -1189,7 +1491,7 @@ export class BrowserManager {
     await new Promise((resolve) => setTimeout(resolve, waitMs));
 
     // 4. Take a fresh snapshot to find the suggestion options
-    await this.sendCommand('Runtime.evaluate', {
+    await this.sendCommand(t, 'Runtime.evaluate', {
       expression: BROWSER_HELPERS_JS,
       returnByValue: true,
     });
@@ -1261,7 +1563,7 @@ export class BrowserManager {
       return null;
     })()`);
 
-    const result = await this.sendCommand('Runtime.evaluate', {
+    const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
@@ -1305,9 +1607,11 @@ export class BrowserManager {
     triggerSelector: string,
     optionText: string,
     waitMs = 2000,
+    tabId?: string,
   ): Promise<{ trigger: string; matched: string | null; selected: boolean; error?: string }> {
+    const t = this.requireTab(tabId);
     // 1. Click the trigger element
-    const clickResult = await this.click(triggerSelector);
+    const clickResult = await this.click(triggerSelector, t.id);
     if (!clickResult.clicked) {
       return { trigger: triggerSelector, matched: null, selected: false, error: clickResult.error ?? 'Click failed' };
     }
@@ -1316,7 +1620,7 @@ export class BrowserManager {
     await new Promise((resolve) => setTimeout(resolve, waitMs));
 
     // 3. Re-inject helpers so piIsVisible etc. work inside the popup
-    await this.sendCommand('Runtime.evaluate', {
+    await this.sendCommand(t, 'Runtime.evaluate', {
       expression: BROWSER_HELPERS_JS,
       returnByValue: true,
     });
@@ -1436,7 +1740,7 @@ export class BrowserManager {
       return null;
     })()`);
 
-    const result = await this.sendCommand('Runtime.evaluate', {
+    const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
@@ -1474,7 +1778,7 @@ export class BrowserManager {
     'PageDown':  { key: 'PageDown',  code: 'PageDown',  windowsVirtualKeyCode: 34,  nativeVirtualKeyCode: 121 },
     'Space':     { key: ' ',         code: 'Space',     windowsVirtualKeyCode: 32,  nativeVirtualKeyCode: 49 },
     'Shift':     { key: 'Shift',     code: 'ShiftLeft', windowsVirtualKeyCode: 16,  nativeVirtualKeyCode: 56 },
-    'Control':   { key: 'Control',   code: 'ControlLeft',windowsVirtualKeyCode: 17,  nativeVirtualKeyCode: 59 },
+    'Control':   { key: 'Control',   code: 'ControlLeft',windowsVirtualKeyCode: 17, nativeVirtualKeyCode: 59 },
     'Alt':       { key: 'Alt',       code: 'AltLeft',   windowsVirtualKeyCode: 18,  nativeVirtualKeyCode: 58 },
     'Meta':      { key: 'Meta',      code: 'MetaLeft',  windowsVirtualKeyCode: 91,  nativeVirtualKeyCode: 55 },
     'F5':        { key: 'F5',        code: 'F5',        windowsVirtualKeyCode: 116, nativeVirtualKeyCode: 96 },
@@ -1486,7 +1790,8 @@ export class BrowserManager {
    *
    * Supports special keys (Enter, Tab, ArrowDown, etc.) and regular characters.
    */
-  async pressKey(key: string): Promise<{ key: string; pressed: boolean }> {
+  async pressKey(key: string, tabId?: string): Promise<{ key: string; pressed: boolean }> {
+    const t = this.requireTab(tabId);
     const keyDef = BrowserManager.KEY_MAP[key];
 
     if (keyDef) {
@@ -1500,14 +1805,14 @@ export class BrowserManager {
         isSystemKey: false,
       };
 
-      await this.sendCommand('Input.dispatchKeyEvent', {
+      await this.sendCommand(t, 'Input.dispatchKeyEvent', {
         ...base,
         type: 'rawKeyDown',
       });
 
       // For keys that produce characters (Enter, Space, Tab), also send a char event
       if (['Enter', 'Tab', 'Space'].includes(key)) {
-        await this.sendCommand('Input.dispatchKeyEvent', {
+        await this.sendCommand(t, 'Input.dispatchKeyEvent', {
           ...base,
           type: 'char',
           text: key === 'Enter' ? '\r' : key === 'Tab' ? '\t' : ' ',
@@ -1515,13 +1820,13 @@ export class BrowserManager {
         });
       }
 
-      await this.sendCommand('Input.dispatchKeyEvent', {
+      await this.sendCommand(t, 'Input.dispatchKeyEvent', {
         ...base,
         type: 'keyUp',
       });
     } else {
       // Regular character — use char event which triggers React onChange properly
-      await this.sendCommand('Input.dispatchKeyEvent', {
+      await this.sendCommand(t, 'Input.dispatchKeyEvent', {
         type: 'char',
         key: key,
         text: key,
@@ -1529,12 +1834,12 @@ export class BrowserManager {
       });
 
       // Also send keyDown/keyUp pair for completeness
-      await this.sendCommand('Input.dispatchKeyEvent', {
+      await this.sendCommand(t, 'Input.dispatchKeyEvent', {
         type: 'rawKeyDown',
         key: key,
         windowsVirtualKeyCode: key.length === 1 ? key.toUpperCase().charCodeAt(0) : 0,
       });
-      await this.sendCommand('Input.dispatchKeyEvent', {
+      await this.sendCommand(t, 'Input.dispatchKeyEvent', {
         type: 'keyUp',
         key: key,
         windowsVirtualKeyCode: key.length === 1 ? key.toUpperCase().charCodeAt(0) : 0,
@@ -1545,19 +1850,20 @@ export class BrowserManager {
   }
 
   /** Wait for a selector to appear on the page. */
-  async waitForSelector(selector: string, timeoutMs = 10000): Promise<{ selector: string; found: boolean }> {
-    const found = await this.waitForElement(selector, timeoutMs);
+  async waitForSelector(selector: string, timeoutMs = 10000, tabId?: string): Promise<{ selector: string; found: boolean }> {
+    const found = await this.waitForElement(selector, timeoutMs, tabId);
     return { selector, found };
   }
 
   /** Get text content of an element (or entire page if no selector). */
-  async getText(selector?: string): Promise<{ text: string; selector?: string }> {
+  async getText(selector?: string, tabId?: string): Promise<{ text: string; selector?: string }> {
+    const t = this.requireTab(tabId);
     const expr = this.buildExpression(`(function(){
       ${selector ? `var el = window.piResolveSelector(${JSON.stringify(selector)});
       if (!el) return '';
       return (el.innerText || el.textContent || '').trim();` : `return (document.body.innerText || document.body.textContent || '').trim();`}
     })()`);
-    const result = await this.sendCommand('Runtime.evaluate', {
+    const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
@@ -1565,13 +1871,14 @@ export class BrowserManager {
   }
 
   /** Get the value of an attribute on an element. */
-  async getAttribute(selector: string, attribute: string): Promise<{ selector: string; attribute: string; value: string | null }> {
+  async getAttribute(selector: string, attribute: string, tabId?: string): Promise<{ selector: string; attribute: string; value: string | null }> {
+    const t = this.requireTab(tabId);
     const expr = this.buildExpression(`(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
       if (!el) return null;
       return el.getAttribute(${JSON.stringify(attribute)});
     })()`);
-    const result = await this.sendCommand('Runtime.evaluate', {
+    const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
@@ -1579,90 +1886,101 @@ export class BrowserManager {
   }
 
   /** Take a screenshot. Resets zoom to 1.0 for full resolution, restores after.
-   *  Default: viewport only. Pass fullPage: true for full page (scrolls to trigger lazy load first). */
-  async screenshot(options?: { fullPage?: boolean }): Promise<{ base64: string }> {
-    const savedZoom = this.currentZoom;
+   *  Default: viewport only. Pass fullPage: true for full page (scrolls to trigger lazy load first).
+   *  A hidden tab borrows the visible surface for a viewport capture (restored
+   *  after); full-page capture works on DOM metrics alone and needs no surface. */
+  async screenshot(options?: { fullPage?: boolean }, tabId?: string): Promise<{ base64: string }> {
+    const t = this.requireTab(tabId);
+    const savedZoom = t.currentZoom;
 
-    // For full-page: scroll through the page to trigger lazy-loaded content
-    if (options?.fullPage) {
-      await this.triggerLazyLoad();
-      // Scroll back to top before capturing
-      await this.sendCommand('Runtime.evaluate', {
-        expression: 'window.scrollTo(0, 0)',
-        returnByValue: true,
-      });
-
-      // Reset zoom to 1.0 for accurate content dimension measurement
-      try { this.wc?.setZoomFactor(1); } catch {}
-      // Wait for the renderer to repaint after zoom change
-      await new Promise((r) => setTimeout(r, 300));
-    }
-
-    try {
+    const capture = async (): Promise<{ base64: string }> => {
+      // For full-page: scroll through the page to trigger lazy-loaded content
       if (options?.fullPage) {
-        // Use Math.max to include horizontal overflow (scrollWidth > clientWidth)
-        // and account for body-level dimensions on pages where html is constrained.
-        const metrics = await this.sendCommand('Runtime.evaluate', {
-          expression: `JSON.stringify({
-            width: Math.max(
-              document.documentElement.scrollWidth,
-              document.documentElement.clientWidth,
-              document.body ? document.body.scrollWidth : 0,
-              document.body ? document.body.clientWidth : 0
-            ),
-            height: Math.max(
-              document.documentElement.scrollHeight,
-              document.documentElement.clientHeight,
-              document.body ? document.body.scrollHeight : 0
-            )
-          })`,
+        await this.triggerLazyLoad(t);
+        // Scroll back to top before capturing
+        await this.sendCommand(t, 'Runtime.evaluate', {
+          expression: 'window.scrollTo(0, 0)',
           returnByValue: true,
         });
-        const dims = JSON.parse((metrics?.result as { value?: string })?.value ?? '{"width":800,"height":600}');
-        const width = Math.min(dims.width || 1920, 16384);
-        const height = Math.min(dims.height || 600, 16384);
 
-        const result = await this.sendCommand('Page.captureScreenshot', {
-          format: 'png',
-          captureBeyondViewport: true,
-          clip: { x: 0, y: 0, width, height, scale: 1 },
-        });
-        return { base64: (result?.data as string) ?? '' };
-      } else {
-        // Viewport screenshot: capture at current zoom level.
-        // Do NOT reset zoom — the user wants to see exactly what they're viewing.
-        // Use Page.getLayoutMetrics for accurate viewport dimensions.
-        const layoutMetrics = await this.sendCommand('Page.getLayoutMetrics', {}) as Record<string, unknown>;
-        const cssViewport = layoutMetrics?.cssVisualViewport as Record<string, number> | undefined;
-        const vpWidth = cssViewport?.clientWidth ?? 0;
-        const vpHeight = cssViewport?.clientHeight ?? 0;
+        // Reset zoom to 1.0 for accurate content dimension measurement
+        try { t.wc.setZoomFactor(1); } catch {}
+        // Wait for the renderer to repaint after zoom change
+        await new Promise((r) => setTimeout(r, 300));
+      }
 
-        const result = await this.sendCommand('Page.captureScreenshot', {
-          format: 'png',
-          captureBeyondViewport: true,
-          clip: vpWidth > 0 && vpHeight > 0 ? {
-            x: 0,
-            y: 0,
-            width: Math.floor(vpWidth),
-            height: Math.floor(vpHeight),
-            scale: 1,
-          } : undefined,
-        });
-        return { base64: (result?.data as string) ?? '' };
+      try {
+        if (options?.fullPage) {
+          // Use Math.max to include horizontal overflow (scrollWidth > clientWidth)
+          // and account for body-level dimensions on pages where html is constrained.
+          const metrics = await this.sendCommand(t, 'Runtime.evaluate', {
+            expression: `JSON.stringify({
+              width: Math.max(
+                document.documentElement.scrollWidth,
+                document.documentElement.clientWidth,
+                document.body ? document.body.scrollWidth : 0,
+                document.body ? document.body.clientWidth : 0
+              ),
+              height: Math.max(
+                document.documentElement.scrollHeight,
+                document.documentElement.clientHeight,
+                document.body ? document.body.scrollHeight : 0
+              )
+            })`,
+            returnByValue: true,
+          });
+          const dims = JSON.parse((metrics?.result as { value?: string })?.value ?? '{"width":800,"height":600}');
+          const width = Math.min(dims.width || 1920, 16384);
+          const height = Math.min(dims.height || 600, 16384);
+
+          const result = await this.sendCommand(t, 'Page.captureScreenshot', {
+            format: 'png',
+            captureBeyondViewport: true,
+            clip: { x: 0, y: 0, width, height, scale: 1 },
+          });
+          return { base64: (result?.data as string) ?? '' };
+        } else {
+          // Viewport screenshot: capture at current zoom level.
+          // Do NOT reset zoom — the user wants to see exactly what they're viewing.
+          // Use Page.getLayoutMetrics for accurate viewport dimensions.
+          const layoutMetrics = await this.sendCommand(t, 'Page.getLayoutMetrics', {}) as Record<string, unknown>;
+          const cssViewport = layoutMetrics?.cssVisualViewport as Record<string, number> | undefined;
+          const vpWidth = cssViewport?.clientWidth ?? 0;
+          const vpHeight = cssViewport?.clientHeight ?? 0;
+
+          const result = await this.sendCommand(t, 'Page.captureScreenshot', {
+            format: 'png',
+            captureBeyondViewport: true,
+            clip: vpWidth > 0 && vpHeight > 0 ? {
+              x: 0,
+              y: 0,
+              width: Math.floor(vpWidth),
+              height: Math.floor(vpHeight),
+              scale: 1,
+            } : undefined,
+          });
+          return { base64: (result?.data as string) ?? '' };
+        }
+      } finally {
+        // Restore zoom (only if we changed it for full-page)
+        if (options?.fullPage) {
+          try { t.wc.setZoomFactor(savedZoom); } catch {}
+        }
       }
-    } finally {
-      // Restore zoom (only if we changed it for full-page)
-      if (options?.fullPage) {
-        try { this.wc?.setZoomFactor(savedZoom); } catch {}
-      }
+    };
+
+    if (options?.fullPage) {
+      // DOM-metrics capture works without a painted surface.
+      return capture();
     }
+    return this.withTabSurface(t, capture);
   }
 
   /** Scroll through the page to trigger lazy-loaded content.
    *  Uses a two-pass approach: first scrolls down in steps, then back up.
    *  Caps at 40 steps to avoid infinite pages, with 400ms between steps
    *  to give lazy loaders and image decoders time to complete. */
-  private async triggerLazyLoad(): Promise<void> {
+  private async triggerLazyLoad(t: BrowserTab): Promise<void> {
     try {
       const stepExpr = `(function(){
         var step = window.innerHeight * 0.75;
@@ -1675,7 +1993,7 @@ export class BrowserManager {
       let hasMore = true;
       let count = 0;
       while (hasMore && count < 40) {
-        const result = await this.sendCommand('Runtime.evaluate', {
+        const result = await this.sendCommand(t, 'Runtime.evaluate', {
           expression: stepExpr,
           returnByValue: true,
         });
@@ -1683,13 +2001,13 @@ export class BrowserManager {
         count++;
         await new Promise((r) => setTimeout(r, 400));
         // Also dispatch scroll events to wake IntersectionObserver-based loaders
-        await this.sendCommand('Runtime.evaluate', {
+        await this.sendCommand(t, 'Runtime.evaluate', {
           expression: 'window.dispatchEvent(new Event("scroll", {bubbles: true}))',
           returnByValue: true,
         }).catch(() => {});
       }
       // Pass 2: scroll back up to trigger any reverse-direction lazy content
-      await this.sendCommand('Runtime.evaluate', {
+      await this.sendCommand(t, 'Runtime.evaluate', {
         expression: 'window.scrollTo(0, 0)',
         returnByValue: true,
       });
@@ -1701,9 +2019,10 @@ export class BrowserManager {
   }
 
   /** Scroll the page. */
-  async scroll(direction: 'up' | 'down', amount = 500): Promise<{ direction: string; amount: number }> {
+  async scroll(direction: 'up' | 'down', amount = 500, tabId?: string): Promise<{ direction: string; amount: number }> {
+    const t = this.requireTab(tabId);
     const dy = direction === 'down' ? amount : -amount;
-    await this.sendCommand('Runtime.evaluate', {
+    await this.sendCommand(t, 'Runtime.evaluate', {
       expression: `window.scrollBy(0, ${dy})`,
       returnByValue: true,
     });
@@ -1711,8 +2030,9 @@ export class BrowserManager {
   }
 
   /** Evaluate a JavaScript expression in the page. */
-  async evaluate(expression: string): Promise<{ result: unknown }> {
-    const result = await this.sendCommand('Runtime.evaluate', {
+  async evaluate(expression: string, tabId?: string): Promise<{ result: unknown }> {
+    const t = this.requireTab(tabId);
+    const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression,
       returnByValue: true,
     });
@@ -1721,37 +2041,44 @@ export class BrowserManager {
 
   /** ——— Events ——— */
 
-  /** Register a callback for URL changes. */
+  /** Register a callback for URL changes (any tab; the tab id rides along). */
   onUrlChanged(cb: UrlChangedCallback): void {
     this.urlChangedCallbacks.push(cb);
+  }
+
+  /** Register interest in popup-open attempts (window.open / target=_blank). */
+  onWindowOpen(cb: WindowOpenCallback): void {
+    this.windowOpenCallbacks.push(cb);
   }
 
   /** ——— Viewport ——— */
 
   /** Override the webview's device metrics to match the panel width. */
-  async setDeviceMetrics(width: number, height: number): Promise<void> {
-    this.webviewWidth = width;
-    if (width <= 0 || width === this.metricsWidth) return;
-    this.metricsWidth = width;
+  async setDeviceMetrics(width: number, height: number, tabIdOrTab?: string | BrowserTab): Promise<void> {
+    const t = tabIdOrTab instanceof BrowserTab ? tabIdOrTab : this.requireTab(tabIdOrTab);
+    t.webviewWidth = width;
+    if (width <= 0 || width === t.metricsWidth) return;
+    t.metricsWidth = width;
     // Re-fit live: the measure is one cheap CDP evaluate (no zoom reset, no
     // relayout wait), so a panel drag tracks step by step and each step
     // converges to the page's current natural width — no cached state to go
     // stale when a page reflows or lazy-renders.
-    await this.computeAutoZoom();
+    await this.computeAutoZoom(t);
   }
 
   /** ——— Cleanup ——— */
 
-  /** Disconnect the debugger. */
+  /** Disconnect the debugger from every tab. */
   async disconnect(): Promise<void> {
-    const wc = this.wc;
-    if (wc && this.debuggerAttached) {
-      try {
-        wc.debugger.detach();
-      } catch {
-        // Ignore detach errors
+    for (const t of this.tabs.values()) {
+      if (t.debuggerAttached) {
+        try {
+          t.wc.debugger.detach();
+        } catch {
+          // Ignore detach errors
+        }
+        t.debuggerAttached = false;
       }
-      this.debuggerAttached = false;
     }
   }
 }

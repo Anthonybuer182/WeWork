@@ -712,7 +712,87 @@ var SEL_POLL_EXPR = `window.__piSelAction
   ? (function () { var a = JSON.stringify(window.__piSelAction); window.__piSelAction = null; return a; })()
   : (window.__piSelInstalled ? '' : 'REINSTALL')`;
 var mountedPanels = /* @__PURE__ */ new Set();
+var PANEL_ID = "browser";
+function panelTargets() {
+  return /* @__PURE__ */ new Set([...mountedPanels, PANEL_ID]);
+}
+__name(panelTargets, "panelTargets");
 var lastUrl = "";
+var tabBuckets = /* @__PURE__ */ new Map();
+var panelSession = null;
+function bucketKey(sessionId) {
+  return sessionId ?? panelSession ?? "default";
+}
+__name(bucketKey, "bucketKey");
+function bucketFor(key) {
+  let b = tabBuckets.get(key);
+  if (!b) {
+    b = { tabs: [], activeTabId: null };
+    tabBuckets.set(key, b);
+  }
+  return b;
+}
+__name(bucketFor, "bucketFor");
+function targetTabId(sessionKey, explicit) {
+  if (typeof explicit === "string" && explicit) return explicit;
+  return bucketFor(bucketKey(sessionKey)).activeTabId ?? void 0;
+}
+__name(targetTabId, "targetTabId");
+async function ensureTab(ctx, sessionKey) {
+  const key = bucketKey(sessionKey);
+  await syncBucketFor(ctx, key);
+  const b = bucketFor(key);
+  if (b.activeTabId) {
+    const t = b.tabs.find((x) => x.id === b.activeTabId);
+    if (t && !t.evicted) return t;
+  }
+  const created = await ctx.call("browser.newTab", {
+    sessionId: key
+  });
+  const tab = { id: String(created?.tabId ?? ""), url: created?.url ?? "", title: "" };
+  b.tabs.push(tab);
+  b.activeTabId = tab.id;
+  return tab;
+}
+__name(ensureTab, "ensureTab");
+async function syncBucketFor(ctx, key) {
+  try {
+    const tabs = await ctx.call("browser.tabList", { sessionId: key });
+    const b = bucketFor(key);
+    b.tabs = Array.isArray(tabs) ? tabs : [];
+    const focused = b.tabs.find((t) => t.focused === true);
+    if (focused && !focused.evicted) b.activeTabId = focused.id;
+    else if (!b.tabs.some((t) => t.id === b.activeTabId && !t.evicted)) {
+      const live = b.tabs.find((t) => !t.evicted);
+      b.activeTabId = live?.id ?? null;
+    }
+  } catch {
+  }
+  pushTabs(ctx);
+}
+__name(syncBucketFor, "syncBucketFor");
+async function syncBucket(ctx) {
+  const key = bucketKey();
+  await syncBucketFor(ctx, key);
+  const b = bucketFor(key);
+  const active = b.tabs.find((t) => t.id === b.activeTabId);
+  if (active?.url) {
+    lastUrl = active.url;
+    pushUrl(ctx, active.url, active.title);
+  } else if (b.tabs.length === 0) {
+    lastUrl = "";
+    for (const panelId of panelTargets()) {
+      ctx.send(panelId, "ui.urlChanged", { url: "", title: "", favorited: false, private: privateMode });
+    }
+  }
+}
+__name(syncBucket, "syncBucket");
+function pushTabs(ctx) {
+  const b = bucketFor(bucketKey());
+  const data = { tabs: b.tabs, activeTabId: b.activeTabId ?? "" };
+  for (const panelId of panelTargets()) ctx.send(panelId, "ui.tabs", data);
+}
+__name(pushTabs, "pushTabs");
 var history = [];
 var favorites = [];
 var clips = [];
@@ -847,31 +927,38 @@ function pushUrl(ctx, url, title) {
     favorited: isFavorite(url),
     private: privateMode
   };
-  for (const panelId of mountedPanels) ctx.send(panelId, "ui.urlChanged", data);
+  for (const panelId of panelTargets()) ctx.send(panelId, "ui.urlChanged", data);
 }
 __name(pushUrl, "pushUrl");
 function broadcast(ctx, event, data) {
-  for (const panelId of mountedPanels) ctx.send(panelId, event, data);
+  for (const panelId of panelTargets()) ctx.send(panelId, event, data);
 }
 __name(broadcast, "broadcast");
-function scheduleTitleRefresh(ctx) {
+function scheduleTitleRefresh(ctx, tabId) {
   if (titleTimer) clearTimeout(titleTimer);
   titleTimer = setTimeout(() => {
     titleTimer = null;
-    void refreshTitle(ctx);
+    void refreshTitle(ctx, tabId);
   }, TITLE_REFRESH_MS);
 }
 __name(scheduleTitleRefresh, "scheduleTitleRefresh");
-async function refreshTitle(ctx) {
+async function refreshTitle(ctx, tabId) {
   let state;
   try {
-    state = await ctx.call("browser.getUrl");
+    state = await ctx.call(
+      "browser.getUrl",
+      tabId ? { tabId } : {}
+    );
   } catch {
     return;
   }
   const url = String(state?.url ?? "");
   const title = String(state?.title ?? "");
   if (!url || !title) return;
+  for (const b of tabBuckets.values()) {
+    const row = b.tabs.find((t) => t.id === tabId);
+    if (row) row.title = title;
+  }
   const entry = history.find((e) => e.url === urlKey(url));
   if (entry && entry.title !== title) {
     entry.title = title;
@@ -990,7 +1077,7 @@ function syncPoll(ctx) {
   }
   if (pollTimer && ++pollTicks % Math.round(8e3 / SEL_POLL_MS) === 0) {
     void (async () => {
-      for (const panelId of mountedPanels) {
+      for (const panelId of panelTargets()) {
         if (await ctx.panelAlive(panelId, 1e3)) {
           probeFailures = 0;
           return;
@@ -1122,53 +1209,119 @@ plugin({
     } catch {
     }
   },
-  async onPanelMounted(panelId, _params, ctx) {
+  async onPanelMounted(panelId, _params, ctx, meta) {
     mountedPanels.add(panelId);
+    panelSession = meta?.sessionId ?? panelSession;
     await loaded;
     syncPoll(ctx);
+    await syncBucket(ctx);
     scheduleInject(ctx);
-    try {
-      const state = await ctx.call("browser.getUrl");
-      if (state?.url) {
-        pushUrl(ctx, state.url, state.title);
-      } else if (lastUrl) {
-        pushUrl(ctx, lastUrl);
+    const key = bucketKey();
+    const tabId = targetTabId(key);
+    if (tabId) {
+      try {
+        const state = await ctx.call("browser.getUrl", { tabId });
+        if (state?.url) {
+          pushUrl(ctx, state.url, state.title);
+        } else if (lastUrl) {
+          pushUrl(ctx, lastUrl);
+        }
+      } catch {
+        if (lastUrl) pushUrl(ctx, lastUrl);
       }
-    } catch {
-      if (lastUrl) pushUrl(ctx, lastUrl);
     }
   },
   async onRequest(panelId, method, params, ctx) {
     await loaded;
+    const key = bucketKey();
     switch (method) {
       case "nav.open": {
+        const t = await ensureTab(ctx, key);
         const result = await ctx.call(
           "browser.navigate",
-          { url: normalizeUrl(params.url) },
+          { url: normalizeUrl(params.url), tabId: t.id },
           { timeoutMs: NAVIGATE_TIMEOUT_MS }
         );
         if (result?.url) lastUrl = result.url;
+        const row = bucketFor(key).tabs.find((x) => x.id === t.id);
+        if (row && result?.url) row.url = result.url;
+        pushTabs(ctx);
         return { url: result?.url ?? "", title: result?.title ?? "" };
       }
-      case "nav.back":
-        await ctx.call("browser.back");
+      case "nav.back": {
+        const t = targetTabId(key);
+        if (t) await ctx.call("browser.back", { tabId: t });
         return { ok: true };
-      case "nav.forward":
-        await ctx.call("browser.forward");
+      }
+      case "nav.forward": {
+        const t = targetTabId(key);
+        if (t) await ctx.call("browser.forward", { tabId: t });
         return { ok: true };
-      case "nav.reload":
-        await ctx.call("browser.reload");
+      }
+      case "nav.reload": {
+        const t = targetTabId(key);
+        if (t) await ctx.call("browser.reload", { tabId: t });
         return { ok: true };
+      }
+      // ── Tab strip ──
+      case "tabs.new": {
+        const created = await ctx.call("browser.newTab", { sessionId: key });
+        const tab = { id: String(created?.tabId ?? ""), url: "", title: "" };
+        const b = bucketFor(key);
+        b.tabs.push(tab);
+        b.activeTabId = tab.id;
+        if (params.url) {
+          const result = await ctx.call(
+            "browser.navigate",
+            { url: normalizeUrl(params.url), tabId: tab.id },
+            { timeoutMs: NAVIGATE_TIMEOUT_MS }
+          );
+          tab.url = result?.url ?? "";
+        }
+        await syncBucket(ctx);
+        return { tabId: tab.id };
+      }
+      case "tabs.activate": {
+        const tabId = String(params.tabId ?? "");
+        if (!tabId) throw new Error("tabs.activate: missing tabId");
+        await ctx.call("browser.activateTab", { sessionId: key, tabId });
+        await syncBucket(ctx);
+        return { ok: true };
+      }
+      case "tabs.close": {
+        const tabId = String(params.tabId ?? "");
+        if (!tabId) throw new Error("tabs.close: missing tabId");
+        await ctx.call("browser.closeTab", { tabId });
+        const b = bucketFor(key);
+        b.tabs = b.tabs.filter((t) => t.id !== tabId);
+        if (b.activeTabId === tabId) {
+          b.activeTabId = b.tabs.find((t) => !t.evicted)?.id ?? null;
+        }
+        pushTabs(ctx);
+        const active = b.tabs.find((t) => t.id === b.activeTabId);
+        if (active?.url) {
+          lastUrl = active.url;
+          pushUrl(ctx, active.url, active.title);
+        }
+        return { ok: true };
+      }
       case "state.get": {
-        const state = await ctx.call("browser.getUrl");
+        const stateTab = targetTabId(key);
+        const state = await ctx.call(
+          "browser.getUrl",
+          stateTab ? { tabId: stateTab } : {}
+        );
         if (state?.url) lastUrl = state.url;
+        const b = bucketFor(key);
         return {
           url: state?.url ?? "",
           title: state?.title ?? "",
           favorited: isFavorite(state?.url ?? ""),
           private: privateMode,
           selPopup,
-          clips: clips.length
+          clips: clips.length,
+          tabs: b.tabs,
+          activeTabId: b.activeTabId ?? ""
         };
       }
       // ── Omnibox ──
@@ -1231,32 +1384,120 @@ plugin({
     }
   },
   async onHostEvent(event, data, ctx) {
+    const d = data ?? {};
+    if (event === "session.changed") {
+      panelSession = d.sessionId ?? null;
+      await loaded;
+      await syncBucket(ctx);
+      return;
+    }
+    if (event === "browser.tabOpened") {
+      await loaded;
+      const tabId2 = String(d.tabId ?? "");
+      if (!tabId2) return;
+      const key = bucketKey(d.sessionId);
+      const b = bucketFor(key);
+      if (!b.tabs.some((t) => t.id === tabId2)) {
+        b.tabs.push({ id: tabId2, url: String(d.url ?? ""), title: "" });
+      }
+      pushTabs(ctx);
+      return;
+    }
     if (event !== "browser.urlChanged") return;
     await loaded;
-    const url = String(data?.url ?? "");
+    const tabId = String(d.tabId ?? "");
+    const url = String(d.url ?? "");
     if (!url) return;
     if (recordVisit(url, "")) void save(ctx, HISTORY_KEY, history, "history");
+    for (const b of tabBuckets.values()) {
+      const row = b.tabs.find((t) => t.id === tabId);
+      if (row) {
+        row.url = url;
+        break;
+      }
+    }
+    const visible = bucketFor(bucketKey());
+    if (tabId && visible.activeTabId && tabId !== visible.activeTabId) {
+      pushTabs(ctx);
+      return;
+    }
+    lastUrl = url;
     pushUrl(ctx, url);
-    scheduleTitleRefresh(ctx);
+    scheduleTitleRefresh(ctx, tabId || void 0);
     scheduleInject(ctx);
   },
-  async onTool(name, params, ctx) {
-    const reveal = name === "browser_navigate" || name === "browser_walk" || name === "browser_screenshot" || name === "browser_show";
+  async onTool(name, params, ctx, call) {
+    const sessionKey = call?.sessionId ?? null;
+    const tid = targetTabId(sessionKey, params.tab);
+    const reveal = name === "browser_navigate" || name === "browser_walk" || name === "browser_screenshot" || name === "browser_show" || name === "browser_tab_open" || name === "browser_tab_switch";
     void ctx.openPanel("browser", { focus: reveal }).catch(() => {
     });
     switch (name) {
       case "browser_navigate": {
         const url = normalizeUrl(params.url);
+        const tab = tid ? { id: tid } : await ensureTab(ctx, bucketKey(sessionKey));
         const result = await ctx.call(
           "browser.navigate",
-          { url },
+          { url, tabId: tab.id },
           { timeoutMs: NAVIGATE_TIMEOUT_MS }
         );
         const finalUrl = result?.url ?? url;
+        const row = bucketFor(bucketKey(sessionKey)).tabs.find((t) => t.id === tab.id);
+        if (row) row.url = finalUrl;
+        pushTabs(ctx);
         return `\u5DF2\u6253\u5F00 ${finalUrl}${result?.title ? ` \u2014 ${result.title}` : ""}`;
       }
+      case "browser_tab_list": {
+        const b = bucketFor(bucketKey(sessionKey));
+        if (b.tabs.length === 0) return "\u5F53\u524D\u4F1A\u8BDD\u8FD8\u6CA1\u6709\u6253\u5F00\u4EFB\u4F55\u6807\u7B7E\u9875\u3002";
+        return b.tabs.map((t, i) => {
+          const mark = t.id === b.activeTabId ? " \u2192" : "";
+          const state = t.evicted ? " (\u5DF2\u56DE\u6536,\u518D\u6B21\u6253\u5F00\u4F1A\u91CD\u65B0\u52A0\u8F7D)" : "";
+          return `${i + 1}. [${t.id}]${mark} ${t.title || t.url || "(\u65B0\u6807\u7B7E\u9875)"}${state}`;
+        }).join("\n");
+      }
+      case "browser_tab_open": {
+        const url = params.url ? normalizeUrl(params.url) : void 0;
+        const created = await ctx.call("browser.newTab", {
+          sessionId: bucketKey(sessionKey),
+          url,
+          activate: params.activate !== false
+        });
+        const tab = {
+          id: String(created?.tabId ?? ""),
+          url: created?.url ?? url ?? "",
+          title: ""
+        };
+        const b = bucketFor(bucketKey(sessionKey));
+        b.tabs.push(tab);
+        b.activeTabId = tab.id;
+        pushTabs(ctx);
+        return `\u5DF2\u65B0\u5EFA\u6807\u7B7E\u9875 [${tab.id}]${tab.url ? ` \u2014 ${tab.url}` : ""}`;
+      }
+      case "browser_tab_switch": {
+        const tabId = String(params.tabId ?? "").trim();
+        if (!tabId) throw new Error("browser_tab_switch: missing tabId");
+        await ctx.call("browser.activateTab", { sessionId: bucketKey(sessionKey), tabId });
+        const b = bucketFor(bucketKey(sessionKey));
+        b.activeTabId = tabId;
+        pushTabs(ctx);
+        const row = b.tabs.find((t) => t.id === tabId);
+        return `\u5DF2\u5207\u6362\u5230\u6807\u7B7E\u9875 [${tabId}]${row?.title ? ` \u2014 ${row.title}` : ""}`;
+      }
+      case "browser_tab_close": {
+        const tabId = String(params.tabId ?? "").trim();
+        if (!tabId) throw new Error("browser_tab_close: missing tabId");
+        await ctx.call("browser.closeTab", { tabId });
+        const b = bucketFor(bucketKey(sessionKey));
+        b.tabs = b.tabs.filter((t) => t.id !== tabId);
+        if (b.activeTabId === tabId) {
+          b.activeTabId = b.tabs.find((t) => !t.evicted)?.id ?? null;
+        }
+        pushTabs(ctx);
+        return `\u5DF2\u5173\u95ED\u6807\u7B7E\u9875 [${tabId}]`;
+      }
       case "browser_get_state": {
-        const state = await ctx.call("browser.getState");
+        const state = await ctx.call("browser.getState", tid ? { tabId: tid } : {});
         const lines = [
           `\u5F53\u524D\u9875\u9762: ${state?.url ?? "(about:blank)"}${state?.title ? ` \u2014 ${state.title}` : ""}`
         ];
@@ -1270,7 +1511,7 @@ plugin({
       case "browser_find": {
         const query = String(params.query ?? "").trim();
         if (!query) throw new Error("missing query");
-        const matches = await ctx.call("browser.find", { query });
+        const matches = await ctx.call("browser.find", { query, ...tid ? { tabId: tid } : {} });
         if (matches.length === 0) return `\u9875\u9762\u4E0A\u6CA1\u6709\u5339\u914D "${query}" \u7684\u5143\u7D20`;
         return matches.map((m) => `[${m.role}] "${m.text}" (${m.section}, \u5339\u914D\u5EA6 ${m.score})`).join("\n");
       }
@@ -1278,7 +1519,8 @@ plugin({
         const selector = String(params.selector ?? "").trim();
         if (!selector) throw new Error("missing selector");
         const r = await ctx.call("browser.click", {
-          selector
+          selector,
+          ...tid ? { tabId: tid } : {}
         });
         return actionResult(`\u70B9\u51FB "${selector}"`, r);
       }
@@ -1287,7 +1529,8 @@ plugin({
         if (!selector) throw new Error("missing selector");
         const r = await ctx.call("browser.fill", {
           selector,
-          value: String(params.value ?? "")
+          value: String(params.value ?? ""),
+          ...tid ? { tabId: tid } : {}
         });
         return actionResult(`\u586B\u5199 "${selector}"`, r);
       }
@@ -1295,7 +1538,8 @@ plugin({
         const selector = String(params.selector ?? "").trim();
         if (!selector) throw new Error("missing selector");
         const r = await ctx.call("browser.hover", {
-          selector
+          selector,
+          ...tid ? { tabId: tid } : {}
         });
         return actionResult(`\u60AC\u505C "${selector}"`, r);
       }
@@ -1304,21 +1548,26 @@ plugin({
         if (!selector) throw new Error("missing selector");
         const r = await ctx.call("browser.select", {
           selector,
-          value: String(params.value ?? "")
+          value: String(params.value ?? ""),
+          ...tid ? { tabId: tid } : {}
         });
         return actionResult(`\u5728 "${selector}" \u9009\u4E2D "${params.value}"`, r);
       }
       case "browser_scroll": {
         const r = await ctx.call("browser.scroll", {
           direction: params.direction,
-          amount: params.amount
+          amount: params.amount,
+          ...tid ? { tabId: tid } : {}
         });
         return `\u5DF2${r.direction === "up" ? "\u5411\u4E0A" : "\u5411\u4E0B"}\u6EDA\u52A8 ${r.amount}px`;
       }
       case "browser_evaluate": {
         const expression = String(params.expression ?? "");
         if (!expression.trim()) throw new Error("missing expression");
-        const r = await ctx.call("browser.evaluate", { expression });
+        const r = await ctx.call("browser.evaluate", {
+          expression,
+          ...tid ? { tabId: tid } : {}
+        });
         return typeof r.result === "string" ? r.result : JSON.stringify(r.result);
       }
       case "browser_walk": {
@@ -1326,7 +1575,7 @@ plugin({
         if (!goal) throw new Error("missing goal");
         const r = await ctx.call(
           "browser.walk",
-          { goal, maxSteps: params.maxSteps },
+          { goal, maxSteps: params.maxSteps, ...tid ? { tabId: tid } : {} },
           { timeoutMs: NAVIGATE_TIMEOUT_MS }
         );
         const stepLines = r.steps.map((s, i) => `${i + 1}. \u70B9\u51FB "${s.text}"${s.ok === false ? " \u2717" : ""}`);
@@ -1335,7 +1584,8 @@ plugin({
       }
       case "browser_screenshot": {
         const shot = await ctx.call("browser.screenshot", {
-          fullPage: params.fullPage === true
+          fullPage: params.fullPage === true,
+          ...tid ? { tabId: tid } : {}
         });
         if (!shot?.base64) throw new Error("screenshot failed: the host returned no image data");
         const kb = Math.round(shot.base64.length * 3 / 4 / 1024);

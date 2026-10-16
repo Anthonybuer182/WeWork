@@ -217,6 +217,7 @@ const bridge = {
   liveBounds: (
     name: string,
     b: { x: number; y: number; width: number; height: number },
+    tag?: string,
   ): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('pi:liveview:set-bounds', {
       slotId: `${PLUGIN_ID}:${String(name)}`,
@@ -224,6 +225,10 @@ const bridge = {
       y: b.y,
       width: b.width,
       height: b.height,
+      // WHICH engine view the slot wants (the browser's active tab id). The
+      // rect and its target travel together: the host never applies one
+      // without the other.
+      tag: tag ?? '',
     }),
   liveDetach: (name: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('pi:liveview:detach', { slotId: `${PLUGIN_ID}:${String(name)}` }),

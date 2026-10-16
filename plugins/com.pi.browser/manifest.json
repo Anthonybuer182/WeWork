@@ -108,11 +108,75 @@
         }
       },
       {
+        "name": "browser_tab_list",
+        "description": "List this conversation's browser tabs: id, title/url, and which is focused. Multi-tab workflows start here.",
+        "readOnly": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "browser_tab_open",
+        "description": "Open a NEW browser tab (optionally at a URL) in this conversation and focus it. The page tools then act on the focused tab, or on `tab` when given. Page state (login, scroll, forms) is kept per tab.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "URL to load; omit for a blank tab."
+            },
+            "activate": {
+              "type": "boolean",
+              "description": "Focus the new tab (default true)."
+            }
+          }
+        }
+      },
+      {
+        "name": "browser_tab_switch",
+        "description": "Focus one of this conversation's tabs by id (from browser_tab_list). Subsequent page tools act on it.",
+        "readOnly": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tabId": {
+              "type": "string",
+              "description": "Tab id from browser_tab_list."
+            }
+          },
+          "required": [
+            "tabId"
+          ]
+        }
+      },
+      {
+        "name": "browser_tab_close",
+        "description": "Close one of this conversation's tabs by id.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tabId": {
+              "type": "string",
+              "description": "Tab id from browser_tab_list."
+            }
+          },
+          "required": [
+            "tabId"
+          ]
+        }
+      },
+      {
         "name": "browser_get_state",
         "description": "Get the current URL, page title, and a snapshot of the page's interactive elements (buttons, links, inputs — each with a ref you can pass to browser_click / browser_fill). Call this FIRST when you need to see what is on the page and act on it; use browser_screenshot only when you need the visual layout.",
         "inputSchema": {
           "type": "object",
-          "properties": {},
+          "properties": {
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
+            }
+          },
           "additionalProperties": false
         }
       },
@@ -125,6 +189,10 @@
             "query": {
               "type": "string",
               "description": "Text to search for, e.g. \"登录\" or \"search\""
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
             }
           },
           "required": [
@@ -142,6 +210,10 @@
             "selector": {
               "type": "string",
               "description": "Element selector. Preferred: a ref from browser_get_state/browser_find, e.g. \"[12]\". Also accepted: text=\"登录\", role=button[name=\"提交\"], or a CSS selector."
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
             }
           },
           "required": [
@@ -163,6 +235,10 @@
             "value": {
               "type": "string",
               "description": "The text to type into the field"
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
             }
           },
           "required": [
@@ -181,6 +257,10 @@
             "selector": {
               "type": "string",
               "description": "Element selector — same formats as browser_click."
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
             }
           },
           "required": [
@@ -202,6 +282,10 @@
             "value": {
               "type": "string",
               "description": "Option value or visible text to select"
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
             }
           },
           "required": [
@@ -228,6 +312,10 @@
             "amount": {
               "type": "number",
               "description": "Pixels to scroll. Defaults to 500."
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
             }
           },
           "additionalProperties": false
@@ -242,6 +330,10 @@
             "expression": {
               "type": "string",
               "description": "JavaScript expression to evaluate, e.g. JSON.stringify({h1: document.querySelector('h1')?.textContent})"
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
             }
           },
           "required": [
@@ -280,6 +372,10 @@
             "fullPage": {
               "type": "boolean",
               "description": "Capture the full scrollable page instead of the viewport"
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
             }
           },
           "additionalProperties": false

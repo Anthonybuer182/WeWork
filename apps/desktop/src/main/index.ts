@@ -84,30 +84,14 @@ if (!gotLock) {
 
     mainWindow = createMainWindow();
 
-    // Create the embedded browser as a WebContentsView (the modern replacement
-    // for BrowserView, which is deprecated since Electron 30). Like BrowserView
-    // it owns a persistent webContents — no guest recreation on redirects, no
-    // use-after-free — but it attaches through `contentView.addChildView`, which
-    // can hold more than one view.
-    const browserView = new WebContentsView({
-      webPreferences: {
-        partition: 'persist:pi-browser',
-        contextIsolation: true,
-        nodeIntegration: false,
-        sandbox: true,
-        // Prevent Chromium from throttling/hiding the view's compositor
-        // surface when the window is occluded or backgrounded — without this,
-        // the view can go permanently white while the webContents still
-        // has rendered content (this is what caused the zhipin.com blanking bug).
-        backgroundThrottling: false,
-      },
-    });
-    // Hide initially — bounds are set by the renderer when the browser panel opens.
+    // The embedded browser is a SET of WebContentsViews now — one per tab, all
+    // sharing the persist:pi-browser profile (one Chromium profile, one
+    // renderer process per tab). The manager creates them lazily; boot creates
+    // the first via connect() below. Like the old single view it attaches
+    // through `contentView.addChildView`, which can hold more than one view.
     // (No setAutoResize: WebContentsView keeps exactly the bounds it is given,
     // which is what we want — the renderer owns layout.)
-    browserView.setBounds({ x: 0, y: 0, width: 0, height: 0 });
-    mainWindow.contentView.addChildView(browserView);
-    browserManager.setBrowserView(browserView, mainWindow);
+    browserManager.attach(mainWindow);
 
     // The engine view has no host panel of its own any more: the browser
     // plugin's panel embeds it via piSDK.liveSlot, and plugin-webview.ts
@@ -206,8 +190,17 @@ if (!gotLock) {
     };
 
     // Push browser URL changes to plugin backends holding "browser" permission.
-    browserManager.onUrlChanged((url) => {
-      pluginSystem.pushHostEvent('browser.urlChanged', 'browser', { url });
+    // The tab id rides along — a backend with several tabs routes the record to
+    // the conversation that owns the tab.
+    browserManager.onUrlChanged((tabId, url) => {
+      pluginSystem.pushHostEvent('browser.urlChanged', 'browser', { tabId, url });
+    });
+    // window.open / target=_blank attempts open as a NEW TAB (the handler in the
+    // engine denies the native window), in the SAME conversation's bucket as the
+    // opener; the plugin hears it and can record it.
+    browserManager.onWindowOpen((url, _disposition, sourceTabId) => {
+      const t = pluginSystem.capabilityHub.tabRegistry.newTabFromPopup(sourceTabId, url);
+      pluginSystem.pushHostEvent('browser.tabOpened', 'browser', { tabId: t.id, url });
     });
 
     app.on('will-quit', () => pluginSystem.dispose());
