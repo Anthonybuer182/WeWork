@@ -8,8 +8,18 @@ export type PanelKeepAlive = 'always' | 'lru' | 'never';
 // sites import these from the store alongside PanelEntry.
 export type { PanelRegion, PanelAnchor, PanelScope };
 
+/**
+ * Which side of a split a tab lives in. 'A' is the primary (only) slot;
+ * 'B' exists only while the right column is split (决策二: right-column
+ * internal split, two slots max, never a free grid).
+ */
+export type PanelSlotId = 'A' | 'B';
+
 /** How many conversations keep their panel state when the user moves on. */
 const SESSIONS_KEPT = 8;
+
+/** Right-column width below which a split cannot engage (narrow form first). */
+export const SPLIT_MIN_WIDTH = 720;
 
 /**
  * Unified panel entry — host panels and plugin panels share this shape.
@@ -47,15 +57,31 @@ export interface PanelEntry {
 
 /**
  * The session-scoped slice of one conversation: which session-scoped panels
- * were open, which was focused, and their open params (e.g. which file the
- * viewer held). Swapped out of `openPanelIds`/`params` on session switch and
- * back in on re-entry — the strip the user sees is always "global tabs +
- * the current conversation's tabs".
+ * were open, which slot each sat in, which was focused per slot, and their
+ * open params (e.g. which file the viewer held). Swapped out of
+ * `openPanelIds`/`params` on session switch and back in on re-entry — the
+ * strip the user sees is always "global tabs + the current conversation's
+ * tabs".
  */
 export interface SessionPanelState {
   tabs: string[];
-  active: string | null;
+  /** Slot each tab restores into (tabs not listed default to 'A'). */
+  slotOf: Record<string, PanelSlotId>;
+  /** Focused tab per slot. */
+  active: Record<PanelSlotId, string | null>;
   params: Record<string, Record<string, unknown> | undefined>;
+}
+
+/** Per-slot visible tab; every consumer of "the region's active panel" goes
+ *  through activeOf() so the split stays an internal concern of the store. */
+type ActiveBySlot = Record<PanelRegion, Record<PanelSlotId, string | null>>;
+
+const activeOf = (region: PanelRegion, active: ActiveBySlot[PanelRegion], slot: PanelSlotId): string | null =>
+  active[slot] ?? null;
+
+/** All non-null actives of a region (its slots' visible panels). */
+function activeIdsOf(region: PanelRegion, active: ActiveBySlot[PanelRegion]): string[] {
+  return (['A', 'B'] as PanelSlotId[]).map((s) => activeOf(region, active, s)).filter((id): id is string => !!id);
 }
 
 export interface PanelRuntimeState {
@@ -86,19 +112,37 @@ const TAB_MOUNT_CAP = 6;
 /** Preferred right-region panel when there is no prior selection. */
 const DEFAULT_ACTIVE_PANEL = 'host:plugins';
 
-const EMPTY_ACTIVE: Record<PanelRegion, string | null> = { left: null, right: null };
+const EMPTY_ACTIVE: ActiveBySlot = {
+  left: { A: null, B: null },
+  right: { A: null, B: null },
+};
 const EMPTY_TABS: Record<PanelRegion, string[]> = { left: [], right: [] };
+const EMPTY_SLOT_OF: Record<string, PanelSlotId> = {};
+const EMPTY_RATIO: Record<PanelRegion, number | null> = { left: null, right: null };
+const DEFAULT_SLOT: Record<PanelRegion, PanelSlotId> = { left: 'A', right: 'A' };
+
+/** The slot a tab sits in — every unlisted tab is 'A' (the primary slot). */
+function slotOfTab(slotOf: Record<string, PanelSlotId>, id: string): PanelSlotId {
+  return slotOf[id] ?? 'A';
+}
 
 interface PanelStoreState {
   panels: PanelEntry[];
-  /** Focused panel per region — always a member of that region's tab list. */
-  activePanelIds: Record<PanelRegion, string | null>;
+  /** Visible panel per slot — always a member of that slot's tab list. */
+  activePanelIds: ActiveBySlot;
   /**
    * Open tabs per region, in strip order — global tabs plus the CURRENT
-   * conversation's session tabs. The tab strip renders this list; closing a
-   * panel removes it (and unmounts it once it leaves the LRU).
+   * conversation's session tabs. The tab strip renders this list (per slot
+   * via `slotOf`); closing a panel removes it (and unmounts it once it
+   * leaves the LRU).
    */
   openPanelIds: Record<PanelRegion, string[]>;
+  /** Which slot each open tab sits in ('A' unless the region is split). */
+  slotOf: Record<string, PanelSlotId>;
+  /** Split state per region: null = single slot; a fraction = A's share. Left never splits. */
+  splitRatio: Record<PanelRegion, number | null>;
+  /** The slot that rail clicks and openPanel focus into. */
+  lastSlot: Record<PanelRegion, PanelSlotId>;
   /**
    * Which tab the context menu is open on, per region (null = closed). The
    * strip lives in the header band while the menu row lives in the panel
@@ -139,6 +183,12 @@ interface PanelStoreState {
   closeTab: (region: PanelRegion, id: string) => void;
   /** Move a tab within its strip (drag reorder). */
   reorderTabs: (region: PanelRegion, from: number, to: number) => void;
+  /** Move a tab to the other slot of a split region (drag across / context menu). */
+  moveTab: (region: PanelRegion, id: string, slot: PanelSlotId) => void;
+  /** Split/unsplit a region. `null` collapses slot B's tabs into A. */
+  setSplit: (region: PanelRegion, ratio: number | null) => void;
+  /** The visible tab of a region's slot. */
+  activePanelOf: (region: PanelRegion, slot?: PanelSlotId) => string | null;
   /** Open the tab context menu on one tab (right-click). */
   openTabMenu: (region: PanelRegion, id: string) => void;
   /** Close the tab context menu. */
@@ -179,8 +229,12 @@ function defaultActiveFor(panels: PanelEntry[], region: PanelRegion): string | n
   return inRegion[0]?.id ?? null;
 }
 
-function activeIdSet(activePanelIds: Record<PanelRegion, string | null>): Set<string> {
-  return new Set(Object.values(activePanelIds).filter((id): id is string => !!id));
+function activeIdSet(activePanelIds: ActiveBySlot): Set<string> {
+  const ids = new Set<string>();
+  for (const region of ['left', 'right'] as PanelRegion[]) {
+    for (const id of activeIdsOf(region, activePanelIds[region])) ids.add(id);
+  }
+  return ids;
 }
 
 /**
@@ -274,8 +328,10 @@ function computeMounted(
 function reconcile(
   panels: PanelEntry[],
   prev: {
-    activePanelIds: Record<PanelRegion, string | null>;
+    activePanelIds: ActiveBySlot;
     openPanelIds: Record<PanelRegion, string[]>;
+    slotOf: Record<string, PanelSlotId>;
+    splitRatio: Record<PanelRegion, number | null>;
     sessionPanels: Record<string, SessionPanelState>;
     recency: string[];
     pluginPanelsSynced: boolean;
@@ -283,8 +339,10 @@ function reconcile(
 ): {
   panels: PanelEntry[];
   recency: string[];
-  activePanelIds: Record<PanelRegion, string | null>;
+  activePanelIds: ActiveBySlot;
   openPanelIds: Record<PanelRegion, string[]>;
+  slotOf: Record<string, PanelSlotId>;
+  splitRatio: Record<PanelRegion, number | null>;
   sessionPanels: Record<string, SessionPanelState>;
   mountedIds: string[];
 } {
@@ -301,46 +359,78 @@ function reconcile(
       const tabs = st.tabs.filter((id) =>
         panels.some((p) => p.id === id && p.scope === 'session'),
       );
-      if (tabs.length === 0 && !st.active) continue;
+      if (tabs.length === 0 && !st.active.A && !st.active.B) continue;
       const params: SessionPanelState['params'] = {};
       for (const id of tabs) params[id] = st.params?.[id];
       sessionPanels[sid] = {
         tabs,
-        active: st.active != null && tabs.includes(st.active) ? st.active : null,
+        slotOf: Object.fromEntries(
+          Object.entries(st.slotOf ?? {}).filter(([id]) => tabs.includes(id)),
+        ),
+        active: {
+          A: st.active?.A != null && tabs.includes(st.active.A) ? st.active.A : null,
+          B: st.active?.B != null && tabs.includes(st.active.B) ? st.active.B : null,
+        },
         params,
       };
     }
   }
 
-  const pick = (region: PanelRegion): { active: string | null; tabs: string[] } => {
+  const pick = (region: PanelRegion): { active: ActiveBySlot[PanelRegion]; tabs: string[] } => {
     const inRegion = regionPanels(panels, region);
     const tabs = prev.openPanelIds[region].filter((id) => {
       if (inRegion.some((p) => p.id === id)) return true;
       return !prev.pluginPanelsSynced;
     });
-    const current = prev.activePanelIds[region];
-    if (current && tabs.includes(current)) return { active: current, tabs };
-    if (tabs.length > 0) return { active: tabs[tabs.length - 1], tabs };
-    if (region === 'left') {
-      const fallback = defaultActiveFor(panels, 'left');
-      return { active: fallback, tabs: fallback ? [fallback] : [] };
+    const perSlot: ActiveBySlot[PanelRegion] = { A: null, B: null };
+    for (const slot of ['A', 'B'] as PanelSlotId[]) {
+      const current = prev.activePanelIds[region][slot];
+      if (current && tabs.includes(current)) {
+        perSlot[slot] = current;
+        continue;
+      }
+      // Fall to the last remaining tab IN THIS SLOT.
+      const slotTabs = tabs.filter((id) => slotOfTab(prev.slotOf, id) === slot);
+      perSlot[slot] = slotTabs[slotTabs.length - 1] ?? null;
     }
-    return { active: null, tabs: [] };
+    // A region left with no tabs behaves differently: left re-seeds its
+    // default view (a single-select container has no meaningful empty state
+    // and no close gesture), right stays empty — the column-open effect
+    // opens the fallback as a real tab, so "nothing is open" stays honest.
+    if (region === 'left' && tabs.length === 0) {
+      const fallback = defaultActiveFor(panels, 'left');
+      const fixed = fallback ? [fallback] : [];
+      return { active: { A: fallback, B: null }, tabs: fixed };
+    }
+    return { active: perSlot, tabs };
   };
 
   const left = pick('left');
   const right = pick('right');
-  const activePanelIds: Record<PanelRegion, string | null> = {
-    left: left.active,
-    right: right.active,
-  };
+  const activePanelIds: ActiveBySlot = { left: left.active, right: right.active };
   const openPanelIds: Record<PanelRegion, string[]> = { left: left.tabs, right: right.tabs };
+
+  // Dead tabs take their slot assignment with them.
+  const openIds = new Set([...openPanelIds.left, ...openPanelIds.right]);
+  const slotOf = Object.fromEntries(
+    Object.entries(prev.slotOf).filter(([id]) => openIds.has(id)),
+  );
+  // A split whose B tab list emptied collapses — an empty second slot is a
+  // dead gutter, not a state worth keeping.
+  const splitRatio: Record<PanelRegion, number | null> = { ...prev.splitRatio };
+  for (const region of ['left', 'right'] as PanelRegion[]) {
+    const bTabs = openPanelIds[region].filter((id) => slotOfTab(slotOf, id) === 'B');
+    if (splitRatio[region] != null && bTabs.length === 0) splitRatio[region] = null;
+    if (region === 'left') splitRatio[region] = null; // never splits
+  }
 
   return {
     panels,
     recency,
     activePanelIds,
     openPanelIds,
+    slotOf,
+    splitRatio,
     sessionPanels,
     mountedIds: computeMounted(panels, activeIdSet(activePanelIds), openPanelIds, recency),
   };
@@ -352,6 +442,9 @@ export const usePanelStore = create<PanelStoreState>()(
       panels: [],
       activePanelIds: EMPTY_ACTIVE,
       openPanelIds: EMPTY_TABS,
+      slotOf: EMPTY_SLOT_OF,
+      splitRatio: EMPTY_RATIO,
+      lastSlot: DEFAULT_SLOT,
       tabMenu: { left: null, right: null },
       currentSessionId: null,
       sessionPanels: {},
@@ -428,11 +521,26 @@ export const usePanelStore = create<PanelStoreState>()(
           const openPanelIds = tabs.includes(id)
             ? s.openPanelIds
             : { ...s.openPanelIds, [region]: [...tabs, id] };
-          const activePanelIds = { ...s.activePanelIds, [region]: id };
+          // A NEW tab lands in the focused slot; an existing tab activates in
+          // ITS slot. Outside a split both are 'A' anyway.
+          const slot: PanelSlotId =
+            s.splitRatio[region] == null
+              ? 'A'
+              : tabs.includes(id)
+                ? slotOfTab(s.slotOf, id)
+                : s.lastSlot[region];
+          const slotOf = tabs.includes(id) ? s.slotOf : { ...s.slotOf, [id]: slot };
+          const activePanelIds: ActiveBySlot = {
+            ...s.activePanelIds,
+            [region]: { ...s.activePanelIds[region], [slot]: id },
+          };
+          const lastSlot = { ...s.lastSlot, [region]: slot };
           delete runtime[id];
           return {
             activePanelIds,
             openPanelIds,
+            slotOf,
+            lastSlot,
             recency,
             runtime,
             params,
@@ -444,30 +552,45 @@ export const usePanelStore = create<PanelStoreState>()(
         }),
 
       /**
-       * Close one tab. Focus falls to the tab on its left (browser habit),
-       * then to the one that slid into the closed slot. A right region left
-       * without tabs shows its empty state and the column collapses (the tab
-       * strip calls the collapse); left re-seeds its default view instead.
+       * Close one tab. Focus falls to the tab on its left (browser habit)
+       * WITHIN ITS SLOT, then to the one that slid into the closed slot. A
+       * right region left without tabs shows its empty state and the column
+       * collapses (the tab strip calls the collapse); left re-seeds its
+       * default view instead. Closing the last tab of a split's B slot
+       * collapses the split — an empty second slot is a dead gutter.
        */
       closeTab: (region, id) =>
         set((s) => {
           const idx = s.openPanelIds[region].indexOf(id);
           if (idx === -1) return s;
           let tabs = s.openPanelIds[region].filter((t) => t !== id);
-          let active: string | null = s.activePanelIds[region];
-          if (active === id) {
-            active = tabs[Math.max(0, idx - 1)] ?? null;
+          const slot = slotOfTab(s.slotOf, id);
+          const slotOf = { ...s.slotOf };
+          delete slotOf[id];
+          const active: ActiveBySlot[PanelRegion] = { ...s.activePanelIds[region] };
+          if (active[slot] === id) {
+            const slotTabs = tabs.filter((t) => slotOfTab(slotOf, t) === slot);
+            const inSlotIdx = s.openPanelIds[region]
+              .filter((t) => slotOfTab(s.slotOf, t) === slot)
+              .indexOf(id);
+            active[slot] = slotTabs[Math.max(0, inSlotIdx - 1)] ?? slotTabs[0] ?? null;
           }
           if (tabs.length === 0 && region === 'left') {
             const fallback = defaultActiveFor(s.panels, 'left');
             tabs = fallback ? [fallback] : tabs;
-            active = fallback ?? null;
+            active.A = fallback ?? null;
           }
-          const activePanelIds = { ...s.activePanelIds, [region]: active };
+          const splitRatio = { ...s.splitRatio };
+          if (splitRatio[region] != null && tabs.every((t) => slotOfTab(slotOf, t) !== 'B')) {
+            splitRatio[region] = null;
+          }
+          const activePanelIds: ActiveBySlot = { ...s.activePanelIds, [region]: active };
           const openPanelIds = { ...s.openPanelIds, [region]: tabs };
           return {
             activePanelIds,
             openPanelIds,
+            slotOf,
+            splitRatio,
             mountedIds: computeMounted(s.panels, activeIdSet(activePanelIds), openPanelIds, s.recency),
           };
         }),
@@ -484,6 +607,79 @@ export const usePanelStore = create<PanelStoreState>()(
           tabs.splice(to, 0, moved);
           return { openPanelIds: { ...s.openPanelIds, [region]: tabs } };
         }),
+
+      /** Drag a tab to the other side of a split (or back). Focus follows. */
+      moveTab: (region, id, slot) =>
+        set((s) => {
+          if (s.splitRatio[region] == null) return s;
+          if (!s.openPanelIds[region].includes(id)) return s;
+          const slotOf = { ...s.slotOf, [id]: slot };
+          const active: ActiveBySlot[PanelRegion] = { ...s.activePanelIds[region], [slot]: id };
+          // The slot the tab LEFT may now be empty — fall to its neighbour.
+          const from = slotOfTab(s.slotOf, id);
+          if (from !== slot && active[from] === id) {
+            const rest = s.openPanelIds[region].filter(
+              (t) => t !== id && slotOfTab(slotOf, t) === from,
+            );
+            active[from] = rest[rest.length - 1] ?? null;
+          }
+          const activePanelIds: ActiveBySlot = { ...s.activePanelIds, [region]: active };
+          const lastSlot = { ...s.lastSlot, [region]: slot };
+          return {
+            slotOf,
+            lastSlot,
+            activePanelIds,
+            mountedIds: computeMounted(
+              s.panels,
+              activeIdSet(activePanelIds),
+              s.openPanelIds,
+              s.recency,
+            ),
+          };
+        }),
+
+      /** Split/unsplit: `null` merges slot B back into A. */
+      setSplit: (region, ratio) =>
+        set((s) => {
+          if (region === 'left') return s;
+          const splitRatio = { ...s.splitRatio, [region]: ratio };
+          const slotOf = { ...s.slotOf };
+          const active: ActiveBySlot[PanelRegion] = { ...s.activePanelIds[region] };
+          if (ratio == null) {
+            // Everything returns to A; B's visible panel becomes A's.
+            for (const id of s.openPanelIds[region]) slotOf[id] = 'A';
+            active.A = active.B ?? active.A;
+            active.B = null;
+          } else if (active.B == null) {
+            // Seed B with the tab after A's — if there is one.
+            const aTabs = s.openPanelIds[region].filter((id) => slotOfTab(slotOf, id) === 'A');
+            const aActive = active.A;
+            const aIdx = aActive ? aTabs.indexOf(aActive) : -1;
+            const candidate = aTabs[aIdx + 1] ?? aTabs[aIdx - 1] ?? aTabs[0];
+            if (candidate && candidate !== aActive) {
+              slotOf[candidate] = 'B';
+              active.B = candidate;
+            }
+          }
+          const activePanelIds: ActiveBySlot = { ...s.activePanelIds, [region]: active };
+          return {
+            splitRatio,
+            slotOf,
+            activePanelIds,
+            lastSlot: { ...s.lastSlot },
+            mountedIds: computeMounted(
+              s.panels,
+              activeIdSet(activePanelIds),
+              s.openPanelIds,
+              s.recency,
+            ),
+          };
+        }),
+
+      activePanelOf: (region, slot) => {
+        const s = get();
+        return activeOf(region, s.activePanelIds[region], slot ?? s.lastSlot[region]);
+      },
 
       openTabMenu: (region, id) =>
         set((s) => ({ tabMenu: { ...s.tabMenu, [region]: id } })),
@@ -525,11 +721,13 @@ export const usePanelStore = create<PanelStoreState>()(
 
           const sessionPanels = { ...s.sessionPanels };
           const params = { ...s.params };
+          const slotOf = { ...s.slotOf };
 
           // ── Stash: the outgoing conversation takes its slice with it. ──
           if (s.currentSessionId !== null) {
             const stashTabs: string[] = [];
             const stashParams: SessionPanelState['params'] = {};
+            const stashSlotOf: SessionPanelState['slotOf'] = {};
             for (const region of ['left', 'right'] as PanelRegion[]) {
               for (const id of s.openPanelIds[region]) {
                 // Only KNOWN session panels detach: an unknown id (plugin not
@@ -538,10 +736,21 @@ export const usePanelStore = create<PanelStoreState>()(
                 if (scopeOf(id) !== 'session') continue;
                 stashTabs.push(id);
                 stashParams[id] = params[id];
+                stashSlotOf[id] = slotOfTab(s.slotOf, id);
                 delete params[id];
               }
             }
-            const activeRight = s.activePanelIds.right;
+            const activeBySlot = (region: PanelRegion): ActiveBySlot[PanelRegion] => ({
+              A:
+                s.activePanelIds[region].A != null && scopeOf(s.activePanelIds[region].A!) === 'session'
+                  ? s.activePanelIds[region].A
+                  : null,
+              B:
+                s.activePanelIds[region].B != null && scopeOf(s.activePanelIds[region].B!) === 'session'
+                  ? s.activePanelIds[region].B
+                  : null,
+            });
+            const activeRight = activeBySlot('right');
             // Merge over the previous stash, never clobbering with undefined:
             // `params` is in-memory only, so an idempotent re-entry after a
             // reload would otherwise wipe the persisted file path of an open
@@ -555,10 +764,12 @@ export const usePanelStore = create<PanelStoreState>()(
             for (const k of Object.keys(mergedParams)) {
               if (!stashTabs.includes(k)) delete mergedParams[k];
             }
+            const mergedSlotOf: SessionPanelState['slotOf'] = { ...(prevStash?.slotOf ?? {}) };
+            for (const id of stashTabs) mergedSlotOf[id] = stashSlotOf[id] ?? 'A';
             sessionPanels[s.currentSessionId] = {
               tabs: stashTabs,
-              active:
-                activeRight && scopeOf(activeRight) === 'session' ? activeRight : null,
+              slotOf: mergedSlotOf,
+              active: activeRight,
               params: mergedParams,
             };
           }
@@ -572,7 +783,13 @@ export const usePanelStore = create<PanelStoreState>()(
             openPanelIds[region] = s.openPanelIds[region].filter(
               (id) => scopeOf(id) !== 'session',
             );
+            // Their slot assignments leave with them.
+            for (const id of s.openPanelIds[region]) {
+              if (scopeOf(id) === 'session') delete slotOf[id];
+            }
           }
+          const splitRatio = { ...s.splitRatio };
+          const active: ActiveBySlot = { ...s.activePanelIds, right: { ...s.activePanelIds.right } };
           if (incoming) {
             for (const id of incoming.tabs) {
               const p = s.panels.find((x) => x.id === id);
@@ -581,22 +798,32 @@ export const usePanelStore = create<PanelStoreState>()(
                 openPanelIds[region] = [...openPanelIds[region], id];
               }
               if (incoming.params?.[id] !== undefined) params[id] = incoming.params[id];
+              slotOf[id] = incoming.slotOf?.[id] ?? 'A';
             }
+            active.right.A =
+              incoming.active?.A != null && openPanelIds.right.includes(incoming.active.A)
+                ? incoming.active.A
+                : active.right.A;
+            active.right.B =
+              incoming.active?.B != null && openPanelIds.right.includes(incoming.active.B)
+                ? incoming.active.B
+                : null;
+          }
+          // A restored B with no tabs cannot be a split — collapse it.
+          if (splitRatio.right != null && openPanelIds.right.every((id) => slotOfTab(slotOf, id) !== 'B')) {
+            splitRatio.right = null;
+            active.right.B = null;
           }
 
           // ── Focus: the conversation you return to is the one you left. ──
-          const activePanelIds = { ...s.activePanelIds };
-          if (incoming?.active != null && openPanelIds.right.includes(incoming.active)) {
-            activePanelIds.right = incoming.active;
-          } else if (
-            s.activePanelIds.right != null &&
-            !openPanelIds.right.includes(s.activePanelIds.right)
+          if (
+            incoming?.active?.A == null &&
+            (active.right.A == null || !openPanelIds.right.includes(active.right.A))
           ) {
             // The focused tab left with the outgoing session — fall to the
             // last remaining tab; null lets the column-open effect seed a
             // global fallback.
-            activePanelIds.right =
-              openPanelIds.right[openPanelIds.right.length - 1] ?? null;
+            active.right.A = openPanelIds.right[openPanelIds.right.length - 1] ?? null;
           }
 
           // ── Bookkeeping: recency of entry bounds the per-session state. ──
@@ -613,9 +840,11 @@ export const usePanelStore = create<PanelStoreState>()(
             sessionPanels,
             sessionOrder,
             openPanelIds,
-            activePanelIds,
+            slotOf,
+            splitRatio,
+            activePanelIds: active,
             params,
-            mountedIds: computeMounted(s.panels, activeIdSet(activePanelIds), openPanelIds, s.recency),
+            mountedIds: computeMounted(s.panels, activeIdSet(active), openPanelIds, s.recency),
           };
         }),
 
@@ -647,10 +876,13 @@ export const usePanelStore = create<PanelStoreState>()(
     }),
     {
       name: 'pi-panel-storage',
-      version: 4,
+      version: 5,
       partialize: (state) => ({
         activePanelIds: state.activePanelIds,
         openPanelIds: state.openPanelIds,
+        slotOf: state.slotOf,
+        splitRatio: state.splitRatio,
+        lastSlot: state.lastSlot,
         currentSessionId: state.currentSessionId,
         sessionPanels: state.sessionPanels,
         sessionOrder: state.sessionOrder,
@@ -658,31 +890,76 @@ export const usePanelStore = create<PanelStoreState>()(
       migrate: (persisted) => {
         const p = (persisted ?? {}) as {
           activePanelId?: string | null;
-          activePanelIds?: Record<PanelRegion, string | null>;
+          activePanelIds?:
+            | Record<PanelRegion, string | null>  // ≤v4
+            | ActiveBySlot;                       // v5
           openPanelIds?: Record<PanelRegion, string[]>;
           sessionPanels?: Record<string, SessionPanelState>;
           sessionOrder?: string[];
+          slotOf?: Record<string, PanelSlotId>;
+          splitRatio?: Record<PanelRegion, number | null>;
+          lastSlot?: Record<PanelRegion, PanelSlotId>;
         };
         const sessionState = {
           currentSessionId: null,
           sessionPanels: p.sessionPanels ?? {},
           sessionOrder: p.sessionOrder ?? [],
         };
+
+        // v5 shape (possibly mid-migration leftovers): slots everywhere.
+        const isSplitShape = (x: unknown): x is ActiveBySlot =>
+          typeof x === 'object' && x !== null && 'A' in (x as Record<string, unknown>);
+
         if (p.openPanelIds) {
-          // v3 → v4: same shape, sessions not tracked yet.
-          return { activePanelIds: p.activePanelIds, openPanelIds: p.openPanelIds, ...sessionState } as never;
-        }
-        if (p.activePanelIds) {
-          // v2 → v4: the region's single active panel becomes its only tab.
-          // Tabs pointing at since-uninstalled panels are pruned later, by the
-          // reconcile that runs when the panel list registers.
-          const ids = p.activePanelIds;
+          // v3/v4 → v5: single list becomes slot A's; B starts empty and the
+          // region unsplit. Pure mapping — pruning stays with the
+          // pluginPanelsSynced-gated reconcile, which runs once panels load.
+          const ids =
+            p.activePanelIds && isSplitShape(p.activePanelIds)
+              ? p.activePanelIds
+              : {
+                  left: { A: (p.activePanelIds as Record<PanelRegion, string | null> | undefined)?.left ?? null, B: null },
+                  right: { A: (p.activePanelIds as Record<PanelRegion, string | null> | undefined)?.right ?? null, B: null },
+                };
+          // Session stashes: same field-by-field mapping (old `active` is a
+          // single id; new is per-slot).
+          const sessionPanels: Record<string, SessionPanelState> = {};
+          for (const [sid, st] of Object.entries(sessionState.sessionPanels ?? {})) {
+            const active = (st as { active?: unknown }).active;
+            sessionPanels[sid] = {
+              tabs: st.tabs ?? [],
+              slotOf: (st as { slotOf?: Record<string, PanelSlotId> }).slotOf ?? {},
+              active: isSplitShape(active)
+                ? (active as unknown as Record<PanelSlotId, string | null>)
+                : { A: (active as string | null) ?? null, B: null },
+              params: st.params ?? {},
+            };
+          }
           return {
             activePanelIds: ids,
+            openPanelIds: p.openPanelIds,
+            slotOf: p.slotOf ?? {},
+            splitRatio: p.splitRatio ?? { left: null, right: null },
+            lastSlot: p.lastSlot ?? { left: 'A', right: 'A' },
+            ...sessionState,
+            sessionPanels,
+          } as never;
+        }
+        if (p.activePanelIds) {
+          // v2 → v5: the region's single active panel becomes its only tab.
+          const ids = p.activePanelIds as Record<PanelRegion, string | null>;
+          return {
+            activePanelIds: {
+              left: { A: ids.left ?? null, B: null },
+              right: { A: ids.right ?? null, B: null },
+            },
             openPanelIds: {
               left: ids.left ? [ids.left] : [],
               right: ids.right ? [ids.right] : [],
             },
+            slotOf: {},
+            splitRatio: { left: null, right: null },
+            lastSlot: { left: 'A', right: 'A' },
             ...sessionState,
           } as never;
         }
@@ -699,8 +976,11 @@ export const usePanelStore = create<PanelStoreState>()(
         // Seed it on the right; reconcile re-homes or drops it once panels are
         // registered (that is why `setHostPanels` reconciles).
         return {
-          activePanelIds: { left: null, right: id },
+          activePanelIds: { left: { A: null, B: null }, right: { A: id, B: null } },
           openPanelIds: { left: [], right: id ? [id] : [] },
+          slotOf: {},
+          splitRatio: { left: null, right: null },
+          lastSlot: { left: 'A', right: 'A' },
           ...sessionState,
         } as never;
       },

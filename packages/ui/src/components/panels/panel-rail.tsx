@@ -63,12 +63,14 @@ export function RailIcon({
 }
 
 function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion }) {
-  const activePanelId = usePanelStore((s) => s.activePanelIds[region]);
+  const activeIds = usePanelStore((s) => s.activePanelIds[region]);
   const openPanel = usePanelStore((s) => s.openPanel);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const runtime = usePanelStore((s) => s.runtime[panel.id]);
 
-  const active = activePanelId === panel.id;
+  // Active in EITHER slot — a split region shows two panels at once and the
+  // rail must light up for both.
+  const active = activeIds.A === panel.id || activeIds.B === panel.id;
   const badge = runtime?.badge;
   const pending = runtime?.pending;
   // The rail sits beside its content column, so the indicator goes on the

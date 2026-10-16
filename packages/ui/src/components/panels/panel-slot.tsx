@@ -1,5 +1,5 @@
 import { useEffect, type ComponentType } from 'react';
-import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
+import { usePanelStore, type PanelEntry, type PanelRegion, type PanelSlotId } from '@/stores/panel-store';
 import { ProviderSettings } from '@/components/settings';
 import { PluginCenter } from '@/components/plugins/plugin-center';
 import { FileTree } from '@/components/file/file-tree';
@@ -77,25 +77,36 @@ function PanelBody({ panel }: { panel: PanelEntry }) {
 }
 
 /**
- * Single-panel slot: the active panel is visible; keep-alive panels stay
- * mounted hidden (the view stays alive), everything
- * else unmounts.
+ * One slot of a region's body: the slot's active panel is visible;
+ * keep-alive panels stay mounted hidden (the view stays alive), everything
+ * else unmounts. A split region renders two of these side by side — each
+ * filters the mounted set to ITS slot, so the two never fight over a panel.
  */
-export function PanelSlot({ region = 'right' }: { region?: PanelRegion }) {
+export function PanelSlot({
+  region = 'right',
+  slot = 'A',
+}: {
+  region?: PanelRegion;
+  slot?: PanelSlotId;
+}) {
   const panels = usePanelStore((s) => s.panels);
-  const activePanelId = usePanelStore((s) => s.activePanelIds[region]);
+  const activePanelId = usePanelStore((s) => s.activePanelIds[region][slot]);
   const mountedIds = usePanelStore((s) => s.mountedIds);
+  const slotOf = usePanelStore((s) => s.slotOf);
 
   // `mountedIds` is flat across regions; each slot renders only its own.
-  const regionMountedIds = mountedIds.filter(
-    (id) => panels.find((p) => p.id === id)?.region === region,
-  );
+  const regionMountedIds = mountedIds.filter((id) => {
+    const p = panels.find((x) => x.id === id);
+    if (p?.region !== region) return false;
+    return (slotOf[id] ?? 'A') === slot;
+  });
 
   return (
     <div
       className="relative flex-1 min-h-0 overflow-hidden"
-      data-testid={`panel-slot-${region}`}
+      data-testid={`panel-slot-${region}${slot === 'B' ? '-B' : ''}`}
       data-panel-slot-region={region}
+      data-panel-slot={slot}
     >
       {regionMountedIds.map((id) => {
         const panel = panels.find((p) => p.id === id);

@@ -86,7 +86,7 @@ function AppContent() {
   useEffect(() => {
     if (!rightPanelOpen) return;
     const panelState = usePanelStore.getState();
-    if (panelState.activePanelIds.right) return;
+    if (panelState.activePanelIds.right.A || panelState.activePanelIds.right.B) return;
     const rightPanels = panelState.panels.filter((p) => p.region === 'right');
     // Fallback must be a GLOBAL panel: a session panel opened here would
     // arrive without its conversation's params (its file stays behind with
