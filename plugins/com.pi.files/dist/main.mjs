@@ -45443,7 +45443,7 @@ function parseCustGeom(shapeXml2, shapeW, shapeH) {
     if (!p.w) fw = Math.max(fw, maxCoord(absList[i], 0));
     if (!p.h) fh = Math.max(fh, maxCoord(absList[i], 1));
   });
-  const buckets = { path: [], fillPath: [], strokePath: [] };
+  const buckets2 = { path: [], fillPath: [], strokePath: [] };
   paths.forEach((p, i) => {
     const abs = absList[i];
     if (!abs.length) return;
@@ -45454,14 +45454,14 @@ function parseCustGeom(shapeXml2, shapeW, shapeH) {
     const fillNone = p.fill === "none";
     const strokeNone = p.stroke === "0" || p.stroke === "false" || p.stroke === "none";
     if (fillNone && strokeNone) return;
-    if (fillNone) buckets.strokePath.push(d);
-    else if (strokeNone) buckets.fillPath.push(d);
-    else buckets.path.push(d);
+    if (fillNone) buckets2.strokePath.push(d);
+    else if (strokeNone) buckets2.fillPath.push(d);
+    else buckets2.path.push(d);
   });
   const out = {};
-  if (buckets.path.length) out.path = buckets.path.join(" ");
-  if (buckets.fillPath.length) out.fillPath = buckets.fillPath.join(" ");
-  if (buckets.strokePath.length) out.strokePath = buckets.strokePath.join(" ");
+  if (buckets2.path.length) out.path = buckets2.path.join(" ");
+  if (buckets2.fillPath.length) out.fillPath = buckets2.fillPath.join(" ");
+  if (buckets2.strokePath.length) out.strokePath = buckets2.strokePath.join(" ");
   return out.path || out.fillPath || out.strokePath ? out : void 0;
 }
 __name(parseCustGeom, "parseCustGeom");
@@ -70593,24 +70593,131 @@ function samePath(a, b) {
 }
 __name(samePath, "samePath");
 var PANEL = "viewer";
-var currentFile = "";
 var renderViewer = /* @__PURE__ */ __name((data) => ctx.send(PANEL, "ui.render", data), "renderViewer");
-function openFile(path) {
-  currentFile = String(path ?? "");
-  renderViewer(currentFile ? { path: currentFile } : {});
+var MAX_BUCKETS = 8;
+var buckets = /* @__PURE__ */ new Map();
+var panelSession = null;
+function bucketKey(sessionId) {
+  return sessionId ?? panelSession ?? "default";
+}
+__name(bucketKey, "bucketKey");
+function bucketFor(key) {
+  let b = buckets.get(key);
+  if (!b) {
+    b = { tabs: [], activePath: "" };
+    buckets.set(key, b);
+  }
+  return b;
+}
+__name(bucketFor, "bucketFor");
+function pruneBuckets() {
+  if (buckets.size <= MAX_BUCKETS + 1) return;
+  const current = bucketKey();
+  for (const key of buckets.keys()) {
+    if (buckets.size <= MAX_BUCKETS + 1) break;
+    if (key === current || key === "default") continue;
+    buckets.delete(key);
+  }
+}
+__name(pruneBuckets, "pruneBuckets");
+function renderBucket(b) {
+  return renderViewer(
+    b.activePath ? { path: b.activePath, tabs: b.tabs, activePath: b.activePath } : { tabs: [], activePath: "" }
+  );
+}
+__name(renderBucket, "renderBucket");
+function openFile(path, sessionId) {
+  const p = String(path ?? "");
+  const b = bucketFor(bucketKey(sessionId));
+  if (p) {
+    const existing = b.tabs.findIndex((t) => samePath(t, p));
+    if (existing >= 0) b.tabs.splice(existing, 1);
+    b.tabs.push(p);
+    b.activePath = p;
+    const ext = p.toLowerCase().split(".").pop() ?? "";
+    if (ext !== "docx" && ext !== "docm") mcpReadyPath = null;
+  }
+  renderBucket(b);
 }
 __name(openFile, "openFile");
+function closeTab(path, sessionId) {
+  const b = bucketFor(bucketKey(sessionId));
+  const idx = b.tabs.findIndex((t) => samePath(t, path));
+  if (idx === -1) return;
+  b.tabs.splice(idx, 1);
+  if (b.activePath && samePath(b.activePath, path)) {
+    b.activePath = b.tabs[Math.max(0, idx - 1)] ?? "";
+  }
+  renderBucket(b);
+}
+__name(closeTab, "closeTab");
+function activeFileOf(sessionId) {
+  return bucketFor(bucketKey(sessionId)).activePath;
+}
+__name(activeFileOf, "activeFileOf");
 var mcpPending = /* @__PURE__ */ new Map();
 var mcpSeq = 0;
 var mcpReady = false;
-function requireDocxOpen(path) {
-  const open = currentFile;
-  if (open.toLowerCase().endsWith(".docx") && samePath(open, path)) return;
+var mcpReadyPath = null;
+var readyWaiters = /* @__PURE__ */ new Map();
+function waitMcpReady(path, timeoutMs) {
+  if (mcpReadyPath !== null && samePath(mcpReadyPath, path)) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const entry = { resolve, timer: null };
+    const remove = /* @__PURE__ */ __name(() => {
+      clearTimeout(entry.timer);
+      const arr2 = readyWaiters.get(path);
+      if (!arr2) return;
+      const i = arr2.indexOf(entry);
+      if (i >= 0) arr2.splice(i, 1);
+      if (arr2.length === 0) readyWaiters.delete(path);
+    }, "remove");
+    entry.timer = setTimeout(() => {
+      remove();
+      reject(
+        new Error(
+          `the viewer did not finish opening ${basename(path)} within ${Math.round(timeoutMs / 1e3)}s \u2014 is the file still readable?`
+        )
+      );
+    }, timeoutMs);
+    const arr = readyWaiters.get(path) ?? [];
+    arr.push(entry);
+    readyWaiters.set(path, arr);
+  });
+}
+__name(waitMcpReady, "waitMcpReady");
+function announceMcpReady(path) {
+  mcpReadyPath = path;
+  const arr = readyWaiters.get(path);
+  if (!arr) return;
+  readyWaiters.delete(path);
+  for (const w of arr) {
+    clearTimeout(w.timer);
+    w.resolve();
+  }
+}
+__name(announceMcpReady, "announceMcpReady");
+var mcpChain = Promise.resolve();
+function withMcpLock(fn) {
+  const run = mcpChain.then(fn, fn);
+  mcpChain = run.catch(() => void 0);
+  return run;
+}
+__name(withMcpLock, "withMcpLock");
+function requireDocxOpen(path, sessionId) {
+  const b = bucketFor(bucketKey(sessionId));
+  if (b.tabs.some((t) => samePath(t, path))) return;
   throw new Error(
-    open ? `the viewer is showing ${open}, not ${path} \u2014 open the document you want to edit in the viewer, then retry` : `no document is open in the viewer \u2014 open ${path} there, then retry`
+    b.activePath ? `the viewer is showing ${b.activePath}, not ${path} \u2014 open the document you want to edit in the viewer, then retry` : `no document is open in the viewer \u2014 open ${path} there, then retry`
   );
 }
 __name(requireDocxOpen, "requireDocxOpen");
+async function ensureDocxActive(path, sessionId) {
+  if (mcpReadyPath !== null && samePath(mcpReadyPath, path)) return;
+  openFile(path, sessionId);
+  await waitMcpReady(path, 6e4);
+}
+__name(ensureDocxActive, "ensureDocxActive");
 function mcpCommand(command, payload, timeoutMs = 12e4) {
   const requestId = "m" + ++mcpSeq;
   return new Promise((resolve, reject) => {
@@ -70710,7 +70817,7 @@ Call office_guide again with { group } for one group's field tables and examples
   );
 }
 __name(toolGuide, "toolGuide");
-async function toolRead(p) {
+async function toolRead(p, sessionId) {
   const path = String(p.path ?? "");
   if (!path) throw new Error("office_read: path is required");
   const ext = path.toLowerCase().split(".").pop();
@@ -70729,8 +70836,11 @@ async function toolRead(p) {
     );
   }
   if (ext === "docx") {
-    requireDocxOpen(path);
-    const result = await mcpCommand("read_document", {});
+    requireDocxOpen(path, sessionId);
+    const result = await withMcpLock(async () => {
+      await ensureDocxActive(path, sessionId);
+      return mcpCommand("read_document", {});
+    });
     return text(String(result?.text ?? ""), { path, via: "viewer" });
   }
   if (ext !== "pptx") {
@@ -70760,7 +70870,7 @@ async function toolRead(p) {
   );
 }
 __name(toolRead, "toolRead");
-async function toolEdit(p) {
+async function toolEdit(p, sessionId) {
   const path = String(p.path ?? "");
   if (!path) throw new Error("office_edit: path is required");
   const ops = Array.isArray(p.ops) ? p.ops : [];
@@ -70790,12 +70900,17 @@ async function toolEdit(p) {
     };
   }
   if (ext === "docx") {
-    requireDocxOpen(path);
+    requireDocxOpen(path, sessionId);
     const commands = planDocxCommands(ops, dryRun);
     const steps = [];
-    for (const step of commands) {
-      steps.push(await mcpCommand(step.command, step.payload));
-    }
+    const saved = await withMcpLock(async () => {
+      for (const step of commands) {
+        await ensureDocxActive(path, sessionId);
+        steps.push(await mcpCommand(step.command, step.payload));
+      }
+      if (dryRun) return void 0;
+      return await mcpCommand("save_document", { path, overwrite: true });
+    });
     if (dryRun) {
       const plan = steps[0]?.output ?? "";
       return text(`dry run ok \u2014 ${ops.length} op(s) validated, nothing written:
@@ -70805,7 +70920,6 @@ ${plan}`, {
         steps
       });
     }
-    const saved = await mcpCommand("save_document", { path, overwrite: true });
     if (saved?.ok !== true) throw new Error(`office_edit: the document could not be saved to ${path}`);
     const info2 = await stat(path).catch(() => null);
     return {
@@ -70858,14 +70972,15 @@ Fix the listed op(s) and resend the whole batch.`,
   };
 }
 __name(toolEdit, "toolEdit");
-async function runTool(name, p) {
+async function runTool(name, p, call = {}) {
+  const sessionId = call.sessionId ?? null;
   switch (name) {
     case "office_guide":
       return await toolGuide(p);
     case "office_read":
-      return await toolRead(p);
+      return await toolRead(p, sessionId);
     case "office_edit":
-      return await toolEdit(p);
+      return await toolEdit(p, sessionId);
     // ── legacy P9a probes (kept until the viewer work lands) ──
     case "files_probe_write": {
       if (!p.path) throw new Error("missing path");
@@ -70888,10 +71003,10 @@ ${String(result?.content ?? "").slice(0, 4e3)}`, result);
         await ctx.call("panel.open", { panelId, focus: true });
         return text(`\u5DF2\u6253\u5F00\u9762\u677F ${panelId}`);
       }
-      const target = typeof p.path === "string" && p.path ? String(p.path) : currentFile;
+      const target = typeof p.path === "string" && p.path ? String(p.path) : activeFileOf(sessionId);
       if (!target) throw new Error("no file to open (pass path or click a file first)");
       await ctx.call("panel.open", { panelId: "viewer", focus: true });
-      openFile(target);
+      openFile(target, sessionId);
       return text(`\u5DF2\u5728\u67E5\u770B\u5668\u4E2D\u6253\u5F00 ${target}`);
     }
     default:
@@ -70907,7 +71022,21 @@ async function onUiRequest(method, params = {}) {
       return ctx.call("chat.send", { text: t });
     }
     case "mcp.ready": {
+      const path = String(params.path ?? "");
+      if (path) announceMcpReady(path);
       mcpReady = true;
+      return { ok: true };
+    }
+    case "file.activateTab": {
+      const path = String(params.path ?? "");
+      if (!path) throw new Error("file.activateTab: path is required");
+      openFile(path);
+      return { ok: true };
+    }
+    case "file.closeTab": {
+      const path = String(params.path ?? "");
+      if (!path) throw new Error("file.closeTab: path is required");
+      closeTab(path);
       return { ok: true };
     }
     case "mcp.result": {
@@ -70979,7 +71108,8 @@ async function onUiRequest(method, params = {}) {
       return familyVerticalMetrics2(family) ?? null;
     }
     case "state.get": {
-      return currentFile ? { path: currentFile } : {};
+      const b = bucketFor(bucketKey());
+      return b.activePath ? { path: b.activePath, tabs: b.tabs, activePath: b.activePath } : {};
     }
     default:
       throw new Error(`unknown ui request: ${method}`);
@@ -71018,24 +71148,54 @@ plugin({
   onInit(context) {
     ctx = context;
   },
-  /** The panel draws from here — onInit runs before anyone has opened it. */
-  onPanelMounted(_panelId, params) {
-    openFile(String(params?.file ?? currentFile));
+  /**
+   * The panel draws from here — onInit runs before anyone has opened it.
+   * `meta.sessionId` names the conversation the panel now serves: it arrives on
+   * first mount AND again on every session switch, so the panel's bucket
+   * follows the conversation on screen.
+   *
+   * On a session BOUNDARY `params` cannot be trusted: the host's per-session
+   * stash runs in a PARENT effect, so the re-mount fires first with the
+   * OUTGOING conversation's `{ file }` still attached — applying it here would
+   * open the previous conversation's document in the new one's bucket. So a
+   * boundary renders the incoming bucket as-is; a genuine file click arrives
+   * as a later mount within the settled session. A fresh backend
+   * (panelSession null) has no previous conversation, so its first mount
+   * applies params normally.
+   */
+  onPanelMounted(_panelId, params, _ctx, meta) {
+    const sessionId = meta?.sessionId ?? null;
+    const boundary = panelSession !== null && sessionId !== null && sessionId !== panelSession;
+    panelSession = sessionId ?? panelSession;
+    const b = bucketFor(bucketKey());
+    const file = String(params?.file ?? "");
+    const target = !boundary && file ? file : b.activePath;
+    if (target) openFile(target);
+    else renderBucket(b);
+    pruneBuckets();
   },
-  onTool: runTool,
+  onTool: /* @__PURE__ */ __name((name, params, _ctx, call) => runTool(name, params, call), "onTool"),
+  /** The conversation on screen changed — show that conversation's bucket. */
+  onHostEvent(event, data) {
+    if (event !== "session.changed") return;
+    panelSession = data?.sessionId ?? null;
+    renderBucket(bucketFor(bucketKey()));
+    pruneBuckets();
+  },
   onRequest(_panelId, method, params) {
     return onUiRequest(method, params);
   },
   /**
    * Card buttons from the office_edit result card (messageRenderer). The path
    * comes back in the clicked node's props, so an old card still opens its
-   * own document. Not async: the SDK calls this fire-and-forget without
-   * awaiting, so a rejection here would escape the SDK's try/catch — handle
-   * errors inline instead.
+   * own document. The card was clicked from the conversation ON SCREEN, so it
+   * opens into the panel's bucket. Not async: the SDK calls this fire-and-
+   * forget without awaiting, so a rejection here would escape the SDK's
+   * try/catch — handle errors inline instead.
    */
   onCardEvent(_toolName, eventId, kind, payload) {
     if (kind !== "click" || eventId !== "open_viewer") return;
-    const target = String(payload?.path ?? "") || currentFile;
+    const target = String(payload?.path ?? "") || activeFileOf();
     if (!target) return;
     void ctx.call("panel.open", { panelId: "viewer", focus: true }).then(() => openFile(target)).catch((err) => {
       ctx.log.error(`open_viewer failed: ${err instanceof Error ? err.message : String(err)}`);

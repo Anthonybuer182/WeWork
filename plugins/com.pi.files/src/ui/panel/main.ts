@@ -25,6 +25,7 @@ import './panel-fit.css';
 import { persistPendingPath, readPersistedPath } from '../shims/common';
 import { mountEmptyState } from './empty-state';
 import { mountLegacyShell } from './legacy-shell';
+import { mountTabsBar } from './tabs-bar';
 
 /** The last `ui.render` the backend pushed, kept so a late listener can replay it. */
 let lastPayload: unknown = null;
@@ -34,6 +35,24 @@ window.piSDK?.onMessage((payload) => {
   const msg = payload as { event?: string } | null;
   if (msg?.event !== 'ui.render') return;
   lastPayload = payload;
+  // A push that EMPTIES the bucket — the conversation switched to one with
+  // nothing open — must leave the current renderer: nothing is open any more.
+  // The renderers ignore pathless pushes by contract, so the dispatcher (which
+  // owns dispatching) reloads onto the empty state. Only when something was
+  // actually mounted, or the very first boot push of an empty viewer would
+  // reload for nothing.
+  const data = (payload as { data?: { tabs?: unknown; activePath?: unknown } } | null)?.data;
+  if (
+    data &&
+    Array.isArray(data.tabs) &&
+    data.tabs.length === 0 &&
+    !data.activePath &&
+    (window as unknown as { __PI_OPEN_PATH__?: string }).__PI_OPEN_PATH__
+  ) {
+    persistPendingPath('');
+    location.reload();
+    return;
+  }
   for (const w of waiters.splice(0)) w(payload);
 });
 
@@ -66,6 +85,11 @@ async function pullState(): Promise<unknown> {
 }
 
 void (async () => {
+  // The document tab strip mounts before anything else: it registers its
+  // `ui.render` listener synchronously, so the boot pull below (and every
+  // later bucket push) redraws it. Renderers own #root beneath it.
+  mountTabsBar();
+
   // A reload carries no `ui.render` — the host only sends one when the panel
   // MOUNTS, and this panel never unmounted. So the path the previous load
   // recorded is the only source, and we do not wait for a fresh one.

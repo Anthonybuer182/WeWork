@@ -186,6 +186,14 @@ let appBooted = false;
 let currentPath: string | null = null;
 const openDocxListeners = new Set<(result: unknown) => void>();
 
+/** Tell the backend which document the editor now holds. `ensureDocxActive`
+ *  on the backend waits for the target path to be announced, so a tab switch
+ *  (or a panel reload for another format) can never race a queued command onto
+ *  the wrong editor. Redundant announcements are harmless. */
+function announceMcpReady(): void {
+  void backend('mcp.ready', { path: currentPath ?? '' }).catch(() => undefined);
+}
+
 window.piSDK?.onMessage((payload) => {
   const msg = payload as { event?: string; data?: { path?: string } } | null;
   if (msg?.event !== 'ui.render') return;
@@ -220,6 +228,9 @@ window.piSDK?.onMessage((payload) => {
   void openDocxPath(path)
     .then((result) => {
       currentPath = path;
+      // Announce before the listeners fire: the backend may unblock a queued
+      // command that opens more documents behind this one.
+      announceMcpReady();
       for (const h of openDocxListeners) {
         try {
           h(result);
@@ -335,7 +346,12 @@ export function installDesktopShim(): void {
       const path = await takePendingPath();
       if (!path) return null;
       try {
-        return await openDocxPath(path);
+        const result = await openDocxPath(path);
+        // Boot announcement — the editor now holds `path` (same signal the
+        // in-place switch sends; the bridge's own signalMcpReady carries the
+        // same value, whichever lands first).
+        announceMcpReady();
+        return result;
       } catch (err) {
         console.error('[desktop-shim] open failed:', err);
         return null;
@@ -464,7 +480,11 @@ export function installDesktopShim(): void {
       void backend('mcp.result', result).catch(() => undefined);
     },
     signalMcpReady: () => {
-      void backend('mcp.ready', {}).catch(() => undefined);
+      // Announce WHICH document is loaded — the backend's multi-doc
+      // `ensureDocxActive` gates on it. `currentPath` is set by the time the
+      // bridge signals (takePendingPath resolved during App boot); an empty
+      // string means no document and is ignored backend-side.
+      announceMcpReady();
     },
     zoteroCommand: async () => ({ ok: false }),
     onZoteroRequest: () => () => undefined,
