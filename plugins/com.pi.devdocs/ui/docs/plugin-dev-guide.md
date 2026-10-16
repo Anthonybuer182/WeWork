@@ -574,6 +574,8 @@ await piSDK.request('storage.get', { key: 'x' });
 
 一个插件可以有多块面板，各自在图标列里有一个按钮。`panelId` 由宿主注入，你只要在 `ctx.send` 时选对收件人。`keepAlive` 决定切走时面板保不保活（`always` / `lru` 默认 / `never`）。左侧栏的面板建议 `keepAlive: "always"`——左右两侧共享一个只保留 2 个的 LRU 池，左侧面板用 `lru` 会被右侧面板挤掉、状态全丢。
 
+`scope` 决定面板的标签跟不跟会话走（`global` 默认 / `session`）。展示"这个会话的产物"的面板（agent 开的网页、正在讨论的文档）声明 `session`：切会话时它的标签连同打开参数一起收进那个会话，切回来原样恢复——并发会话之间不会互相抢"当前文档"。跨会话的工作台面板（待办、邮件）保持默认。注意：`session` 只是标签归属和参数恢复；引擎/文档本身仍是单实例（当前会话可见的那份），多实例是后续版本的事。
+
 ### 主题适配
 
 宿主往面板 `<html>` 上注入一组 CSS 变量（`--background` / `--foreground` / `--card` / `--border` / `--radius` / `--font-sans` 等）。前五个的值是 **Tailwind 风格的 HSL 分量**（如 `222 19% 7%`，不带 `hsl()`），所以颜色必须写成 `hsl(var(--background, 222 19% 7%))` ——分量不是颜色，直接 `var(--background)` 会让整条声明失效、面板变成透明底。`var()` 里的兜底分量保证注入前后都正确。`--radius` / `--font-sans` 是完整值，直接 `var()` 引用。
@@ -904,6 +906,7 @@ node scripts/build-market.mjs --out ./dist-market
 | `entry` | ✅ 面板的 HTML 页面，相对插件根目录 |
 | `icon` | 写 `./assets/x.svg` 是自带文件，写 `calendar` 是系统图标。不写就继承插件品牌图标 |
 | `keepAlive` | `always` / `lru`（默认）/ `never` — 切走时保活策略 |
+| `scope` | `global`（默认）/ `session` — 面板标签跟不跟会话走；`session` 的标签和打开参数随会话切换收起/恢复 |
 | `hidden` | `true` 不上图标栏，仅 `panel.open` 可达 |
 | `region` | `left` / `right`（默认） |
 | `anchor` | `top`（默认）/ `bottom` — 在所属栏图标列里的位置 |

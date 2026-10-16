@@ -361,6 +361,7 @@ export class PluginRegistry {
         iconUrl: iconFileUrl(p.icon) ?? (p.icon ? undefined : pluginIconUrl),
         hidden: p.hidden === true,
         keepAlive: p.keepAlive,
+        scope: p.scope,
         region: p.region,
         anchor: p.anchor,
         order: p.order,

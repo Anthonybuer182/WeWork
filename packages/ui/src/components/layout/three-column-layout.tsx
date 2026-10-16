@@ -2,15 +2,30 @@
 
 import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { getHostChrome, DRAG, NO_DRAG, WindowControls } from './title-bar';
 
 interface ThreeColumnLayoutProps {
   leftSidebar: ReactNode;
   centerPanel: ReactNode;
   rightPanel: ReactNode;
-  /** Content for the top bar left section (workspace controls). Shown in sidebar column when sidebar is open. */
-  topLeftContent?: ReactNode;
+  /**
+   * Header band segment over the left column (workspace controls). Rendered
+   * only while the sidebar is open — when it is closed the app is expected
+   * to pass the same content as `centerHeader`, which then carries the
+   * traffic-light inset.
+   */
+  leftHeader?: ReactNode;
+  /** Header band segment over the centre column (future: session title). */
+  centerHeader?: ReactNode;
+  /** Header band segment over the right column (the panel tab strip). */
+  rightHeader?: ReactNode;
+  /**
+   * Pinned at the far right of the header band, IN FLOW — the tab strip is
+   * confined to the right column's segment, so no number of tabs can push
+   * this out. It is also the only affordance that re-opens a collapsed
+   * column, which is why it must never disappear.
+   */
+  headerTrailing?: ReactNode;
   /** Callback when right panel width changes (after drag/arrow-key resize finishes). */
   onRightWidthChange?: (width: number) => void;
   /** Callback when left sidebar width changes (after drag/arrow-key resize finishes). */
@@ -31,11 +46,27 @@ interface ThreeColumnLayoutProps {
   centerPanelOpen?: boolean;
 }
 
+/**
+ * Three-column workbench layout with a partitioned header band.
+ *
+ * The band is NOT a separate title bar floating above the columns: each
+ * column owns a header segment sized by the SAME width state that drives its
+ * body. That is what lets the column dividers run unbroken from the very top
+ * — the band's divider continuations sit at the same x positions as the body
+ * handles, because both come from one `currentLeftWidth`/`currentRightWidth`.
+ *
+ * On desktop the band is the window drag region (`-webkit-app-region` is not
+ * a Tailwind utility and would be purged from the build — it must be inline
+ * styles, see title-bar.tsx). Interactive segments opt out with NO_DRAG.
+ */
 export function ThreeColumnLayout({
   leftSidebar,
   centerPanel,
   rightPanel,
-  topLeftContent,
+  leftHeader,
+  centerHeader,
+  rightHeader,
+  headerTrailing,
   onRightWidthChange,
   onLeftWidthChange,
   leftWidth = 260,
@@ -56,6 +87,25 @@ export function ThreeColumnLayout({
   const rightWidthRef = useRef(currentRightWidth);
   const onLeftWidthChangeRef = useRef(onLeftWidthChange);
   const onRightWidthChangeRef = useRef(onRightWidthChange);
+
+  const chrome = getHostChrome();
+  const draggable = chrome.platform !== 'web';
+
+  // The trailing zone (layout toggles) is pinned absolutely at the band's
+  // top-right — in flow it would eat its 100-odd px out of the flex-1 centre
+  // segment and break the divider alignment with the body. Segments that sit
+  // at the band's right edge reserve its measured width instead.
+  const trailingRef = useRef<HTMLDivElement>(null);
+  const [trailingWidth, setTrailingWidth] = useState(0);
+  useEffect(() => {
+    const el = trailingRef.current;
+    if (!el) return;
+    const measure = () => setTrailingWidth(el.getBoundingClientRect().width);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Keep refs in sync. During a drag the refs are also written directly by the
   // handlers below so that rapid events accumulate correctly even when React
@@ -141,124 +191,172 @@ export function ThreeColumnLayout({
   }, [dragging, handleMouseMove, handleMouseUp]);
 
   return (
-    <div ref={containerRef} className="flex flex-1 overflow-hidden">
-      {/* ============== Left + Center column ============== */}
+    <div ref={containerRef} className="flex flex-1 flex-col overflow-hidden">
+      {/* ============ Header band ============ */}
       <div
-        className={cn(
-          'flex flex-col min-w-0 overflow-hidden',
-          // Centre hidden with the right panel absorbing the space: shrink to
-          // just the sidebar. Two `flex-1` siblings would split the free
-          // width instead of handing it all over.
-          rightTakesCenter ? 'flex-none' : 'flex-1',
-        )}
+        className="relative flex h-11 shrink-0 select-none items-stretch border-b bg-background"
+        data-testid="header-band"
+        style={draggable ? DRAG : undefined}
       >
-        {/* Top bar */}
-        {/* Legacy top bar. Apps that render a full-width <TitleBar/> in the
-            AppShell above pass no topLeftContent, and this bar disappears —
-            which also removes its overlap with the right resize handle. */}
-        {topLeftContent && (
-        <div className="flex h-12 shrink-0 items-center border-b bg-background">
-          {sidebarOpen ? (
-            <>
-              <div
-                style={{ width: currentLeftWidth }}
-                className="flex-shrink-0 overflow-hidden h-full"
-              >
-                <div className="flex items-center gap-2 px-4 h-full">
-                  {topLeftContent}
+        {sidebarOpen && (
+          <>
+            <div
+              className="flex h-full min-w-0 shrink-0 items-center overflow-hidden border-r"
+              style={{ width: currentLeftWidth, paddingLeft: chrome.insetLeft }}
+            >
+              {leftHeader != null && (
+                <div className="flex min-w-0 items-center gap-0.5" style={NO_DRAG}>
+                  {leftHeader}
                 </div>
-              </div>
-              <div className="flex-1 h-full" />
-            </>
-          ) : (
-            <div className="flex-1 flex items-center gap-2 px-4">
-              {topLeftContent}
+              )}
             </div>
-          )}
-        </div>
+            {/* Left divider continuation — same x as the body separator. */}
+            <div className="w-1 shrink-0" aria-hidden />
+          </>
         )}
-
-        {/* Sidebar + Center */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Hidden, not unmounted, when collapsed — same reasoning as the
-              centre column below. The sidebar hosts the left PanelHost, whose
-              keepAlive:'always' panels (session list, file tree, settings
-              forms) must survive a collapse/expand cycle with their state.
-              Unmounting here silently defeated that policy. The resize handle
-              is chrome, not state, so it still goes away. */}
+        {!rightTakesCenter && (
           <div
-            style={sidebarOpen ? { width: currentLeftWidth } : undefined}
-            className={cn(
-              'flex-shrink-0 overflow-hidden border-r',
-              !sidebarOpen && 'hidden',
+            className="flex h-full min-w-0 flex-1 items-center overflow-hidden"
+            style={{
+              paddingLeft: sidebarOpen ? 0 : chrome.insetLeft,
+              // Right panel closed → this segment reaches the band's right
+              // edge, where the toggles zone sits on top of it.
+              paddingRight: rightPanelOpen ? 0 : trailingWidth,
+            }}
+          >
+            {centerHeader != null && (
+              <div className="flex min-w-0 items-center gap-0.5" style={NO_DRAG}>
+                {centerHeader}
+              </div>
             )}
-          >
-            {leftSidebar}
           </div>
-          {sidebarOpen && (
-            <Separator
-              orientation="vertical"
-              role="separator"
-              tabIndex={0}
-              aria-label="Resize sidebar"
-              aria-valuenow={currentLeftWidth}
-              aria-valuemin={minLeftWidth}
-              aria-valuemax={maxLeftWidth}
-              aria-orientation="vertical"
-              className="w-1 cursor-col-resize hover:bg-primary/50 transition-colors"
-              onMouseDown={() => setDragging('left')}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowLeft') handleKeyboardResize('left', -10);
-                if (e.key === 'ArrowRight') handleKeyboardResize('left', 10);
-              }}
-            />
-          )}
-          {/* Hidden, not unmounted: the centre column owns the composer, and a
-              plugin panel can trigger a send from fullscreen (`chat.send`).
-              Unmounting would take that path with it. */}
+        )}
+        {/* Right divider continuation — same 8px strip as the body handle. */}
+        {rightPanelOpen && !rightTakesCenter && <div className="w-2 shrink-0 bg-border" aria-hidden />}
+        {rightPanelOpen && (
           <div
-            className={cn('flex-1 min-w-0 overflow-hidden', !centerPanelOpen && 'hidden')}
+            className={cn(
+              'flex h-full min-w-0 items-stretch overflow-hidden border-l',
+              rightTakesCenter ? 'flex-1' : 'shrink-0',
+            )}
+            style={{
+              width: rightTakesCenter ? undefined : currentRightWidth,
+              paddingLeft: rightTakesCenter && !sidebarOpen ? chrome.insetLeft : 0,
+              // The toggles zone sits over this segment's right end.
+              paddingRight: trailingWidth,
+            }}
           >
-            {centerPanel}
+            {rightHeader != null && (
+              <div className="flex h-full min-w-0 flex-1 items-stretch" style={NO_DRAG}>
+                {rightHeader}
+              </div>
+            )}
           </div>
+        )}
+        <div
+          ref={trailingRef}
+          className="absolute inset-y-0 right-0 z-10 flex shrink-0 items-center gap-1 px-2"
+          style={NO_DRAG}
+          data-testid="header-trailing"
+        >
+          {headerTrailing}
+          {chrome.customControls && <WindowControls />}
         </div>
       </div>
 
-      {/* ============== Right column ============== */}
-      {rightPanelOpen ? (
-        <>
-          {!rightTakesCenter ? (
-          <div
-            className="relative flex-shrink-0 cursor-col-resize group"
-            style={{ width: '8px' }}
-            onMouseDown={() => setDragging('right')}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') handleKeyboardResize('right', -10);
-              if (e.key === 'ArrowRight') handleKeyboardResize('right', 10);
-            }}
-            role="separator"
-            tabIndex={0}
-            aria-label="Resize preview panel"
-            aria-valuenow={currentRightWidth}
-            aria-valuemin={minRightWidth}
-            aria-valuemax={maxRightWidth}
-            aria-orientation="vertical"
-          >
-            <div className="absolute inset-y-0 -left-2 -right-2 z-10" />
-            <div className="h-full w-full bg-border group-hover:bg-primary/50 group-active:bg-primary/30 transition-colors" />
-          </div>
-          ) : null}
-          <div
-            style={rightTakesCenter ? undefined : { width: currentRightWidth }}
-            className={cn(
-              'overflow-hidden border-l flex flex-col',
-              rightTakesCenter ? 'flex-1 min-w-0' : 'flex-shrink-0',
+      {/* ============ Body band ============ */}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        {/* ============== Left + Center column ============== */}
+        <div
+          className={cn(
+            'flex min-w-0 flex-col overflow-hidden',
+            // Centre hidden with the right panel absorbing the space: shrink to
+            // just the sidebar. Two `flex-1` siblings would split the free
+            // width instead of handing it all over.
+            rightTakesCenter ? 'flex-none' : 'flex-1',
+          )}
+        >
+          {/* Sidebar + Center */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Hidden, not unmounted, when collapsed — same reasoning as the
+                centre column below. The sidebar hosts the left PanelHost, whose
+                keepAlive:'always' panels (session list, file tree, settings
+                forms) must survive a collapse/expand cycle with their state.
+                Unmounting here silently defeated that policy. The resize handle
+                is chrome, not state, so it still goes away. */}
+            <div
+              style={sidebarOpen ? { width: currentLeftWidth } : undefined}
+              className={cn(
+                'flex-shrink-0 overflow-hidden border-r',
+                !sidebarOpen && 'hidden',
+              )}
+            >
+              {leftSidebar}
+            </div>
+            {sidebarOpen && (
+              <div
+                role="separator"
+                tabIndex={0}
+                aria-label="Resize sidebar"
+                aria-valuenow={currentLeftWidth}
+                aria-valuemin={minLeftWidth}
+                aria-valuemax={maxLeftWidth}
+                aria-orientation="vertical"
+                className="w-1 cursor-col-resize hover:bg-primary/50 transition-colors"
+                onMouseDown={() => setDragging('left')}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowLeft') handleKeyboardResize('left', -10);
+                  if (e.key === 'ArrowRight') handleKeyboardResize('left', 10);
+                }}
+              />
             )}
-          >
-            <div className="flex-1 overflow-hidden">{rightPanel}</div>
+            {/* Hidden, not unmounted: the centre column owns the composer, and a
+                plugin panel can trigger a send from fullscreen (`chat.send`).
+                Unmounting would take that path with it. */}
+            <div
+              className={cn('min-w-0 flex-1 overflow-hidden', !centerPanelOpen && 'hidden')}
+            >
+              {centerPanel}
+            </div>
           </div>
-        </>
-      ) : null}
+        </div>
+
+        {/* ============== Right column ============== */}
+        {rightPanelOpen ? (
+          <>
+            {!rightTakesCenter ? (
+              <div
+                className="group relative flex-shrink-0 cursor-col-resize"
+                style={{ width: '8px' }}
+                onMouseDown={() => setDragging('right')}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowLeft') handleKeyboardResize('right', -10);
+                  if (e.key === 'ArrowRight') handleKeyboardResize('right', 10);
+                }}
+                role="separator"
+                tabIndex={0}
+                aria-label="Resize preview panel"
+                aria-valuenow={currentRightWidth}
+                aria-valuemin={minRightWidth}
+                aria-valuemax={maxRightWidth}
+                aria-orientation="vertical"
+              >
+                <div className="absolute inset-y-0 -left-2 -right-2 z-10" />
+                <div className="h-full w-full bg-border group-hover:bg-primary/50 group-active:bg-primary/30 transition-colors" />
+              </div>
+            ) : null}
+            <div
+              style={rightTakesCenter ? undefined : { width: currentRightWidth }}
+              className={cn(
+                'overflow-hidden border-l flex flex-col',
+                rightTakesCenter ? 'min-w-0 flex-1' : 'flex-shrink-0',
+              )}
+            >
+              <div className="flex-1 overflow-hidden">{rightPanel}</div>
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

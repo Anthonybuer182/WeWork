@@ -16,7 +16,7 @@ import {
   getPluginBridge,
 } from '@pi/ui';
 import { AppShell } from '@pi/ui';
-import { TitleBar, LayoutToggles } from '@pi/ui';
+import { LayoutToggles, PanelTabs } from '@pi/ui';
 import { ThreeColumnLayout } from '@pi/ui';
 import { LeftSidebar } from '@pi/ui';
 import { CenterPanel } from '@pi/ui';
@@ -86,14 +86,17 @@ function AppContent() {
   useEffect(() => {
     if (!rightPanelOpen) return;
     const panelState = usePanelStore.getState();
-    // Scope to the right region: a left-sidebar view being active says nothing
-    // about what the right side should show.
     if (panelState.activePanelIds.right) return;
     const rightPanels = panelState.panels.filter((p) => p.region === 'right');
+    // Fallback must be a GLOBAL panel: a session panel opened here would
+    // arrive without its conversation's params (its file stays behind with
+    // the session it was opened in) and leak that session's artifact.
     const fallback =
-      panelState.recency.find((id) => rightPanels.some((p) => p.id === id)) ??
+      panelState.recency.find(
+        (id) => rightPanels.some((p) => p.id === id && p.scope !== 'session'),
+      ) ??
       rightPanels.find((p) => p.id === 'host:plugins')?.id ??
-      rightPanels[0]?.id;
+      rightPanels.find((p) => p.scope !== 'session')?.id;
     if (fallback) panelState.openPanel(fallback, { focus: true });
   }, [rightPanelOpen]);
 
@@ -195,6 +198,13 @@ function AppContent() {
     usePermissionStore.getState().sync(activeSessionId ?? 'default');
   }, [activeSessionId]);
 
+  // ── Session-scoped panels follow the conversation ──
+  // enterSession is idempotent; re-running it once the plugin registry has
+  // synced re-classifies tabs whose scope was unknown at first entry.
+  useEffect(() => {
+    usePanelStore.getState().enterSession(activeSessionId ?? null);
+  }, [activeSessionId, pluginsLoaded]);
+
   useEffect(() => {
     sdk.connect().then(() => {
       setConnectionStatus('connected');
@@ -224,13 +234,6 @@ function AppContent() {
   return (
     <TooltipProvider delayDuration={300}>
       <AppShell>
-        <TitleBar
-          leading={<WorkspaceDropdown />}
-          leadingAction={<WorkspaceCreateButton />}
-          // Match the left column so the "+" lands on the sidebar's edge line.
-          leadingWidth={sidebarOpen ? leftPanelWidth : undefined}
-          trailing={<LayoutToggles />}
-        />
         <ThreeColumnLayout
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
@@ -239,6 +242,28 @@ function AppContent() {
           onRightWidthChange={setRightPanelWidth}
           leftWidth={leftPanelWidth}
           onLeftWidthChange={setLeftPanelWidth}
+          // Workspace controls: in the left segment while the sidebar is open,
+          // otherwise in the centre segment's start (which then carries the
+          // traffic-light inset). The centre header is where the session
+          // title will live.
+          leftHeader={
+            sidebarOpen ? (
+              <>
+                <WorkspaceDropdown />
+                <WorkspaceCreateButton />
+              </>
+            ) : null
+          }
+          centerHeader={
+            !sidebarOpen ? (
+              <>
+                <WorkspaceDropdown />
+                <WorkspaceCreateButton />
+              </>
+            ) : null
+          }
+          rightHeader={<PanelTabs />}
+          headerTrailing={<LayoutToggles />}
           rightPanel={<PanelHost />}
           leftSidebar={
             <LeftSidebar>

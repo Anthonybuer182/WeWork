@@ -18,6 +18,17 @@ export type PanelRegion = 'left' | 'right';
 /** Where within its region's rail the panel sits. */
 export type PanelAnchor = 'top' | 'bottom';
 
+/**
+ * Whether the panel's tabs belong to a conversation or to the workbench.
+ *
+ * 'session' — the panel shows artifacts of the CURRENT conversation (browser
+ * pages the agent opened, the document under discussion). Its tabs are kept
+ * per session: switching sessions swaps them out and back, so concurrent
+ * sessions never fight over one "current document/page". 'global' (default) —
+ * a cross-session workbench panel (tasks, mail); its tabs stay put.
+ */
+export type PanelScope = 'session' | 'global';
+
 export interface PanelContribution {
   /** Unique within the plugin; also the `panelId` in the panel↔backend protocol. */
   id: string;
@@ -44,6 +55,8 @@ export interface PanelContribution {
    */
   entry: string;
   keepAlive?: PanelKeepAlive;
+  /** Whether the panel's tabs follow the session. Defaults to 'global'. */
+  scope?: PanelScope;
   /**
    * Which sidebar column the panel lives in. Defaults to 'right'.
    *

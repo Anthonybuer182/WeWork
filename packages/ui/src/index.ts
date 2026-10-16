@@ -42,7 +42,7 @@ export { useMediaQuery } from './hooks/use-media-query';
 export { useKeyboardShortcut } from './hooks/use-keyboard-shortcut';
 export { useResizeObserver } from './hooks/use-resize-observer';
 
-export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel, RightPanel, TitleBar, LayoutToggles, getHostChrome } from './components/layout';
+export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel, RightPanel, LayoutToggles, getHostChrome } from './components/layout';
 export type { HostChrome, HostPlatform } from './components/layout';
 export { WorkspaceDropdown, WorkspaceCreateButton } from './components/workspace';
 export { SessionList, SessionItem, SessionCreateButton } from './components/session';
@@ -60,4 +60,5 @@ export { DeclarativeRenderer } from './components/plugins/declarative/declarativ
 export type { UiEventContext } from './components/plugins/declarative/declarative-renderer';
 export { PanelHost, PanelRail } from './components/panels/panel-host';
 export { PanelSlot } from './components/panels/panel-slot';
+export { PanelTabs, PanelTabMenu } from './components/panels/panel-tabs';
 export { panelIcon } from './components/panels/panel-icons';

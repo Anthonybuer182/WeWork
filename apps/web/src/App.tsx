@@ -10,7 +10,7 @@ import {
   usePanelStore,
 } from '@pi/ui';
 import { AppShell } from '@pi/ui';
-import { TitleBar, LayoutToggles } from '@pi/ui';
+import { LayoutToggles, PanelTabs } from '@pi/ui';
 import { ThreeColumnLayout } from '@pi/ui';
 import { LeftSidebar } from '@pi/ui';
 import { CenterPanel } from '@pi/ui';
@@ -76,13 +76,6 @@ function AppContent() {
   return (
     <TooltipProvider delayDuration={300}>
       <AppShell>
-        <TitleBar
-          leading={<WorkspaceDropdown />}
-          leadingAction={<WorkspaceCreateButton />}
-          // Match the left column so the "+" lands on the sidebar's edge line.
-          leadingWidth={sidebarOpen ? leftPanelWidth : undefined}
-          trailing={<LayoutToggles />}
-        />
         <ThreeColumnLayout
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
@@ -90,6 +83,27 @@ function AppContent() {
           onRightWidthChange={setRightPanelWidth}
           leftWidth={leftPanelWidth}
           onLeftWidthChange={setLeftPanelWidth}
+          // Workspace controls: in the left segment while the sidebar is open,
+          // otherwise in the centre segment's start. The centre header is
+          // where the session title will live.
+          leftHeader={
+            sidebarOpen ? (
+              <>
+                <WorkspaceDropdown />
+                <WorkspaceCreateButton />
+              </>
+            ) : null
+          }
+          centerHeader={
+            !sidebarOpen ? (
+              <>
+                <WorkspaceDropdown />
+                <WorkspaceCreateButton />
+              </>
+            ) : null
+          }
+          rightHeader={<PanelTabs />}
+          headerTrailing={<LayoutToggles />}
           rightPanel={<PanelHost />}
           leftSidebar={
             <LeftSidebar>

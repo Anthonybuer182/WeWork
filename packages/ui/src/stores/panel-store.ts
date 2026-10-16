@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { PluginInfo, PluginPanelStatus, PanelRegion, PanelAnchor } from '@pi/types';
+import type { PluginInfo, PluginPanelStatus, PanelRegion, PanelAnchor, PanelScope } from '@pi/types';
 
 export type PanelKeepAlive = 'always' | 'lru' | 'never';
-// Region/anchor belong to the manifest contract (plugins declare them), so the
-// definitions live in @pi/types. Re-exported here because most call sites
-// import these from the store alongside PanelEntry.
-export type { PanelRegion, PanelAnchor };
+// Region/anchor/scope belong to the manifest contract (plugins declare them),
+// so the definitions live in @pi/types. Re-exported here because most call
+// sites import these from the store alongside PanelEntry.
+export type { PanelRegion, PanelAnchor, PanelScope };
+
+/** How many conversations keep their panel state when the user moves on. */
+const SESSIONS_KEPT = 8;
 
 /**
  * Unified panel entry — host panels and plugin panels share this shape.
@@ -32,12 +35,27 @@ export interface PanelEntry {
   /** Not shown on the rail; still openable via panel.open / events. */
   hidden?: boolean;
   keepAlive: PanelKeepAlive;
+  /** Whether the panel's tabs follow the session. Defaults to 'global'. */
+  scope?: PanelScope;
   /** Which sidebar column this panel renders in. */
   region: PanelRegion;
   /** Position within its region's rail. Defaults to 'top'. */
   anchor?: PanelAnchor;
   /** Sort order among panels sharing a region and anchor. */
   order?: number;
+}
+
+/**
+ * The session-scoped slice of one conversation: which session-scoped panels
+ * were open, which was focused, and their open params (e.g. which file the
+ * viewer held). Swapped out of `openPanelIds`/`params` on session switch and
+ * back in on re-entry — the strip the user sees is always "global tabs +
+ * the current conversation's tabs".
+ */
+export interface SessionPanelState {
+  tabs: string[];
+  active: string | null;
+  params: Record<string, Record<string, unknown> | undefined>;
 }
 
 export interface PanelRuntimeState {
@@ -76,10 +94,22 @@ interface PanelStoreState {
   /** Focused panel per region — always a member of that region's tab list. */
   activePanelIds: Record<PanelRegion, string | null>;
   /**
-   * Open tabs per region, in strip order. The tab strip renders this list;
-   * closing a panel removes it (and unmounts it once it leaves the LRU).
+   * Open tabs per region, in strip order — global tabs plus the CURRENT
+   * conversation's session tabs. The tab strip renders this list; closing a
+   * panel removes it (and unmounts it once it leaves the LRU).
    */
   openPanelIds: Record<PanelRegion, string[]>;
+  /**
+   * Which tab the context menu is open on, per region (null = closed). The
+   * strip lives in the header band while the menu row lives in the panel
+   * column body — the store is what lets them share one open/close state.
+   */
+  tabMenu: Record<PanelRegion, string | null>;
+  /** The conversation whose session tabs currently sit in `openPanelIds`. */
+  currentSessionId: string | null;
+  /** Per-conversation session-panel state, most recently entered tracked in `sessionOrder`. */
+  sessionPanels: Record<string, SessionPanelState>;
+  sessionOrder: string[];
   /** Panels currently mounted (visible or hidden-kept-alive). Flat; filter by region at render. */
   mountedIds: string[];
   /** Last-activation order for LRU bookkeeping (most recent first). */
@@ -109,6 +139,17 @@ interface PanelStoreState {
   closeTab: (region: PanelRegion, id: string) => void;
   /** Move a tab within its strip (drag reorder). */
   reorderTabs: (region: PanelRegion, from: number, to: number) => void;
+  /** Open the tab context menu on one tab (right-click). */
+  openTabMenu: (region: PanelRegion, id: string) => void;
+  /** Close the tab context menu. */
+  closeTabMenu: (region: PanelRegion) => void;
+  /**
+   * Switch conversations: stash the outgoing session's session-scoped tabs
+   * (with their params and focus), restore the incoming one's. Global tabs
+   * never move. Idempotent — safe to re-run after plugin registration, which
+   * re-classifies tabs whose scope was unknown at first call.
+   */
+  enterSession: (sessionId: string | null) => void;
   setPanelStatus: (status: PluginPanelStatus) => void;
   clearPending: (id: string) => void;
 }
@@ -235,6 +276,7 @@ function reconcile(
   prev: {
     activePanelIds: Record<PanelRegion, string | null>;
     openPanelIds: Record<PanelRegion, string[]>;
+    sessionPanels: Record<string, SessionPanelState>;
     recency: string[];
     pluginPanelsSynced: boolean;
   },
@@ -243,9 +285,32 @@ function reconcile(
   recency: string[];
   activePanelIds: Record<PanelRegion, string | null>;
   openPanelIds: Record<PanelRegion, string[]>;
+  sessionPanels: Record<string, SessionPanelState>;
   mountedIds: string[];
 } {
   const recency = prev.recency.filter((id) => panels.some((p) => p.id === id));
+
+  // Session panel state gets the same sync-gate treatment as the tab lists:
+  // prune a session's stashed tabs only once the registry is authoritative,
+  // and keep only tabs that still point at session-scoped panels (a panel
+  // that turned global, or vanished, has no business riding a conversation).
+  let sessionPanels = prev.sessionPanels;
+  if (prev.pluginPanelsSynced) {
+    sessionPanels = {};
+    for (const [sid, st] of Object.entries(prev.sessionPanels)) {
+      const tabs = st.tabs.filter((id) =>
+        panels.some((p) => p.id === id && p.scope === 'session'),
+      );
+      if (tabs.length === 0 && !st.active) continue;
+      const params: SessionPanelState['params'] = {};
+      for (const id of tabs) params[id] = st.params?.[id];
+      sessionPanels[sid] = {
+        tabs,
+        active: st.active != null && tabs.includes(st.active) ? st.active : null,
+        params,
+      };
+    }
+  }
 
   const pick = (region: PanelRegion): { active: string | null; tabs: string[] } => {
     const inRegion = regionPanels(panels, region);
@@ -276,6 +341,7 @@ function reconcile(
     recency,
     activePanelIds,
     openPanelIds,
+    sessionPanels,
     mountedIds: computeMounted(panels, activeIdSet(activePanelIds), openPanelIds, recency),
   };
 }
@@ -286,6 +352,10 @@ export const usePanelStore = create<PanelStoreState>()(
       panels: [],
       activePanelIds: EMPTY_ACTIVE,
       openPanelIds: EMPTY_TABS,
+      tabMenu: { left: null, right: null },
+      currentSessionId: null,
+      sessionPanels: {},
+      sessionOrder: [],
       mountedIds: [],
       recency: [],
       runtime: {},
@@ -319,6 +389,7 @@ export const usePanelStore = create<PanelStoreState>()(
                 // the page from scratch. (Host panels carry their own
                 // keepAlive and never route through this mapping.)
                 keepAlive: panel.keepAlive ?? 'lru',
+                scope: panel.scope,
                 region: panel.region ?? 'right',
                 anchor: panel.anchor,
                 order: panel.order,
@@ -414,6 +485,140 @@ export const usePanelStore = create<PanelStoreState>()(
           return { openPanelIds: { ...s.openPanelIds, [region]: tabs } };
         }),
 
+      openTabMenu: (region, id) =>
+        set((s) => ({ tabMenu: { ...s.tabMenu, [region]: id } })),
+
+      // Closing the menu target's tab closes the menu with it.
+      closeTabMenu: (region) =>
+        set((s) => (s.tabMenu[region] === null ? s : { tabMenu: { ...s.tabMenu, [region]: null } })),
+
+      /**
+       * Switch conversations. The session-scoped slice of the current strip
+       * (tabs, their params, focus) detaches into `sessionPanels`; the
+       * incoming session's slice attaches. Global tabs and global params
+       * never move. Idempotent: calling it for the session that is already
+       * current re-runs the detach/attach — which is exactly how a tab whose
+       * scope was unknown at boot gets classified once plugins register (the
+       * App re-enters on `pluginsLoaded`).
+       */
+      enterSession: (sessionId) =>
+        set((s) => {
+          const scopeOf = (id: string): 'session' | 'global' | 'unknown' => {
+            const p = s.panels.find((x) => x.id === id);
+            return p ? (p.scope === 'session' ? 'session' : 'global') : 'unknown';
+          };
+
+          // Before the plugin registry syncs, tabs of not-yet-registered
+          // panels are unclassifiable. Running the swap then would stash a
+          // half-read strip — worst case an EMPTY stash overwriting the
+          // persisted one (params are not persisted, so they cannot be
+          // recovered). Defer the whole swap: the App re-enters once the
+          // registry has synced, and reconcile has pruned genuinely dead ids
+          // by then, so the deferred run classifies cleanly.
+          const stripIds = [...s.openPanelIds.left, ...s.openPanelIds.right];
+          if (!s.pluginPanelsSynced && stripIds.some((id) => scopeOf(id) === 'unknown')) {
+            const order = [sessionId, s.currentSessionId, ...s.sessionOrder].filter(
+              (id): id is string => id !== null,
+            );
+            return { currentSessionId: sessionId, sessionOrder: [...new Set(order)] };
+          }
+
+          const sessionPanels = { ...s.sessionPanels };
+          const params = { ...s.params };
+
+          // ── Stash: the outgoing conversation takes its slice with it. ──
+          if (s.currentSessionId !== null) {
+            const stashTabs: string[] = [];
+            const stashParams: SessionPanelState['params'] = {};
+            for (const region of ['left', 'right'] as PanelRegion[]) {
+              for (const id of s.openPanelIds[region]) {
+                // Only KNOWN session panels detach: an unknown id (plugin not
+                // registered yet) may be global (tasks/mail) — stashing it
+                // here would pin a global panel to one conversation.
+                if (scopeOf(id) !== 'session') continue;
+                stashTabs.push(id);
+                stashParams[id] = params[id];
+                delete params[id];
+              }
+            }
+            const activeRight = s.activePanelIds.right;
+            // Merge over the previous stash, never clobbering with undefined:
+            // `params` is in-memory only, so an idempotent re-entry after a
+            // reload would otherwise wipe the persisted file path of an open
+            // tab (the round trip loses exactly what persistence keeps).
+            const prevStash = sessionPanels[s.currentSessionId];
+            const mergedParams: SessionPanelState['params'] = { ...(prevStash?.params ?? {}) };
+            for (const [k, v] of Object.entries(stashParams)) {
+              if (v !== undefined) mergedParams[k] = v;
+            }
+            // A tab closed since the last stash takes its params with it.
+            for (const k of Object.keys(mergedParams)) {
+              if (!stashTabs.includes(k)) delete mergedParams[k];
+            }
+            sessionPanels[s.currentSessionId] = {
+              tabs: stashTabs,
+              active:
+                activeRight && scopeOf(activeRight) === 'session' ? activeRight : null,
+              params: mergedParams,
+            };
+          }
+
+          // ── Restore: the incoming conversation's slice attaches. ──
+          // First detach the outgoing session's tabs from the strip (the
+          // stash above copied them; here they leave) — global tabs stay put.
+          const incoming = sessionId !== null ? sessionPanels[sessionId] : undefined;
+          const openPanelIds = { ...s.openPanelIds };
+          for (const region of ['left', 'right'] as PanelRegion[]) {
+            openPanelIds[region] = s.openPanelIds[region].filter(
+              (id) => scopeOf(id) !== 'session',
+            );
+          }
+          if (incoming) {
+            for (const id of incoming.tabs) {
+              const p = s.panels.find((x) => x.id === id);
+              const region: PanelRegion = p?.region ?? 'right';
+              if (!openPanelIds[region].includes(id)) {
+                openPanelIds[region] = [...openPanelIds[region], id];
+              }
+              if (incoming.params?.[id] !== undefined) params[id] = incoming.params[id];
+            }
+          }
+
+          // ── Focus: the conversation you return to is the one you left. ──
+          const activePanelIds = { ...s.activePanelIds };
+          if (incoming?.active != null && openPanelIds.right.includes(incoming.active)) {
+            activePanelIds.right = incoming.active;
+          } else if (
+            s.activePanelIds.right != null &&
+            !openPanelIds.right.includes(s.activePanelIds.right)
+          ) {
+            // The focused tab left with the outgoing session — fall to the
+            // last remaining tab; null lets the column-open effect seed a
+            // global fallback.
+            activePanelIds.right =
+              openPanelIds.right[openPanelIds.right.length - 1] ?? null;
+          }
+
+          // ── Bookkeeping: recency of entry bounds the per-session state. ──
+          const order = [sessionId, s.currentSessionId, ...s.sessionOrder]
+            .filter((id): id is string => id !== null);
+          const sessionOrder = [...new Set(order)];
+          const keep = new Set(sessionOrder.slice(0, SESSIONS_KEPT));
+          for (const sid of Object.keys(sessionPanels)) {
+            if (!keep.has(sid)) delete sessionPanels[sid];
+          }
+
+          return {
+            currentSessionId: sessionId,
+            sessionPanels,
+            sessionOrder,
+            openPanelIds,
+            activePanelIds,
+            params,
+            mountedIds: computeMounted(s.panels, activeIdSet(activePanelIds), openPanelIds, s.recency),
+          };
+        }),
+
       setPanelStatus: (status) =>
         set((s) => {
           const id = status.panelId
@@ -442,18 +647,33 @@ export const usePanelStore = create<PanelStoreState>()(
     }),
     {
       name: 'pi-panel-storage',
-      version: 3,
+      version: 4,
       partialize: (state) => ({
         activePanelIds: state.activePanelIds,
         openPanelIds: state.openPanelIds,
+        currentSessionId: state.currentSessionId,
+        sessionPanels: state.sessionPanels,
+        sessionOrder: state.sessionOrder,
       }),
       migrate: (persisted) => {
         const p = (persisted ?? {}) as {
           activePanelId?: string | null;
           activePanelIds?: Record<PanelRegion, string | null>;
+          openPanelIds?: Record<PanelRegion, string[]>;
+          sessionPanels?: Record<string, SessionPanelState>;
+          sessionOrder?: string[];
         };
+        const sessionState = {
+          currentSessionId: null,
+          sessionPanels: p.sessionPanels ?? {},
+          sessionOrder: p.sessionOrder ?? [],
+        };
+        if (p.openPanelIds) {
+          // v3 → v4: same shape, sessions not tracked yet.
+          return { activePanelIds: p.activePanelIds, openPanelIds: p.openPanelIds, ...sessionState } as never;
+        }
         if (p.activePanelIds) {
-          // v2 → v3: the region's single active panel becomes its only tab.
+          // v2 → v4: the region's single active panel becomes its only tab.
           // Tabs pointing at since-uninstalled panels are pruned later, by the
           // reconcile that runs when the panel list registers.
           const ids = p.activePanelIds;
@@ -463,6 +683,7 @@ export const usePanelStore = create<PanelStoreState>()(
               left: ids.left ? [ids.left] : [],
               right: ids.right ? [ids.right] : [],
             },
+            ...sessionState,
           } as never;
         }
 
@@ -480,6 +701,7 @@ export const usePanelStore = create<PanelStoreState>()(
         return {
           activePanelIds: { left: null, right: id },
           openPanelIds: { left: [], right: id ? [id] : [] },
+          ...sessionState,
         } as never;
       },
     },

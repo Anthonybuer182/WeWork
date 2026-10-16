@@ -19,7 +19,8 @@
         "title": "文件查看器",
         "icon": "file",
         "entry": "./ui-dist/panel/index.html",
-        "keepAlive": "lru"
+        "keepAlive": "lru",
+        "scope": "session"
       }
     ],
     "tools": [

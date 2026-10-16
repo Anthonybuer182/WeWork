@@ -9,9 +9,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
  * `-webkit-app-region` is not a Tailwind utility and neither tailwind config
  * registers a plugin for it, so a class name would be silently purged from the
  * build (both configs scan source for class NAMES). It must be an inline style.
+ *
+ * Exported for the three-column layout, whose header band is the window drag
+ * region; interactive segments opt out with NO_DRAG.
  */
-const DRAG: CSSProperties = { WebkitAppRegion: 'drag' } as CSSProperties;
-const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
+export const DRAG: CSSProperties = { WebkitAppRegion: 'drag' } as CSSProperties;
+export const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
 
 export type HostPlatform = 'darwin' | 'win32' | 'linux' | 'web';
 
@@ -42,88 +45,6 @@ export function getHostChrome(): HostChrome {
   const api = (window as unknown as { electronAPI?: { chrome?: Partial<HostChrome> } }).electronAPI;
   if (!api?.chrome) return WEB_CHROME;
   return { ...WEB_CHROME, ...api.chrome };
-}
-
-interface TitleBarProps {
-  /** Omit to let the component read the host descriptor itself. */
-  chrome?: HostChrome;
-  /** Left-aligned content (workspace selector). */
-  leading?: ReactNode;
-  /** Rendered at the end of the leading section (the "+" action). */
-  leadingAction?: ReactNode;
-  /**
-   * Upper bound for the leading section — normally the left column's width.
-   * The section sizes to its content (the controls sit next to each other);
-   * this only clamps it, so a long workspace name truncates instead of
-   * pushing the trailing action past the sidebar's edge.
-   */
-  leadingWidth?: number;
-  /** Right-aligned content (layout toggles). */
-  trailing?: ReactNode;
-  className?: string;
-}
-
-/**
- * Full-width application title bar. Replaces the OS title bar on Electron and
- * acts as a plain header row on web.
- *
- * Interactive children sit in their own no-drag zones: a `drag` region is
- * treated by Chromium as a window-caption hit-test area and receives no mouse
- * events at all, so a bare button inside it would simply not be clickable.
- * The container around them stays draggable, so the gaps still move the window.
- */
-export function TitleBar({
-  chrome = getHostChrome(),
-  leading,
-  leadingAction,
-  leadingWidth,
-  trailing,
-  className,
-}: TitleBarProps) {
-  const draggable = chrome.platform !== 'web';
-
-  return (
-    <div
-      className={cn(
-        'flex h-11 shrink-0 items-center border-b bg-background select-none',
-        className,
-      )}
-      style={{
-        ...(draggable ? DRAG : undefined),
-        paddingRight: chrome.insetRight,
-      }}
-      data-testid="title-bar"
-    >
-      {(leading || leadingAction) && (
-        <div
-          className="flex shrink-0 items-center gap-0.5 min-w-0"
-          style={{
-            // max-width, not width: the controls stay tightly packed and this
-            // only stops them from crossing the sidebar's right edge.
-            maxWidth: leadingWidth,
-            paddingLeft: chrome.insetLeft + 12,
-            paddingRight: 8,
-          }}
-        >
-          {leading && (
-            <div className="min-w-0" style={NO_DRAG}>
-              {leading}
-            </div>
-          )}
-          {leadingAction && (
-            <div className="shrink-0" style={NO_DRAG}>
-              {leadingAction}
-            </div>
-          )}
-        </div>
-      )}
-      <div className="flex-1" />
-      <div className="flex items-center gap-1 px-2" style={NO_DRAG}>
-        {trailing}
-      </div>
-      {chrome.customControls && <WindowControls />}
-    </div>
-  );
 }
 
 function TitleBarButton({
@@ -230,8 +151,9 @@ export function LayoutToggles() {
   );
 }
 
-/** Self-drawn caption buttons for frameless platforms (Linux). */
-function WindowControls() {
+/** Self-drawn caption buttons for frameless platforms (Linux). Rendered by
+ *  the layout's header-trailing zone. */
+export function WindowControls() {
   const invoke = (channel: string) => {
     const api = (window as unknown as {
       electronAPI?: { invoke?: (c: string, ...a: unknown[]) => Promise<unknown> };

@@ -19,7 +19,8 @@
         "title": "浏览器",
         "icon": "globe",
         "entry": "./ui/index.html",
-        "keepAlive": "lru"
+        "keepAlive": "lru",
+        "scope": "session"
       }
     ],
     "tools": [

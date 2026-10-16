@@ -27,6 +27,8 @@ export interface PluginPanelInfo {
   /** Not shown on the rail; still openable via panel.open. */
   hidden?: boolean;
   keepAlive?: 'always' | 'lru' | 'never';
+  /** Whether the panel's tabs follow the session. Defaults to 'global'. */
+  scope?: import('./manifest.js').PanelScope;
   /** Sidebar column. Defaults to 'right'. */
   region?: PanelRegion;
   /** Position within the region's rail. Defaults to 'top'. */
