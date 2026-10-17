@@ -179,6 +179,22 @@ export class CapabilityHub {
       },
     });
 
+    // ── panel.close (requires contributing the panel) ──
+    // The closing counterpart of panel.open: a plugin collapsing its own
+    // split pane (the viewer's 取消拆分) has no other way back.
+    this.capabilities.set('panel.close', {
+      handler: ({ pluginId, params }) => {
+        const plugin = this.registry.get(pluginId);
+        const panels = plugin?.manifest.contributes?.panels ?? [];
+        const panelId = params.panelId ? String(params.panelId) : panels[0]?.id;
+        if (!panelId || !panels.some((p: { id: string }) => p.id === panelId)) {
+          throw new Error(`plugin "${pluginId}" does not contribute panel "${panelId}"`);
+        }
+        this.emitEvent({ type: 'panel-close', pluginId, panelId });
+        return { ok: true, panelId };
+      },
+    });
+
     // ── dialog.openFile / dialog.saveFile (always allowed) ──
     //
     // Deliberately unpermissioned, for the same reason `chat.send` is: the user

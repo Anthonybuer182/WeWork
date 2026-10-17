@@ -170,6 +170,12 @@ function AppContent() {
             else if (region === 'left') useUIStore.getState().setSidebarOpen(true);
           }
         }
+      } else if (event.type === 'panel-close') {
+        const target = event.panelId
+          ? `plugin:${event.pluginId}:${event.panelId}`
+          : usePanelStore.getState().panels.find((p) => p.source === event.pluginId)?.id;
+        const entry = target ? usePanelStore.getState().panels.find((p) => p.id === target) : undefined;
+        if (entry) usePanelStore.getState().closeTab(entry.region, entry.id);
       } else if (event.type === 'plugins-changed') {
         // Install/uninstall/enable/disable — refresh discovery + panels.
         usePluginStore.getState().loadPlugins();

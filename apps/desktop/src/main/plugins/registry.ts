@@ -365,6 +365,7 @@ export class PluginRegistry {
         region: p.region,
         anchor: p.anchor,
         order: p.order,
+        companion: p.companion,
       })),
       commands: (plugin.manifest.contributes?.commands ?? []).map((c) => ({
         name: c.name,

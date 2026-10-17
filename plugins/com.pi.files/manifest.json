@@ -20,7 +20,8 @@
         "icon": "file",
         "entry": "./ui-dist/panel/index.html",
         "keepAlive": "lru",
-        "scope": "session"
+        "scope": "session",
+        "companion": "viewer-pane"
       },
       {
         "id": "viewer-pane",

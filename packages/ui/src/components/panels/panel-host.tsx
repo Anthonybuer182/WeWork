@@ -99,11 +99,27 @@ export function PanelHost({
     // The focused pane always keeps a tile: if it fell beyond the capacity,
     // swap it with the last tiled pane. Rail clicks promote through the same
     // rule (rail click → setFocused → the focused pane is promoted here).
+    // A split pair counts as one unit: when the focused pane is a companion,
+    // its main panel keeps a tile too — a 向右拆分 that immediately minimizes
+    // the panel being split reads as the two sides swapping places.
     const focusedEntry = ordered.find((p) => p.id === focusedId);
-    if (focusedEntry && !tiled.includes(focusedEntry) && tiled.length > 0) {
-      const yielding = tiled[tiled.length - 1];
-      tiled = [...tiled.slice(0, -1), focusedEntry];
-      minimized = minimized.map((p) => (p.id === focusedEntry.id ? yielding : p));
+    const mainEntry = focusedEntry?.panelId
+      ? panels.find((p) => p.source === focusedEntry.source && p.companion === focusedEntry.panelId)
+      : undefined;
+    const mustTile = [focusedEntry, mainEntry].filter(
+      (p): p is PanelEntry => Boolean(p) && ordered.some((x) => x.id === p!.id),
+    );
+    for (const entry of mustTile) {
+      if (tiled.some((p) => p.id === entry.id)) continue;
+      if (tiled.length === 0) {
+        tiled = [entry];
+        minimized = minimized.filter((p) => p.id !== entry.id);
+        continue;
+      }
+      const yielding = [...tiled].reverse().find((p) => !mustTile.some((m) => m.id === p.id));
+      if (!yielding) break; // every tiled pane is part of the pair — nothing to yield
+      tiled = [...tiled.filter((p) => p.id !== yielding.id), entry];
+      minimized = minimized.map((p) => (p.id === entry.id ? yielding : p));
     }
   }
 

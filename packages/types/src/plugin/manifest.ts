@@ -69,6 +69,13 @@ export interface PanelContribution {
   anchor?: PanelAnchor;
   /** Sort order among panels sharing a region and anchor. Defaults to 0. */
   order?: number;
+  /**
+   * This panel's split companion (VS Code's 向右拆分): another panel id of the
+   * same plugin that opens BESIDE this one — the multi-tab counterpart of the
+   * "split editor" gesture. Declared on the MAIN panel; the companion itself
+   * is usually `hidden` (reachable only through the split).
+   */
+  companion?: string;
 }
 
 /**

@@ -88,14 +88,16 @@ function baseName(p: string): string {
 }
 
 /** The doc-tab context menu — a NATIVE popup (OS-level, same as the
- *  browser's tab menu): floats above everything, styled by the system. */
+ *  browser's tab menu): floats above everything, styled by the system.
+ *  No unsplit item: closing the pane's tabs (their ×) collapses the split. */
 function openTabMenu(path: string, at: { x: number; y: number }): void {
-  const items = [{ id: 'split-right', label: '向右拆分' }];
-  void window.piSDK?.showPopupMenu?.(items, at.x, at.y).then((picked) => {
-    if (picked === 'split-right') {
-      void window.piSDK?.request('file.splitRight', { path });
-    }
-  });
+  void window.piSDK
+    ?.showPopupMenu?.([{ id: 'split-right', label: '向右拆分' }], at.x, at.y)
+    .then((picked) => {
+      if (picked === 'split-right') {
+        void window.piSDK?.request('file.splitRight', { path });
+      }
+    });
 }
 
 function renderStrip(tabs: string[], activePath: string): void {
@@ -149,6 +151,7 @@ function renderStrip(tabs: string[], activePath: string): void {
     });
     tab.addEventListener('dblclick', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       openTabMenu(path, { x: e.clientX, y: e.clientY });
     });
     bar.appendChild(tab);

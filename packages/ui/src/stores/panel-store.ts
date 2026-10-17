@@ -43,6 +43,8 @@ export interface PanelEntry {
   anchor?: PanelAnchor;
   /** Sort order among panels sharing a region and anchor. */
   order?: number;
+  /** This panel's split companion (see PluginPanelInfo.companion). */
+  companion?: string;
 }
 
 /**
@@ -330,6 +332,7 @@ export const usePanelStore = create<PanelStoreState>()(
                 region: panel.region ?? 'right',
                 anchor: panel.anchor,
                 order: panel.order,
+                companion: panel.companion,
               })),
           );
           const hostPanels = s.panels.filter((p) => p.source === 'host');
@@ -363,18 +366,39 @@ export const usePanelStore = create<PanelStoreState>()(
           // selection is inserted at its list-order position (pane order
           // follows the plugin list's order).
           const selected = s.openPanelIds[region];
+
+          // Split-companion adjacency (VS Code's 向右拆分): opening the
+          // companion of an already-selected panel re-seats it RIGHT AFTER its
+          // main panel in the arrangement — never appended at the row's end —
+          // and clears the region's zoom, which would otherwise keep the new
+          // pane hidden off-layout.
+          const entry = s.panels.find((p) => p.id === id);
+          const mainPanel = entry?.panelId
+            ? s.panels.find((p) => p.companion === entry.panelId)
+            : undefined;
+          let order = s.panelOrder[region];
+          let zoomedId = s.zoomedId;
+          if (mainPanel && selected.includes(mainPanel.id)) {
+            const stripped = order.filter((x) => x !== id);
+            const mainIdx = stripped.indexOf(mainPanel.id);
+            if (mainIdx !== -1) {
+              order = [...stripped.slice(0, mainIdx + 1), id, ...stripped.slice(mainIdx + 1)];
+            }
+            if (zoomedId[region]) zoomedId = { ...zoomedId, [region]: null };
+          }
+
           if (selected.includes(id)) {
             delete runtime[id];
             return {
               focusedId: { ...s.focusedId, [region]: id },
-              zoomedId: { ...s.zoomedId, [region]: s.zoomedId[region] },
+              zoomedId,
+              panelOrder: { ...s.panelOrder, [region]: order },
               recency,
               runtime,
               params,
               activationNonces: { ...s.activationNonces, [id]: (s.activationNonces[id] ?? 0) + 1 },
             };
           }
-          const order = s.panelOrder[region];
           const orderIdx = order.indexOf(id);
           const openPanelIds = { ...s.openPanelIds };
           if (orderIdx === -1) {
@@ -396,6 +420,8 @@ export const usePanelStore = create<PanelStoreState>()(
           return {
             focusedId,
             openPanelIds,
+            zoomedId,
+            panelOrder: { ...s.panelOrder, [region]: order },
             recency,
             runtime,
             params,

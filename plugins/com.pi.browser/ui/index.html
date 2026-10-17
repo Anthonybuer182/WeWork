@@ -440,14 +440,10 @@
         });
       })();
       // Native popup menu (OS-level — floats above the engine views, unlike
-      // any DOM dropdown in this page).
+      // any DOM dropdown in this page). No unsplit item: closing a split tab
+      // (its ×) collapses the split, so the menu only ever offers the split.
       function openTabMenu(tab) {
-        var inSplit = !!(state.split && (state.split[0] === tab.id || state.split[1] === tab.id));
-        var items = inSplit
-          ? [{ id: 'unsplit', label: '取消分屏' }]
-          : [{ id: 'split-right', label: '向右拆分' }];
-        window.piSDK.showPopupMenu(items, lastMouse.x, lastMouse.y).then(function (picked) {
-          if (picked === 'unsplit') { act('split.set', { tabs: null }); return; }
+        window.piSDK.showPopupMenu([{ id: 'split-right', label: '向右拆分' }], lastMouse.x, lastMouse.y).then(function (picked) {
           if (picked === 'split-right') {
             var right = (state.tabs.find(function (t) { return t.id !== tab.id && !t.evicted; }) || {}).id;
             if (right) act('split.set', { tabs: [tab.id, right], ratio: state.splitRatio });

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Maximize2, Minimize2, MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { showPopupMenu } from '@/lib/native-menu';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
 import { RailIcon } from './panel-rail';
 
@@ -56,11 +57,19 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
   // (with its `order` tiebreak) for entries the user has never arranged.
   // Hidden panels (openable only by the backend) are excluded — unless they
   // are selected: a displayed panel must always be reachable as an entry.
+  // EXCEPT a hidden split-companion whose main panel is also selected: the
+  // strip reads as one entry per plugin, and the companion is present as the
+  // pane beside its main (unsplit lives in the tab / in-panel menus).
   const selectedSet = new Set(selectedIds);
   const sorted = (() => {
     const orderIndex = new Map(panelOrder.map((id, i) => [id, i]));
     return panels
       .filter((p) => p.region === region && (!p.hidden || selectedSet.has(p.id)))
+      .filter((p) => {
+        if (!p.hidden || !p.panelId) return true;
+        const main = panels.find((q) => q.source === p.source && q.companion === p.panelId);
+        return !(main && selectedSet.has(main.id));
+      })
       .sort((a, b) => {
         const ia = orderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER;
         const ib = orderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER;
@@ -112,6 +121,35 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
     setDropTargetId(null);
   };
 
+  // ── Split (向右拆分) ──
+  // A panel may declare a companion (manifest `companion`): a hidden second
+  // panel with independent state that opens BESIDE this one — the multi-tab
+  // counterpart of VS Code's split-editor gesture. The companion resolves
+  // from either side of the pair: the main panel names it, the companion is
+  // found by reverse lookup.
+  const splitPairOf = (panel: PanelEntry): { main: PanelEntry; companion: PanelEntry } | null => {
+    if (panel.companion) {
+      const companion = panels.find((p) => p.source === panel.source && p.panelId === panel.companion);
+      if (companion) return { main: panel, companion };
+    }
+    if (panel.panelId) {
+      const main = panels.find((p) => p.source === panel.source && p.companion === panel.panelId);
+      if (main) return { main, companion: panel };
+    }
+    return null;
+  };
+
+  const openTabMenu = (panel: PanelEntry, at: { x: number; y: number }) => {
+    const pair = splitPairOf(panel);
+    if (!pair) return;
+    // No unsplit item — closing the pane's tabs (their ×) collapses the split,
+    // so a menu while the pane is open would only ever offer nothing.
+    if (selectedSet.has(pair.companion.id)) return;
+    void showPopupMenu([{ id: 'split-right', label: '向右拆分' }], at).then((picked) => {
+      if (picked === 'split-right') openPanel(pair.companion.id, { focus: true });
+    });
+  };
+
   const renderItem = (panel: PanelEntry) => {
     const id = panel.id;
     const selected = selectedSet.has(id);
@@ -143,6 +181,10 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
           // The tab is the tiled pane's zoom control (tiled panes draw no
           // header of their own — see PaneView).
           if (selected) toggleZoom(region, id);
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          openTabMenu(panel, { x: e.clientX, y: e.clientY });
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {

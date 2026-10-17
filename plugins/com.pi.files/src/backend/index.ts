@@ -127,6 +127,17 @@ function renderBucket(b: DocBucket, panelId: string = PANEL): boolean {
 /** The pane panel — a second, independent viewer beside the session's main one. */
 const PANE_PANEL = 'viewer-pane';
 
+/** Whether the pane is actually connected right now, probed over its port —
+ *  stateless, so a host-side restore after a restart is seen correctly (a
+ *  cached flag went stale exactly there). 'ui.ping' is ignored by the page. */
+function paneIsOpen(): boolean {
+  try {
+    return ctx.send(PANE_PANEL, 'ui.ping', {}) === true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The bucket a UI request addresses. The main viewer serves the session's
  * bucket; the pane panel has its OWN bucket beside it, so the split view's
@@ -136,15 +147,22 @@ function uiBucketKey(panelId?: string | null): string {
   return panelId === PANE_PANEL ? `${bucketKey()}::pane` : bucketKey();
 }
 
-/** Open (or focus) a document tab in a conversation's bucket. */
-function openFile(path: string, sessionId?: string | null, renderTo?: string): void {
+/** Open (or focus) a document tab in the bucket named by `key`. */
+function openFileInBucket(key: string, path: string, renderTo?: string): void {
   const p = String(path ?? '');
-  const b = bucketFor(bucketKey(sessionId));
+  const b = bucketFor(key);
   if (p) {
     const existing = b.tabs.findIndex((t) => samePath(t, p));
-    if (existing >= 0) b.tabs.splice(existing, 1);
-    b.tabs.push(p);
-    b.activePath = p;
+    if (existing >= 0) {
+      // Focus in place. Re-seating the tab to the end here (the old MRU
+      // behavior) made the strip reshuffle on every click of an inactive tab
+      // — with two docs that reads exactly as "the tabs swapped places".
+      // Strip order changes only through an explicit drag (file.reorderTab).
+      b.activePath = p;
+    } else {
+      b.tabs.push(p);
+      b.activePath = p;
+    }
     // Leaving the docs renderer (a format switch reloads the panel) invalidates
     // whatever the editor last announced. A docx target keeps the stale value —
     // the fast path in ensureDocxActive compares it against the TARGET, so a
@@ -153,6 +171,11 @@ function openFile(path: string, sessionId?: string | null, renderTo?: string): v
     if (ext !== 'docx' && ext !== 'docm') mcpReadyPath = null;
   }
   renderBucket(b, renderTo);
+}
+
+/** Open (or focus) a document tab in a conversation's bucket. */
+function openFile(path: string, sessionId?: string | null, renderTo?: string): void {
+  openFileInBucket(bucketKey(sessionId), path, renderTo);
 }
 
 /** Close a tab; closing the focused one falls focus to its left neighbour. */
@@ -714,6 +737,12 @@ async function onUiRequest(
       const path = String(params.path ?? '');
       if (!path) throw new Error('file.closeTab: path is required');
       closeTab(path, uiBucketKey(panelId), panelId ?? undefined);
+      // The pane's × IS the unsplit gesture now: when its last document
+      // closes, collapse the split — an emptied pane must not linger as a
+      // blank column with no way to dismiss it (it has no strip entry).
+      if (panelId === PANE_PANEL && bucketFor(uiBucketKey(panelId)).tabs.length === 0 && paneIsOpen()) {
+        await ctx.call('panel.close', { panelId: PANE_PANEL });
+      }
       return { ok: true };
     }
     case 'file.reorderTab': {
@@ -733,21 +762,18 @@ async function onUiRequest(
       return { ok: true, tabs: b.tabs };
     }
     case 'file.splitRight': {
-      // The strip's 向右拆分: open the pane panel — a second, independent
-      // viewer — beside this one with the clicked document loaded, for
-      // side-by-side comparison. Already the pane: there is nothing right of
-      // the right side.
+      // The strip's 向右拆分: the clicked document goes INTO the pane beside
+      // the main view. The main view's document never moves — the two sides
+      // must not swap. Pane already open: it simply takes the clicked doc.
       if (panelId === PANE_PANEL) return { ok: false, reason: 'already-pane' };
       const path = String(params.path ?? '');
       if (!path) throw new Error('file.splitRight: path is required');
-      // If the clicked doc IS the main view's current doc, switch the main
-      // view to a neighbour first — two copies of one document do not make a
-      // comparison.
-      const b = bucketFor(bucketKey());
-      if (samePath(b.activePath, path)) {
-        const idx = b.tabs.findIndex((t) => samePath(t, path));
-        const neighbour = b.tabs[idx + 1] ?? b.tabs[idx - 1];
-        if (neighbour) openFile(neighbour, bucketKey(), PANEL);
+      if (paneIsOpen()) {
+        openFileInBucket(uiBucketKey(PANE_PANEL), path, PANE_PANEL);
+        // A deselected-but-warm pane (closed from the strip, page still alive)
+        // must come back to the work area, not load invisibly.
+        await ctx.call('panel.open', { panelId: PANE_PANEL, focus: true });
+        return { ok: true };
       }
       await ctx.call('panel.open', {
         panelId: PANE_PANEL,

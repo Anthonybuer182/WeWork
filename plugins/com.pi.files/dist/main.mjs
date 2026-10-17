@@ -70644,22 +70644,37 @@ function renderBucket(b, panelId = PANEL) {
 }
 __name(renderBucket, "renderBucket");
 var PANE_PANEL = "viewer-pane";
+function paneIsOpen() {
+  try {
+    return ctx.send(PANE_PANEL, "ui.ping", {}) === true;
+  } catch {
+    return false;
+  }
+}
+__name(paneIsOpen, "paneIsOpen");
 function uiBucketKey(panelId) {
   return panelId === PANE_PANEL ? `${bucketKey()}::pane` : bucketKey();
 }
 __name(uiBucketKey, "uiBucketKey");
-function openFile(path, sessionId, renderTo) {
+function openFileInBucket(key, path, renderTo) {
   const p = String(path ?? "");
-  const b = bucketFor(bucketKey(sessionId));
+  const b = bucketFor(key);
   if (p) {
     const existing = b.tabs.findIndex((t) => samePath(t, p));
-    if (existing >= 0) b.tabs.splice(existing, 1);
-    b.tabs.push(p);
-    b.activePath = p;
+    if (existing >= 0) {
+      b.activePath = p;
+    } else {
+      b.tabs.push(p);
+      b.activePath = p;
+    }
     const ext = p.toLowerCase().split(".").pop() ?? "";
     if (ext !== "docx" && ext !== "docm") mcpReadyPath = null;
   }
   renderBucket(b, renderTo);
+}
+__name(openFileInBucket, "openFileInBucket");
+function openFile(path, sessionId, renderTo) {
+  openFileInBucket(bucketKey(sessionId), path, renderTo);
 }
 __name(openFile, "openFile");
 function closeTab(path, sessionId, renderTo) {
@@ -71059,6 +71074,9 @@ async function onUiRequest(method, params = {}, panelId) {
       const path = String(params.path ?? "");
       if (!path) throw new Error("file.closeTab: path is required");
       closeTab(path, uiBucketKey(panelId), panelId ?? void 0);
+      if (panelId === PANE_PANEL && bucketFor(uiBucketKey(panelId)).tabs.length === 0 && paneIsOpen()) {
+        await ctx.call("panel.close", { panelId: PANE_PANEL });
+      }
       return { ok: true };
     }
     case "file.reorderTab": {
@@ -71079,11 +71097,10 @@ async function onUiRequest(method, params = {}, panelId) {
       if (panelId === PANE_PANEL) return { ok: false, reason: "already-pane" };
       const path = String(params.path ?? "");
       if (!path) throw new Error("file.splitRight: path is required");
-      const b = bucketFor(bucketKey());
-      if (samePath(b.activePath, path)) {
-        const idx = b.tabs.findIndex((t) => samePath(t, path));
-        const neighbour = b.tabs[idx + 1] ?? b.tabs[idx - 1];
-        if (neighbour) openFile(neighbour, bucketKey(), PANEL);
+      if (paneIsOpen()) {
+        openFileInBucket(uiBucketKey(PANE_PANEL), path, PANE_PANEL);
+        await ctx.call("panel.open", { panelId: PANE_PANEL, focus: true });
+        return { ok: true };
       }
       await ctx.call("panel.open", {
         panelId: PANE_PANEL,
