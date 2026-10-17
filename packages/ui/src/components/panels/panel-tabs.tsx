@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { MoreHorizontal, X } from 'lucide-react';
+import { Maximize2, Minimize2, MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
 import { RailIcon } from './panel-rail';
@@ -20,7 +20,9 @@ const CONTROLS_RESERVE = 44;
  *  - click an unselected entry → it joins the work area (selected, focused);
  *  - click a selected entry → focus its pane (agent target);
  *  - hover a selected entry → [×] deselects it (its pane leaves the work
- *    area; state is kept warm for a while);
+ *    area; state is kept warm for a while), [⛶] zooms its pane to the full
+ *    column (double-click on the entry does the same — since the tiled panes
+ *    draw no header of their own, the tab is the zoom control's home);
  *  - drag an entry onto another to reorder the list — the work-area pane
  *    order follows the list order.
  *
@@ -40,6 +42,8 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
   const closeTab = usePanelStore((s) => s.closeTab);
   const setFocused = usePanelStore((s) => s.setFocused);
   const setPanelOrder = usePanelStore((s) => s.setPanelOrder);
+  const zoomedId = usePanelStore((s) => s.zoomedId[region]);
+  const toggleZoom = usePanelStore((s) => s.toggleZoom);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -112,6 +116,7 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
     const id = panel.id;
     const selected = selectedSet.has(id);
     const focused = focusedId === id;
+    const zoomed = zoomedId === id;
     const rt = runtime[id];
     const badge = rt?.badge;
     const visualIndex = sorted.findIndex((p) => p.id === id);
@@ -133,6 +138,11 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
         onClick={() => {
           if (selected) setFocused(region, id);
           else openPanel(id, { focus: true });
+        }}
+        onDoubleClick={() => {
+          // The tab is the tiled pane's zoom control (tiled panes draw no
+          // header of their own — see PaneView).
+          if (selected) toggleZoom(region, id);
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -184,11 +194,11 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
           'max-w-[176px]',
           selected
             ? cn(
-                'bg-accent text-accent-foreground shadow-sm',
-                focused && 'ring-1 ring-primary/60',
+                'bg-accent text-accent-foreground',
+                focused && 'ring-1 ring-foreground/25',
               )
             : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground/80',
-          dropTargetId === id && dragId !== null && dragId !== id && 'bg-primary/20 ring-1 ring-primary/40',
+          dropTargetId === id && dragId !== null && dragId !== id && 'bg-muted-foreground/20 ring-1 ring-muted-foreground/40',
           dragId === id && 'opacity-50',
           overflowed && 'hidden',
         )}
@@ -219,6 +229,29 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
             title="跟会话走的面板（切换会话时随会话切换）"
             className={cn('h-1.5 w-1.5 shrink-0 rounded-full', 'bg-primary/70')}
           />
+        )}
+        {/* Zoom: lives here because the tiled pane below draws no header
+            (its title would duplicate this entry). Hover reveals ⛶; a zoomed
+            pane keeps the restore button always visible. */}
+        {selected && (
+          <button
+            type="button"
+            aria-label={zoomed ? '还原窗格' : '放大窗格'}
+            title={zoomed ? '还原（其他窗格回到工作区；Esc 同效）' : '放大占满（其他窗格收成侧条）'}
+            data-panel-tab-zoom={id}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleZoom(region, id);
+            }}
+            onDoubleClick={(e) => e.stopPropagation()}
+            className={cn(
+              'shrink-0 rounded-sm p-0.5 transition-opacity hover:bg-accent-foreground/15',
+              zoomed ? 'opacity-80' : 'opacity-0',
+              'group-hover/entry:opacity-70',
+            )}
+          >
+            {zoomed ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          </button>
         )}
         {/* Deselect: only on selected entries, only on hover — an explicit,
             hard-to-hit-by-accident gesture. */}

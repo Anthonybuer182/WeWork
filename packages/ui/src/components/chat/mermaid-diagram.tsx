@@ -124,7 +124,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
         <div className="flex items-center justify-between px-3 py-1.5 bg-muted/60 border border-border rounded-t-md border-b-0">
           <span className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
             mermaid
-            <span className="text-[10px] font-normal italic normal-case tracking-normal text-amber-500">
+            <span className="text-[10px] font-normal italic normal-case tracking-normal text-muted-foreground">
               rendering...
             </span>
           </span>
@@ -134,7 +134,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
           >
             {copied ? (
               <>
-                <Check className="h-3 w-3 text-emerald-500" />
+                <Check className="h-3 w-3" />
                 Copied!
               </>
             ) : (
@@ -170,7 +170,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
           >
             {copied ? (
               <>
-                <Check className="h-3 w-3 text-emerald-500" />
+                <Check className="h-3 w-3" />
                 Copied!
               </>
             ) : (
@@ -216,7 +216,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
           >
             {copied ? (
               <>
-                <Check className="h-3 w-3 text-emerald-500" />
+                <Check className="h-3 w-3" />
                 Copied!
               </>
             ) : (

@@ -153,7 +153,7 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
               className="p-1 rounded hover:bg-muted"
               title="Open with system app"
             >
-              <ExternalLink className="h-3.5 w-3.5 text-blue-500" />
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           )}
           {!opensRightPanel && expandable && (

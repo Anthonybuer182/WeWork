@@ -24,10 +24,10 @@ const MIN_FRAC = 0.12;
  *
  *  - **Tiled**: as many panes as fit at MIN_PANE, shares draggable via the
  *    sashes (per pane, persisted); equal by default;
- *  - **Zoomed**: one pane takes the full column (its ⛶ / header double-
- *    click); every other selected pane collapses into a right-edge rail of
- *    icons. Clicking a rail icon promotes it into the tiled area — the
- *    focused tiled pane yields.
+ *  - **Zoomed**: one pane takes the full column (double-click its header
+ *    tab, or the tab's ⛶ button); every other selected pane collapses into
+ *    a right-edge rail of icons. Clicking a rail icon promotes it into the
+ *    tiled area — the focused tiled pane yields.
  *
  * Selected panes beyond the tile capacity are minimized into the rail
  * automatically; the focused pane always keeps a tile. Esc clears the zoom.

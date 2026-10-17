@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, memo } from 'react';
 import type { Message, ContentBlock, ThinkingBlock as ThinkingBlockType, ToolCallBlock, ToolResultBlock, ImageBlock, FileBlock, AssistantMessage, TokenUsage, ContextUsageInfo, MessageTiming } from '@pi/types';
 import { cn } from '@/lib/utils';
-import { UserIcon, Bot, Clock, Zap, FileText, Copy, Pencil, Check, X } from 'lucide-react';
+import { Clock, Zap, FileText, Copy, Pencil, Check, X } from 'lucide-react';
 import { ThinkingBlock } from './thinking-block';
 import { ToolCallDisplay } from './tool-call-display';
 import { MarkdownContent } from './markdown-content';
@@ -117,7 +117,7 @@ function MessageMetrics({ timing, contentLength, isStreaming }: { timing?: Messa
   if (!timing && isStreaming) return null;
 
   return (
-    <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground/50">
+    <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground/50 tabular-nums">
       {/* Estimated tokens */}
       <span className="flex items-center gap-0.5" title="Estimated output tokens (chars / 4)">
         <FileText className="h-2.5 w-2.5" />
@@ -225,13 +225,7 @@ function MessageBubbleImpl({
   };
 
   return (
-    <div className={cn('flex gap-3 px-4 py-3', isUser ? 'flex-row-reverse' : '')}>
-      <div className={cn(
-        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-        isUser ? 'bg-primary text-primary-foreground' : 'bg-muted',
-      )}>
-        {isUser ? <UserIcon className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-      </div>
+    <div className={cn('flex w-full px-4 py-2', isUser ? 'justify-end' : 'flex-col')}>
       <div className={cn('flex max-w-[85%] flex-col gap-0.5 group', isUser && 'items-end')}>
         {isUser ? (
           <div className={cn('flex flex-col', isUser && 'items-end')}>
@@ -241,9 +235,9 @@ function MessageBubbleImpl({
                 <textarea
                   ref={textareaRef}
                   className={cn(
-                    'rounded-lg px-4 py-2 text-sm bg-primary text-primary-foreground w-full min-w-[260px]',
-                    'resize-none outline-none ring-2 ring-primary/50',
-                    'placeholder:text-primary-foreground/50 overflow-hidden',
+                    'rounded-3xl bg-muted px-4 py-2.5 text-sm w-full min-w-[260px]',
+                    'resize-none outline-none ring-1 ring-border focus:ring-foreground/20',
+                    'placeholder:text-muted-foreground/60 overflow-hidden',
                   )}
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
@@ -257,7 +251,7 @@ function MessageBubbleImpl({
                     className="h-6 w-6 text-muted-foreground hover:text-foreground"
                     onClick={handleConfirmEdit}
                   >
-                    <Check className="h-3 w-3 text-green-500" />
+                    <Check className="h-3 w-3" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -265,14 +259,13 @@ function MessageBubbleImpl({
                     className="h-6 w-6 text-muted-foreground hover:text-foreground"
                     onClick={handleCancelEdit}
                   >
-                    <X className="h-3 w-3 text-red-500" />
+                    <X className="h-3 w-3 text-destructive" />
                   </Button>
                 </div>
               </div>
             ) : (
               <div className={cn(
-                'rounded-lg px-4 py-2 text-sm',
-                isUser ? 'bg-primary text-primary-foreground' : 'bg-muted',
+                'max-w-full rounded-3xl bg-muted px-4 py-2.5 text-sm',
               )}>
                 <p className="whitespace-pre-wrap">{renderTokenizedText(displayContent)}</p>
               </div>
@@ -284,10 +277,7 @@ function MessageBubbleImpl({
             )}
           </div>
         ) : !hasBlocks ? (
-          <div className={cn(
-            'rounded-lg px-4 py-2 text-sm',
-            'bg-muted',
-          )}>
+          <div className="text-sm leading-relaxed">
             <p className="whitespace-pre-wrap">{renderTokenizedText(message.content)}</p>
           </div>
         ) : (
@@ -300,7 +290,7 @@ function MessageBubbleImpl({
           'flex items-center gap-3',
           isUser && 'flex-row-reverse justify-start',
         )}>
-          <span className="text-[10px] text-muted-foreground/50">
+          <span className="text-[10px] text-muted-foreground/50 tabular-nums">
             {new Date(message.createdAt).toLocaleTimeString()}
           </span>
           {showMessageMetrics && (
@@ -324,7 +314,7 @@ function MessageBubbleImpl({
                     className="h-5 w-5 text-muted-foreground/50 hover:text-foreground"
                     onClick={handleCopy}
                   >
-                    {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                    {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">{copied ? 'Copied!' : 'Copy'}</TooltipContent>

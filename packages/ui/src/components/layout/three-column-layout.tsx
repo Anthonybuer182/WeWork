@@ -193,15 +193,17 @@ export function ThreeColumnLayout({
   return (
     <div ref={containerRef} className="flex flex-1 flex-col overflow-hidden">
       {/* ============ Header band ============ */}
+      {/* No bottom border: the band merges into the body (Codex-style); the
+          column separators themselves carry the structure. */}
       <div
-        className="relative flex h-11 shrink-0 select-none items-stretch border-b bg-background"
+        className="relative flex h-11 shrink-0 select-none items-stretch bg-background"
         data-testid="header-band"
         style={draggable ? DRAG : undefined}
       >
         {sidebarOpen && (
           <>
             <div
-              className="flex h-full min-w-0 shrink-0 items-center overflow-hidden border-r"
+              className="flex h-full min-w-0 shrink-0 items-center overflow-hidden border-r bg-sidebar"
               style={{ width: currentLeftWidth, paddingLeft: chrome.insetLeft }}
             >
               {leftHeader != null && (
@@ -231,12 +233,18 @@ export function ThreeColumnLayout({
             )}
           </div>
         )}
-        {/* Right divider continuation — same 8px strip as the body handle. */}
-        {rightPanelOpen && !rightTakesCenter && <div className="w-2 shrink-0 bg-border" aria-hidden />}
+        {/* Right divider continuation — the same single 1px line as the body
+            handle, flush against the right column (the segment's own border-l
+            would double it). */}
+        {rightPanelOpen && !rightTakesCenter && (
+          <div className="flex w-2 shrink-0 justify-end" aria-hidden>
+            <div className="h-full w-px bg-border" />
+          </div>
+        )}
         {rightPanelOpen && (
           <div
             className={cn(
-              'flex h-full min-w-0 items-stretch overflow-hidden border-l',
+              'flex h-full min-w-0 items-stretch overflow-hidden',
               rightTakesCenter ? 'flex-1' : 'shrink-0',
             )}
             style={{
@@ -302,7 +310,7 @@ export function ThreeColumnLayout({
                 aria-valuemin={minLeftWidth}
                 aria-valuemax={maxLeftWidth}
                 aria-orientation="vertical"
-                className="w-1 cursor-col-resize hover:bg-primary/50 transition-colors"
+                className="w-1 cursor-col-resize hover:bg-muted-foreground/40 transition-colors"
                 onMouseDown={() => setDragging('left')}
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowLeft') handleKeyboardResize('left', -10);
@@ -342,13 +350,15 @@ export function ThreeColumnLayout({
                 aria-orientation="vertical"
               >
                 <div className="absolute inset-y-0 -left-2 -right-2 z-10" />
-                <div className="h-full w-full bg-border group-hover:bg-primary/50 group-active:bg-primary/30 transition-colors" />
+                {/* Single 1px divider, flush against the right column — the
+                    column's own border-l would draw a second line 4px over. */}
+                <div className="ml-auto h-full w-px bg-border group-hover:bg-muted-foreground/60 group-active:bg-muted-foreground/40 transition-colors" />
               </div>
             ) : null}
             <div
               style={rightTakesCenter ? undefined : { width: currentRightWidth }}
               className={cn(
-                'overflow-hidden border-l flex flex-col',
+                'overflow-hidden flex flex-col',
                 rightTakesCenter ? 'min-w-0 flex-1' : 'flex-shrink-0',
               )}
             >

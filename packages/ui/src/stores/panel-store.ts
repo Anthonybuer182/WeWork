@@ -211,12 +211,17 @@ function reconcile(
 
   // The header plugin list follows the registry: uninstall/disable removes an
   // entry, a freshly installed plugin appends (the user's drag order is kept
-  // for everything that survives).
+  // for everything that survives). Before the registry has synced once the
+  // pruning is gated off — host panels register before plugin panels, so a
+  // boot-time prune would drop every plugin id from the persisted arrangement
+  // and resurrect registry order (the same gate the selection pick applies).
   const panelOrder: Record<PanelRegion, string[]> = { left: [], right: [] };
   for (const region of ['left', 'right'] as PanelRegion[]) {
     const known = regionPanels(panels, region).map((p) => p.id);
     const knownSet = new Set(known);
-    const kept = prev.panelOrder[region].filter((id) => knownSet.has(id));
+    const kept = prev.pluginPanelsSynced
+      ? prev.panelOrder[region].filter((id) => knownSet.has(id))
+      : prev.panelOrder[region];
     const keptSet = new Set(kept);
     panelOrder[region] = [...kept, ...known.filter((id) => !keptSet.has(id))];
   }

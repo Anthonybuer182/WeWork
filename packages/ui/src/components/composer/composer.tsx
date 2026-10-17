@@ -1107,11 +1107,11 @@ export function Composer() {
   return (
     <div
       className={cn(
-        'rounded-xl border bg-card shadow-lg mx-4 mb-4 overflow-visible',
+        'rounded-3xl border border-border bg-card shadow-sm mx-4 mb-4 overflow-visible transition-colors',
         // 完全访问 keeps the door visibly open for as long as it is open —
         // the red ring is the state, not a decoration.
         !isDragging && permissionMode === 'full' && 'ring-2 ring-destructive/40 border-destructive/50',
-        isDragging && 'ring-2 ring-primary/50 border-primary',
+        isDragging && 'ring-2 ring-muted-foreground/30 border-muted-foreground/50',
       )}
     >
       {/* Attachment previews */}
@@ -1174,8 +1174,8 @@ export function Composer() {
 
         {/* Drag overlay */}
         {isDragging && (
-          <div className="absolute inset-0 flex items-center justify-center bg-primary/5 rounded-lg border-2 border-dashed border-primary/50 z-10 pointer-events-none">
-            <div className="flex flex-col items-center gap-1 text-primary/70">
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/40 z-10 pointer-events-none">
+            <div className="flex flex-col items-center gap-1 text-muted-foreground">
               <Upload className="h-6 w-6" />
               <span className="text-xs font-medium">Drop files to attach</span>
             </div>

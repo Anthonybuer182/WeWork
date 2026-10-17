@@ -1,5 +1,5 @@
 import { useEffect, type ComponentType } from 'react';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePanelStore, type PanelEntry } from '@/stores/panel-store';
 import { ProviderSettings } from '@/components/settings';
@@ -80,11 +80,15 @@ export function PanelBody({ panel }: { panel: PanelEntry }) {
 }
 
 /**
- * One work-area pane: a slim host-drawn header (identity, focus, zoom) above
- * the panel's body. The header exists so every pane is identifiable at a
- * glance when several sit side by side, and so the zoom control has a home
- * above the panel's own chrome (plugin pages are native views that would
- * cover any DOM floating inside them).
+ * One work-area pane: the panel's body, plus — only while the pane is ZOOMED —
+ * a slim host-drawn header carrying identity and the restore control.
+ *
+ * The tiled panes draw no header: the header tab strip directly above already
+ * shows every open panel's icon and title, and a second copy right under it
+ * read as duplication. Zoom must live outside the panel body either way
+ * (plugin pages are native views that would cover any DOM floating inside
+ * them), so in tiled mode it lives on the tab (hover button + double-click);
+ * zoomed, the header returns as the pane's own title bar with 还原.
  *
  * `zoomable` is false for regions where a pane already spans its whole
  * container (the left sidebar) — zooming there is meaningless.
@@ -124,39 +128,39 @@ export function PaneView({
         if (!focused) setFocused(region, panel.id);
       }}
     >
-      <div
-        data-pane-header={panel.id}
-        onDoubleClick={(e) => {
-          if (!zoomable) return;
-          e.preventDefault();
-          toggleZoom(region, panel.id);
-        }}
-        className={cn(
-          'flex h-7 shrink-0 select-none items-center gap-1.5 border-b px-2 text-xs',
-          focused ? 'border-border bg-accent/60 text-accent-foreground' : 'bg-muted/40 text-muted-foreground',
-        )}
-      >
-        <RailIcon panel={panel} size={14} className="h-3.5 w-3.5 shrink-0" />
-        <span className="min-w-0 flex-1 truncate">{panel.title}</span>
-        {zoomable && (
-          <button
-            type="button"
-            aria-label={zoomed ? '还原窗格' : '放大窗格'}
-            title={zoomed ? '还原（其他窗格回到工作区）' : '放大占满（其他窗格收成侧条）'}
-            data-pane-zoom={panel.id}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleZoom(region, panel.id);
-            }}
-            className={cn(
-              'shrink-0 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
-              focused ? 'opacity-80' : 'opacity-0 group-hover/pane:opacity-70',
-            )}
-          >
-            {zoomed ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
-          </button>
-        )}
-      </div>
+      {/* Header only while zoomed — see the doc comment above. */}
+      {zoomed && (
+        <div
+          data-pane-header={panel.id}
+          onDoubleClick={(e) => {
+            if (!zoomable) return;
+            e.preventDefault();
+            toggleZoom(region, panel.id);
+          }}
+          className={cn(
+            'flex h-7 shrink-0 select-none items-center gap-1.5 border-b px-2 text-xs',
+            focused ? 'border-border bg-accent/60 text-accent-foreground' : 'bg-muted/40 text-muted-foreground',
+          )}
+        >
+          <RailIcon panel={panel} size={14} className="h-3.5 w-3.5 shrink-0" />
+          <span className="min-w-0 flex-1 truncate">{panel.title}</span>
+          {zoomable && (
+            <button
+              type="button"
+              aria-label="还原窗格"
+              title="还原（其他窗格回到工作区；Esc 同效）"
+              data-pane-zoom={panel.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleZoom(region, panel.id);
+              }}
+              className="shrink-0 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <Minimize2 className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      )}
       <div className="min-h-0 flex-1">
         <PanelBody panel={panel} />
       </div>

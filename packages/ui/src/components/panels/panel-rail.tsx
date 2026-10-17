@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type DragEvent as ReactDragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
 import { useUIStore } from '@/stores/ui-store';
@@ -147,13 +147,76 @@ function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion 
  */
 export function PanelRail({ region = 'right' }: { region?: PanelRegion }) {
   const panels = usePanelStore((s) => s.panels);
+  const panelOrder = usePanelStore((s) => s.panelOrder[region]);
+  const setPanelOrder = usePanelStore((s) => s.setPanelOrder);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+
   // Hidden panels are openable via panel.open / events but get no rail button.
+  // Display order follows the user's `panelOrder` arrangement (the same store
+  // the tab strip's drag writes), registry order for entries never arranged.
+  const orderIndex = new Map(panelOrder.map((id, i) => [id, i]));
   const railPanels = panels
     .filter((p) => p.region === region && !p.hidden)
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    .sort((a, b) => {
+      const ia = orderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER;
+      const ib = orderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER;
+      return ia === ib ? (a.order ?? 0) - (b.order ?? 0) : ia - ib;
+    });
 
   const topGroup = railPanels.filter((p) => p.anchor !== 'bottom');
   const bottomGroup = railPanels.filter((p) => p.anchor === 'bottom');
+
+  const endDrag = () => {
+    setDragId(null);
+    setDropTargetId(null);
+  };
+
+  // Drag-reorder the rail's top group (bottom-anchored panels are pinned).
+  // Drop re-seats the dragged id before the target in the region's
+  // arrangement — the same convention as the tab strip.
+  const dragProps = (panel: PanelEntry) => ({
+    draggable: panel.anchor !== 'bottom',
+    onDragStart: (e: ReactDragEvent) => {
+      if (panel.anchor === 'bottom') return;
+      setDragId(panel.id);
+      e.dataTransfer.effectAllowed = 'move';
+      // Firefox refuses drags without payload; the id doubles as the source.
+      e.dataTransfer.setData('text/plain', panel.id);
+    },
+    onDragOver: (e: ReactDragEvent) => {
+      if (dragId === null || panel.anchor === 'bottom') return;
+      e.preventDefault();
+      setDropTargetId(panel.id);
+    },
+    onDrop: (e: ReactDragEvent) => {
+      e.preventDefault();
+      const from = e.dataTransfer.getData('text/plain');
+      if (from && from !== panel.id && panel.anchor !== 'bottom') {
+        const ids = railPanels.map((p) => p.id).filter((x) => x !== from);
+        const at = ids.indexOf(panel.id);
+        if (at === -1) ids.push(from);
+        else ids.splice(at, 0, from);
+        setPanelOrder(region, ids);
+      }
+      endDrag();
+    },
+    onDragEnd: endDrag,
+  });
+
+  const railButton = (panel: PanelEntry) => (
+    <div
+      key={panel.id}
+      {...dragProps(panel)}
+      className={cn(
+        'rounded-md',
+        dropTargetId === panel.id && dragId !== null && dragId !== panel.id && 'ring-1 ring-muted-foreground/40',
+        dragId === panel.id && 'opacity-50',
+      )}
+    >
+      <RailButton panel={panel} region={region} />
+    </div>
+  );
 
   return (
     <div
@@ -161,15 +224,11 @@ export function PanelRail({ region = 'right' }: { region?: PanelRegion }) {
       data-testid={`panel-rail-${region}`}
       data-panel-rail-region={region}
     >
-      {topGroup.map((panel) => (
-        <RailButton key={panel.id} panel={panel} region={region} />
-      ))}
+      {topGroup.map(railButton)}
       {bottomGroup.length > 0 && (
         <>
           <div className="flex-1" />
-          {bottomGroup.map((panel) => (
-            <RailButton key={panel.id} panel={panel} region={region} />
-          ))}
+          {bottomGroup.map(railButton)}
         </>
       )}
     </div>

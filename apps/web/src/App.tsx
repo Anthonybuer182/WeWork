@@ -17,6 +17,7 @@ import { CenterPanel } from '@pi/ui';
 import { PanelHost } from '@pi/ui';
 import { WorkspaceDropdown } from '@pi/ui';
 import { WorkspaceCreateButton } from '@pi/ui';
+import { SessionHeader } from '@pi/ui';
 import { HOST_LEFT_PANELS } from '@pi/ui';
 import type { PanelEntry } from '@pi/ui';
 import { ChatTimeline } from '@pi/ui';
@@ -84,8 +85,8 @@ function AppContent() {
           leftWidth={leftPanelWidth}
           onLeftWidthChange={setLeftPanelWidth}
           // Workspace controls: in the left segment while the sidebar is open,
-          // otherwise in the centre segment's start. The centre header is
-          // where the session title will live.
+          // otherwise in the centre segment's start. The centre header carries
+          // the Codex-style session title (rename / session dropdown / new).
           leftHeader={
             sidebarOpen ? (
               <>
@@ -95,12 +96,15 @@ function AppContent() {
             ) : null
           }
           centerHeader={
-            !sidebarOpen ? (
-              <>
-                <WorkspaceDropdown />
-                <WorkspaceCreateButton />
-              </>
-            ) : null
+            <>
+              {!sidebarOpen && (
+                <>
+                  <WorkspaceDropdown />
+                  <WorkspaceCreateButton />
+                </>
+              )}
+              <SessionHeader />
+            </>
           }
           rightHeader={<PanelTabs />}
           headerTrailing={<LayoutToggles />}

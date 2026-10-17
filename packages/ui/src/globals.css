@@ -4,64 +4,70 @@
 
 @layer base {
   :root {
+    /* Codex-style neutral palette: pure grayscale, no hue tint. Names are
+       load-bearing — plugin panels consume them via panel-relay THEME_VARS. */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 5%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 5%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --popover-foreground: 0 0% 5%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 91%;
+    --input: 0 0% 91%;
+    --ring: 0 0% 9%;
+    --radius: 0.625rem;
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-foreground: 0 0% 35%;
+    --sidebar-primary: 0 0% 9%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 0% 92%;
+    --sidebar-accent-foreground: 0 0% 5%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-ring: 0 0% 9%;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+      'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas,
+      'Liberation Mono', 'Courier New', monospace;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 0 0% 13%;
+    --foreground: 0 0% 92%;
+    --card: 0 0% 16%;
+    --card-foreground: 0 0% 92%;
+    --popover: 0 0% 18%;
+    --popover-foreground: 0 0% 92%;
+    --primary: 0 0% 93%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 22%;
+    --accent-foreground: 0 0% 92%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 19%;
+    --input: 0 0% 19%;
+    --ring: 0 0% 65%;
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 70%;
+    --sidebar-primary: 0 0% 93%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 0% 65%;
   }
 }
 
@@ -71,31 +77,89 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 }
 
-/* Token badge styles for /command and @mention */
+/* Token badge styles for /command and @mention — neutral, distinguished by
+   border style rather than color. */
 .token-slash,
 .token-mention {
   @apply inline-flex items-center px-1 py-0 rounded text-xs font-medium border;
 }
 
 .token-slash {
-  @apply bg-blue-500/10 text-blue-600 border-blue-500/20;
+  @apply bg-foreground/[0.06] text-foreground border-foreground/15;
 }
 
 .token-mention {
-  @apply bg-emerald-500/10 text-emerald-600 border-emerald-500/20;
+  @apply bg-foreground/[0.06] text-foreground border-border border-dashed;
 }
 
 /* Dark mode token badges */
 .dark .token-slash {
-  @apply bg-blue-400/15 text-blue-400 border-blue-400/20;
+  @apply bg-foreground/10 text-foreground border-foreground/20;
 }
 
 .dark .token-mention {
-  @apply bg-emerald-400/15 text-emerald-400 border-emerald-400/20;
+  @apply bg-foreground/10 text-foreground border-border border-dashed;
+}
+
+/* ===== Markdown body (chat messages) ===== */
+/* Scoped typography for assistant messages. Replaces the @tailwindcss/typography
+   prose classes, which were dead code (the plugin was never installed). */
+.md-body {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: hsl(var(--foreground));
+}
+.md-body > :first-child { margin-top: 0; }
+.md-body > :last-child { margin-bottom: 0; }
+.md-body h1, .md-body h2 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin: 1.25em 0 0.5em;
+}
+.md-body h3, .md-body h4, .md-body h5, .md-body h6 {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 1em 0 0.4em;
+}
+.md-body p { margin: 0.4em 0; }
+.md-body ul, .md-body ol { margin: 0.4em 0; padding-left: 1.4em; }
+.md-body li { margin: 0.15em 0; }
+.md-body blockquote {
+  border-left: 2px solid hsl(var(--border));
+  padding: 0.1em 0 0.1em 0.8em;
+  margin: 0.5em 0;
+  color: hsl(var(--muted-foreground));
+  font-style: normal;
+}
+.md-body table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin: 0.6em 0;
+}
+.md-body th, .md-body td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.25rem 0.5rem;
+}
+.md-body hr { border-color: hsl(var(--border)); margin: 1em 0; }
+.md-body a {
+  color: hsl(var(--foreground));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md-body :not(pre) > code {
+  background: hsl(var(--muted) / 0.6);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
 }
 
 /* ===== DOCX Preview Styles ===== */

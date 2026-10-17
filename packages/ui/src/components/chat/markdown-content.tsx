@@ -2,7 +2,8 @@ import { useState, useCallback, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github-dark.css';
+import 'highlight.js/styles/github.css';
+import './hljs-theme.css';
 import { Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MermaidDiagram } from './mermaid-diagram';
@@ -41,8 +42,8 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
   const language = className?.replace('language-', '') || '';
 
   return (
-    <div className="group relative">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-muted/60 border border-border rounded-t-md border-b-0">
+    <div className="group relative my-2 overflow-hidden rounded-md border border-border">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border-b border-border">
         <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
           {language || 'code'}
         </span>
@@ -53,7 +54,7 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
         >
           {copied ? (
             <>
-              <Check className="h-3 w-3 text-emerald-500" />
+              <Check className="h-3 w-3" />
               Copied!
             </>
           ) : (
@@ -64,7 +65,7 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
           )}
         </button>
       </div>
-      <pre className="!mt-0 !rounded-t-none">
+      <pre className="!mt-0 !rounded-none !border-0">
         <code className={className}>{children}</code>
       </pre>
     </div>
@@ -87,15 +88,8 @@ function MarkdownContentImpl({ content, isStreaming }: MarkdownContentProps) {
   return (
     <div
       className={cn(
-        'prose prose-sm dark:prose-invert max-w-none',
+        'md-body max-w-none',
         !isStreaming && 'animate-streaming-in',
-        'prose-pre:my-2 prose-pre:bg-muted/80 prose-pre:border prose-pre:border-border',
-        'prose-code:bg-muted/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none',
-        'prose-headings:mb-2 prose-headings:mt-4 prose-headings:font-semibold',
-        'prose-p:my-1 prose-p:leading-relaxed',
-        'prose-ul:my-1 prose-ol:my-1 prose-li:my-0',
-        'prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1',
-        'prose-blockquote:border-l-2 prose-blockquote:border-emerald-500 prose-blockquote:bg-emerald-50/30 prose-blockquote:py-1 prose-blockquote:pl-3 prose-blockquote:not-italic',
       )}
     >
       <ReactMarkdown

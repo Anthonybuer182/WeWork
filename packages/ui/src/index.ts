@@ -45,7 +45,7 @@ export { useResizeObserver } from './hooks/use-resize-observer';
 export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel, RightPanel, LayoutToggles, getHostChrome } from './components/layout';
 export type { HostChrome, HostPlatform } from './components/layout';
 export { WorkspaceDropdown, WorkspaceCreateButton } from './components/workspace';
-export { SessionList, SessionItem, SessionCreateButton } from './components/session';
+export { SessionList, SessionItem, SessionCreateButton, SessionHeader } from './components/session';
 export { ChatTimeline, MessageBubble, ThinkingBlock, ToolCallDisplay, EmptyChat, StreamingIndicator } from './components/chat';
 export { Composer, ComposerInput, SendButton, SlashCommandMenu, MentionMenu, AttachmentPreviewBar, FileUploadButton } from './components/composer';
 export { ModelSelector, ThinkLevelSelector, CompactToggle, SkillSelector } from './components/model';

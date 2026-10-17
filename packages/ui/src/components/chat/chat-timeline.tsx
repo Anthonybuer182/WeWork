@@ -372,9 +372,7 @@ export function ChatTimeline() {
             and this branch is where that failure has to be visible. */}
         {streamError && <StreamErrorBanner error={streamError} onRetry={handleRetry} />}
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-          <div className="rounded-full bg-muted p-4">
-            <MessageSquare className="h-8 w-8 text-muted-foreground" />
-          </div>
+          <MessageSquare className="h-8 w-8 text-muted-foreground/60" strokeWidth={1.5} />
           <div className="text-center">
             <h3 className="text-lg font-medium">Start a conversation</h3>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -450,7 +448,7 @@ export function ChatTimeline() {
       {isStreaming && !isAtBottom && (
         <button
           onClick={scrollToBottom}
-          className="absolute bottom-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-md hover:bg-muted transition-colors"
+          className="absolute bottom-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-muted transition-colors"
           aria-label="Scroll to bottom"
         >
           <ArrowDown className="h-4 w-4" />

@@ -124,7 +124,7 @@ export function SessionStatsBar({ messages, contextUsage }: SessionStatsBarProps
                 <div
                   className={cn(
                     'h-full rounded-full transition-all duration-500',
-                    ctx.percent > 0.8 ? 'bg-red-400' : ctx.percent > 0.6 ? 'bg-yellow-400' : 'bg-primary/50',
+                    ctx.percent > 0.8 ? 'bg-destructive/80' : ctx.percent > 0.6 ? 'bg-amber-400/80' : 'bg-foreground/40',
                   )}
                   style={{ width: `${Math.min(ctx.percent * 100, 100)}%` }}
                 />

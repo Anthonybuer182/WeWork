@@ -121,19 +121,15 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
   const hasStreamingCard =
     isRunning && !!renderer?.streaming && argsEntries.length > 0;
 
-  const statusColor = hasError
-    ? 'border-red-200/50 dark:border-red-800/30 bg-red-50/20 dark:bg-red-950/5'
-    : 'border-emerald-200/30 dark:border-emerald-800/20 bg-emerald-50/20 dark:bg-emerald-950/5';
-
   return (
     <div className={cn(
-      'my-1 rounded-md border overflow-hidden text-xs',
+      'my-1 rounded-md border bg-transparent overflow-hidden text-xs',
       !isStreaming && 'animate-streaming-in',
       awaitingApproval
-        ? 'border-amber-400/50 bg-amber-50/30 dark:bg-amber-950/10'
-        : isRunning
-          ? 'border-emerald-400/40 bg-emerald-50/30 dark:bg-emerald-950/10'
-          : statusColor,
+        ? 'border-amber-400/60 bg-amber-50/40 dark:bg-amber-950/10'
+        : hasError
+          ? 'border-destructive/30'
+          : 'border-border',
     )}>
       {/* ── Header row ── */}
       <button
@@ -144,18 +140,18 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
         {awaitingApproval ? (
           <ShieldAlert className="h-3 w-3 animate-pulse text-amber-600 dark:text-amber-400 shrink-0" />
         ) : isRunning ? (
-          <Loader2 className="h-3 w-3 animate-spin text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />
         ) : (
           <span className={cn(
             'h-1.5 w-1.5 rounded-full shrink-0',
-            hasError ? 'bg-red-500' : 'bg-emerald-500',
+            hasError ? 'bg-destructive' : 'bg-muted-foreground/50',
           )} />
         )}
 
         {/* Tool name */}
         <span className={cn(
-          'font-semibold font-mono text-[11px] shrink-0',
-          hasError ? 'text-red-600 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-300',
+          'font-medium font-mono text-[11px] shrink-0',
+          hasError ? 'text-red-600 dark:text-red-400' : 'text-foreground',
         )}>
           {block.toolName}
         </span>
@@ -174,7 +170,7 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
           </span>
         )}
         {isRunning && !awaitingApproval && !expanded && (
-          <span className="text-emerald-600/70 dark:text-emerald-400/50 animate-pulse shrink-0 ml-auto">
+          <span className="text-muted-foreground/60 animate-pulse shrink-0 ml-auto">
             running...
           </span>
         )}
@@ -257,10 +253,10 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
               'px-2.5 py-2 whitespace-pre-wrap font-mono text-[11px] leading-relaxed max-h-64 overflow-y-auto',
               'border-t border-border/30',
               hasError
-                ? 'text-red-600 dark:text-red-400 bg-red-50/10 dark:bg-red-950/5'
+                ? 'text-red-600 dark:text-red-400'
                 : resultIsEmpty
                   ? 'text-muted-foreground/50 italic'
-                  : 'text-muted-foreground bg-muted/20',
+                  : 'text-muted-foreground',
             )}>
               {resultIsEmpty ? '(no output)' : resultText.length > 2000 ? resultText.slice(0, 2000) + '\n... (truncated)' : resultText}
             </pre>
