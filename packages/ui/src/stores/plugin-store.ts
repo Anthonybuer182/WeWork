@@ -21,16 +21,8 @@ interface PluginBridge {
   getSettings: (pluginId: string) => Promise<Record<string, unknown>>;
   setSetting: (pluginId: string, key: string, value: unknown) => Promise<{ ok: boolean; error?: string }>;
   send: (pluginId: string, payload: unknown) => void;
-  showContextMenu: (pos: { x: number; y: number }) => Promise<{ ok: boolean }>;
   onMessage: (callback: (pluginId: string, payload: unknown) => void) => void;
   onEvent: (callback: (event: PluginEvent) => void) => void;
-  /**
-   * Wire frames relayed from plugin panels hosted in native views. Such a panel
-   * is a top-level frame and cannot post to the shell, so main forwards its
-   * host-bound frames (selection, resize) here. Optional: the web build has no
-   * host at all.
-   */
-  onRelay?: (callback: (frame: unknown) => void) => void;
   /** Hand the shell's theme tokens to main, which fans them out to plugin views. */
   setTheme?: (tokens: Record<string, string>) => void;
 }

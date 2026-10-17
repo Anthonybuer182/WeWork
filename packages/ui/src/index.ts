@@ -42,7 +42,7 @@ export { useMediaQuery } from './hooks/use-media-query';
 export { useKeyboardShortcut } from './hooks/use-keyboard-shortcut';
 export { useResizeObserver } from './hooks/use-resize-observer';
 
-export { AppShell, ThreeColumnLayout, TopControlPanel, LeftSidebar, CenterPanel, RightPanel, LayoutToggles, getHostChrome } from './components/layout';
+export { AppShell, ThreeColumnLayout, LeftSidebar, CenterPanel, RightPanel, LayoutToggles, getHostChrome } from './components/layout';
 export type { HostChrome, HostPlatform } from './components/layout';
 export { WorkspaceDropdown, WorkspaceCreateButton } from './components/workspace';
 export { SessionList, SessionItem, SessionCreateButton, SessionHeader } from './components/session';

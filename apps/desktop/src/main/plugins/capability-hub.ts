@@ -166,15 +166,12 @@ export class CapabilityHub {
           throw new Error(`plugin "${pluginId}" does not contribute panel "${panelId}"`);
         }
         const focus = params.focus === true;
-        // `slot: 'B'` = a split request: the renderer engages the right
-        // column's split and seats the panel in the second slot. `params`
-        // ride the open (the viewer pane's `{ file }`).
-        const slot = params.slot === 'B' ? 'B' : undefined;
+        // `params` ride the open (the viewer pane's `{ file }`).
         const openParams =
           params.params && typeof params.params === 'object' && !Array.isArray(params.params)
             ? (params.params as Record<string, unknown>)
             : undefined;
-        this.emitEvent({ type: 'panel-open', pluginId, panelId, focus, slot, params: openParams });
+        this.emitEvent({ type: 'panel-open', pluginId, panelId, focus, params: openParams });
         return { ok: true, panelId, focus };
       },
     });

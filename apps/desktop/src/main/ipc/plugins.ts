@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, Menu, app } from 'electron';
+import { ipcMain, BrowserWindow, app } from 'electron';
 import type { InstallPhase } from '@pi/types';
 import type { PluginSystem } from '@main/plugins';
 
@@ -116,12 +116,6 @@ export function registerPluginIpcHandlers(system: PluginSystem): void {
     return system.setEnabled(pluginId, payload.enabled);
   });
 
-  // ── Native context menu (plugin iframe bridge) ──
-  ipcMain.handle('pi:plugin:context-menu', (_event, payload: { x?: number; y?: number }) => {
-    popupEditMenu(payload?.x ?? 0, payload?.y ?? 0);
-    return { ok: true };
-  });
-
   // ── Extensions (tools / preview routing) ──
   // ── Context providers (pre-send hook) ──
   ipcMain.handle('pi:plugin:collect-context', async (_event, payload: { message?: string }) => {
@@ -172,19 +166,4 @@ export function registerPluginIpcHandlers(system: PluginSystem): void {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
   });
-}
-
-
-/** Edit-roles context menu: roles act on the currently focused webContents
- *  (the plugin OOPIF when invoked from a plugin panel, the shell otherwise). */
-export function popupEditMenu(x: number, y: number): void {
-  const win = BrowserWindow.getFocusedWindow();
-  if (!win) return;
-  Menu.buildFromTemplate([
-    { label: '剪切', role: 'cut' },
-    { label: '复制', role: 'copy' },
-    { label: '粘贴', role: 'paste' },
-    { type: 'separator' },
-    { label: '全选', role: 'selectAll' },
-  ]).popup({ window: win, x: Math.round(x), y: Math.round(y) });
 }

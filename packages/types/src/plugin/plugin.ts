@@ -122,14 +122,12 @@ export type PluginEvent =
   | { type: 'state-changed'; pluginId: string; state: PluginRuntimeState; error?: string }
   | { type: 'plugins-changed' }
   /** Backend requested a panel open. focus=false → badge only, no steal.
-   *  `slot: 'B'` engages the right column's split and seats the panel there;
    *  `params` ride the open (e.g. `{ file }` for the viewer pane). */
   | {
       type: 'panel-open';
       pluginId: string;
       panelId?: string;
       focus: boolean;
-      slot?: 'B';
       params?: Record<string, unknown>;
     }
   /** A plugin asked to close one of its own panels (e.g. unsplit a pane). */

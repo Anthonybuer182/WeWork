@@ -96,18 +96,6 @@ const PLUGIN_SDK_SOURCE = String.raw`
     }, '*');
   }
 
-  /** Host traffic (the native context menu). Not backend-related. */
-  function postToShell(direction, payload) {
-    var frame = {
-      __piPlugin: true,
-      pluginId: PLUGIN_ID,
-      direction: direction,
-      payload: payload
-    };
-    if (IN_VIEW) { VIEW.sendHostFrame(frame); return; }
-    window.parent.postMessage(frame, '*');
-  }
-
   function applyThemeTokens(tokens) {
     try {
       for (var k in tokens) {
@@ -194,8 +182,6 @@ const PLUGIN_SDK_SOURCE = String.raw`
         postMessage: function (frame) {
           if (!frame || frame.__piPlugin !== true) return;
           if (frame.direction === 'ui') VIEW.send(frame.payload);
-          else if (frame.direction === 'contextmenu') return; // handled below
-          else VIEW.sendHostFrame(frame);
         }
       };
       Object.defineProperty(window, 'parent', { configurable: true, get: function () { return parentShim; } });
@@ -344,17 +330,5 @@ const PLUGIN_SDK_SOURCE = String.raw`
       if (VIEW && VIEW.__setPopupMenuOverride) VIEW.__setPopupMenuOverride(fn);
     }
   };
-
-  // ── Context menu ───────────────────────────────────────────────────
-  // A native view can pop main's menu directly; an iframe has to ask the shell.
-  document.addEventListener('contextmenu', function (event) {
-    try {
-      if (IN_VIEW) {
-        VIEW.showContextMenu({ x: event.clientX, y: event.clientY });
-        return;
-      }
-      postToShell('contextmenu', { x: event.clientX, y: event.clientY });
-    } catch (e) { /* best-effort */ }
-  });
 })();
 `;

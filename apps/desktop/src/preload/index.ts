@@ -233,8 +233,6 @@ const pluginBridge = (() => {
     listTools: (): Promise<unknown[]> => ipcRenderer.invoke('pi:plugin:list-tools'),
     executeTool: (pluginId: string, name: string, params?: Record<string, unknown>): Promise<{ ok: boolean; content?: unknown[]; details?: unknown; error?: string }> =>
       ipcRenderer.invoke('pi:plugin:execute-tool', { pluginId, name, params }),
-    showContextMenu: (pos: { x: number; y: number }): Promise<{ ok: boolean }> =>
-      ipcRenderer.invoke('pi:plugin:context-menu', pos),
     send: (pluginId: string, payload: unknown): void => {
       const port = pluginPorts.get(pluginId);
       if (port) {
@@ -251,15 +249,6 @@ const pluginBridge = (() => {
     },
     onEvent: (callback: (event: unknown) => void): void => {
       eventCallback = callback;
-    },
-    /**
-     * Wire frames relayed from plugin panels hosted in native views. A view is
-     * a top-level frame, so it cannot post to the shell the way an iframe could;
-     * main forwards its host-bound frames (selection, resize) here instead, and
-     * the shell handles them with the same code path as before.
-     */
-    onRelay: (callback: (frame: unknown) => void): void => {
-      ipcRenderer.on('pi:plugin:relay', (_event, frame) => callback(frame));
     },
     /** Hand the shell's theme tokens to main, which fans them out to plugin views. */
     setTheme: (tokens: Record<string, string>): void => {

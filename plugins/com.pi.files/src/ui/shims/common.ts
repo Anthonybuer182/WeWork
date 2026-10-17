@@ -35,7 +35,6 @@ export interface PiViewBridge {
   send(payload: unknown): void;
   onMessage(cb: (payload: unknown) => void): void;
   onTheme(cb: (tokens: Record<string, string>) => void): void;
-  showContextMenu(pos: { x: number; y: number }): Promise<{ ok: boolean }>;
 }
 
 export const PLUGIN_ID = 'com.pi.files';

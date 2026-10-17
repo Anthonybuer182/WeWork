@@ -204,18 +204,6 @@ const bridge = {
     toBackend(payload);
   },
 
-  /**
-   * Forward a wire frame to the HOST (the shell renderer), for directions the
-   * backend port does not carry — today that is just `contextmenu`: the native
-   * menu can only be popped by main, and a panel in a native view cannot reach
-   * the shell's DOM to ask for it.
-   *
-   * Main relays it to the shell.
-   */
-  sendHostFrame: (frame: unknown): void => {
-    ipcRenderer.send('pi:plugin:view-frame', frame);
-  },
-
   onMessage: (cb: (payload: unknown) => void): void => {
     messageCallback = cb;
     // Drain anything the backend sent while the page was still parsing.
@@ -232,10 +220,6 @@ const bridge = {
     // Replay if the tokens landed before the page subscribed.
     if (lastThemeTokens) cb(lastThemeTokens);
   },
-
-  /** Native context menu — an editable plugin page needs the edit roles. */
-  showContextMenu: (pos: { x: number; y: number }): Promise<{ ok: boolean }> =>
-    ipcRenderer.invoke('pi:plugin:context-menu', pos),
 
   /**
    * Native popup menu with custom items — resolves the clicked item id, or

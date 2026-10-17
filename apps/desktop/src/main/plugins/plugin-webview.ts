@@ -73,16 +73,8 @@ export class PluginWebViews {
    * Relay host-bound traffic from a plugin view (selection, resize) to the
    * shell renderer.
    *
-   * The shell already knows how to handle these wire frames — it did so when
-   * panels were iframes and the message arrived via `window.parent`. Feeding
-   * them over IPC instead means that handler stays the single implementation,
-   * rather than growing a second one for native views.
    */
   installIpc(): void {
-    ipcMain.on('pi:plugin:view-frame', (_event, frame) => {
-      this.opts.getWindow()?.webContents.send('pi:plugin:relay', frame);
-    });
-
     // Theme tokens are collected in the shell (it owns the CSS variables), so
     // the shell pushes them here and main fans them out to every plugin view.
     ipcMain.on('pi:plugin:set-theme', (_event, tokens: Record<string, string>) => {

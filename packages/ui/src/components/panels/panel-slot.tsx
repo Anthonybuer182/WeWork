@@ -46,8 +46,8 @@ function hasNativeViewHost(): boolean {
  * `{ file }` for the viewer) and hands them to the slot, which forwards them to
  * the backend as the `panel.mounted` event the backend renders from.
  *
- * It also installs the relay — the theme push and the `onRelay` subscription
- * that carries a panel's selection frames back to the shell.
+ * It also installs the relay — the theme push that keeps a panel's colors in
+ * sync with the shell.
  */
 function PluginWebViewPanel({ pluginId, panelId }: { pluginId: string; panelId: string }) {
   const params = usePanelStore((s) => s.params[`plugin:${pluginId}:${panelId}`]);

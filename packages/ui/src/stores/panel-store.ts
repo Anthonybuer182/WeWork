@@ -474,19 +474,6 @@ export const usePanelStore = create<PanelStoreState>()(
           };
         }),
 
-      // Reorder does not touch mountedIds — the mounted set is unchanged, and
-      // pane-cap eviction ranks by recency, not by list order.
-      reorderTabs: (region, from, to) =>
-        set((s) => {
-          const ids = [...s.openPanelIds[region]];
-          if (from < 0 || from >= ids.length || to < 0 || to >= ids.length || from === to) {
-            return s;
-          }
-          const [moved] = ids.splice(from, 1);
-          ids.splice(to, 0, moved);
-          return { openPanelIds: { ...s.openPanelIds, [region]: ids } };
-        }),
-
       /** The user's arrangement of the header plugin list (drag reorder). */
       setPanelOrder: (region, ids) =>
         set((s) => {
@@ -829,8 +816,6 @@ export interface PanelStoreState {
   openPanel: (id: string, opts?: { focus?: boolean; params?: Record<string, unknown> }) => void;
   /** Deselect a panel (its pane leaves the work area). */
   closeTab: (region: PanelRegion, id: string) => void;
-  /** Reorder a region's selection. */
-  reorderTabs: (region: PanelRegion, from: number, to: number) => void;
   /** The user's arrangement of the header plugin list (drag reorder). */
   setPanelOrder: (region: PanelRegion, ids: string[]) => void;
   /** Focus a selected panel's pane. */
