@@ -48331,6 +48331,8 @@ function plugin(handlers) {
     throw new Error("pi plugin SDK: no host port. A plugin backend must be started by the host (it is forked as a child process); running it directly cannot work.");
   }
   let panelPort = null;
+  const panelPorts = /* @__PURE__ */ new Map();
+  const portPanel = /* @__PURE__ */ new Map();
   let pluginId = "";
   let dataDir = "";
   let booted = false;
@@ -48340,6 +48342,15 @@ function plugin(handlers) {
   let portClosed = false;
   let probeSeq = 0;
   const pendingProbes = /* @__PURE__ */ new Map();
+  function routeFor(panelId) {
+    if (panelId) {
+      const p = panelPorts.get(panelId);
+      if (p)
+        return p;
+    }
+    return panelPort;
+  }
+  __name(routeFor, "routeFor");
   const post = /* @__PURE__ */ __name((message) => host.postMessage(message), "post");
   const log = /* @__PURE__ */ __name((level, message) => post({ type: "log", level, message }), "log");
   const ctx = {
@@ -48361,13 +48372,15 @@ function plugin(handlers) {
       });
     },
     send(panelId, event, data) {
-      if (!panelPort || portClosed)
+      const port = routeFor(panelId);
+      if (!port)
         return false;
-      panelPort.postMessage({ kind: "event", event, panelId, data });
+      port.postMessage({ kind: "event", event, panelId, data });
       return true;
     },
     panelAlive(panelId, timeoutMs = PROBE_TIMEOUT_MS) {
-      if (!panelPort || portClosed)
+      const port = routeFor(panelId);
+      if (!port)
         return Promise.resolve(false);
       const id2 = "probe-" + ++probeSeq;
       return new Promise((resolve3) => {
@@ -48379,7 +48392,7 @@ function plugin(handlers) {
           clearTimeout(timer);
           resolve3(true);
         });
-        panelPort.postMessage({ kind: "event", event: "pi.probe", panelId, data: { id: id2 } });
+        port.postMessage({ kind: "event", event: "pi.probe", panelId, data: { id: id2 } });
       });
     },
     async openPanel(panelId, options) {
@@ -48432,7 +48445,7 @@ function plugin(handlers) {
     }
   }
   __name(runTool, "runTool");
-  async function onPanelMessage(raw) {
+  async function onPanelMessage(raw, sourcePort) {
     const msg = raw;
     if (!msg || typeof msg !== "object")
       return;
@@ -48440,44 +48453,30 @@ function plugin(handlers) {
       const id2 = String(msg.id ?? "");
       const method = String(msg.method ?? "");
       const panelId = msg.panelId ?? "";
+      const replyPort = sourcePort ?? routeFor(panelId);
+      const reply = /* @__PURE__ */ __name((ok, error2, result) => {
+        replyPort?.postMessage({ kind: "response", id: id2, ok, panelId, error: error2, result });
+      }, "reply");
       if (!panelId) {
         log("warn", `panel request "${method}" arrived with no panel id \u2014 cannot attribute it.`);
       }
       if (!handlers.onRequest) {
-        panelPort?.postMessage({
-          kind: "response",
-          id: id2,
-          ok: false,
-          panelId,
-          error: `this plugin handles no panel requests (asked for "${method}")`
-        });
+        reply(false, `this plugin handles no panel requests (asked for "${method}")`);
         return;
       }
       if (!booted) {
-        panelPort?.postMessage({
-          kind: "response",
-          id: id2,
-          ok: false,
-          panelId,
-          error: `request "${method}" arrived before the host sent init \u2014 no plugin id or data dir yet.`
-        });
+        reply(false, `request "${method}" arrived before the host sent init \u2014 no plugin id or data dir yet.`);
         return;
       }
       try {
         const result = await handlers.onRequest(panelId, method, msg.params ?? {}, ctx);
         if (result === void 0) {
-          panelPort?.postMessage({
-            kind: "response",
-            id: id2,
-            ok: false,
-            panelId,
-            error: `onRequest handled "${method}" without returning anything. Return the answer (a value, or true), or rethrow for a method you do not handle.`
-          });
+          reply(false, `onRequest handled "${method}" without returning anything. Return the answer (a value, or true), or rethrow for a method you do not handle.`);
           return;
         }
-        panelPort?.postMessage({ kind: "response", id: id2, ok: true, panelId, result });
+        reply(true, void 0, result);
       } catch (err) {
-        panelPort?.postMessage({ kind: "response", id: id2, ok: false, panelId, error: describe(err) });
+        reply(false, describe(err));
       }
       return;
     }
@@ -48587,13 +48586,28 @@ function plugin(handlers) {
           break;
         panelPort = port;
         portClosed = false;
+        port.on("message", (e) => {
+          const pid = e.data?.panelId;
+          if (pid) {
+            portPanel.set(port, pid);
+            panelPorts.set(pid, port);
+          }
+          void onPanelMessage(e.data, port);
+        });
         try {
           port.on("close", () => {
-            portClosed = true;
+            const pid = portPanel.get(port);
+            if (pid && panelPorts.get(pid) === port)
+              panelPorts.delete(pid);
+            portPanel.delete(port);
+            if (panelPort === port) {
+              panelPort = panelPorts.size > 0 ? [...panelPorts.values()][panelPorts.size - 1] : null;
+              if (!panelPort)
+                portClosed = true;
+            }
           });
         } catch {
         }
-        port.on("message", (e) => void onPanelMessage(e.data));
         port.start?.();
         break;
       }

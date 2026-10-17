@@ -90,8 +90,9 @@ const buckets = new Map<string, DocBucket>();
 /** The conversation the viewer panel currently serves (null = none heard yet). */
 let panelSession: string | null = null;
 
-function bucketKey(sessionId?: string | null): string {
-  return sessionId ?? panelSession ?? 'default';
+function bucketKey(sessionId?: string | null, panelId?: string | null): string {
+  const s = sessionId ?? panelSession ?? 'default';
+  return panelId === PANE_PANEL ? `${s}::pane` : s;
 }
 
 function bucketFor(key: string): DocBucket {
@@ -115,14 +116,28 @@ function pruneBuckets(): void {
 }
 
 /** Push a bucket to the panel. `path` stays for the renderers, tabs drive the strip. */
-function renderBucket(b: DocBucket): boolean {
-  return renderViewer(
+function renderBucket(b: DocBucket, panelId: string = PANEL): boolean {
+  return ctx.send(
+    panelId,
+    'ui.render',
     b.activePath ? { path: b.activePath, tabs: b.tabs, activePath: b.activePath } : { tabs: [], activePath: '' },
   );
 }
 
+/** The pane panel — a second, independent viewer beside the session's main one. */
+const PANE_PANEL = 'viewer-pane';
+
+/**
+ * The bucket a UI request addresses. The main viewer serves the session's
+ * bucket; the pane panel has its OWN bucket beside it, so the split view's
+ * two sides keep independent documents.
+ */
+function uiBucketKey(panelId?: string | null): string {
+  return panelId === PANE_PANEL ? `${bucketKey()}::pane` : bucketKey();
+}
+
 /** Open (or focus) a document tab in a conversation's bucket. */
-function openFile(path: string, sessionId?: string | null): void {
+function openFile(path: string, sessionId?: string | null, renderTo?: string): void {
   const p = String(path ?? '');
   const b = bucketFor(bucketKey(sessionId));
   if (p) {
@@ -137,11 +152,11 @@ function openFile(path: string, sessionId?: string | null): void {
     const ext = p.toLowerCase().split('.').pop() ?? '';
     if (ext !== 'docx' && ext !== 'docm') mcpReadyPath = null;
   }
-  renderBucket(b);
+  renderBucket(b, renderTo);
 }
 
 /** Close a tab; closing the focused one falls focus to its left neighbour. */
-function closeTab(path: string, sessionId?: string | null): void {
+function closeTab(path: string, sessionId?: string | null, renderTo?: string): void {
   const b = bucketFor(bucketKey(sessionId));
   const idx = b.tabs.findIndex((t) => samePath(t, path));
   if (idx === -1) return;
@@ -149,7 +164,7 @@ function closeTab(path: string, sessionId?: string | null): void {
   if (b.activePath && samePath(b.activePath, path)) {
     b.activePath = b.tabs[Math.max(0, idx - 1)] ?? '';
   }
-  renderBucket(b);
+  renderBucket(b, renderTo);
 }
 
 /** The active document of a conversation's bucket ('' when nothing is open). */
@@ -664,7 +679,11 @@ async function runTool(name: string, p: Record<string, unknown>, call: { session
 // await a `{kind:'response', id, ...}`. The desktop shim uses this for the
 // two things the panel cannot do itself: call a host capability (only the
 // backend may), and run Node-side code (font metrics reads font files).
-async function onUiRequest(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
+async function onUiRequest(
+  method: string,
+  params: Record<string, unknown> = {},
+  panelId?: string | null,
+): Promise<unknown> {
   switch (method) {
     case 'chat.send': {
       const t = String(params.text ?? '').trim();
@@ -688,13 +707,53 @@ async function onUiRequest(method: string, params: Record<string, unknown> = {})
       // docx→docx, a dispatcher reload for other formats).
       const path = String(params.path ?? '');
       if (!path) throw new Error('file.activateTab: path is required');
-      openFile(path);
+      openFile(path, uiBucketKey(panelId), panelId ?? undefined);
       return { ok: true };
     }
     case 'file.closeTab': {
       const path = String(params.path ?? '');
       if (!path) throw new Error('file.closeTab: path is required');
-      closeTab(path);
+      closeTab(path, uiBucketKey(panelId), panelId ?? undefined);
+      return { ok: true };
+    }
+    case 'file.reorderTab': {
+      // Strip drag: re-seat `path` before `beforePath` (end when omitted). A
+      // pure order change — focus and the loaded renderer are untouched.
+      const path = String(params.path ?? '');
+      const beforePath = params.beforePath ? String(params.beforePath) : '';
+      if (!path) throw new Error('file.reorderTab: path is required');
+      const b = bucketFor(uiBucketKey(panelId));
+      const from = b.tabs.findIndex((t) => samePath(t, path));
+      if (from === -1) return { ok: true };
+      b.tabs.splice(from, 1);
+      const at = beforePath ? b.tabs.findIndex((t) => samePath(t, beforePath)) : -1;
+      if (at === -1) b.tabs.push(path);
+      else b.tabs.splice(at, 0, path);
+      renderBucket(b, panelId ?? PANEL);
+      return { ok: true, tabs: b.tabs };
+    }
+    case 'file.splitRight': {
+      // The strip's 向右拆分: open the pane panel — a second, independent
+      // viewer — beside this one with the clicked document loaded, for
+      // side-by-side comparison. Already the pane: there is nothing right of
+      // the right side.
+      if (panelId === PANE_PANEL) return { ok: false, reason: 'already-pane' };
+      const path = String(params.path ?? '');
+      if (!path) throw new Error('file.splitRight: path is required');
+      // If the clicked doc IS the main view's current doc, switch the main
+      // view to a neighbour first — two copies of one document do not make a
+      // comparison.
+      const b = bucketFor(bucketKey());
+      if (samePath(b.activePath, path)) {
+        const idx = b.tabs.findIndex((t) => samePath(t, path));
+        const neighbour = b.tabs[idx + 1] ?? b.tabs[idx - 1];
+        if (neighbour) openFile(neighbour, bucketKey(), PANEL);
+      }
+      await ctx.call('panel.open', {
+        panelId: PANE_PANEL,
+        focus: true,
+        params: { file: path },
+      });
       return { ok: true };
     }
     case 'mcp.result': {
@@ -793,7 +852,7 @@ async function onUiRequest(method: string, params: Record<string, unknown> = {})
       // The boot pull — the same payload openFile() pushes, so a panel that
       // loads late still learns what it should be showing without waiting on
       // the mounted push. Tabs ride along for the strip.
-      const b = bucketFor(bucketKey());
+      const b = bucketFor(uiBucketKey(panelId));
       return b.activePath ? { path: b.activePath, tabs: b.tabs, activePath: b.activePath } : {};
     }
     default:
@@ -867,15 +926,18 @@ plugin({
    * (panelSession null) has no previous conversation, so its first mount
    * applies params normally.
    */
-  onPanelMounted(_panelId, params, _ctx, meta) {
+  onPanelMounted(panelId, params, _ctx, meta) {
     const sessionId = meta?.sessionId ?? null;
     const boundary = panelSession !== null && sessionId !== null && sessionId !== panelSession;
     panelSession = sessionId ?? panelSession;
-    const b = bucketFor(bucketKey());
+    // The pane panel mounts into its OWN bucket — the split view's second
+    // side never shares the main viewer's document set.
+    const key = bucketKey(sessionId, panelId);
+    const b = bucketFor(key);
     const file = String((params as { file?: string } | undefined)?.file ?? '');
     const target = !boundary && file ? file : b.activePath;
-    if (target) openFile(target);
-    else renderBucket(b);
+    if (target) openFile(target, key, panelId ?? undefined);
+    else renderBucket(b, panelId ?? PANEL);
     pruneBuckets();
   },
 
@@ -886,11 +948,14 @@ plugin({
     if (event !== 'session.changed') return;
     panelSession = (data as { sessionId?: string | null } | null)?.sessionId ?? null;
     renderBucket(bucketFor(bucketKey()));
+    // The pane (when open) follows with ITS bucket — fire-and-forget; send
+    // returning false just means the pane is not open.
+    renderBucket(bucketFor(`${bucketKey()}::pane`), PANE_PANEL);
     pruneBuckets();
   },
 
-  onRequest(_panelId, method, params) {
-    return onUiRequest(method, params);
+  onRequest(panelId, method, params) {
+    return onUiRequest(method, params, panelId);
   },
 
   /**

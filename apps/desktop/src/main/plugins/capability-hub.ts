@@ -166,7 +166,15 @@ export class CapabilityHub {
           throw new Error(`plugin "${pluginId}" does not contribute panel "${panelId}"`);
         }
         const focus = params.focus === true;
-        this.emitEvent({ type: 'panel-open', pluginId, panelId, focus });
+        // `slot: 'B'` = a split request: the renderer engages the right
+        // column's split and seats the panel in the second slot. `params`
+        // ride the open (the viewer pane's `{ file }`).
+        const slot = params.slot === 'B' ? 'B' : undefined;
+        const openParams =
+          params.params && typeof params.params === 'object' && !Array.isArray(params.params)
+            ? (params.params as Record<string, unknown>)
+            : undefined;
+        this.emitEvent({ type: 'panel-open', pluginId, panelId, focus, slot, params: openParams });
         return { ok: true, panelId, focus };
       },
     });
@@ -448,6 +456,27 @@ export class CapabilityHub {
           activate: params.activate !== false,
         });
         return { tabId: t.id, url: t.url };
+      },
+    });
+    this.capabilities.set('browser.reorderTab', {
+      permission: 'browser',
+      handler: async ({ params }) => {
+        const tabId = String(params.tabId ?? '');
+        if (!tabId) throw new Error('missing tabId');
+        this.tabRegistry.reorderTab(
+          String(params.sessionId ?? 'default'),
+          tabId,
+          params.beforeTabId ? String(params.beforeTabId) : null,
+        );
+        return { ok: true };
+      },
+    });
+    this.capabilities.set('browser.setSplitTabs', {
+      permission: 'browser',
+      handler: async ({ params }) => {
+        const tabId = params.tabId ? String(params.tabId) : null;
+        (await bm()).setSplitPartner(tabId);
+        return { ok: true };
       },
     });
     this.capabilities.set('browser.activateTab', {

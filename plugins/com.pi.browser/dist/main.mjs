@@ -19,6 +19,8 @@ function plugin(handlers) {
     throw new Error("pi plugin SDK: no host port. A plugin backend must be started by the host (it is forked as a child process); running it directly cannot work.");
   }
   let panelPort = null;
+  const panelPorts = /* @__PURE__ */ new Map();
+  const portPanel = /* @__PURE__ */ new Map();
   let pluginId = "";
   let dataDir = "";
   let booted = false;
@@ -28,6 +30,15 @@ function plugin(handlers) {
   let portClosed = false;
   let probeSeq = 0;
   const pendingProbes = /* @__PURE__ */ new Map();
+  function routeFor(panelId) {
+    if (panelId) {
+      const p = panelPorts.get(panelId);
+      if (p)
+        return p;
+    }
+    return panelPort;
+  }
+  __name(routeFor, "routeFor");
   const post = /* @__PURE__ */ __name((message) => host.postMessage(message), "post");
   const log = /* @__PURE__ */ __name((level, message) => post({ type: "log", level, message }), "log");
   const ctx = {
@@ -49,13 +60,15 @@ function plugin(handlers) {
       });
     },
     send(panelId, event, data) {
-      if (!panelPort || portClosed)
+      const port = routeFor(panelId);
+      if (!port)
         return false;
-      panelPort.postMessage({ kind: "event", event, panelId, data });
+      port.postMessage({ kind: "event", event, panelId, data });
       return true;
     },
     panelAlive(panelId, timeoutMs = PROBE_TIMEOUT_MS) {
-      if (!panelPort || portClosed)
+      const port = routeFor(panelId);
+      if (!port)
         return Promise.resolve(false);
       const id = "probe-" + ++probeSeq;
       return new Promise((resolve) => {
@@ -67,7 +80,7 @@ function plugin(handlers) {
           clearTimeout(timer);
           resolve(true);
         });
-        panelPort.postMessage({ kind: "event", event: "pi.probe", panelId, data: { id } });
+        port.postMessage({ kind: "event", event: "pi.probe", panelId, data: { id } });
       });
     },
     async openPanel(panelId, options) {
@@ -120,7 +133,7 @@ function plugin(handlers) {
     }
   }
   __name(runTool, "runTool");
-  async function onPanelMessage(raw) {
+  async function onPanelMessage(raw, sourcePort) {
     const msg = raw;
     if (!msg || typeof msg !== "object")
       return;
@@ -128,44 +141,30 @@ function plugin(handlers) {
       const id = String(msg.id ?? "");
       const method = String(msg.method ?? "");
       const panelId = msg.panelId ?? "";
+      const replyPort = sourcePort ?? routeFor(panelId);
+      const reply = /* @__PURE__ */ __name((ok, error, result) => {
+        replyPort?.postMessage({ kind: "response", id, ok, panelId, error, result });
+      }, "reply");
       if (!panelId) {
         log("warn", `panel request "${method}" arrived with no panel id \u2014 cannot attribute it.`);
       }
       if (!handlers.onRequest) {
-        panelPort?.postMessage({
-          kind: "response",
-          id,
-          ok: false,
-          panelId,
-          error: `this plugin handles no panel requests (asked for "${method}")`
-        });
+        reply(false, `this plugin handles no panel requests (asked for "${method}")`);
         return;
       }
       if (!booted) {
-        panelPort?.postMessage({
-          kind: "response",
-          id,
-          ok: false,
-          panelId,
-          error: `request "${method}" arrived before the host sent init \u2014 no plugin id or data dir yet.`
-        });
+        reply(false, `request "${method}" arrived before the host sent init \u2014 no plugin id or data dir yet.`);
         return;
       }
       try {
         const result = await handlers.onRequest(panelId, method, msg.params ?? {}, ctx);
         if (result === void 0) {
-          panelPort?.postMessage({
-            kind: "response",
-            id,
-            ok: false,
-            panelId,
-            error: `onRequest handled "${method}" without returning anything. Return the answer (a value, or true), or rethrow for a method you do not handle.`
-          });
+          reply(false, `onRequest handled "${method}" without returning anything. Return the answer (a value, or true), or rethrow for a method you do not handle.`);
           return;
         }
-        panelPort?.postMessage({ kind: "response", id, ok: true, panelId, result });
+        reply(true, void 0, result);
       } catch (err) {
-        panelPort?.postMessage({ kind: "response", id, ok: false, panelId, error: describe(err) });
+        reply(false, describe(err));
       }
       return;
     }
@@ -275,13 +274,28 @@ function plugin(handlers) {
           break;
         panelPort = port;
         portClosed = false;
+        port.on("message", (e) => {
+          const pid = e.data?.panelId;
+          if (pid) {
+            portPanel.set(port, pid);
+            panelPorts.set(pid, port);
+          }
+          void onPanelMessage(e.data, port);
+        });
         try {
           port.on("close", () => {
-            portClosed = true;
+            const pid = portPanel.get(port);
+            if (pid && panelPorts.get(pid) === port)
+              panelPorts.delete(pid);
+            portPanel.delete(port);
+            if (panelPort === port) {
+              panelPort = panelPorts.size > 0 ? [...panelPorts.values()][panelPorts.size - 1] : null;
+              if (!panelPort)
+                portClosed = true;
+            }
           });
         } catch {
         }
-        port.on("message", (e) => void onPanelMessage(e.data));
         port.start?.();
         break;
       }
@@ -727,7 +741,7 @@ __name(bucketKey, "bucketKey");
 function bucketFor(key) {
   let b = tabBuckets.get(key);
   if (!b) {
-    b = { tabs: [], activeTabId: null };
+    b = { tabs: [], activeTabId: null, split: null, splitRatio: 0.5 };
     tabBuckets.set(key, b);
   }
   return b;
@@ -766,6 +780,11 @@ async function syncBucketFor(ctx, key) {
       const live = b.tabs.find((t) => !t.evicted);
       b.activeTabId = live?.id ?? null;
     }
+    if (b.split && (!b.tabs.some((t) => t.id === b.split[0]) || !b.tabs.some((t) => t.id === b.split[1]))) {
+      b.split = null;
+      void ctx.call("browser.setSplitTabs", { sessionId: key, tabId: null }).catch(() => {
+      });
+    }
   } catch {
   }
   pushTabs(ctx);
@@ -789,7 +808,7 @@ async function syncBucket(ctx) {
 __name(syncBucket, "syncBucket");
 function pushTabs(ctx) {
   const b = bucketFor(bucketKey());
-  const data = { tabs: b.tabs, activeTabId: b.activeTabId ?? "" };
+  const data = { tabs: b.tabs, activeTabId: b.activeTabId ?? "", split: b.split, splitRatio: b.splitRatio };
   for (const panelId of panelTargets()) ctx.send(panelId, "ui.tabs", data);
 }
 __name(pushTabs, "pushTabs");
@@ -1297,6 +1316,11 @@ plugin({
         if (b.activeTabId === tabId) {
           b.activeTabId = b.tabs.find((t) => !t.evicted)?.id ?? null;
         }
+        if (b.split && (b.split[0] === tabId || b.split[1] === tabId)) {
+          b.split = null;
+          await ctx.call("browser.setSplitTabs", { sessionId: key, tabId: null }).catch(() => {
+          });
+        }
         pushTabs(ctx);
         const active = b.tabs.find((t) => t.id === b.activeTabId);
         if (active?.url) {
@@ -1304,6 +1328,55 @@ plugin({
           pushUrl(ctx, active.url, active.title);
         }
         return { ok: true };
+      }
+      // Pure strip-order change: no focus, no view moves. The HOST registry is
+      // the truth for order — the mirror re-pulls so agent tool listings agree
+      // with what the strip shows.
+      case "tabs.reorder": {
+        const tabId = String(params.tabId ?? "");
+        if (!tabId) throw new Error("tabs.reorder: missing tabId");
+        await ctx.call("browser.reorderTab", {
+          sessionId: key,
+          tabId,
+          beforeTabId: params.beforeTabId ? String(params.beforeTabId) : null
+        });
+        await syncBucket(ctx);
+        return { ok: true };
+      }
+      case "split.set": {
+        const b = bucketFor(key);
+        const raw = params.tabs;
+        if (!Array.isArray(raw) || raw.length !== 2) {
+          b.split = null;
+          await ctx.call("browser.setSplitTabs", { sessionId: key, tabId: null }).catch(() => {
+          });
+          pushTabs(ctx);
+          return { ok: true, split: null };
+        }
+        const left = String(raw[0] ?? "");
+        const right = String(raw[1] ?? "");
+        if (!left || !right || left === right) throw new Error("split.set: need two distinct tab ids");
+        if (!b.tabs.some((t) => t.id === left) || !b.tabs.some((t) => t.id === right)) {
+          throw new Error("split.set: unknown tab id");
+        }
+        b.split = [left, right];
+        if (typeof params.ratio === "number" && Number.isFinite(params.ratio)) {
+          b.splitRatio = Math.min(0.8, Math.max(0.2, params.ratio));
+        }
+        b.activeTabId = left;
+        await ctx.call("browser.activateTab", { sessionId: key, tabId: left });
+        await ctx.call("browser.setSplitTabs", { sessionId: key, tabId: right });
+        pushTabs(ctx);
+        return { ok: true, split: b.split };
+      }
+      // The panes' width share — the draggable gutter writes here. Pure view
+      // state, but per conversation like the rest of the bucket.
+      case "split.ratio": {
+        const b = bucketFor(key);
+        const ratio = Number(params.ratio ?? 0.5);
+        b.splitRatio = Math.min(0.8, Math.max(0.2, Number.isFinite(ratio) ? ratio : 0.5));
+        pushTabs(ctx);
+        return { ok: true, splitRatio: b.splitRatio };
       }
       case "state.get": {
         const stateTab = targetTabId(key);
@@ -1321,7 +1394,9 @@ plugin({
           selPopup,
           clips: clips.length,
           tabs: b.tabs,
-          activeTabId: b.activeTabId ?? ""
+          activeTabId: b.activeTabId ?? "",
+          split: b.split,
+          splitRatio: b.splitRatio
         };
       }
       // ── Omnibox ──
@@ -1379,7 +1454,7 @@ plugin({
       }
       default:
         throw new Error(
-          `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, settings.setPrivate, settings.setSelPopup)`
+          `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, settings.setPrivate, settings.setSelPopup, tabs.new, tabs.activate, tabs.close, tabs.reorder, split.set)`
         );
     }
   },

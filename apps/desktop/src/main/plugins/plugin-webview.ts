@@ -16,6 +16,15 @@ import type { PluginRegistry } from './registry';
 export const ENGINE_SLOT_NAME = 'page';
 
 /**
+ * The split view's secondary engine slot. A plugin page holding `browser`
+ * permission may bind a SECOND element with `piSDK.liveSlot(ENGINE_SLOT_B_NAME,
+ * element)`; when shown, the engine displays two tabs side by side — the
+ * focused one in the primary slot, the split partner here. Focus (address
+ * bar, navigation, agent tools) always stays with the primary.
+ */
+export const ENGINE_SLOT_B_NAME = 'page-b';
+
+/**
  * Plugin web panels as native views.
  *
  * Every plugin panel — a manifest panel with an `entry` — is a web page. This
@@ -170,6 +179,37 @@ export class PluginWebViews {
             hide: () => bm.hide(),
           });
         }
+        // The split view's second pane — same translation, but it sizes its
+        // tab BESIDE the primary instead of enforcing the one-visible rule.
+        const engineSlotBId = `${pluginId}:${ENGINE_SLOT_B_NAME}`;
+        if (
+          !panelIds.has(ENGINE_SLOT_B_NAME) &&
+          !this.engineRegistered.has(engineSlotBId)
+        ) {
+          this.engineRegistered.add(engineSlotBId);
+          this.registered.add(engineSlotBId);
+          const bm = this.opts.browserManager;
+          liveSlots.register(engineSlotBId, {
+            attach: () => {
+              if (!bm.isConnected()) bm.connect().catch(() => {});
+            },
+            show: (bounds, tag) => {
+              const host = this.attachedPanelView(pluginId);
+              if (!host || !tag) {
+                bm.hideSecondary();
+                return;
+              }
+              const hostBounds = host.getBounds();
+              bm.showSecondary(tag, {
+                x: hostBounds.x + bounds.x,
+                y: hostBounds.y + bounds.y,
+                width: bounds.width,
+                height: bounds.height,
+              });
+            },
+            hide: () => bm.hideSecondary(),
+          });
+        }
       }
 
       // ── Panel slots ──
@@ -202,9 +242,12 @@ export class PluginWebViews {
             }
             // The panel view remounts with its page exactly as it was — no
             // resize inside the page, so its live slot will not re-report and
-            // the engine view positioned there stays hidden. Replay it.
+            // the engine view positioned there stays hidden. Replay it (both
+            // panes when a split is showing).
             const engineId = `${pluginId}:${ENGINE_SLOT_NAME}`;
             if (this.engineRegistered.has(engineId)) void liveSlots.reshow(engineId);
+            const engineIdB = `${pluginId}:${ENGINE_SLOT_B_NAME}`;
+            if (this.engineRegistered.has(engineIdB)) void liveSlots.reshow(engineIdB);
           },
           hide: () => this.hideSlot(slotId),
         });

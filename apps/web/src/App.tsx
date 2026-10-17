@@ -104,7 +104,7 @@ function AppContent() {
           }
           rightHeader={<PanelTabs />}
           headerTrailing={<LayoutToggles />}
-          rightPanel={<PanelHost />}
+          rightPanel={<PanelHost rail={false} />}
           leftSidebar={
             <LeftSidebar>
               <PanelHost region="left" />

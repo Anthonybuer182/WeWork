@@ -79,6 +79,37 @@ window.addEventListener('load', () => {
   flushInbox();
 }, { once: true });
 
+// ── Native popup menu (pi:menu:popup) ──
+// The click/dismiss round-trip comes back over ipcRenderer on this view; the
+// nonce pairs them with the popup call. A page-settable override lets
+// automated tests resolve the choice without the OS menu (contextBridge
+// function properties are read-only from the page, so tests cannot
+// monkey-patch showPopupMenu directly).
+let menuNonceSeq = 0;
+const menuWaiters = new Map<number, (id: string | null) => void>();
+let menuListenersInstalled = false;
+let popupMenuOverride: ((items: unknown[], x: number, y: number) => string | null) | null = null;
+function installMenuListeners(): void {
+  if (menuListenersInstalled) return;
+  menuListenersInstalled = true;
+  ipcRenderer.on('pi:menu:click', (_e, payload: { nonce?: number; id?: string }) => {
+    const nonce = payload?.nonce;
+    if (nonce == null) return;
+    const resolve = menuWaiters.get(nonce);
+    if (!resolve) return;
+    menuWaiters.delete(nonce);
+    resolve(payload?.id ?? null);
+  });
+  ipcRenderer.on('pi:menu:dismiss', (_e, payload: { nonce?: number }) => {
+    const nonce = payload?.nonce;
+    if (nonce == null) return;
+    const resolve = menuWaiters.get(nonce);
+    if (!resolve) return;
+    menuWaiters.delete(nonce);
+    resolve(null);
+  });
+}
+
 ipcRenderer.on('pi:plugin:port', (event, meta: { pluginId?: string }) => {
   const incoming = (event.ports as unknown as PortLike[] | undefined)?.[0];
   if (!incoming) return;
@@ -205,6 +236,47 @@ const bridge = {
   /** Native context menu — an editable plugin page needs the edit roles. */
   showContextMenu: (pos: { x: number; y: number }): Promise<{ ok: boolean }> =>
     ipcRenderer.invoke('pi:plugin:context-menu', pos),
+
+  /**
+   * Native popup menu with custom items — resolves the clicked item id, or
+   * null on dismissal. The menu is OS-level, so it floats above engine views
+   * (any DOM popup inside this page would be covered by them). The nonce
+   * pairs the popup with its click/dismiss round-trip.
+   *
+   * `__setPopupMenuOverride` is the automated-test seam: the contextBridge
+   * object's function properties are read-only from the page, so tests swap
+   * the handler through this entry point instead of monkey-patching.
+   */
+  showPopupMenu: (
+    items: { id: string; label: string }[],
+    x: number,
+    y: number,
+  ): Promise<string | null> => {
+    if (popupMenuOverride) return Promise.resolve(popupMenuOverride(items, x, y));
+    installMenuListeners();
+    const nonce = ++menuNonceSeq;
+    return new Promise<string | null>((resolve) => {
+      menuWaiters.set(nonce, resolve);
+      setTimeout(() => {
+        if (menuWaiters.has(nonce)) {
+          menuWaiters.delete(nonce);
+          resolve(null);
+        }
+      }, 120_000);
+      ipcRenderer
+        .invoke('pi:menu:popup', { nonce, x: Math.round(x), y: Math.round(y), items })
+        .catch(() => {
+          if (menuWaiters.has(nonce)) {
+            menuWaiters.delete(nonce);
+            resolve(null);
+          }
+        });
+    });
+  },
+
+  __setPopupMenuOverride: (fn: ((items: unknown[], x: number, y: number) => string | null) | null): void => {
+    popupMenuOverride = fn as never;
+  },
 
   /**
    * Live-slot binding (piSDK.liveSlot): let a host engine view be positioned

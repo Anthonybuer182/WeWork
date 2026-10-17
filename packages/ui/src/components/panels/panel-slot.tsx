@@ -1,5 +1,7 @@
 import { useEffect, type ComponentType } from 'react';
-import { usePanelStore, type PanelEntry, type PanelRegion, type PanelSlotId } from '@/stores/panel-store';
+import { Maximize2, Minimize2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { usePanelStore, type PanelEntry } from '@/stores/panel-store';
 import { ProviderSettings } from '@/components/settings';
 import { PluginCenter } from '@/components/plugins/plugin-center';
 import { FileTree } from '@/components/file/file-tree';
@@ -7,10 +9,11 @@ import { SessionList } from '@/components/session/session-list';
 import { ContextPanel } from '@/components/context/context-panel';
 import { ensureRelayInstalled } from '@/components/plugins/panel-relay';
 import { LiveSlot } from './live-slot';
+import { RailIcon } from './panel-rail';
 
 /**
  * Host panels ("the host is the zeroth contributor") — rendered through the
- * same panel registry/lifecycle/rail as plugin panels. File preview is
+ * same panel registry/lifecycle as plugin panels. File preview is
  * plugin-owned: no host preview panel.
  */
 const HOST_COMPONENTS: Record<string, ComponentType> = {
@@ -54,7 +57,7 @@ function PluginWebViewPanel({ pluginId, panelId }: { pluginId: string; panelId: 
   return <LiveSlot pluginId={pluginId} panelId={panelId} notifyMounted params={params} />;
 }
 
-function PanelBody({ panel }: { panel: PanelEntry }) {
+export function PanelBody({ panel }: { panel: PanelEntry }) {
   // Host panel: a React component the shell owns.
   if (panel.source === 'host') {
     const Host = HOST_COMPONENTS[panel.id];
@@ -77,63 +80,86 @@ function PanelBody({ panel }: { panel: PanelEntry }) {
 }
 
 /**
- * One slot of a region's body: the slot's active panel is visible;
- * keep-alive panels stay mounted hidden (the view stays alive), everything
- * else unmounts. A split region renders two of these side by side — each
- * filters the mounted set to ITS slot, so the two never fight over a panel.
+ * One work-area pane: a slim host-drawn header (identity, focus, zoom) above
+ * the panel's body. The header exists so every pane is identifiable at a
+ * glance when several sit side by side, and so the zoom control has a home
+ * above the panel's own chrome (plugin pages are native views that would
+ * cover any DOM floating inside them).
+ *
+ * `zoomable` is false for regions where a pane already spans its whole
+ * container (the left sidebar) — zooming there is meaningless.
  */
-export function PanelSlot({
-  region = 'right',
-  slot = 'A',
+export function PaneView({
+  panel,
+  focused,
+  zoomed,
+  zoomable = true,
+  hidden = false,
+  width,
 }: {
-  region?: PanelRegion;
-  slot?: PanelSlotId;
+  panel: PanelEntry;
+  focused: boolean;
+  zoomed: boolean;
+  zoomable?: boolean;
+  /** Rendered but kept off the layout (kept-alive while minimized). */
+  hidden?: boolean;
+  /** Flex-basis width when laid out (px). Undefined → flex:1. */
+  width?: number;
 }) {
-  const panels = usePanelStore((s) => s.panels);
-  const activePanelId = usePanelStore((s) => s.activePanelIds[region][slot]);
-  const mountedIds = usePanelStore((s) => s.mountedIds);
-  const slotOf = usePanelStore((s) => s.slotOf);
-
-  // `mountedIds` is flat across regions; each slot renders only its own.
-  const regionMountedIds = mountedIds.filter((id) => {
-    const p = panels.find((x) => x.id === id);
-    if (p?.region !== region) return false;
-    return (slotOf[id] ?? 'A') === slot;
-  });
+  const setFocused = usePanelStore((s) => s.setFocused);
+  const toggleZoom = usePanelStore((s) => s.toggleZoom);
+  const region = panel.region;
 
   return (
     <div
-      className="relative flex-1 min-h-0 overflow-hidden"
-      data-testid={`panel-slot-${region}${slot === 'B' ? '-B' : ''}`}
-      data-panel-slot-region={region}
-      data-panel-slot={slot}
-    >
-      {regionMountedIds.map((id) => {
-        const panel = panels.find((p) => p.id === id);
-        if (!panel) return null;
-        const visible = id === activePanelId;
-        return (
-          <div
-            key={id}
-            data-panel-container={id}
-            // `flex flex-col` is load-bearing: panel components size themselves
-            // with `flex-1`, which only has meaning against a flex parent.
-            // Without it their height collapses to 0 and virtualized lists
-            // (the session list) render nothing.
-            className="absolute inset-0 flex flex-col"
-            style={{ display: visible ? undefined : 'none' }}
-          >
-            <PanelBody panel={panel} />
-          </div>
-        );
-      })}
-      {regionMountedIds.length === 0 && (
-        <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
-          <span className="text-sm">
-            {region === 'left' ? '从左侧图标栏选择一个视图' : '从右侧图标栏选择一个面板'}
-          </span>
-        </div>
+      data-panel-container={panel.id}
+      data-pane-focused={focused ? 'true' : undefined}
+      className={cn(
+        'group/pane flex min-w-0 flex-col overflow-hidden',
+        focused ? 'bg-background' : 'bg-background/95',
+        hidden && 'hidden',
       )}
+      style={hidden ? undefined : { flex: width != null ? `0 0 ${width}px` : '1 1 0%' }}
+      onMouseDown={() => {
+        if (!focused) setFocused(region, panel.id);
+      }}
+    >
+      <div
+        data-pane-header={panel.id}
+        onDoubleClick={(e) => {
+          if (!zoomable) return;
+          e.preventDefault();
+          toggleZoom(region, panel.id);
+        }}
+        className={cn(
+          'flex h-7 shrink-0 select-none items-center gap-1.5 border-b px-2 text-xs',
+          focused ? 'border-border bg-accent/60 text-accent-foreground' : 'bg-muted/40 text-muted-foreground',
+        )}
+      >
+        <RailIcon panel={panel} size={14} className="h-3.5 w-3.5 shrink-0" />
+        <span className="min-w-0 flex-1 truncate">{panel.title}</span>
+        {zoomable && (
+          <button
+            type="button"
+            aria-label={zoomed ? '还原窗格' : '放大窗格'}
+            title={zoomed ? '还原（其他窗格回到工作区）' : '放大占满（其他窗格收成侧条）'}
+            data-pane-zoom={panel.id}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleZoom(region, panel.id);
+            }}
+            className={cn(
+              'shrink-0 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+              focused ? 'opacity-80' : 'opacity-0 group-hover/pane:opacity-70',
+            )}
+          >
+            {zoomed ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+          </button>
+        )}
+      </div>
+      <div className="min-h-0 flex-1">
+        <PanelBody panel={panel} />
+      </div>
     </div>
   );
 }

@@ -100,6 +100,21 @@ export class TabRegistry {
     b.activeTabId = tabId;
   }
 
+  /**
+   * Move a tab within its conversation's strip: it re-seats before
+   * `beforeTabId`, or at the end when omitted/unknown. A pure order change —
+   * focus and views are untouched.
+   */
+  reorderTab(sessionId: string, tabId: string, beforeTabId?: string | null): void {
+    const b = this.bucketFor(sessionId);
+    const from = b.tabIds.indexOf(tabId);
+    if (from === -1) return;
+    b.tabIds.splice(from, 1);
+    const at = beforeTabId ? b.tabIds.indexOf(beforeTabId) : -1;
+    if (at === -1) b.tabIds.push(tabId);
+    else b.tabIds.splice(at, 0, tabId);
+  }
+
   /** Close a tab and drop it from its bucket; closing the focus falls left. */
   closeTab(tabId: string): void {
     const sessionId = this.ownerOf(tabId);

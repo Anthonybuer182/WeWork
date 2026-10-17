@@ -87,6 +87,17 @@ function baseName(p: string): string {
   return p.split(/[\\/]/).pop() || p;
 }
 
+/** The doc-tab context menu — a NATIVE popup (OS-level, same as the
+ *  browser's tab menu): floats above everything, styled by the system. */
+function openTabMenu(path: string, at: { x: number; y: number }): void {
+  const items = [{ id: 'split-right', label: '向右拆分' }];
+  void window.piSDK?.showPopupMenu?.(items, at.x, at.y).then((picked) => {
+    if (picked === 'split-right') {
+      void window.piSDK?.request('file.splitRight', { path });
+    }
+  });
+}
+
 function renderStrip(tabs: string[], activePath: string): void {
   const bar = document.getElementById(stripId);
   if (!bar) return;
@@ -101,6 +112,19 @@ function renderStrip(tabs: string[], activePath: string): void {
     const tab = document.createElement('div');
     tab.className = 'pi-file-tab' + (path === activePath ? ' active' : '');
     tab.title = path;
+    // Drag to reorder: the drop target names the position ("before that
+    // doc"); the backend bucket is the truth for strip order.
+    tab.draggable = true;
+    tab.addEventListener('dragstart', (e) => {
+      e.dataTransfer?.setData('text/plain', path);
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+    });
+    tab.addEventListener('dragover', (e) => e.preventDefault());
+    tab.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const from = e.dataTransfer?.getData('text/plain');
+      if (from && from !== path) void window.piSDK?.request('file.reorderTab', { path: from, beforePath: path });
+    });
     const label = document.createElement('span');
     label.textContent = baseName(path);
     tab.appendChild(label);
@@ -117,6 +141,15 @@ function renderStrip(tabs: string[], activePath: string): void {
     tab.addEventListener('click', () => {
       if (path === activePath) return;
       void window.piSDK?.request('file.activateTab', { path });
+    });
+    tab.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openTabMenu(path, { x: e.clientX, y: e.clientY });
+    });
+    tab.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      openTabMenu(path, { x: e.clientX, y: e.clientY });
     });
     bar.appendChild(tab);
   }
@@ -142,6 +175,7 @@ export function mountTabsBar(): void {
     if (!data || !Array.isArray(data.tabs)) return;
     renderStrip(data.tabs.map(String), typeof data.activePath === 'string' ? data.activePath : '');
   });
+
 
   // Boot pull. The host pushes `ui.render` on MOUNT only — a format-switch
   // reload (or DevTools reload) comes back with no push, and the dispatcher's

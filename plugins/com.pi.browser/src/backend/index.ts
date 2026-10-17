@@ -638,6 +638,14 @@ interface MirrorTab {
 interface TabBucket {
   tabs: MirrorTab[];
   activeTabId: string | null;
+  /**
+   * The split view's two tabs: [primary (left pane), secondary (right
+   * pane)]. null = no split. The secondary is also reported to the host
+   * (`browser.setSplitTabs`) so its view survives the primary's slot report.
+   */
+  split: [string, string] | null;
+  /** The split panes' width share (primary's fraction, 0.2–0.8). */
+  splitRatio: number;
 }
 
 /**
@@ -657,7 +665,7 @@ function bucketKey(sessionId?: string | null): string {
 function bucketFor(key: string): TabBucket {
   let b = tabBuckets.get(key);
   if (!b) {
-    b = { tabs: [], activeTabId: null };
+    b = { tabs: [], activeTabId: null, split: null, splitRatio: 0.5 };
     tabBuckets.set(key, b);
   }
   return b;
@@ -708,6 +716,12 @@ async function syncBucketFor(ctx: PluginContext, key: string): Promise<void> {
       const live = b.tabs.find((t) => !t.evicted);
       b.activeTabId = live?.id ?? null;
     }
+    // A split whose panes no longer resolve is dead — collapse it here so the
+    // panel never tries to show a tab the host has evicted or closed.
+    if (b.split && (!b.tabs.some((t) => t.id === b.split![0]) || !b.tabs.some((t) => t.id === b.split![1]))) {
+      b.split = null;
+      void ctx.call('browser.setSplitTabs', { sessionId: key, tabId: null }).catch(() => {});
+    }
   } catch {
     /* host without tab support (old build) — keep whatever we mirror */
   }
@@ -740,7 +754,7 @@ async function syncBucket(ctx: PluginContext): Promise<void> {
 /** Push the tab strip state to the panel (dedup-free: the strip redraw is cheap). */
 function pushTabs(ctx: PluginContext): void {
   const b = bucketFor(bucketKey());
-  const data = { tabs: b.tabs, activeTabId: b.activeTabId ?? '' };
+  const data = { tabs: b.tabs, activeTabId: b.activeTabId ?? '', split: b.split, splitRatio: b.splitRatio };
   for (const panelId of panelTargets()) ctx.send(panelId, 'ui.tabs', data);
 }
 
@@ -1397,6 +1411,11 @@ plugin({
         if (b.activeTabId === tabId) {
           b.activeTabId = b.tabs.find((t) => !t.evicted)?.id ?? null;
         }
+        // A split pane died — collapse rather than show a ghost.
+        if (b.split && (b.split[0] === tabId || b.split[1] === tabId)) {
+          b.split = null;
+          await ctx.call('browser.setSplitTabs', { sessionId: key, tabId: null }).catch(() => {});
+        }
         pushTabs(ctx);
         const active = b.tabs.find((t) => t.id === b.activeTabId);
         if (active?.url) {
@@ -1404,6 +1423,59 @@ plugin({
           pushUrl(ctx, active.url, active.title);
         }
         return { ok: true };
+      }
+
+      // Pure strip-order change: no focus, no view moves. The HOST registry is
+      // the truth for order — the mirror re-pulls so agent tool listings agree
+      // with what the strip shows.
+      case 'tabs.reorder': {
+        const tabId = String(params.tabId ?? '');
+        if (!tabId) throw new Error('tabs.reorder: missing tabId');
+        await ctx.call('browser.reorderTab', {
+          sessionId: key,
+          tabId,
+          beforeTabId: params.beforeTabId ? String(params.beforeTabId) : null,
+        });
+        await syncBucket(ctx);
+        return { ok: true };
+      }
+
+      case 'split.set': {
+        const b = bucketFor(key);
+        const raw = params.tabs;
+        if (!Array.isArray(raw) || raw.length !== 2) {
+          b.split = null;
+          await ctx.call('browser.setSplitTabs', { sessionId: key, tabId: null }).catch(() => {});
+          pushTabs(ctx);
+          return { ok: true, split: null };
+        }
+        const left = String(raw[0] ?? '');
+        const right = String(raw[1] ?? '');
+        if (!left || !right || left === right) throw new Error('split.set: need two distinct tab ids');
+        if (!b.tabs.some((t) => t.id === left) || !b.tabs.some((t) => t.id === right)) {
+          throw new Error('split.set: unknown tab id');
+        }
+        b.split = [left, right];
+        if (typeof params.ratio === 'number' && Number.isFinite(params.ratio)) {
+          b.splitRatio = Math.min(0.8, Math.max(0.2, params.ratio));
+        }
+        // Make the LEFT pane the focus: the address bar and agent tools act on
+        // it. The right pane's view is positioned by its own slot report.
+        b.activeTabId = left;
+        await ctx.call('browser.activateTab', { sessionId: key, tabId: left });
+        await ctx.call('browser.setSplitTabs', { sessionId: key, tabId: right });
+        pushTabs(ctx);
+        return { ok: true, split: b.split };
+      }
+
+      // The panes' width share — the draggable gutter writes here. Pure view
+      // state, but per conversation like the rest of the bucket.
+      case 'split.ratio': {
+        const b = bucketFor(key);
+        const ratio = Number(params.ratio ?? 0.5);
+        b.splitRatio = Math.min(0.8, Math.max(0.2, Number.isFinite(ratio) ? ratio : 0.5));
+        pushTabs(ctx);
+        return { ok: true, splitRatio: b.splitRatio };
       }
 
       case 'state.get': {
@@ -1423,6 +1495,8 @@ plugin({
           clips: clips.length,
           tabs: b.tabs,
           activeTabId: b.activeTabId ?? '',
+          split: b.split,
+          splitRatio: b.splitRatio,
         };
       }
 
@@ -1487,7 +1561,8 @@ plugin({
         throw new Error(
           `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, ` +
             `state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, ` +
-            `settings.setPrivate, settings.setSelPopup)`,
+            `settings.setPrivate, settings.setSelPopup, tabs.new, tabs.activate, tabs.close, ` +
+            `tabs.reorder, split.set)`,
         );
     }
   },

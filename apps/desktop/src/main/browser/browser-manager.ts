@@ -241,6 +241,9 @@ export class BrowserManager {
   closeTab(tabId: string, opts: { keepRecord?: boolean } = {}): void {
     const t = this.tabs.get(tabId);
     if (!t) return;
+    // A closed tab cannot keep the split's second pane — the panel re-reports
+    // after collapsing, but the stale view must not outlive the tab.
+    if (this.splitPartner === tabId) this.splitPartner = null;
     if (opts.keepRecord) {
       let title = '';
       try {
@@ -323,15 +326,27 @@ export class BrowserManager {
   }
 
   /**
+   * The tab currently shown in the split view's SECOND pane (null = no
+   * split). `showTab` must not zero it, or the two panes would fight.
+   */
+  private splitPartner: string | null = null;
+
+  /** Record which tab the panel's secondary engine slot is showing (or none). */
+  setSplitPartner(tabId: string | null): void {
+    this.splitPartner = tabId && this.tabs.has(tabId) ? tabId : null;
+  }
+
+  /**
    * Show a tab at `bounds` — the ONLY writer of non-zero bounds. Enforces the
-   * one-visible invariant: every other view goes to 0×0 first, then the target
-   * is sized and re-topped (native views stack in child order — the engine
-   * must sit above panel views or clicks land on the DOM beneath).
+   * one-visible invariant: every other view goes to 0×0 first (the split
+   * partner excepted — the two panes coexist), then the target is sized and
+   * re-topped (native views stack in child order — the engine must sit above
+   * panel views or clicks land on the DOM beneath).
    */
   showTab(tabId: string | undefined, bounds: { x: number; y: number; width: number; height: number }): void {
     const t = this.tab(tabId);
     if (!t) return;
-    const others = [...this.tabs.values()].filter((x) => x !== t);
+    const others = [...this.tabs.values()].filter((x) => x !== t && x.id !== this.splitPartner);
     for (const o of others) {
       try {
         o.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
@@ -344,14 +359,59 @@ export class BrowserManager {
       this.activeTabId = t.id;
       // Re-top: if a panel view joined the tree after this engine view, it
       // would paint over the engine — re-append to keep the engine last.
-      const children = this.mainWindow?.contentView.children ?? [];
-      if (children.length > 0 && children[children.length - 1] !== t.view) {
-        this.mainWindow!.contentView.removeChildView(t.view);
-        this.mainWindow!.contentView.addChildView(t.view);
-      }
+      this.retop(t);
       void this.setDeviceMetrics(bounds.width, bounds.height, t).catch(() => {});
     } catch (err) {
       console.warn('[BrowserManager] showTab failed:', err);
+    }
+  }
+
+  /**
+   * The split view's secondary pane: size and reveal THIS tab without
+   * touching the primary's view. Focus stays with the primary — the address
+   * bar and navigation act on it.
+   */
+  showSecondary(tabId: string | undefined, bounds: { x: number; y: number; width: number; height: number }): void {
+    const t = this.tab(tabId);
+    if (!t) return;
+    this.splitPartner = t.id;
+    const others = [...this.tabs.values()].filter((x) => x !== t && x.id !== this.activeTabId);
+    for (const o of others) {
+      try {
+        o.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+      } catch { /* ignore */ }
+    }
+    try {
+      t.view.setBounds(bounds);
+      t.lastBounds = { ...bounds };
+      t.lastShownAt = Date.now();
+      this.retop(t);
+      void this.setDeviceMetrics(bounds.width, bounds.height, t).catch(() => {});
+    } catch (err) {
+      console.warn('[BrowserManager] showSecondary failed:', err);
+    }
+  }
+
+  /** Zero the secondary pane's view (split collapsed or its slot hidden). */
+  hideSecondary(): void {
+    this.splitPartner = null;
+    // The next primary slot report re-lays the single pane; zero the rest now
+    // so no stale secondary view keeps painting.
+    for (const t of this.tabs.values()) {
+      if (t.id === this.activeTabId) continue;
+      try {
+        t.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+        t.lastBounds = null;
+      } catch { /* ignore */ }
+    }
+  }
+
+  /** Re-append a tab's view so it sits above every other view in the tree. */
+  private retop(t: BrowserTab): void {
+    const children = this.mainWindow?.contentView.children ?? [];
+    if (children.length > 0 && children[children.length - 1] !== t.view) {
+      this.mainWindow!.contentView.removeChildView(t.view);
+      this.mainWindow!.contentView.addChildView(t.view);
     }
   }
 

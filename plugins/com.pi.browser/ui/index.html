@@ -151,6 +151,89 @@
     /* The engine view is positioned exactly over this region by the host
        (piSDK.liveSlot). Keep it empty — anything painted here is covered. */
     #page-slot { flex: 1; min-height: 0; }
+    /* NON-split mode: the primary slot must FILL the region — an empty div
+       here has zero height, and the engine view would be positioned 0×0
+       (invisible + swallowed). height:100% inside the block parent. */
+    #page-slot-a { display: block; width: 100%; height: 100%; }
+    /* Split mode: the region becomes a flex row; pane A takes the remembered
+       share (JS writes paneA.style.flex), B fills the rest. */
+    body.split #page-slot { display: flex; }
+    body.split #page-slot-a { width: auto; height: auto; }
+    #page-slot-b { display: none; }
+    body.split #page-slot-b { display: block; flex: 1 1 0%; min-width: 0; }
+    /* Split view: two panes share the region; the secondary starts hidden so
+       its live slot reports 0×0 (degenerate = hidden view) until a split
+       engages. The gutter between them is a REAL splitter (drag → the backend
+       remembers the ratio per conversation); pane widths come from JS. */
+    #page-slot-a, #page-slot-b { min-width: 0; }
+    #split-gutter {
+      display: none;
+      position: relative;
+      flex: none;
+      width: 12px;
+      cursor: col-resize;
+      background: transparent;
+      touch-action: none;
+      outline: none;
+    }
+    #split-gutter::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-50%);
+      border-radius: 2px;
+      background: hsl(var(--border, 218 14% 20%));
+      transition: width 0.15s, background 0.15s;
+    }
+    #split-gutter:hover::before, #split-gutter.drag::before {
+      width: 3px;
+      background: hsl(var(--ring, 218 100% 65%) / 0.7);
+    }
+    #split-gutter::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 36px;
+      transform: translate(-50%, -50%);
+      border-radius: 2px;
+      background: hsl(var(--ring, 218 100% 65%) / 0.45);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    #split-gutter:hover::after, #split-gutter.drag::after { opacity: 1; }
+    #split-gutter:focus-visible::before { width: 3px; background: hsl(var(--ring, 218 100% 65%)); }
+    #split-tip {
+      position: fixed;
+      z-index: 60;
+      transform: translate(-50%, 0);
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 10px;
+      line-height: 16px;
+      background: hsl(var(--foreground, 220 21% 92%));
+      color: hsl(var(--background, 222 19% 7%));
+      box-shadow: 0 2px 8px hsl(0 0% 0% / 0.3);
+      display: none;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    body.split #split-gutter { display: block; }
+
+    /* Split mode: the shared strip shows ONE chip per pane, in two segments
+       sized by the split ratio — each chip sits directly above its own
+       engine view, VS Code editor-group style. */
+    #tabs .tab-seg {
+      display: flex;
+      align-items: stretch;
+      gap: 2px;
+      min-width: 0;
+      overflow: hidden;
+    }
 
     /* ── Tab strip ──
        IN DOCUMENT FLOW above the toolbar: the engine view covers all DOM, so
@@ -238,12 +321,15 @@
     </div>
   </div>
 
-  <div id="page-slot"></div>
+  <div id="page-slot">
+    <div id="page-slot-a"></div>
+    <div id="split-gutter" title="拖动调整分屏比例"></div>
+    <div id="page-slot-b"></div>
+  </div>
 
   <script>
     (function () {
       var input = document.getElementById('url');
-      var slot = document.getElementById('page-slot');
       var omnibox = document.getElementById('omnibox');
       var list = document.getElementById('omni-list');
       var btnStar = document.getElementById('btn-star');
@@ -251,11 +337,17 @@
       var chkSel = document.getElementById('chk-sel');
       var btnClear = document.getElementById('btn-clear');
 
-      // Bind the host engine view into the empty region below the toolbar.
-      // The tag names WHICH tab the slot wants — the strip's focused one. A
-      // tab switch changes no DOM size, so refresh() is what re-reports.
-      var slotHandle = window.piSDK.liveSlot('page', slot, function () {
+      // Bind the host engine views. `#page-slot-a` carries the focused tab;
+      // `#page-slot-b` carries the split's right pane (its tag is empty while
+      // no split is engaged, and the pane itself is display:none so the slot
+      // reports 0×0 — the host hides the view). A tab switch changes no DOM
+      // size, so refresh() is what re-reports.
+      var slotHandle = window.piSDK.liveSlot('page', document.getElementById('page-slot-a'), function () {
         return state.activeTabId;
+      });
+      var slotBHandle = window.piSDK.liveSlot('page-b', document.getElementById('page-slot-b'), function () {
+        var s = state.split;
+        return s ? s[1] : '';
       });
 
       function act(method, params) {
@@ -266,34 +358,225 @@
 
       // ── Tab strip ──
       var tabsEl = document.getElementById('tabs');
+      function applySplitClass() {
+        var on = !!(state.split && state.split[1]);
+        document.body.classList.toggle('split', on);
+        // Pane widths follow the remembered ratio (primary's share).
+        var paneA = document.getElementById('page-slot-a');
+        if (on) {
+          var r = Math.min(0.8, Math.max(0.2, state.splitRatio || 0.5));
+          paneA.style.flex = '0 0 ' + (r * 100).toFixed(2) + '%';
+        } else {
+          paneA.style.flex = '';
+        }
+      }
+      // The split sash: the single divider between the two panes. Invisible
+      // wide hit area; hover thickens the line and shows a grip; drag shows a
+      // live share pill; double-click resets to 50/50; arrows nudge by 2%.
+      // The ratio persists per conversation (backend split.ratio).
+      (function () {
+        var gutter = document.getElementById('split-gutter');
+        var region = document.getElementById('page-slot');
+        var tip = document.createElement('div');
+        tip.id = 'split-tip';
+        document.body.appendChild(tip);
+        var SNAP = 0.025;
+        var clamp = function (r) { return Math.min(0.8, Math.max(0.2, r)); };
+        var setRatio = function (r) {
+          state.splitRatio = r;
+          applySplitClass();
+        };
+        gutter.tabIndex = 0;
+        gutter.setAttribute('role', 'separator');
+        gutter.setAttribute('aria-orientation', 'vertical');
+        gutter.setAttribute('aria-label', '拖动调整分屏比例（双击复位为对半，方向键微调）');
+        gutter.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          gutter.classList.add('drag');
+          if (gutter.setPointerCapture) { try { gutter.setPointerCapture(e.pointerId); } catch (err) {} }
+          var move = function (ev) {
+            var rect = region.getBoundingClientRect();
+            if (rect.width <= 0) return;
+            var ratio = (ev.clientX - rect.left) / rect.width;
+            if (Math.abs(ratio - 0.5) < SNAP) ratio = 0.5;
+            setRatio(clamp(ratio));
+            tip.style.display = 'block';
+            tip.style.left = ev.clientX + 'px';
+            tip.style.top = rect.top + 10 + 'px';
+            tip.textContent = Math.round(state.splitRatio * 100) + ' · ' + Math.round((1 - state.splitRatio) * 100);
+          };
+          var up = function () {
+            gutter.classList.remove('drag');
+            tip.style.display = 'none';
+            gutter.removeEventListener('pointermove', move);
+            gutter.removeEventListener('pointerup', up);
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+            act('split.ratio', { ratio: state.splitRatio });
+          };
+          if (gutter.setPointerCapture) {
+            gutter.addEventListener('pointermove', move);
+            gutter.addEventListener('pointerup', up);
+          } else {
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', up);
+          }
+        });
+        gutter.addEventListener('dblclick', function () {
+          setRatio(0.5);
+          act('split.ratio', { ratio: 0.5 });
+        });
+        gutter.addEventListener('keydown', function (e) {
+          var next = null;
+          if (e.key === 'ArrowLeft') next = clamp(state.splitRatio - 0.02);
+          else if (e.key === 'ArrowRight') next = clamp(state.splitRatio + 0.02);
+          else if (e.key === 'Home') next = 0.2;
+          else if (e.key === 'End') next = 0.8;
+          if (next != null) {
+            e.preventDefault();
+            setRatio(next);
+            act('split.ratio', { ratio: next });
+          }
+        });
+      })();
+      // Native popup menu (OS-level — floats above the engine views, unlike
+      // any DOM dropdown in this page).
+      function openTabMenu(tab) {
+        var inSplit = !!(state.split && (state.split[0] === tab.id || state.split[1] === tab.id));
+        var items = inSplit
+          ? [{ id: 'unsplit', label: '取消分屏' }]
+          : [{ id: 'split-right', label: '向右拆分' }];
+        window.piSDK.showPopupMenu(items, lastMouse.x, lastMouse.y).then(function (picked) {
+          if (picked === 'unsplit') { act('split.set', { tabs: null }); return; }
+          if (picked === 'split-right') {
+            var right = (state.tabs.find(function (t) { return t.id !== tab.id && !t.evicted; }) || {}).id;
+            if (right) act('split.set', { tabs: [tab.id, right], ratio: state.splitRatio });
+          }
+        });
+      }
+      var lastMouse = { x: 0, y: 0 };
+      function makeChip(t, split) {
+        var isSplitRight = !!(split && split[1] === t.id);
+        var el = document.createElement('div');
+        el.className = 'tab on';
+        el.draggable = true;
+        el.dataset.tabId = t.id;
+        var label = document.createElement('span');
+        label.textContent = t.title || shortUrl(t.url) || '新标签页';
+        el.title = t.url || '';
+        el.appendChild(label);
+        var x = document.createElement('button');
+        x.className = 'x';
+        x.textContent = '×';
+        x.setAttribute('aria-label', '关闭标签页');
+        x.onclick = function (e) { e.stopPropagation(); act('tabs.close', { tabId: t.id }); };
+        el.appendChild(x);
+        el.onclick = function () {
+          // Both split panes are visible — clicking a chip swaps which side
+          // it renders on instead of doubling it into the left pane.
+          if (split && split[1] === t.id && split[0] !== t.id) {
+            act('split.set', { tabs: [t.id, split[0]], ratio: state.splitRatio });
+            return;
+          }
+          act('tabs.activate', { tabId: t.id });
+        };
+        el.oncontextmenu = function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          lastMouse.x = e.clientX; lastMouse.y = e.clientY;
+          openTabMenu(t);
+        };
+        el.ondblclick = function (e) {
+          e.preventDefault();
+          lastMouse.x = e.clientX; lastMouse.y = e.clientY;
+          openTabMenu(t);
+        };
+        el.addEventListener('dragstart', function (e) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', t.id);
+        });
+        el.addEventListener('dragover', function (e) { e.preventDefault(); });
+        el.addEventListener('drop', function (e) {
+          e.preventDefault();
+          var from = e.dataTransfer.getData('text/plain');
+          if (from && from !== t.id) act('tabs.reorder', { tabId: from, beforeTabId: t.id });
+        });
+        return el;
+      }
       function renderTabs() {
         var tabs = state.tabs || [];
         var active = state.activeTabId || '';
-        var changed = tabsEl.dataset.active !== active;
+        var split = state.split || null;
+        applySplitClass();
+        var changed = tabsEl.dataset.active !== active || tabsEl.dataset.split !== String(split ? split[1] : '');
         tabsEl.dataset.active = active;
+        tabsEl.dataset.split = String(split ? split[1] : '');
         tabsEl.textContent = '';
         if (tabs.length === 0) {
           tabsEl.style.display = 'none';
         } else {
           tabsEl.style.display = 'flex';
-          for (var i = 0; i < tabs.length; i++) {
-            (function (t) {
-              var el = document.createElement('div');
-              el.className = 'tab' + (t.id === active ? ' on' : '');
-              var label = document.createElement('span');
-              label.textContent = t.title || shortUrl(t.url) || '新标签页';
-              el.title = t.url || '';
-              if (t.evicted) label.textContent += ' (重新打开会重载)';
-              el.appendChild(label);
-              var x = document.createElement('button');
-              x.className = 'x';
-              x.textContent = '×';
-              x.setAttribute('aria-label', '关闭标签页');
-              x.onclick = function (e) { e.stopPropagation(); act('tabs.close', { tabId: t.id }); };
-              el.appendChild(x);
-              el.onclick = function () { act('tabs.activate', { tabId: t.id }); };
-              tabsEl.appendChild(el);
-            })(tabs[i]);
+          if (split) {
+            // VS Code-style split: each pane's tab chip sits above ITS OWN
+            // content, and the two segments size with the split ratio so the
+            // chips line up over their engine views.
+            var slotW = document.getElementById('page-slot').getBoundingClientRect().width;
+            var r = Math.min(0.8, Math.max(0.2, state.splitRatio || 0.5));
+            var segA = document.createElement('div');
+            segA.className = 'tab-seg';
+            segA.style.flex = '0 0 ' + (r * 100).toFixed(2) + '%';
+            var leftTab = tabs.find(function (t) { return t.id === split[0]; });
+            if (leftTab) segA.appendChild(makeChip(leftTab, split));
+            var segB = document.createElement('div');
+            segB.className = 'tab-seg';
+            segB.style.flex = '1 1 0%';
+            var rightTab = tabs.find(function (t) { return t.id === split[1]; });
+            if (rightTab) segB.appendChild(makeChip(rightTab, split));
+            tabsEl.appendChild(segA);
+            tabsEl.appendChild(segB);
+          } else {
+            for (var i = 0; i < tabs.length; i++) {
+              (function (t) {
+                var el = document.createElement('div');
+                el.className = 'tab' + (t.id === active ? ' on' : '');
+                el.draggable = true;
+                el.dataset.tabId = t.id;
+                var label = document.createElement('span');
+                label.textContent = t.title || shortUrl(t.url) || '新标签页';
+                el.title = t.url || '';
+                if (t.evicted) label.textContent += ' (重新打开会重载)';
+                el.appendChild(label);
+                var x = document.createElement('button');
+                x.className = 'x';
+                x.textContent = '×';
+                x.setAttribute('aria-label', '关闭标签页');
+                x.onclick = function (e) { e.stopPropagation(); act('tabs.close', { tabId: t.id }); };
+                el.appendChild(x);
+                el.onclick = function () { act('tabs.activate', { tabId: t.id }); };
+                el.oncontextmenu = function (e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  lastMouse.x = e.clientX; lastMouse.y = e.clientY;
+                  openTabMenu(t);
+                };
+                el.ondblclick = function (e) {
+                  e.preventDefault();
+                  lastMouse.x = e.clientX; lastMouse.y = e.clientY;
+                  openTabMenu(t);
+                };
+                el.addEventListener('dragstart', function (e) {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', t.id);
+                });
+                el.addEventListener('dragover', function (e) { e.preventDefault(); });
+                el.addEventListener('drop', function (e) {
+                  e.preventDefault();
+                  var from = e.dataTransfer.getData('text/plain');
+                  if (from && from !== t.id) act('tabs.reorder', { tabId: from, beforeTabId: t.id });
+                });
+                tabsEl.appendChild(el);
+              })(tabs[i]);
+            }
           }
           var plus = document.createElement('button');
           plus.className = 'newtab';
@@ -303,8 +586,9 @@
           plus.onclick = function () { act('tabs.new', {}); };
           tabsEl.appendChild(plus);
         }
-        // The focused tab changed → the engine view must follow it.
+        // Focus or split changed → the engine views must follow.
         if (changed && slotHandle && slotHandle.refresh) slotHandle.refresh();
+        if (slotBHandle && slotBHandle.refresh) slotBHandle.refresh();
       }
       function shortUrl(u) {
         try {
@@ -330,7 +614,9 @@
         history: [],
         active: -1,      // highlighted row across both sections
         tabs: [],        // this conversation's tabs (mirror of the backend)
-        activeTabId: ''
+        activeTabId: '',
+        split: null,     // [leftTabId, rightTabId] while the panes are split
+        splitRatio: 0.5  // the panes' width share (primary's fraction)
       };
       var searchSeq = 0;
 
@@ -612,6 +898,8 @@
         } else if (msg.event === 'ui.tabs') {
           state.tabs = msg.data.tabs || [];
           state.activeTabId = String(msg.data.activeTabId || '');
+          state.split = Array.isArray(msg.data.split) ? msg.data.split : null;
+          state.splitRatio = typeof msg.data.splitRatio === 'number' ? msg.data.splitRatio : 0.5;
           renderTabs();
         } else if (msg.event === 'ui.favoritesChanged' || msg.event === 'ui.historyCleared') {
           if (!omnibox.hidden) refreshList();
@@ -635,6 +923,9 @@
         if (s.tabs) {
           state.tabs = s.tabs;
           state.activeTabId = String(s.activeTabId || '');
+          state.split = Array.isArray(s.split) ? s.split : null;
+          state.splitRatio = typeof s.splitRatio === 'number' ? s.splitRatio : 0.5;
+          applySplitClass();
           renderTabs();
         }
         chkPrivate.checked = state.private;

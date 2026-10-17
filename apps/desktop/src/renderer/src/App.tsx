@@ -86,7 +86,7 @@ function AppContent() {
   useEffect(() => {
     if (!rightPanelOpen) return;
     const panelState = usePanelStore.getState();
-    if (panelState.activePanelIds.right.A || panelState.activePanelIds.right.B) return;
+    if (panelState.openPanelIds.right.length > 0) return;
     const rightPanels = panelState.panels.filter((p) => p.region === 'right');
     // Fallback must be a GLOBAL panel: a session panel opened here would
     // arrive without its conversation's params (its file stays behind with
@@ -159,7 +159,7 @@ function AppContent() {
           : undefined;
         const target = panelId ?? usePanelStore.getState().panels.find((p) => p.source === event.pluginId)?.id;
         if (target) {
-          openPanel(target, { focus: event.focus });
+          openPanel(target, { focus: event.focus, params: event.params });
           // Surface the panel's own side: a backend-opened panel must not land
           // in a collapsed column the user cannot see. focus=false means
           // "badge, don't steal focus" — no reveal in that case, either region.
@@ -283,7 +283,7 @@ function AppContent() {
           }
           rightHeader={<PanelTabs />}
           headerTrailing={<LayoutToggles />}
-          rightPanel={<PanelHost />}
+          rightPanel={<PanelHost rail={false} />}
           leftSidebar={
             <LeftSidebar>
               <PanelHost region="left" />

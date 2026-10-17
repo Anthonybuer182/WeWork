@@ -32,6 +32,12 @@ interface PiSdk {
   request(method: string, params?: Record<string, unknown>): Promise<unknown>;
   emit(event: string, data?: unknown): void;
   onMessage(cb: (payload: unknown) => void): void;
+  /** Native popup menu (desktop): resolves the clicked item id, null on dismiss. */
+  showPopupMenu?(
+    items: { id: string; label: string }[],
+    x: number,
+    y: number,
+  ): Promise<string | null>;
 }
 
 interface PiViewBridge {

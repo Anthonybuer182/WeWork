@@ -247,6 +247,16 @@ export function plugin(handlers: PluginHandlers): void {
   }
 
   let panelPort: PanelPort | null = null;
+  /**
+   * All live panel ports by panel id. A plugin may serve SEVERAL panels at
+   * once — the viewer's split pane is a second native view of the same plugin
+   * page, so a second port arrives while the first is alive. Ports carry no
+   * panel id at transfer time; each port's panel is learned from its first
+   * inbound tagged message. `panelPort` (the most recent transfer) stays as
+   * the fallback for traffic that has no routing information.
+   */
+  const panelPorts = new Map<string, PanelPort>();
+  const portPanel = new Map<PanelPort, string>();
   let pluginId = '';
   let dataDir = '';
   /** False until the host's `init` arrives; handlers must not run before it. */
@@ -259,6 +269,15 @@ export function plugin(handlers: PluginHandlers): void {
   let portClosed = false;
   let probeSeq = 0;
   const pendingProbes = new Map<string, () => void>();
+
+  /** The port a panel's traffic should use. */
+  function routeFor(panelId?: string): PanelPort | null {
+    if (panelId) {
+      const p = panelPorts.get(panelId);
+      if (p) return p;
+    }
+    return panelPort;
+  }
 
   const post = (message: unknown): void => host.postMessage(message);
   const log = (level: string, message: string): void => post({ type: 'log', level, message });
@@ -288,14 +307,16 @@ export function plugin(handlers: PluginHandlers): void {
       // No port, or the port has closed: the message goes nowhere. Deliberately
       // not logged — see the interface comment. Returning false is how a caller
       // finds out.
-      if (!panelPort || portClosed) return false;
-      panelPort.postMessage({ kind: 'event', event, panelId, data });
+      const port = routeFor(panelId);
+      if (!port) return false;
+      port.postMessage({ kind: 'event', event, panelId, data });
       return true;
     },
     panelAlive(panelId: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<boolean> {
       // No port, or the port has closed: nothing to ask, and asking would be a
       // postMessage into a dead peer, which succeeds silently.
-      if (!panelPort || portClosed) return Promise.resolve(false);
+      const port = routeFor(panelId);
+      if (!port) return Promise.resolve(false);
       const id = 'probe-' + ++probeSeq;
       return new Promise<boolean>((resolve) => {
         const timer = setTimeout(() => {
@@ -306,7 +327,7 @@ export function plugin(handlers: PluginHandlers): void {
           clearTimeout(timer);
           resolve(true);
         });
-        panelPort!.postMessage({ kind: 'event', event: 'pi.probe', panelId, data: { id } });
+        port.postMessage({ kind: 'event', event: 'pi.probe', panelId, data: { id } });
       });
     },
     async openPanel(panelId: string, options?: { focus?: boolean }): Promise<unknown> {
@@ -370,7 +391,7 @@ export function plugin(handlers: PluginHandlers): void {
   }
 
   // ── Panel traffic ──
-  async function onPanelMessage(raw: unknown): Promise<void> {
+  async function onPanelMessage(raw: unknown, sourcePort?: PanelPort): Promise<void> {
     const msg = raw as {
       kind?: string;
       id?: string;
@@ -386,27 +407,21 @@ export function plugin(handlers: PluginHandlers): void {
       const id = String(msg.id ?? '');
       const method = String(msg.method ?? '');
       const panelId = msg.panelId ?? '';
+      // Replies go back on the port the request CAME from — with several
+      // panels alive there is no single "the panel port".
+      const replyPort = sourcePort ?? routeFor(panelId);
+      const reply = (ok: boolean, error?: string, result?: unknown): void => {
+        replyPort?.postMessage({ kind: 'response', id, ok, panelId, error, result });
+      };
       if (!panelId) {
         log('warn', `panel request "${method}" arrived with no panel id — cannot attribute it.`);
       }
       if (!handlers.onRequest) {
-        panelPort?.postMessage({
-          kind: 'response',
-          id,
-          ok: false,
-          panelId,
-          error: `this plugin handles no panel requests (asked for "${method}")`,
-        });
+        reply(false, `this plugin handles no panel requests (asked for "${method}")`);
         return;
       }
       if (!booted) {
-        panelPort?.postMessage({
-          kind: 'response',
-          id,
-          ok: false,
-          panelId,
-          error: `request "${method}" arrived before the host sent init — no plugin id or data dir yet.`,
-        });
+        reply(false, `request "${method}" arrived before the host sent init — no plugin id or data dir yet.`);
         return;
       }
       try {
@@ -416,20 +431,16 @@ export function plugin(handlers: PluginHandlers): void {
         // success on the panel side — it would resolve with undefined and the
         // real bug would surface somewhere far away.
         if (result === undefined) {
-          panelPort?.postMessage({
-            kind: 'response',
-            id,
-            ok: false,
-            panelId,
-            error:
-              `onRequest handled "${method}" without returning anything. ` +
+          reply(
+            false,
+            `onRequest handled "${method}" without returning anything. ` +
               `Return the answer (a value, or true), or rethrow for a method you do not handle.`,
-          });
+          );
           return;
         }
-        panelPort?.postMessage({ kind: 'response', id, ok: true, panelId, result });
+        reply(true, undefined, result);
       } catch (err) {
-        panelPort?.postMessage({ kind: 'response', id, ok: false, panelId, error: describe(err) });
+        reply(false, describe(err));
       }
       return;
     }
@@ -572,20 +583,39 @@ export function plugin(handlers: PluginHandlers): void {
       case 'ui-port': {
         const port = event.ports?.[0] as PanelPort | undefined;
         if (!port) break;
-        // A fresh port replaces the old one (renderer reload); the previous
-        // port is dead, so dropping the reference is the whole cleanup.
+        // Several panels of this plugin may be alive AT ONCE (the viewer's
+        // split pane is a second native view of the same page), so this ADDS a
+        // port rather than replacing the previous one. `panelPort` — the most
+        // recent transfer — remains the fallback for traffic that cannot be
+        // attributed. A renderer reload transfers a fresh port for the SAME
+        // panel; the old port's close event retires exactly that binding.
         panelPort = port;
         portClosed = false;
+        port.on('message', (e) => {
+          // Learn the port's panel from its first tagged message — the
+          // ui-port transfer carries no panel id.
+          const pid = (e.data as { panelId?: string } | null)?.panelId;
+          if (pid) {
+            portPanel.set(port, pid);
+            panelPorts.set(pid, port);
+          }
+          void onPanelMessage(e.data, port);
+        });
         // The host closes a replaced port when a fresh webContents takes over.
         // That is the only close signal that exists — see panelAlive.
         try {
           port.on('close', () => {
-            portClosed = true;
+            const pid = portPanel.get(port);
+            if (pid && panelPorts.get(pid) === port) panelPorts.delete(pid);
+            portPanel.delete(port);
+            if (panelPort === port) {
+              panelPort = panelPorts.size > 0 ? [...panelPorts.values()][panelPorts.size - 1] : null;
+              if (!panelPort) portClosed = true;
+            }
           });
         } catch {
           /* older Electron: no close event; the probe timeout still covers it */
         }
-        port.on('message', (e) => void onPanelMessage(e.data));
         port.start?.();
         break;
       }

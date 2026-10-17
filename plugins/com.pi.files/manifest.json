@@ -21,6 +21,15 @@
         "entry": "./ui-dist/panel/index.html",
         "keepAlive": "lru",
         "scope": "session"
+      },
+      {
+        "id": "viewer-pane",
+        "title": "文件查看器",
+        "icon": "file",
+        "entry": "./ui-dist/panel/index.html",
+        "keepAlive": "lru",
+        "scope": "session",
+        "hidden": true
       }
     ],
     "tools": [
@@ -163,7 +172,12 @@
         }
       }
     ],
-    "messageRenderers": [{ "type": "office_edit", "streaming": false }],
+    "messageRenderers": [
+      {
+        "type": "office_edit",
+        "streaming": false
+      }
+    ],
     "filePreview": [
       {
         "match": [

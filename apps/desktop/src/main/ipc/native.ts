@@ -1,4 +1,4 @@
-import { ipcMain, dialog, shell, clipboard, app, BrowserWindow, nativeImage } from 'electron';
+import { ipcMain, dialog, shell, clipboard, app, BrowserWindow, nativeImage, Menu } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { TITLE_BAR_HEIGHT } from '../window-manager.js';
@@ -9,6 +9,80 @@ export function registerNativeIpcHandlers(): void {
   ipcMain.handle('pi:window:minimize', () => {
     BrowserWindow.getFocusedWindow()?.minimize();
   });
+
+  // ── Native context menus ──
+  // The renderer's popup menus must float ABOVE the plugin panels' native
+  // WebContentsViews — those views sit over all window DOM, so a DOM dropdown
+  // anchored in the header band gets covered the moment it reaches the panel
+  // body. An OS-level Menu composites above everything: the renderer
+  // describes the entries, main shows the menu, and clicks round-trip with
+  // the nonce identifying the open call.
+
+  ipcMain.handle(
+    'pi:menu:popup',
+    (
+      event,
+      payload: {
+        nonce?: number;
+        x?: number;
+        y?: number;
+        items?: { id?: string; label: string; enabled?: boolean; separatorBefore?: boolean }[];
+      },
+    ) => {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (!win) return { ok: false };
+      const template: Electron.MenuItemConstructorOptions[] = [];
+      for (const item of payload.items ?? []) {
+        if (item.separatorBefore) template.push({ type: 'separator' });
+        template.push({
+          label: item.label,
+          enabled: item.enabled !== false,
+          click: item.id
+            ? () => {
+                // Reply to the SENDER view — plugin pages pop this menu too,
+                // and their choices must route back to their own preload.
+                if (!event.sender.isDestroyed()) {
+                  event.sender.send('pi:menu:click', { nonce: payload.nonce, id: item.id });
+                }
+              }
+            : undefined,
+        });
+      }
+      const menu = Menu.buildFromTemplate(template);
+      // The caller's coordinates are PAGE-local. For a plugin page hosted in
+      // a WebContentsView, the view sits at an offset inside the window —
+      // translate so the menu pops at the caller's cursor, not the window's
+      // top-left corner (where a small one-item menu is easy to miss
+      // entirely). The host's own view sits at 0,0, so its popups are
+      // unaffected.
+      let offsetX = 0;
+      let offsetY = 0;
+      for (const child of win.contentView.children ?? []) {
+        const view = child as Electron.WebContentsView;
+        if (view.webContents === event.sender) {
+          const b = view.getBounds();
+          offsetX = b.x;
+          offsetY = b.y;
+          break;
+        }
+      }
+      menu.popup({
+        window: win,
+        ...(payload.x != null && payload.y != null
+          ? { x: offsetX + Math.round(payload.x), y: offsetY + Math.round(payload.y) }
+          : {}),
+        // Fires when the menu closes WITHOUT a click (dismissed via Esc /
+        // outside click) — the renderer resolves the waiting call with null.
+        callback: () => {
+          if (!event.sender.isDestroyed()) {
+            event.sender.send('pi:menu:dismiss', { nonce: payload.nonce });
+          }
+        },
+      });
+      return { ok: true };
+    },
+  );
+
 
   ipcMain.handle('pi:window:maximize', () => {
     const win = BrowserWindow.getFocusedWindow();

@@ -261,6 +261,8 @@ export type CapabilityMethod =
   | 'browser.newTab'
   | 'browser.activateTab'
   | 'browser.closeTab'
+  | 'browser.reorderTab'
+  | 'browser.setSplitTabs'
   | 'network.fetch'
   /** Put a message into the conversation, exactly as typing it would. */
   | 'chat.send';

@@ -63,14 +63,14 @@ export function RailIcon({
 }
 
 function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion }) {
-  const activeIds = usePanelStore((s) => s.activePanelIds[region]);
+  const focusedId = usePanelStore((s) => s.focusedId[region]);
   const openPanel = usePanelStore((s) => s.openPanel);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const runtime = usePanelStore((s) => s.runtime[panel.id]);
 
   // Active in EITHER slot — a split region shows two panels at once and the
   // rail must light up for both.
-  const active = activeIds.A === panel.id || activeIds.B === panel.id;
+  const active = focusedId === panel.id;
   const badge = runtime?.badge;
   const pending = runtime?.pending;
   // The rail sits beside its content column, so the indicator goes on the
@@ -139,6 +139,11 @@ function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion 
  *
  * Panels are split into two groups by `anchor`; the bottom group is pushed to
  * the far end, which is where configuration-style panels belong.
+ *
+ * Only the LEFT column mounts this vertical rail. The RIGHT column's launcher
+ * merged into its tab strip (2026-10-16): open panels are tabs, a trailing
+ * "+" picker opens everything else — a 48px rail of icons beside the slots
+ * duplicated the strip one row over.
  */
 export function PanelRail({ region = 'right' }: { region?: PanelRegion }) {
   const panels = usePanelStore((s) => s.panels);

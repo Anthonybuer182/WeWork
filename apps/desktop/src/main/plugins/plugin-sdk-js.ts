@@ -329,6 +329,19 @@ const PLUGIN_SDK_SOURCE = String.raw`
     liveSlot: liveSlot,
     onMessage: function (cb) {
       if (handlers.indexOf(cb) < 0) handlers.push(cb);
+    },
+    // Native popup menu with custom items (OS-level — floats above engine
+    // views). Native views only; resolves the clicked item id or null.
+    showPopupMenu: function (items, x, y) {
+      if (!IN_VIEW || !VIEW.showPopupMenu) {
+        console.error('[pi-sdk] showPopupMenu needs a native view container (a desktop panel hosted in a WebContentsView).');
+        return Promise.resolve(null);
+      }
+      return VIEW.showPopupMenu(items, x, y);
+    },
+    // Automated-test seam: resolve the popup choice without the OS menu.
+    __setPopupMenuOverride: function (fn) {
+      if (VIEW && VIEW.__setPopupMenuOverride) VIEW.__setPopupMenuOverride(fn);
     }
   };
 
