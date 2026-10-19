@@ -6,7 +6,7 @@
   "apiVersion": 3,
   "engines": { "pi-desktop": ">=0.1.0" },
   "backend": "./dist/main.mjs",
-  "permissions": ["storage", "network:api.your-system.example", "secrets:NAME"],
+  "permissions": ["storage", "network:api.your-system.example"],
   "contributes": {
     "panels": [
       { "id": "records", "title": "NAME", "icon": "erp", "entry": "./ui/index.html" }

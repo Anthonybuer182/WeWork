@@ -64,13 +64,17 @@ const panelPort = {
       );
     }
   },
-  on(_event, listener) {
-    panelPort._listener = listener;
+  on(event, listener) {
+    // Key listeners by event. The SDK registers 'message' first, then 'close';
+    // one shared field made the close handler overwrite the message handler,
+    // so every panel-side check below failed with an empty toPanel buffer.
+    panelPort._listeners ??= {};
+    panelPort._listeners[event] = listener;
   },
   start() {},
 };
 function panelSends(msg) {
-  panelPort._listener?.({ data: msg });
+  panelPort._listeners?.message?.({ data: msg });
 }
 
 const nextCall = () => 't' + ++callSeq;

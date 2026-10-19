@@ -235,6 +235,8 @@ export type CapabilityMethod =
   | 'dialog.saveFile'
   | 'panel.setStatus'
   | 'panel.open'
+  /** Close one of this plugin's own panels (the counterpart of panel.open). */
+  | 'panel.close'
   | 'filesystem.read'
   | 'filesystem.write'
   /** Remove a file. Same mtime conflict check as write. */
@@ -249,13 +251,19 @@ export type CapabilityMethod =
   | 'browser.getState'
   | 'browser.screenshot'
   | 'browser.click'
+  | 'browser.fill'
+  | 'browser.hover'
+  | 'browser.select'
+  | 'browser.scroll'
+  | 'browser.find'
+  | 'browser.walk'
   | 'browser.getText'
   | 'browser.evaluate'
   /**
    * Tab management for the multi-tab engine. `sessionId` names the
-   * conversation whose bucket the tab belongs to (these four are the only
-   * capabilities that need it — page-level calls take an optional `tabId`
-   * and default to the conversation's focused tab).
+   * conversation whose bucket the tab belongs to — every method here except
+   * `setSplitTabs`, which addresses the tab directly. Page-level calls take an
+   * optional `tabId` and default to the conversation's focused tab.
    */
   | 'browser.tabList'
   | 'browser.newTab'

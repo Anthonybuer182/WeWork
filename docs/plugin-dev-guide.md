@@ -62,7 +62,7 @@
 | `filePreview` | 某类文件在文件树里被点开时，路由到你的面板 |
 | `skills` | 附带给 agent 的技能文档 |
 
-想看真实插件长什么样：仓库 `plugins/` 下的五个官方插件就是参照实现。**com.pi.tasks** 最典型（工具 + 面板 + 定时任务）；**com.pi.browser** 演示如何在面板里嵌入宿主的浏览器引擎；**com.pi.files** 演示插件如何自带一整套大型渲染引擎。
+想看真实插件长什么样：仓库 `plugins/` 下的六个官方插件就是参照实现。**com.pi.tasks** 最典型（工具 + 面板 + 定时任务）；**com.pi.browser** 演示如何在面板里嵌入宿主的浏览器引擎，以及多标签与会话作用域；**com.pi.files** 演示插件如何自带一整套大型渲染引擎；**com.pi.devdocs**（就是这份文档）是最小的纯 UI 插件：只有 manifest + 一张网页，没有后端、没有构建步骤。
 
 ---
 
@@ -103,7 +103,7 @@ com.example.note/
 └── ui/index.html         ← 面板页面（第 8 / 9 步）
 ```
 
-> `id` 的习惯是反域名格式（`com.公司.插件名`），并且**和目录名一致**。
+> `id` 的习惯是反域名格式（`com.公司.插件名`），目录名也建议保持一致。宿主只认 `manifest.json` 里的 `id`，目录名不一致仍能加载；但市场安装会用 `id` 作为安装目录名，两种路径下不一致时容易找错目录。
 
 ### 第 2 步 · `package.json` 并安装依赖
 
@@ -163,7 +163,7 @@ npm install
 
 | 字段 | 这里填了什么 | 为什么 |
 |---|---|---|
-| `id` | `com.example.note` | 全应用唯一，必须与目录名一致 |
+| `id` | `com.example.note` | 全应用唯一。建议与目录名一致（市场安装以 `id` 作为目录名） |
 | `name` | 便签 | 界面里显示的名字 |
 | `version` | 0.1.0 | 你自己的版本号 |
 | `apiVersion` | 5 | 你照哪一版插件协议写的。宿主支持一个区间（当前 3 – 5），落进去就能加载 |
@@ -448,7 +448,7 @@ if (name === 'note_write') {
 }
 ```
 
-`card` 是一棵声明式的 UI 树（`{ component, props, children, events }`）——你只描述"长什么样"，宿主用它自带的组件渲染，你的插件不用发任何 UI 代码。`events: { onClick: 'undo' }` 的意思是：按钮被点击时，把 `undo` 这个事件 id 送回后端。完整的组件词汇表（Column / Row / Text / Badge / KeyValue / List / Input / Image …）见第 11 节。
+`card` 是一棵声明式的 UI 树（`{ component, props, children, events }`）——你只描述"长什么样"，宿主用它自带的组件渲染，你的插件不用发任何 UI 代码。`events: { onClick: 'undo' }` 的意思是：按钮被点击时，把 `undo` 这个事件 id 送回后端。完整的组件词汇表（`Column` / `Row` / `Card` / `Text` / `Badge` / `KeyValue` / `List` / `Button` / `Input` / `Image` / `Separator` / `Spinner` / `EmptyState`）见第 11 节。
 
 后端加 `onCardEvent` 回调（和 `onTool` 平级）：
 
@@ -487,9 +487,9 @@ async onCardEvent(toolName, eventId, kind, payload, ctx) {
 
 | 症状 | 原因 | 怎么查 |
 |---|---|---|
-| 插件中心根本没有它 | 目录名和 `id` 不一致；或 `manifest.json` 有语法错误（JSON 不允许注释和尾逗号）；或没重启 | 仔细对照目录名与 `id`，用任意 JSON 校验器过一遍清单 |
-| 有条目，但状态是"错误" | `dist/main.mjs` 不存在，或打包时没 `--bundle` 导致运行时找不到模块 | 重跑第 6 步，确认命令一个词不少 |
-| 面板空白或打不开 | `entry` 路径写错；或后端日志提示缺少 `onPanelMounted` | 看第 6 节「日志」 |
+| 插件中心根本没有它 | `manifest.json` 有语法错误（JSON 不允许注释和尾逗号）；或清单里声明的 `backend` 文件不存在；或没重启 | 用任意 JSON 校验器过一遍清单；确认 `backend` 指向的文件真实存在 |
+| 有条目，但状态是"错误" | 后端启动失败：打包时没 `--bundle` 导致运行时找不到模块，或 10 秒内没发 `ready`（不用 SDK 手写协议时才会遇到） | 看插件后端日志；重跑第 6 步，确认命令一个词不少 |
+| 面板空白或打不开 | `entry` 路径写错或文件没构建；或后端日志提示缺少 `onPanelMounted` | 看第 6 节「日志」 |
 | agent 从不调用你的工具 | 没有 `PLUGIN.md`，或 `description` 写的是"是什么"不是"什么时候用" | 看第 3 节 |
 | 工具结果没有渲染成卡片 | 清单没声明 `messageRenderers`，或 `type` 和工具名不一致 | 核对第 10 步的清单改动 |
 | 卡片上的按钮点了没反应 | 后端没实现 `onCardEvent`（按钮退化成展示，不会坏） | 加上 `onCardEvent`，事件 id 对上 `events.onClick` |
@@ -554,9 +554,9 @@ agent **能**调你的工具（清单里注册过）是一回事，**想得到**
 
 | 情形 | 结果 |
 |---|---|
-| 面板请求了后端没处理的方法 | 90 秒后 `request` 拒绝，并告诉你是哪个方法 |
+| 面板请求了后端没处理的方法 | 后端没实现 `onRequest`、或 handler 抛错时，立即返回带方法名的错误；只有后端完全不回应时，才等到 90 秒超时 |
 | 后端 `onRequest` 处理了但忘了 `return` | 面板收到明确报错（"处理了但没返回东西"），不是拿到 `undefined` 假装成功 |
-| 面板发了后端没处理的事件 | 后端日志一条警告，带事件名 |
+| 插件没有 `onEvent`，面板却发了事件 | 后端日志一条警告，带事件名；实现了 `onEvent` 后所有事件都会交给它，是否处理由你判断 |
 | 面板打开后一直空白 | 后端日志会提醒：你没实现 `onPanelMounted` |
 
 ### ⚠️ 唯一要记的一条：面板不能直接调宿主能力
@@ -572,7 +572,7 @@ await piSDK.request('storage.get', { key: 'x' });
 
 ### 多块面板
 
-一个插件可以有多块面板，各自在图标列里有一个按钮。`panelId` 由宿主注入，你只要在 `ctx.send` 时选对收件人。`keepAlive` 决定切走时面板保不保活（`always` / `lru` 默认 / `never`）。左侧栏的面板建议 `keepAlive: "always"`——左右两侧共享一个只保留 2 个的 LRU 池，左侧面板用 `lru` 会被右侧面板挤掉、状态全丢。
+一个插件可以有多块面板，各自在图标列里有一个按钮（`hidden: true` 的除外，它只能被 `panel.open` 打开）。`panelId` 由宿主注入，你只要在 `ctx.send` 时选对收件人。`keepAlive` 决定切走时面板保不保活（`always` / `lru` 默认 / `never`）。左侧栏的面板建议 `keepAlive: "always"`——左右两侧共享一个只保留 2 个的 LRU 池，左侧面板用 `lru` 会被右侧面板挤掉、状态全丢。
 
 `scope` 决定面板的标签跟不跟会话走（`global` 默认 / `session`）。展示"这个会话的产物"的面板（agent 开的网页、正在讨论的文档）声明 `session`：切会话时它的标签连同打开参数一起收进那个会话，切回来原样恢复——并发会话之间不会互相抢"当前文档"。跨会话的工作台面板（待办、邮件）保持默认。注意：`session` 只是标签归属和参数恢复；引擎/文档本身仍是单实例（当前会话可见的那份），多实例是后续版本的事。
 
@@ -589,16 +589,24 @@ await piSDK.request('storage.get', { key: 'x' });
 面板页可以把一块**宿主引擎视图**嵌进自己的布局——宿主把原生视图精确摆在你给的矩形里，你的页面在它周围自由发挥。浏览器插件就是这么做的：地址栏是页面，下面嵌引擎。
 
 ```js
-// 返回 { detach() }。绑定后逐帧跟随元素尺寸；矩形没变不重发。
+// 返回 { detach(), refresh() }。绑定后逐帧跟随元素尺寸；矩形没变不重发。
 const slot = piSDK.liveSlot('page', document.getElementById('page-slot'));
+
+// 可选第三个参数 getTag 告诉宿主当前要显示哪个引擎标签（如浏览器活动 tab id）。
+// 切标签时 DOM 尺寸不变、ResizeObserver 不会再触发，调用 slot.refresh() 立即重报。
+const slotB = piSDK.liveSlot('page-b', document.getElementById('second-pane'), () => activeTabId);
 ```
 
 规则：
 
 - **矩形即一切**。元素多大视图多大；元素 `display:none` 或卸载会上报 0×0，即"隐藏视图"。
 - 槽名空间是插件级的：实际槽 id 是 `<插件id>:<名字>`，页面改不了前缀；槽名不得与自己的面板 id 重名。
-- 不是每个插件都有视图可嵌。目前：manifest 声明 `browser` 权限的插件自动获得 `<插件id>:page` 槽（内容是内嵌浏览器引擎）。没有的插件调用会在 attach 时被宿主拒绝，原因打进 console。
-- 网页（iframe）构建下是空操作：返回同样的句柄但不报错，面板代码不用分平台写。
+- 不是每个插件都有视图可嵌。目前：manifest 声明 `browser` 权限的插件自动获得 `<插件id>:page` 槽（主视图）和 `<插件id>:page-b` 槽（分屏第二栏），内容是宿主的内嵌浏览器引擎。没有的插件调用会在 attach 时被宿主拒绝，原因打进 console。
+- 只有原生视图容器（桌面端的面板）能嵌引擎；不在原生视图里调用会返回一个空句柄并打一条 `console.error`，不会抛异常。
+
+### 进阶：原生弹出菜单 piSDK.showPopupMenu
+
+`piSDK.showPopupMenu(items, x, y)` 在原生视图里弹出系统菜单（浮在引擎视图之上），`items` 是 `[{ id, label }]`，返回被点中的 `id`（取消返回 `null`，120 秒无操作也会返回 `null`）。仅桌面原生面板可用；其他环境返回 `null` 并打 `console.error`。浏览器插件的标签右键菜单就是这么做的。
 
 ---
 
@@ -609,14 +617,16 @@ const slot = piSDK.liveSlot('page', document.getElementById('page-slot'));
 | 回调 | 什么时候被调 |
 |------|------|
 | `onInit(ctx)` | 后端起来了。**此时面板还没开**，别在这儿画界面 |
-| `onPanelMounted(panelId, params, ctx)` | 某块面板加载完了 —— 首次绘制放这儿 |
+| `onPanelMounted(panelId, params, ctx, meta?)` | 某块面板加载完了 —— 首次绘制放这儿。`meta.sessionId` 是它当前服务的会话；`scope: session` 的面板切会话会重新触发 |
 | `onRequest(panelId, method, params, ctx)` | 面板在等一个答复（`return` 它） |
 | `onEvent(panelId, event, data, ctx)` | 面板报了一件事（单向，无回复） |
-| `onTool(name, params, ctx)` | agent 调了你的工具（`return` 字符串或 `{ content, details, card }`） |
+| `onTool(name, params, ctx, call)` | agent 调了你的工具（`return` 字符串或 `{ content, details, card }`）。`call.sessionId` 是调用方会话 |
 | `onCommand(name, args, ctx)` | 斜杠命令跑了 |
 | `onContextRequest(providerId, message, ctx)` | 宿主发消息前要上下文，返回要注入的文字 |
-| `onHostEvent(event, data, ctx)` | 宿主推了个事件（如浏览器地址变化） |
+| `onHostEvent(event, data, ctx)` | 宿主推了个事件：`session.changed`（`{ sessionId }`，所有后端）、`browser.urlChanged` / `browser.tabOpened`（`{ tabId, url }`，仅 `browser` 权限） |
 | `onCardEvent(toolName, eventId, kind, payload, ctx)` | 用户点了你返回到对话里的卡片按钮（`kind:'click'`）或在其中输入框回车（`kind:'submit'`）。事件是单向的；想让卡片反映后续状态，靠下一次工具结果返回新卡片 |
+
+`onPanelMounted` 的 `meta.sessionId` 和 `onTool` 的 `call.sessionId` 用来把"当前文档 / 当前页面"解析到对应会话——并发会话共用一个全局 current 会串台。
 
 一个都不实现也行——那是一个没有后端的插件（清单里去掉 `backend` 字段）。
 
@@ -629,7 +639,7 @@ const slot = piSDK.liveSlot('page', document.getElementById('page-slot'));
 | `ctx.call(method, params, { timeoutMs? })` | 调宿主能力，返回 Promise；默认 30 秒超时，可单次覆盖 |
 | `ctx.send(panelId, event, data)` | 往某块面板推事件；返回 `false` 表示没送出去（面板没开），不是错误 |
 | `ctx.panelAlive(panelId, timeoutMs?)` | 问某块面板还活着吗（尽力而为的探测） |
-| `ctx.openPanel(panelId, { focus })` | 打开自己的面板；`focus: false` 只亮角标不抢焦点 |
+| `ctx.openPanel(panelId, { focus })` | 打开自己的面板；`focus: false` 只亮角标不抢焦点。要带打开参数时直接用 `ctx.call('panel.open', { panelId, focus, params })`——SDK 的封装只传 focus |
 | `ctx.setBadge(panelId, n)` | 面板图标上的角标，传 `null` 清掉 |
 | `ctx.log.info / warn / error(msg)` | 写进应用日志，前缀是你的插件 id |
 
@@ -637,16 +647,17 @@ const slot = piSDK.liveSlot('page', document.getElementById('page-slot'));
 
 | 组 | 方法 | 需要的权限 | 说明 |
 |---|---|---|---|
-| 应用 | `app.info` | 无 | 宿主与协议版本信息 |
+| 应用 | `app.info` | 无 | 返回 `{ pluginId, apiVersion, appVersion, platform }` |
 | 存储 | `storage.get` / `storage.set` / `storage.delete` | `storage` | 插件私有键值对，落盘持久 |
 | 通知 | `notify.show` | `notify` | 系统通知 |
-| 面板 | `panel.open` / `panel.setStatus` | 无 | 只能操作**自己的**面板（`ctx.openPanel` / `ctx.setBadge` 是它们的封装） |
+| 面板 | `panel.open` / `panel.close` / `panel.setStatus` | 无 | 只能操作**自己的**面板（`ctx.openPanel` / `ctx.setBadge` 是它们的封装）。`panel.open` 可带 `params`，原样交给面板的 `onPanelMounted` |
 | 对话 | `chat.send` | 无 | 发消息进当前对话。消息会带来源标注（「插件消息 · 来自 你的插件名」），agent 和用户都看得出不是用户亲手打的——插件够得着对话，但拿不到用户的声音 |
 | 对话框 | `dialog.openFile` / `dialog.saveFile` | 无 | 系统文件对话框。用户亲手选就是授权。`openFile` 返回 `{ canceled, path, paths }`，`saveFile` 返回 `{ canceled, path }` |
-| 文件 | `filesystem.read` / `write` / `delete` | `filesystem` | 任意绝对路径，含二进制。`write` 支持 `expectedMtime` 冲突检测（读之后被外部改过就拒绝写入，不会覆盖） |
-| Office | `office.read` | `filesystem` | 提取 docx / pptx / xlsx 等文档的文本内容 |
-| 网络 | `network.fetch` | `network:<域名>` | 出站请求，按清单里声明的域名白名单逐次校验 |
-| 浏览器 | `browser.navigate` / `click` / `fill` / `hover` / `scroll` / `select` / `reload` / `back` / `forward` / `screenshot` / `getText` / `getUrl` / `find` / `walk` / `evaluate` / `getState` | `browser` | 驱动宿主内嵌浏览器（自动化、读页面、截图） |
+| 文件 | `filesystem.read` / `write` / `delete` | `filesystem` | 任意绝对路径。`read` 返回 UTF-8 文本（≤2MB；docx/xlsx/pptx 用 `office.read`）；`write` 支持 `content`（文本）或 `contentB64`（二进制），`expectedMtime` 冲突检测；`delete` 同样支持 `expectedMtime` |
+| Office | `office.read` | `filesystem` | 提取 docx / pptx / xlsx 等文档的文本内容（≤20MB） |
+| 网络 | `network.fetch` | `network:<域名>` | 出站请求，按清单里声明的域名白名单逐次校验；返回 `{ ok, status, body }`，响应体上限 2MB |
+| 浏览器页面 | `browser.navigate` / `click` / `fill` / `hover` / `scroll` / `select` / `reload` / `back` / `forward` / `screenshot` / `getText` / `getUrl` / `find` / `walk` / `evaluate` / `getState` | `browser` | 驱动宿主内嵌浏览器（自动化、读页面、截图）。页面级方法接受可选 `tabId`，省略时用当前活动标签 |
+| 浏览器标签 | `browser.tabList` / `newTab` / `reorderTab` / `setSplitTabs` / `activateTab` / `closeTab` | `browser` | 多标签管理：标签按 `sessionId` 分桶，`newTab` / `activateTab` / `closeTab` / `reorderTab` 用会话定位；`setSplitTabs` 设置分屏伙伴 |
 
 调用示例：
 
@@ -671,7 +682,7 @@ await ctx.call('dialog.openFile', { filters: [{ name: 'Word', extensions: ['docx
 | `onRequest` 忘了 `return` | 面板收到明确报错："处理了但没返回东西" |
 | 回调里抛异常 | 对面收到报错，带着异常信息 |
 | `onTool` 忘了 `return` | agent 收到报错："工具没返回任何东西" |
-| 面板发了个你没处理的事件 | 后端日志一条 `warn`，带事件名 |
+| 面板发了个你**没有实现 `onEvent`** 的事件 | 后端日志一条 `warn`，带事件名（实现了 `onEvent` 后所有事件都会送进来，是否处理由你决定） |
 | 面板的消息没带 panel id | 后端日志一条 `warn` |
 | 实现了 `onEvent` 但没实现 `onPanelMounted` | 面板首次挂载时 `warn` 一条，提醒你别忘了画 |
 | `ctx.call` 一直不回 | 30 秒后拒绝，带方法名（可用 `timeoutMs` 覆盖） |
@@ -721,7 +732,7 @@ pnpm dev:desktop                  # 客户路径：读用户目录
 
 两个配套注意点：
 
-- `plugins/` 不在 pnpm workspace 里，根目录的 `pnpm install` 碰不到它。新 clone 后先跑一次 `pnpm setup`（逐个插件装依赖并构建）。面板插件的入口在 `ui-dist/`，属于构建产物——不构建的话插件会**静默不显示**，不是报错。
+- `plugins/` 不在 pnpm workspace 里，根目录的 `pnpm install` 碰不到它。新 clone 后先跑一次 `pnpm setup`（逐个插件装依赖并构建）。有的官方插件（`com.pi.tasks`、`com.pi.files`）面板入口在 `ui-dist/`，属于构建产物——不构建的话插件会**静默不显示**，不是报错。
 - 插件默认启用：`~/.pi/agent/plugins/_state.json` 里没有记录的插件视为开启。
 
 ### 不启动应用，单独测后端
@@ -737,8 +748,8 @@ await import('./dist/main.mjs');               // SDK 在导入时接管
 
 现成的样板：
 
-- SDK 自己的契约测试（21 项，覆盖每一条报错路径）：`node packages/plugin-sdk/tests/smoke.mjs`
-- 各官方插件的自测：`cd plugins/com.pi.tasks && node scripts/smoke-backend.mjs`（五个插件合计 138 项检查）
+- SDK 自己的契约测试（21 项，覆盖每一条报错路径）：先 `pnpm --filter @pi/plugin-sdk build`，再 `node packages/plugin-sdk/tests/smoke.mjs`。测试加载的是 `dist/`，改了 SDK 源码不重建会测到旧代码。
+- 各官方后端的自测：`node plugins/com.pi.tasks/scripts/smoke-backend.mjs`（browser / files / knowledge / mail 也有同名脚本）。它们加载各自的 `dist/main.mjs`，改过后端要先重新构建该插件。
 
 ### 常见坑速查
 
@@ -805,11 +816,11 @@ setTimeout(tick, next ? clamp(next - now, 250, 30_000) : 30_000);
 |------|------|
 | `storage` | 插件私有键值对（每插件独立目录，互不可见） |
 | `notify` | 系统通知 |
-| `clipboard` | 系统剪贴板 |
-| `browser` | 驱动宿主浏览器自动化 |
+| `browser` | 驱动宿主浏览器自动化，并解锁 `liveSlot` 的 `page` / `page-b` 引擎槽 |
 | `network:<域名>` | 出站网络（域名白名单，可多条） |
 | `filesystem` | 读写文件，**任意绝对路径**（含二进制），不限工作区 |
-| `secrets:<命名空间>` | 凭据保管箱（系统钥匙串加密） |
+
+> 安装授权文案里还会出现 `clipboard` 和 `secrets:<命名空间>` 两项，但宿主**目前没有对应能力**：声明了也无法通过 `ctx.call` 调用（会报 unknown capability），剪贴板与凭据保管箱仍是预留项。
 
 权限在安装时逐条展示给用户确认；运行时每个能力调用都被主进程逐次校验，未授权直接拒绝。
 
@@ -828,7 +839,7 @@ node scripts/build-market.mjs          # 打包 + 算 sha256 + 写 index.json
 node scripts/build-market.mjs --out ./dist-market
 ```
 
-它只打运行时该带的（`manifest` / `dist/` / `ui-dist/` / `assets/` / `PLUGIN.md`），跳过 `src/`、`tests/`、`node_modules/` 等。打完把 `market-dist/` 传到哪儿都行，然后把用户目录 `_state.json` 的 `registry` 指过去。
+它只打运行时该带的（`manifest` / `dist/` / `ui-dist/` / `assets/` / `PLUGIN.md`），跳过 `src/`、`tests/`、`node_modules/` 等。打完把 `market-dist/` 传到哪儿都行，然后把 `~/.pi/agent/plugins/_state.json` 的 `registry` 指过去。
 
 想自己实现一遍，是这四步：
 
@@ -842,6 +853,7 @@ node scripts/build-market.mjs --out ./dist-market
     "id": "com.example.my-plugin",
     "name": "My Plugin",
     "version": "1.0.0",
+    "apiVersion": 5,
     "url": "https://cdn.example.com/my-plugin-1.0.0.zip",
     "sha256": "…",
     "permissions": ["storage", "network:api.example.com"]
@@ -849,11 +861,13 @@ node scripts/build-market.mjs --out ./dist-market
 }
 ```
 
+`url` 可以是相对 `index.json` 的路径（官方 `build-market.mjs` 就这么写，市场目录整体搬到别处仍然可用）。`apiVersion` 会用于下载前的兼容性预检；缺了它就要等装的时候才发现版本不兼容。
+
 4. 宿主安装流：拉索引 → 下载 zip → sha256 校验 → 版本协商 → 原子解压 → 授权确认 → 激活
 
 ### 图标规范
 
-- 插件品牌图标：自带 SVG（单色，CSS mask 渲染随主题变色）。**上架必须带。**
+- 插件品牌图标：自带 SVG（单色，CSS mask 渲染随主题变色）。建议上架带上；没有时插件中心和面板图标会回落到 `puzzle`。
 - 面板图标：清单里面板的 `icon` 字段。写路径（`./assets/x.svg`）是自带文件，写名字（`calendar`）用系统图标；不写就继承插件品牌图标。
 - 可用系统图标名：settings / puzzle / globe / browser / mail / calendar / todo / knowledge / database / erp / chat / eye / note / users / money / clock / sliders / layout / file / folder / search / session（写错不报错，回落到 puzzle；没有 `gear`，齿轮是 `settings`）
 
@@ -918,6 +932,7 @@ node scripts/build-market.mjs --out ./dist-market
 | `keepAlive` | `always` / `lru`（默认）/ `never` — 切走时保活策略 |
 | `scope` | `global`（默认）/ `session` — 面板标签跟不跟会话走；`session` 的标签和打开参数随会话切换收起/恢复 |
 | `hidden` | `true` 不上图标栏，仅 `panel.open` 可达 |
+| `companion` | 同一插件的另一块面板 id：主面板打开时，这块面板作为分屏第二栏并排显示。通常把 companion 本身设为 `hidden: true`，只能通过分屏打开 |
 | `region` | `left` / `right`（默认） |
 | `anchor` | `top`（默认）/ `bottom` — 在所属栏图标列里的位置 |
 | `order` | 同一 region + anchor 内的排序，默认 0 |
@@ -965,13 +980,15 @@ node scripts/build-market.mjs --out ./dist-market
 { "settings": [{ "key": "apiKey", "type": "string", "label": "API Key" }] }
 ```
 
+`type` 可以是 `string` / `number` / `boolean` / `enum`（`enum` 配 `options`）。保存的值写进插件自己的 `storage`，键是 `settings.<key>`；后端用 `ctx.call('storage.get', { key: 'settings.<key>' })` 读取。声明里的 `default` 只决定表单初值——没有保存过时 `storage.get` 返回 `undefined`，需要默认值就在后端自己兜底。
+
 ### contributes.messageRenderers — 对话内卡片
 
 ```json
 { "messageRenderers": [{ "type": "mail_create_draft" }] }
 ```
 
-`type` 填**工具名**。声明后，工具结果里的 `card`（声明式 UI 树：Column / Row / Text / Badge / Image / KeyValue / Card / List / Button / Input …）由宿主渲染进对话，工具运行中还会把参数实时渲染成「生成中」卡片。卡片里的 Button / Input 是**活的**：用户点击/回车，事件带着节点上声明的 `eventId` 回到后端的 `onCardEvent`。旧版客户端或没实现 `onCardEvent` 的后端，按钮退化成展示——不会坏，只是不动。
+`type` 填**工具名**。声明后，工具结果里的 `card`（声明式 UI 树：`Column` / `Row` / `Card` / `Text` / `Badge` / `KeyValue` / `List` / `Button` / `Input` / `Image` / `Separator` / `Spinner` / `EmptyState`）由宿主渲染进对话，工具运行中还会把参数实时渲染成「生成中」卡片（`streaming: false` 可关闭）。卡片里的 Button / Input 是**活的**：用户点击/回车，事件带着节点上声明的 `eventId` 回到后端的 `onCardEvent`。旧版客户端或没实现 `onCardEvent` 的后端，按钮退化成展示——不会坏，只是不动。
 
 **领域惯例：你工具的产出物，就用你自己的卡片展示。** 邮件插件的草稿卡片、文件中心的「文档已更新」卡片（office_edit 保存成功后返回：文件名 + 格式徽章 + 「在查看器中打开」按钮）都是这么做。把上下文（如文件路径）放进按钮的 `props`——点击时它作为 `payload` 回到 `onCardEvent`，这样对话里堆了多少张卡片，每张打开的都还是它自己那份产出物。
 
@@ -980,6 +997,8 @@ node scripts/build-market.mjs --out ./dist-market
 ```json
 { "filePreview": [{ "match": ["docx", "xlsx", "pptx"] }] }
 ```
+
+匹配到扩展名后，宿主打开该插件的**第一个面板**（`panels[0]`）——想用 `filePreview` 至少得声明一块面板，并把它放在第一位。
 
 ### contributes.skills — agent 使用说明
 
@@ -993,6 +1012,7 @@ node scripts/build-market.mjs --out ./dist-market
 
 - [ ] `apiVersion` 写了（照当前协议填）
 - [ ] 后端打包成了单文件（`--bundle`），装到全新机器上能跑
+- [ ] 面板入口（`panels[].entry`）真实存在；使用 `ui-dist/` 的插件别忘了构建
 - [ ] 带 `PLUGIN.md`，`description` 写的是"用户会说什么"
 - [ ] 工具名带稳定前缀，`description` 一句话、写"什么时候调"
 - [ ] `readOnly` 如实声明

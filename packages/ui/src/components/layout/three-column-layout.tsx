@@ -36,6 +36,13 @@ interface ThreeColumnLayoutProps {
   minRightWidth?: number;
   maxLeftWidth?: number;
   maxRightWidth?: number;
+  /**
+   * Minimum width the centre column keeps while the right panel is widened.
+   * The right panel's own `maxRightWidth` is a static cap; this is the dynamic
+   * one — it also reserves the sidebar and both dividers, so dragging the
+   * right divider can never squeeze the left column out of view.
+   */
+  minCenterWidth?: number;
   rightPanelOpen?: boolean;
   sidebarOpen?: boolean;
   /**
@@ -44,6 +51,55 @@ interface ThreeColumnLayoutProps {
    * reach it.
    */
   centerPanelOpen?: boolean;
+}
+
+/** Width of each resize divider (matches the `w-1` handles below). */
+const DIVIDER_WIDTH = 4;
+
+/**
+ * The right divider handle — used by BOTH the header band and the body so the
+ * line is one continuous grab target from the very top of the window. Grabbing
+ * it in the title bar must feel identical to grabbing it below (same cursor,
+ * same hover highlight, same keyboard behaviour); the two copies are driven by
+ * one `currentRightWidth`, so they can never drift apart.
+ */
+function RightDividerHandle({
+  width,
+  minWidth,
+  maxWidth,
+  onDragStart,
+  onKeyboardResize,
+}: {
+  width: number;
+  minWidth: number;
+  maxWidth: number;
+  onDragStart: () => void;
+  onKeyboardResize: (side: 'left' | 'right', delta: number) => void;
+}) {
+  return (
+    <div
+      role="separator"
+      tabIndex={0}
+      aria-label="Resize preview panel"
+      aria-valuenow={width}
+      aria-valuemin={minWidth}
+      aria-valuemax={maxWidth}
+      aria-orientation="vertical"
+      className="group relative w-1 shrink-0 cursor-col-resize"
+      // The header band is a window drag region; the handle must opt out or
+      // the OS swallows the mousedown and resizing from the title bar never
+      // starts.
+      style={NO_DRAG}
+      onMouseDown={onDragStart}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowLeft') onKeyboardResize('right', -10);
+        if (e.key === 'ArrowRight') onKeyboardResize('right', 10);
+      }}
+    >
+      <div className="absolute inset-y-0 -left-2 -right-2 z-10" />
+      <div className="ml-auto h-full w-px bg-border transition-colors group-hover:bg-muted-foreground/60 group-active:bg-muted-foreground/40" />
+    </div>
+  );
 }
 
 /**
@@ -75,6 +131,7 @@ export function ThreeColumnLayout({
   minRightWidth = 300,
   maxLeftWidth = 400,
   maxRightWidth = 1200,
+  minCenterWidth = 360,
   rightPanelOpen = true,
   sidebarOpen = true,
   centerPanelOpen = true,
@@ -122,12 +179,47 @@ export function ThreeColumnLayout({
     return clamped;
   }, [minLeftWidth, maxLeftWidth]);
 
+  /**
+   * The right panel's real ceiling right now. `maxRightWidth` is a static
+   * preference (a 1200px panel on a 1400px window is legal by that number),
+   * so it also has to leave room for the sidebar, both dividers and a usable
+   * centre — otherwise the left column is clipped out of view and the panel
+   * appears to cover it.
+   */
+  const maxRightWidthNow = useCallback(() => {
+    const width = containerRef.current?.getBoundingClientRect().width;
+    if (width === undefined) return maxRightWidth;
+    const leftColumn = sidebarOpen ? currentLeftWidth + DIVIDER_WIDTH : 0;
+    const centre = centerPanelOpen ? minCenterWidth : 0;
+    const cap = width - leftColumn - DIVIDER_WIDTH - centre;
+    return Math.max(minRightWidth, Math.min(maxRightWidth, cap));
+  }, [maxRightWidth, minRightWidth, minCenterWidth, sidebarOpen, centerPanelOpen, currentLeftWidth]);
+
   const applyRightWidth = useCallback((next: number) => {
-    const clamped = Math.max(minRightWidth, Math.min(maxRightWidth, next));
+    const clamped = Math.max(minRightWidth, Math.min(maxRightWidthNow(), next));
     rightWidthRef.current = clamped;
     setCurrentRightWidth(clamped);
     return clamped;
-  }, [minRightWidth, maxRightWidth]);
+  }, [minRightWidth, maxRightWidthNow]);
+
+  // A panel that was already wide must not survive a window shrink or a wider
+  // sidebar: re-clamp whenever the container or the left column changes, so
+  // the left column is never left clipped.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const clamp = () => {
+      const cap = maxRightWidthNow();
+      if (rightWidthRef.current > cap) {
+        applyRightWidth(cap);
+        onRightWidthChangeRef.current?.(rightWidthRef.current);
+      }
+    };
+    clamp();
+    const observer = new ResizeObserver(clamp);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [maxRightWidthNow, applyRightWidth]);
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -233,13 +325,17 @@ export function ThreeColumnLayout({
             )}
           </div>
         )}
-        {/* Right divider continuation — the same single 1px line as the body
-            handle, flush against the right column (the segment's own border-l
-            would double it). */}
+        {/* Right divider continuation — the same interactive handle as the
+            body, flush against the right column (the segment's own border-l
+            would double the line). */}
         {rightPanelOpen && !rightTakesCenter && (
-          <div className="flex w-2 shrink-0 justify-end" aria-hidden>
-            <div className="h-full w-px bg-border" />
-          </div>
+          <RightDividerHandle
+            width={currentRightWidth}
+            minWidth={minRightWidth}
+            maxWidth={maxRightWidthNow()}
+            onDragStart={() => setDragging('right')}
+            onKeyboardResize={handleKeyboardResize}
+          />
         )}
         {rightPanelOpen && (
           <div
@@ -333,27 +429,13 @@ export function ThreeColumnLayout({
         {rightPanelOpen ? (
           <>
             {!rightTakesCenter ? (
-              <div
-                className="group relative flex-shrink-0 cursor-col-resize"
-                style={{ width: '8px' }}
-                onMouseDown={() => setDragging('right')}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowLeft') handleKeyboardResize('right', -10);
-                  if (e.key === 'ArrowRight') handleKeyboardResize('right', 10);
-                }}
-                role="separator"
-                tabIndex={0}
-                aria-label="Resize preview panel"
-                aria-valuenow={currentRightWidth}
-                aria-valuemin={minRightWidth}
-                aria-valuemax={maxRightWidth}
-                aria-orientation="vertical"
-              >
-                <div className="absolute inset-y-0 -left-2 -right-2 z-10" />
-                {/* Single 1px divider, flush against the right column — the
-                    column's own border-l would draw a second line 4px over. */}
-                <div className="ml-auto h-full w-px bg-border group-hover:bg-muted-foreground/60 group-active:bg-muted-foreground/40 transition-colors" />
-              </div>
+              <RightDividerHandle
+                width={currentRightWidth}
+                minWidth={minRightWidth}
+                maxWidth={maxRightWidthNow()}
+                onDragStart={() => setDragging('right')}
+                onKeyboardResize={handleKeyboardResize}
+              />
             ) : null}
             <div
               style={rightTakesCenter ? undefined : { width: currentRightWidth }}

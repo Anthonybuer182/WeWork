@@ -36,8 +36,9 @@ let loadError: string | undefined;
 // makes the manifest's `network:<host>` permission meaningful — a plain
 // `fetch()` would bypass the permission model entirely.
 //
-// Credentials belong in the secrets vault (manifest `secrets:NAME`), not in
-// the source:
+// Store credentials in the plugin's private storage (`storage` permission),
+// never in the source. The host's keychain-backed `secrets` capability is
+// still reserved — declaring `secrets:NAME` does nothing yet.
 //
 //   const { token } = await ctx.call('storage.get', { key: 'auth' });
 //   const res = await ctx.call('network.fetch', {

@@ -34,13 +34,12 @@ node scripts/typecheck.mjs  # 可选
   "id": "com.yourco.connector-crm",
   "permissions": [
     "storage",                       // 插件私有存储
-    "network:api.crm.example",       // 出站到目标 API 域名
-    "secrets:crm"                    // 凭据保管箱命名空间
+    "network:api.crm.example"        // 出站到目标 API 域名
   ]
 }
 ```
 
-凭据流:插件首次运行时引导用户授权 → `storage` 存 token 或接入 `host.secrets`(系统钥匙串)→ API 调用带 `Authorization`。
+凭据流:插件首次运行时引导用户授权 → 用 `storage` 保存 token(插件私有、落盘)→ API 调用带 `Authorization`。宿主目前还没有系统钥匙串的 `secrets` 能力,声明 `secrets:<命名空间>` 不会生效。
 
 ## 工具即插即用
 
