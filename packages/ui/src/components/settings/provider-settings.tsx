@@ -129,6 +129,7 @@ export function ProviderSettings() {
       setProviderDialog({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } });
       queryClient.invalidateQueries({ queryKey: ['modelsConfig'] });
       queryClient.invalidateQueries({ queryKey: ['models'] });
+      queryClient.invalidateQueries({ queryKey: ['config'] });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed');
     }
@@ -141,6 +142,7 @@ export function ProviderSettings() {
       setDeleteProvider(null);
       queryClient.invalidateQueries({ queryKey: ['modelsConfig'] });
       queryClient.invalidateQueries({ queryKey: ['models'] });
+      queryClient.invalidateQueries({ queryKey: ['config'] });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Delete failed');
     }
@@ -184,6 +186,7 @@ export function ProviderSettings() {
       setModelDialog({ open: false, providerName: '', editMode: false, originalId: '', data: { ...DEFAULT_MODEL } });
       queryClient.invalidateQueries({ queryKey: ['modelsConfig'] });
       queryClient.invalidateQueries({ queryKey: ['models'] });
+      queryClient.invalidateQueries({ queryKey: ['config'] });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed');
     }
@@ -196,6 +199,7 @@ export function ProviderSettings() {
       setDeleteModel(null);
       queryClient.invalidateQueries({ queryKey: ['modelsConfig'] });
       queryClient.invalidateQueries({ queryKey: ['models'] });
+      queryClient.invalidateQueries({ queryKey: ['config'] });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Delete failed');
     }
@@ -440,9 +444,14 @@ export function ProviderSettings() {
                 id="modelId"
                 placeholder="MiniMax-M2.7-highspeed"
                 value={modelDialog.data.id}
-                disabled={modelDialog.editMode}
                 onChange={(e) => setModelDialog((d) => ({ ...d, data: { ...d.data, id: e.target.value } }))}
               />
+              {modelDialog.editMode && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Changing the ID renames the model. Your default model selection follows the rename;
+                  past sessions keep the ID they ran with.
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="modelName">Model Name *</Label>

@@ -435,9 +435,31 @@ export function createRealConfigService(cwd: string, agentDir?: string, modelReg
       if (!provider) throw new Error(`Provider "${providerName}" does not exist`);
       const idx = provider.models.findIndex((m) => m.id === modelId);
       if (idx === -1) throw new Error(`Model "${modelId}" does not exist`);
-      provider.models[idx] = { ...provider.models[idx], ...model, id: modelId };
+
+      // No normalizeModelInput() here: on edit, a field the user did not touch
+      // must not be rewritten (it could silently flip a text-only model to
+      // multimodal just because the new name matches a heuristic). Fresh adds
+      // and read-time migration handle that.
+      const updated = { ...provider.models[idx], ...model };
+      const nextId = updated.id.trim();
+      if (!nextId) throw new Error('Model ID cannot be empty');
+      if (nextId !== modelId && provider.models.some((m, i) => i !== idx && m.id === nextId)) {
+        throw new Error(`Model "${nextId}" already exists`);
+      }
+
+      provider.models[idx] = { ...updated, id: nextId };
       writeModelsConfig(current);
       configuredProviders = refreshConfiguredProviders(registry);
+
+      // A rename changes the id downstream code uses to look the model up, so
+      // keep the saved default-model selection pointing at it. Match on the id
+      // alone: the desktop composer only ever writes defaultModel, so
+      // defaultProvider can be stale (e.g. left by the CLI), and config.get()
+      // resolves the default by id anyway.
+      if (nextId !== modelId && settings.getDefaultModel() === modelId) {
+        settings.setDefaultModel(nextId);
+        await settings.flush();
+      }
     },
   };
 }
