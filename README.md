@@ -75,12 +75,19 @@ pi-coding-agent-desktop/
 # 安装依赖（含插件，插件不属 workspace，必须走这一步）
 pnpm setup
 
+# 把首方插件装进用户目录 —— 客户路径运行的前提
+# （等价于 setup:market + 在插件中心安装）
+pnpm plugins:publish --install
+
 # 启动 Web 开发服务器 (localhost:5173)
 # Web 端内置 API 代理，无需单独启动后端服务
 pnpm dev:web
 
-# 启动 Electron 桌面应用
+# 启动 Electron 桌面应用（客户路径：加载 ~/.pi/agent/plugins）
 pnpm dev:desktop
+
+# 只想改插件、要求改动立刻生效时，改用仓库插件模式
+pnpm dev:desktop:plugins
 ```
 
 `pnpm setup` 会依次做：根依赖安装 → 根构建 → 逐个插件的依赖安装与构建 → 校验 vendor 资源完整性。首次运行约需下载 1 GB 的插件依赖，请耐心等待。
@@ -93,11 +100,25 @@ pnpm dev:desktop
 
 **面板入口是构建产物。** `com.pi.files`（文件中心）和 `com.pi.tasks`（事项）的 `manifest.json` 里，面板入口指向 `./ui-dist/panel/index.html`，而 `ui-dist/` 被插件自己的 `.gitignore` 忽略。不构建就没有面板可显示，只会看到插件静默消失。
 
-**`pnpm dev:desktop` 会加载本仓库的 `plugins/`。** 它通过 `PI_DEV_PLUGINS` 把本仓库设为开发插件根目录。插件的查找根按优先级 `dev > user > builtin` 解析，`dev` 最高，因此会遮蔽 `~/.pi/agent/plugins/` 里已安装的旧副本。**如果不走这条路（例如直接 `turbo run dev --filter=@pi/desktop`），应用读的是 `~/.pi/agent/plugins/` 里的副本——你改仓库里的代码不会有任何反应。** 需要绕过时用 `pnpm dev:desktop:raw`。
+**两种启动方式，对应两种插件来源。** 插件的查找根按优先级 `dev > user` 解析：
+
+- **`pnpm dev:desktop`（客户路径）**：不设开发根，应用只读 `~/.pi/agent/plugins/`。安装、更新、回滚都在插件中心走真实市场流程（sha256 校验、权限确认、原子替换）。这是验证"用户实际会看到什么"的方式。
+- **`pnpm dev:desktop:plugins`（插件开发）**：通过 `PI_DEV_PLUGINS` 把本仓库设为开发插件根，直接加载 `plugins/`，改代码立刻生效。它会遮蔽用户目录里的同名副本，所以不能用来测安装/更新流程。
+- `pnpm dev:desktop:raw` 是客户路径的历史别名，等价于 `pnpm dev:desktop`。
+
+**从仓库发布到用户目录。** 两个目录不会自动同步。标准流程是重新打市场包，再在插件中心安装/更新：
+
+```bash
+pnpm plugins:publish                 # 构建 + 重新打市场包（默认带开发版本后缀）
+pnpm plugins:publish --only com.pi.browser
+pnpm plugins:publish --install       # 额外无界面安装到 ~/.pi/agent/plugins
+```
+
+默认的版本后缀（`0.7.1-dev.<时间>`）让插件中心显示「更新」并保留 `.previous`，可以测试回滚；加 `--no-stamp` 则保持原版本号，插件中心显示「重装」。
 
 **vendor 资源不可重建，只能靠 git。** `com.pi.files` 内嵌了一份 GenOffice 引擎（`vendor/genoffice/`，Apache-2.0）。它由 `vendor-genoffice.mjs` 从外部源码复制而来，而那份源码是临时路径、不随仓库保存，所以这份 vendor 树**删了就回不来**。`vendor/UPSTREAM.json` 登记了每个文件的 sha256；`pnpm verify:vendor` 用它校验本地树是否完整。
 
-**可选的本地插件市场。** `pnpm setup:market` 会把插件打成 zip 并在 `market-dist/` 建一个本地市场，把 `~/.pi/agent/plugins/_state.json` 的 `registry` 指向它——用来走一遍真实的安装流程（sha256 校验、权限确认、原子替换）。注意它安装的是**副本**到用户目录，开发时仍以仓库为准。
+**可选的本地插件市场。** `pnpm setup:market` 会把插件打成 zip 并在 `market-dist/` 建一个本地市场，把 `~/.pi/agent/plugins/_state.json` 的 `registry` 指向它。它只准备市场、不安装；安装仍在插件中心完成（或 `pnpm plugins:publish --install`）。
 
 ## 命令参考
 
@@ -107,9 +128,11 @@ pnpm dev:desktop
 |------|------|
 | `pnpm setup` | 一键搭建：根安装/构建 + 逐个插件安装/构建 + vendor 校验 |
 | `pnpm dev:web` | 启动 Web 应用 (localhost:5173) |
-| `pnpm dev:desktop` | 启动 Electron 桌面应用（加载本仓库的 `plugins/`） |
-| `pnpm dev:desktop:raw` | 同上，但不设 `PI_DEV_PLUGINS`（读 `~/.pi/agent/plugins/`） |
-| `pnpm setup:market` | 额外构建本地插件市场 |
+| `pnpm dev:desktop` | 启动 Electron 桌面应用（客户路径，读 `~/.pi/agent/plugins/`） |
+| `pnpm dev:desktop:plugins` | 启动 Electron 桌面应用（开发模式，加载本仓库的 `plugins/`） |
+| `pnpm dev:desktop:raw` | 客户路径的历史别名，等价于 `pnpm dev:desktop` |
+| `pnpm setup:market` | 构建本地插件市场（不安装） |
+| `pnpm plugins:publish` | 构建插件 + 重新打市场包（`--only`、`--install`、`--no-stamp`） |
 | `pnpm verify:vendor` | 校验内嵌 GenOffice 资源是否完整（对照 `UPSTREAM.json` 的 sha256） |
 
 ### 构建与打包

@@ -12,10 +12,17 @@
  *
  * Usage:  node scripts/setup.mjs [--market] [--force]
  *   --market  also build the local plugin market (scripts/build-market.mjs)
- *             and point ~/.pi/agent/plugins/_state.json at it. This *installs
- *             copies* into the home dir; for development you want the repo's
- *             plugins/ loaded directly, which `pnpm dev:desktop` does.
+ *             and point ~/.pi/agent/plugins/_state.json at it. The market is
+ *             built with stamped dev versions, so the plugin center shows
+ *             them as updates with a rollback copy. This step *installs
+ *             nothing* — install/update through the plugin center (the
+ *             customer path, `pnpm dev:desktop`) or `pnpm plugins:publish
+ *             --install`.
  *   --force   rebuild every plugin even if its outputs are already present
+ *
+ * Run modes afterwards:
+ *   pnpm dev:desktop          customer path — loads ~/.pi/agent/plugins
+ *   pnpm dev:desktop:plugins  plugin authoring — loads this checkout's plugins/
  */
 import { spawn } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -161,8 +168,9 @@ for (const plugin of plugins) {
 if (WANT_MARKET) {
   step('local plugin market');
   // build-market.mjs zips dist/ + ui-dist/, so it has to come after the builds,
-  // and it refreshes _state.json#registry itself.
-  record('build-market', await run(NODE, [join(REPO, 'scripts', 'build-market.mjs')], REPO));
+  // and it refreshes _state.json#registry itself. Stamp dev versions so the
+  // plugin center sees 更新 (and keeps .previous) rather than same-version 重装.
+  record('build-market', await run(NODE, [join(REPO, 'scripts', 'build-market.mjs'), '--stamp'], REPO));
 }
 
 // ── Summary ─────────────────────────────────────────────────────────────
@@ -174,9 +182,9 @@ if (failures.length) {
 }
 
 console.log('✓ setup complete');
-note('start the app with:  pnpm dev:desktop');
-note('that sets PI_DEV_PLUGINS to this checkout\'s plugins/, so the repo is the');
-note('run source and ~/.pi/agent/plugins/ cannot shadow it with a stale copy.');
+note('customer path (user plugins + local market):  pnpm dev:desktop');
+note('install/update the customer plugins:  pnpm plugins:publish --install');
+note('plugin authoring (repo plugins, live edits):  pnpm dev:desktop:plugins');
 if (!WANT_MARKET) {
-  note('to also exercise the real install flow:  pnpm setup:market');
+  note('to also build the local market now:  pnpm setup:market');
 }

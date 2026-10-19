@@ -184,6 +184,12 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
           ) : null}
         </div>
         {plugin.description ? <div className="mt-1 text-xs text-muted-foreground">{plugin.description}</div> : null}
+        {plugin.source === 'dev' ? (
+          <div className="mt-1 text-[11px] leading-4 text-muted-foreground">
+            当前加载的是仓库开发副本，插件中心不能替换或卸载它。测试客户的安装/更新路径请用
+            <span className="font-mono"> pnpm dev:desktop</span>。
+          </div>
+        ) : null}
         {plugin.error ? (
           <div className="mt-1 flex items-center gap-1 text-xs text-destructive">
             <CircleAlert className="h-3 w-3" />{plugin.error}
@@ -470,6 +476,7 @@ export function PluginCenter() {
   const catalog = usePluginStore((s) => s.catalog);
   const catalogLoading = usePluginStore((s) => s.catalogLoading);
   const catalogError = usePluginStore((s) => s.catalogError);
+  const registryUrl = usePluginStore((s) => s.registryUrl);
   const loadCatalog = usePluginStore((s) => s.loadCatalog);
   const installPhases = usePluginStore((s) => s.installPhases);
   const [query, setQuery] = useState('');
@@ -513,6 +520,14 @@ export function PluginCenter() {
           <RefreshCw className={cn('h-3.5 w-3.5', catalogLoading && 'animate-spin')} />
         </Button>
       </div>
+
+      {/* Which index the install/update buttons read. A stale local market is
+          exactly how "更新" silently does nothing useful. */}
+      {registryUrl ? (
+        <div className="-mt-1 mb-2 truncate text-[10px] text-muted-foreground" title={registryUrl} data-market-registry>
+          市场: {registryUrl}
+        </div>
+      ) : null}
 
       <div className="relative mb-2">
         <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

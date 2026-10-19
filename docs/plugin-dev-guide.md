@@ -695,7 +695,7 @@ SDK 底下是两套通道。**只有你不打算用 SDK 的时候才需要知道
 
 ### 看日志
 
-后端的所有 `ctx.log.*` 和未捕获报错都进应用日志，前缀 `[plugin:你的插件id]`。开发本仓库时跑 `pnpm dev:desktop`，日志直接在终端里。
+后端的所有 `ctx.log.*` 和未捕获报错都进应用日志，前缀 `[plugin:你的插件id]`。开发本仓库时跑 `pnpm dev:desktop:plugins`（仓库插件模式），日志直接在终端里。
 
 ### 开发本仓库的官方插件：不要拷目录
 
@@ -704,10 +704,20 @@ SDK 底下是两套通道。**只有你不打算用 SDK 的时候才需要知道
 开发时把仓库的 `plugins/` 直接设成开发根目录：
 
 ```bash
-pnpm dev:desktop          # 设 PI_DEV_PLUGINS=<仓库>/plugins 后再启动
+pnpm dev:desktop:plugins  # 设 PI_DEV_PLUGINS=<仓库>/plugins 后再启动
 ```
 
 也可以手动设：`PI_DEV_PLUGINS=/绝对路径/plugins`（**冒号分隔**，可给多个）。开发目录的优先级高于用户目录，同名插件以仓库为准，不会打架。
+
+想把仓库插件发布到用户目录、走真实的安装/更新流程：
+
+```bash
+pnpm plugins:publish              # 构建 + 重新打市场包（默认带开发版本后缀）
+pnpm plugins:publish --install    # 直接安装到 ~/.pi/agent/plugins
+pnpm dev:desktop                  # 客户路径：读用户目录
+```
+
+`--no-stamp` 保持原版本号，此时插件中心显示「重装」而不是「更新」。
 
 两个配套注意点：
 

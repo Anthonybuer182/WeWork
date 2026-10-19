@@ -2,7 +2,12 @@
 /**
  * Launch the desktop app with THIS repo's `plugins/` as a dev plugin root.
  *
- * Why this script exists: the plugin registry resolves roots by priority
+ * This is the PLUGIN-AUTHORING mode. `pnpm dev:desktop` (the default) runs the
+ * customer path instead: plugins come from `~/.pi/agent/plugins/`, installed
+ * and updated through the plugin center's market. Use this script when the
+ * point is to see edits to `plugins/<id>/` immediately.
+ *
+ * Why the env var exists: the plugin registry resolves roots by priority
  * (dev 3 > user 2), and `~/.pi/agent/plugins/` — the user root — always
  * shadows the repo checkout below it. So without `PI_DEV_PLUGINS`, edits to
  * `plugins/<id>/` are never loaded and the app silently runs whatever stale
@@ -23,6 +28,7 @@ const DEV_ROOT = join(REPO, 'plugins');
 process.env.PI_DEV_PLUGINS = DEV_ROOT;
 
 // ── Make it visually unambiguous which root is live ────────────────────
+console.log(`[dev-plugin] plugin-authoring mode (repo plugins win over user copies)`);
 console.log(`[dev-plugin] PI_DEV_PLUGINS = ${DEV_ROOT}`);
 
 try {

@@ -15,12 +15,25 @@
  * inputs and are excluded — for com.pi.files that is the difference between
  * ~80 MB and ~900 MB.
  *
- * Usage:  node scripts/build-market.mjs [--out <dir>]
+ * Usage:  node scripts/build-market.mjs [--out <dir>] [--only <id[,id]>]
+ *                                       [--stamp] [--stamp-label <label>]
+ *                                       [--skip-state]
+ *
+ *   --only         build only the listed plugin ids. Existing entries for the
+ *                  other plugins are kept from the current index (incremental
+ *                  publish), so one plugin's build does not stamp or re-zip
+ *                  the rest.
+ *   --stamp        rewrite the packaged manifest's version to
+ *                  `<version>-dev.<label>` and use it in the index too. The
+ *                  plugin center compares version strings, so a stamped build
+ *                  shows as 更新 (instead of 重装) and keeps `.previous` for
+ *                  rollback. The repo manifest is never modified.
+ *   --stamp-label  label for --stamp (default: local YYYYMMDDHHmmss)
  */
 import AdmZip from 'adm-zip';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 
@@ -39,6 +52,28 @@ const OUT = outFlag >= 0 ? resolve(process.argv[outFlag + 1]) : join(REPO, 'mark
  * _state.json#registry at them as a side effect.
  */
 const SKIP_STATE = process.argv.includes('--skip-state');
+
+const onlyFlag = process.argv.indexOf('--only');
+const ONLY = onlyFlag >= 0
+  ? (process.argv[onlyFlag + 1] ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+  : null;
+if (onlyFlag >= 0 && (!ONLY || ONLY.length === 0)) {
+  console.error('--only needs a comma-separated list of plugin ids');
+  process.exit(1);
+}
+
+const STAMP = process.argv.includes('--stamp');
+const stampLabelFlag = process.argv.indexOf('--stamp-label');
+function defaultStampLabel() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+const STAMP_LABEL = stampLabelFlag >= 0 ? process.argv[stampLabelFlag + 1] : defaultStampLabel();
+if (stampLabelFlag >= 0 && !STAMP_LABEL) {
+  console.error('--stamp-label needs a value');
+  process.exit(1);
+}
 
 /**
  * One fixed timestamp for every zip entry.
@@ -68,20 +103,47 @@ function collectPayload(root, rel = '') {
   return out;
 }
 
-const pluginIds = readdirSync(PLUGINS_DIR, { withFileTypes: true })
+let pluginIds = readdirSync(PLUGINS_DIR, { withFileTypes: true })
   .filter((d) => d.isDirectory() && existsSync(join(PLUGINS_DIR, d.name, 'manifest.json')))
   .map((d) => d.name)
   .sort();
+
+if (ONLY) {
+  const missing = ONLY.filter((id) => !pluginIds.includes(id));
+  if (missing.length > 0) {
+    console.error(`unknown plugin id(s): ${missing.join(', ')}`);
+    console.error(`available: ${pluginIds.join(', ')}`);
+    process.exit(1);
+  }
+  pluginIds = pluginIds.filter((id) => ONLY.includes(id));
+}
 
 if (pluginIds.length === 0) {
   console.error(`no plugins found under ${PLUGINS_DIR}`);
   process.exit(1);
 }
 
-rmSync(OUT, { recursive: true, force: true });
+const indexPath = join(OUT, 'index.json');
+
+// Incremental publish: with --only, keep the other plugins' published entries
+// and zips untouched. A full build starts from an empty output directory.
+let previousEntries = [];
+if (ONLY) {
+  try {
+    const previous = JSON.parse(readFileSync(indexPath, 'utf-8'));
+    previousEntries = Array.isArray(previous.plugins) ? previous.plugins : [];
+  } catch {
+    /* first run: no previous index */
+  }
+  if (previousEntries.length === 0) {
+    console.warn('note: no existing index — the catalog will contain only the selected plugin(s)');
+  }
+} else {
+  rmSync(OUT, { recursive: true, force: true });
+}
 mkdirSync(OUT, { recursive: true });
 
-console.log(`building market → ${OUT}\n`);
+console.log(`building market → ${OUT}${ONLY ? ` (only: ${ONLY.join(', ')})` : ''}\n`);
 
 const entries = [];
 for (const dir of pluginIds) {
@@ -110,7 +172,12 @@ for (const dir of pluginIds) {
 
   const zip = new AdmZip();
   let bytes = 0;
+  // A stamped build rewrites the packaged manifest only. The repo manifest
+  // stays clean; the market (and therefore the installed copy) carries the
+  // dev version, which is what makes the plugin center show 更新 + rollback.
+  const packagedVersion = STAMP ? `${manifest.version}-dev.${STAMP_LABEL}` : manifest.version;
   for (const rel of collectPayload(root)) {
+    if (STAMP && rel === 'manifest.json') continue; // re-added below, stamped
     const content = readFileSync(join(root, rel));
     bytes += content.length;
     // Forward slashes: a zip entry path is not an OS path, and Windows would
@@ -118,18 +185,32 @@ for (const dir of pluginIds) {
     const entry = zip.addFile(rel.split('\\').join('/'), content);
     entry.header.time = SOURCE_DATE;
   }
+  if (STAMP) {
+    const packaged = { ...manifest, version: packagedVersion };
+    const content = Buffer.from(`${JSON.stringify(packaged, null, 2)}\n`, 'utf-8');
+    bytes += content.length;
+    const entry = zip.addFile('manifest.json', content);
+    entry.header.time = SOURCE_DATE;
+  }
 
-  const zipName = `${manifest.id}-${manifest.version}.zip`;
+  const zipName = `${manifest.id}-${packagedVersion}.zip`;
   const zipPath = join(OUT, zipName);
   const zipBytes = zip.toBuffer();
   writeFileSync(zipPath, zipBytes);
+  // Version changed: drop this plugin's older zips so the market directory
+  // does not accumulate dead artifacts across dev publishes.
+  for (const f of readdirSync(OUT)) {
+    if (f.startsWith(`${manifest.id}-`) && f.endsWith('.zip') && f !== zipName) {
+      rmSync(join(OUT, f), { force: true });
+    }
+  }
 
   const sha256 = createHash('sha256').update(zipBytes).digest('hex');
   entries.push({
     id: manifest.id,
     name: manifest.name,
     description: manifest.description ?? '',
-    version: manifest.version,
+    version: packagedVersion,
     apiVersion: manifest.apiVersion,
     // Relative to the index. An absolute build-machine path would be baked
     // into the index and then dangle inside a packaged app installed
@@ -142,13 +223,36 @@ for (const dir of pluginIds) {
   });
 
   const mb = (n) => `${(n / 1024 / 1024).toFixed(2)} MB`;
-  console.log(`  ${manifest.id.padEnd(18)} v${manifest.version.padEnd(8)} ${mb(zipBytes.length).padStart(9)}  (${zip.getEntries().length} files, ${mb(bytes)} raw)`);
+  const versionNote = STAMP ? ` v${packagedVersion.padEnd(8)} (from ${manifest.version})` : ` v${manifest.version.padEnd(8)}      `;
+  console.log(`  ${manifest.id.padEnd(18)}${versionNote} ${mb(zipBytes.length).padStart(9)}  (${zip.getEntries().length} files, ${mb(bytes)} raw)`);
 }
 
-const indexPath = join(OUT, 'index.json');
+// Incremental publish keeps the other plugins' existing entries. Refuse to
+// write an index that points at zips we would have deleted.
+let mergedEntries = entries;
+if (ONLY) {
+  const selected = new Set(ONLY);
+  // Older indexes may carry absolute zip paths; normalize them to paths
+  // relative to this index so a relocated market keeps working.
+  const kept = previousEntries
+    .filter((e) => !selected.has(e.id))
+    .map((e) => (isAbsolute(e.url) && dirname(e.url) === OUT ? { ...e, url: basename(e.url) } : e));
+  const missingZips = kept.filter((e) => {
+    const zipPath = isAbsolute(e.url) ? e.url : join(OUT, e.url);
+    return !existsSync(zipPath);
+  });
+  if (missingZips.length > 0) {
+    console.error('✗ the previous index references zips that are not present:');
+    for (const e of missingZips) console.error(`    ${e.id} → ${e.url}`);
+    console.error('  run a full market build (pnpm setup:market) to regenerate it');
+    process.exit(1);
+  }
+  mergedEntries = [...kept, ...entries].sort((a, b) => a.id.localeCompare(b.id));
+}
+
 writeFileSync(
   indexPath,
-  `${JSON.stringify({ version: 1, updated: new Date().toISOString(), plugins: entries }, null, 2)}\n`,
+  `${JSON.stringify({ version: 1, updated: new Date().toISOString(), plugins: mergedEntries }, null, 2)}\n`,
 );
 
 // Point the app at this index, keeping whatever it already knows about which
@@ -168,14 +272,15 @@ if (SKIP_STATE) {
   writeFileSync(stateFile, `${JSON.stringify({ ...state, registry: indexPath }, null, 2)}\n`);
 }
 
-const total = entries.reduce((n, e) => n + e.size, 0);
-console.log(`\n${entries.length} plugin(s), ${(total / 1024 / 1024).toFixed(1)} MB total`);
+const total = mergedEntries.reduce((n, e) => n + e.size, 0);
+console.log(`\n${mergedEntries.length} plugin(s) in the index, ${(total / 1024 / 1024).toFixed(1)} MB total`);
 console.log(`index:  ${indexPath}`);
 if (!SKIP_STATE) console.log(`state:  ${stateFile} → registry`);
 console.log(`
 next:
-  1. make sure nothing is installed from a previous run:
-       rm -rf ~/.pi/agent/plugins/com.pi.*
-  2. launch WITHOUT the dev plugin root, so the market copy is what loads:
-       pnpm --filter @pi/desktop dev
-  3. open 插件中心 and install — or, from a dev session, read the catalog first`);
+  1. customer-path app (loads ~/.pi/agent/plugins):
+       pnpm dev:desktop
+  2. open 插件中心 and install/update — or install headlessly:
+       pnpm plugins:publish --install
+  3. plugin authoring (repo plugins, live edits):
+       pnpm dev:desktop:plugins`);
