@@ -62,7 +62,7 @@
 | `filePreview` | 某类文件在文件树里被点开时，路由到你的面板 |
 | `skills` | 附带给 agent 的技能文档 |
 
-想看真实插件长什么样：仓库 `plugins/` 下的六个官方插件就是参照实现。**com.pi.tasks** 最典型（工具 + 面板 + 定时任务）；**com.pi.browser** 演示如何在面板里嵌入宿主的浏览器引擎，以及多标签与会话作用域；**com.pi.files** 演示插件如何自带一整套大型渲染引擎；**com.pi.devdocs**（就是这份文档）是最小的纯 UI 插件：只有 manifest + 一张网页，没有后端、没有构建步骤。
+想看真实插件长什么样：仓库 `plugins/` 下的五个官方插件就是参照实现。**com.pi.tasks** 最典型（工具 + 面板 + 定时任务）；**com.pi.browser** 演示如何在面板里嵌入宿主的浏览器引擎，以及多标签与会话作用域；**com.pi.files** 演示插件如何自带一整套大型渲染引擎；**com.pi.devdocs**（就是这份文档）是最小的纯 UI 插件：只有 manifest + 一张网页，没有后端、没有构建步骤。
 
 ---
 
@@ -749,7 +749,7 @@ await import('./dist/main.mjs');               // SDK 在导入时接管
 现成的样板：
 
 - SDK 自己的契约测试（21 项，覆盖每一条报错路径）：先 `pnpm --filter @pi/plugin-sdk build`，再 `node packages/plugin-sdk/tests/smoke.mjs`。测试加载的是 `dist/`，改了 SDK 源码不重建会测到旧代码。
-- 各官方后端的自测：`node plugins/com.pi.tasks/scripts/smoke-backend.mjs`（browser / files / knowledge / mail 也有同名脚本）。它们加载各自的 `dist/main.mjs`，改过后端要先重新构建该插件。
+- 各官方后端的自测：`node plugins/com.pi.tasks/scripts/smoke-backend.mjs`（browser / files / mail 也有同名脚本）。它们加载各自的 `dist/main.mjs`，改过后端要先重新构建该插件。
 
 ### 常见坑速查
 
