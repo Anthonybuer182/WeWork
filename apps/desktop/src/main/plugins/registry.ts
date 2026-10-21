@@ -2,7 +2,13 @@ import { app } from 'electron';
 import { getAgentDir } from '@earendil-works/pi-coding-agent';
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, resolve, dirname } from 'path';
-import type { PluginManifest, PluginRuntimeState, PluginSource, PluginInfo } from '@pi/types';
+import type {
+  PluginManifest,
+  PluginRuntimeState,
+  PluginSource,
+  PluginInfo,
+  PluginShadowedCopy,
+} from '@pi/types';
 import { MIN_SUPPORTED_API_VERSION, PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { satisfiesVersion } from './semver';
 
@@ -18,6 +24,8 @@ export interface ResolvedPlugin {
   enabled: boolean;
   state: PluginRuntimeState;
   error?: string;
+  /** Same-id copies from lower-priority roots, for display only. */
+  shadowed?: PluginShadowedCopy[];
 }
 
 /** Shape of ~/.pi/agent/plugins/_state.json */
@@ -175,6 +183,8 @@ export class PluginRegistry {
     this.plugins.clear();
 
     const candidates = new Map<string, { manifest: PluginManifest; rootPath: string; source: PluginSource }>();
+    /** Losers of the id collision, keyed by id — reported, never loaded. */
+    const shadowed = new Map<string, PluginShadowedCopy[]>();
 
     const collectFrom = (rootPath: string, source: PluginSource) => {
       if (!rootPath || !existsSync(rootPath)) return;
@@ -182,13 +192,13 @@ export class PluginRegistry {
 
       // A root may itself be a plugin directory (single-plugin dev path).
       if (existsSync(join(rootPath, 'manifest.json'))) {
-        this.addCandidate(candidates, rootPath, source);
+        this.addCandidate(candidates, shadowed, rootPath, source);
         return;
       }
       for (const entry of stat) {
         if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
         if (entry.name === '_data') continue;  // plugin data, not a plugin
-        this.addCandidate(candidates, join(rootPath, entry.name), source);
+        this.addCandidate(candidates, shadowed, join(rootPath, entry.name), source);
       }
     };
 
@@ -205,6 +215,8 @@ export class PluginRegistry {
         enabled: enabledMap[id]?.enabled !== false, // enabled by default
         state: 'registered',
       };
+      const hidden = shadowed.get(id);
+      if (hidden?.length) plugin.shadowed = hidden;
       // engines negotiation
       const range = candidate.manifest.engines?.[HOST_ENGINE_KEY];
       if (range && !satisfiesVersion(this.appVersion, range)) {
@@ -236,6 +248,7 @@ export class PluginRegistry {
 
   private addCandidate(
     candidates: Map<string, { manifest: PluginManifest; rootPath: string; source: PluginSource }>,
+    shadowed: Map<string, PluginShadowedCopy[]>,
     dir: string,
     source: PluginSource,
   ): void {
@@ -243,7 +256,21 @@ export class PluginRegistry {
     if (!validated) return;
     const { manifest } = validated;
     const existing = candidates.get(manifest.id);
-    if (existing && SOURCE_PRIORITY[existing.source] >= SOURCE_PRIORITY[source]) return;
+    const record = (m: PluginManifest, rootPath: string, src: PluginSource): void => {
+      const list = shadowed.get(manifest.id) ?? [];
+      // Same root rescanned (a path listed twice in PI_DEV_PLUGINS) is not a
+      // second copy — reporting it would turn a config typo into a phantom.
+      if (list.some((s) => s.rootPath === rootPath)) return;
+      list.push({ source: src, version: m.version, rootPath });
+      shadowed.set(manifest.id, list);
+    };
+    if (existing) {
+      if (SOURCE_PRIORITY[existing.source] >= SOURCE_PRIORITY[source]) {
+        record(manifest, dir, source);
+        return;
+      }
+      record(existing.manifest, existing.rootPath, existing.source);
+    }
     candidates.set(manifest.id, { manifest, rootPath: dir, source });
   }
 
@@ -348,6 +375,7 @@ export class PluginRegistry {
       state: plugin.state,
       permissions: plugin.manifest.permissions ?? [],
       previousVersion: this.getPreviousVersion(id),
+      shadowed: plugin.shadowed,
       iconUrl: pluginIconUrl,
       panels: (plugin.manifest.contributes?.panels ?? []).map((p) => ({
         id: p.id,

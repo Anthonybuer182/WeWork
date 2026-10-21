@@ -82,6 +82,22 @@ export interface PluginSettingInfo {
   options?: string[];
 }
 
+/**
+ * A copy of a plugin that discovery found but did not load, because another
+ * root already supplied that id at a higher priority.
+ *
+ * The scan has always dropped these silently (`dev > user`, first root wins).
+ * That is correct for loading, but it left the UI unable to answer the one
+ * question a developer actually has — "is my installed copy behind the one
+ * running right now?". Dev copies shadow the user's installed copy by design,
+ * so this is the normal state of `pnpm dev:desktop:plugins`, not an error.
+ */
+export interface PluginShadowedCopy {
+  source: PluginSource;
+  version: string;
+  rootPath: string;
+}
+
 /** Serializable plugin descriptor sent to the renderer via IPC. */
 export interface PluginInfo {
   id: string;
@@ -96,6 +112,12 @@ export interface PluginInfo {
    * an upgrade — it is what makes "回到上一版" offerable in the plugin center.
    */
   previousVersion?: string;
+  /**
+   * Copies discovery found but did not load (same id, lower-priority root).
+   * Empty in the normal installed-only setup; populated when a dev root
+   * shadows the user's installed copy.
+   */
+  shadowed?: PluginShadowedCopy[];
   /** Plugin brand icon, absolute pi-plugin:// URL (optional). */
   iconUrl?: string;
   panels: PluginPanelInfo[];

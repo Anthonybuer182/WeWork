@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown, Puzzle, Undo2, Search } from 'lucide-react';
+import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, ChevronDown, Puzzle, Undo2, Search, Info } from 'lucide-react';
 import type { MarketEntry, PluginInfo, PluginSettingInfo } from '@pi/types';
 import { describePermission, MIN_SUPPORTED_API_VERSION, PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -184,6 +184,22 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
           ) : null}
         </div>
         {plugin.description ? <div className="mt-1 text-xs text-muted-foreground">{plugin.description}</div> : null}
+        {plugin.shadowed?.length ? (
+          // Discovery loads one copy per id and drops the rest without a word.
+          // A dev root beating the user's installed copy is the normal state of
+          // plugin authoring, so this is a fact to state, not an error.
+          <div
+            className="mt-1 flex items-start gap-1 text-[11px] leading-4 text-muted-foreground"
+            data-shadowed-copy={plugin.id}
+            title={plugin.shadowed.map((s) => `${s.rootPath} (v${s.version})`).join('\n')}
+          >
+            <Info className="mt-0.5 h-3 w-3 shrink-0" />
+            <span>
+              {plugin.shadowed.map((s) => `${SOURCE_LABEL[s.source] ?? s.source}副本 v${s.version}`).join('、')}
+              {' 未加载（被当前副本遮蔽）'}
+            </span>
+          </div>
+        ) : null}
         {plugin.source === 'dev' ? (
           <div className="mt-1 text-[11px] leading-4 text-muted-foreground">
             当前加载的是仓库开发副本，插件中心不能替换或卸载它。测试客户的安装/更新路径请用
