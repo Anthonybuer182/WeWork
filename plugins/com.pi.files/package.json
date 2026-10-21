@@ -1,6 +1,6 @@
 {
   "name": "com.pi.files",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "文件中心插件 — 自包含的 office 引擎（创建/编辑/预览 docx/pptx/xlsx/pdf），基于 vendor 的 GenOffice 引擎（Apache-2.0）",
   "type": "module",

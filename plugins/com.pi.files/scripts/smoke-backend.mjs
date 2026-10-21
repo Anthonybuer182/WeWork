@@ -16,7 +16,7 @@
  *
  * Run from the plugin root:  node scripts/smoke-backend.mjs
  */
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
@@ -81,7 +81,7 @@ function waitFor(pred, what, timeoutMs = 20_000) {
       const i = outbox.findIndex((m) => pred(m) && m.type !== 'call');
       if (i >= 0) return resolve_(outbox.splice(i, 1)[0]);
       if (Date.now() - started > timeoutMs) {
-        return reject(new Error(`timed out waiting for ${what}\n  saw: ${JSON.stringify(outbox.map((m) => m.type))}`));
+        return reject(new Error(`timed out waiting for ${what}\n  saw: ${JSON.stringify(outbox.map((m) => ({ type: m.type, name: m.name, method: m.method, message: m.message })))}`));
       }
       setTimeout(tick, 10);
     };
@@ -261,6 +261,10 @@ console.log(`  fixture: ${deckPath} (${original.length} bytes)\n`);
   hostSend({ type: 'ui-port' }, [fakeUiPort]);
   // Which document the viewer has open — this is what the guard reads.
   portListener({ data: { kind: 'event', event: 'panel.mounted', data: { params: { file: docxPath } } } });
+  // The real panel announces readiness once its editor has the document
+  // loaded; office_edit waits for this before sending any command. Without it
+  // the backend would wait the full 60s for an announcement that never comes.
+  portListener({ data: { kind: 'request', id: 'ready-1', method: 'mcp.ready', params: { path: docxPath } } });
 
   const guide = await callTool('office_guide', { domain: 'docx' });
   check('office_guide serves the docx vocabulary', /findReplace/.test(guide.content?.[0]?.text ?? ''));
@@ -353,6 +357,186 @@ console.log(`  fixture: ${deckPath} (${original.length} bytes)\n`);
   writeFileSync(xlsxPath, written.get(xlsxPath));
   const reread = await callTool('office_read', { path: xlsxPath });
   check('the xlsx edit survives a re-read', /B2=100/.test(reread.content?.[0]?.text ?? ''), reread.content?.[0]?.text);
+}
+
+// ── files_search: find a document by what it is about ──────────────────
+//
+// The index exists because office files cannot be grepped. These assertions
+// pin the two halves an agent depends on: titles really are extracted from
+// each container format, and an answer is never older than the file system —
+// an edit made outside the app changes the next answer, a deleted file
+// disappears.
+{
+  const JSZip = (await import('jszip')).default;
+  const reports = join(dir, 'reports');
+  mkdirSync(reports, { recursive: true });
+
+  // Minimal containers: the extractor reads one XML part per format, so a
+  // single-entry zip is a real test of that path without a generator library.
+  const docx = new JSZip();
+  docx.file(
+    'word/document.xml',
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' +
+      '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>季度汇报</w:t></w:r></w:p>' +
+      '<w:p><w:r><w:t>正文第一段</w:t></w:r></w:p>' +
+      // Body-only text: the digest tier's reason to exist.
+      '<w:p><w:r><w:t>华东区预算 30 万</w:t></w:r></w:p>' +
+      '</w:body></w:document>',
+  );
+  const docxPath = join(reports, '2026-Q3.docx');
+  writeFileSync(docxPath, await docx.generateAsync({ type: 'nodebuffer' }));
+
+  const pptx = new JSZip();
+  pptx.file(
+    'ppt/slides/slide1.xml',
+    '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' +
+      '<p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Q3 经营分析</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>',
+  );
+  // A later slide: a title-only index would miss this.
+  pptx.file(
+    'ppt/slides/slide2.xml',
+    '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' +
+      '<p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>渠道费用明细</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>',
+  );
+  const pptxPath = join(reports, '2026-Q3.pptx');
+  writeFileSync(pptxPath, await pptx.generateAsync({ type: 'nodebuffer' }));
+
+  const mdPath = join(reports, 'notes.md');
+  writeFileSync(mdPath, '# 会议记录\n\n正文\n');
+  // Word/Excel create this beside an open document; it must not be indexed.
+  writeFileSync(join(reports, '~$notes.docx'), 'owner lock');
+
+  // Excel producers disagree about where cell text lives. `smoke.xlsx`
+  // (created earlier by SheetJS) covers the `t="str"` form; these two pin the
+  // sharedStrings and inline-string forms that Word/Excel exports use.
+  const sharedBook = new JSZip();
+  sharedBook.file(
+    'xl/workbook.xml',
+    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheets><sheet name="预算表" sheetId="1"/></sheets></workbook>',
+  );
+  sharedBook.file(
+    'xl/sharedStrings.xml',
+    '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><si><t>差旅费用合计</t></si></sst>',
+  );
+  sharedBook.file(
+    'xl/worksheets/sheet1.xml',
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c></row></sheetData></worksheet>',
+  );
+  const sharedPath = join(reports, '预算.xlsx');
+  writeFileSync(sharedPath, await sharedBook.generateAsync({ type: 'nodebuffer' }));
+
+  const inlineBook = new JSZip();
+  inlineBook.file(
+    'xl/workbook.xml',
+    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheets><sheet name="会议" sheetId="1"/></sheets></workbook>',
+  );
+  inlineBook.file(
+    'xl/worksheets/sheet1.xml',
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>会议纪要</t></is></c></row></sheetData></worksheet>',
+  );
+  const inlinePath = join(reports, '纪要.xlsx');
+  writeFileSync(inlinePath, await inlineBook.generateAsync({ type: 'nodebuffer' }));
+
+  const first = await callTool('files_search', { root: dir, query: '经营分析' });
+  const firstText = first.content?.[0]?.text ?? '';
+  check('files_search finds a pptx by its slide title', firstText.includes(pptxPath), firstText);
+  check('files_search returns the title it extracted', firstText.includes('Q3 经营分析'), firstText);
+  check('files_search leaves unrelated documents out', !firstText.includes(mdPath), firstText);
+
+  const byHeading = await callTool('files_search', { root: dir, query: '季度汇报' });
+  check('files_search finds a docx by its heading', (byHeading.content?.[0]?.text ?? '').includes(docxPath), byHeading.content?.[0]?.text);
+
+  const byBody = await callTool('files_search', { root: dir, query: '华东区预算' });
+  check(
+    'files_search matches docx body text, not just the title',
+    (byBody.content?.[0]?.text ?? '').includes(docxPath),
+    byBody.content?.[0]?.text,
+  );
+  const punctuated = await callTool('files_search', { root: dir, query: '华东区预算，30' });
+  check(
+    'Chinese punctuation separates terms instead of poisoning the query',
+    (punctuated.content?.[0]?.text ?? '').includes(docxPath),
+    punctuated.content?.[0]?.text,
+  );
+  check(
+    'a body match returns the matched snippet',
+    (byBody.details?.results?.[0]?.snippet ?? '').includes('华东区预算'),
+    JSON.stringify(byBody.details?.results?.[0]),
+  );
+
+  const bySlide = await callTool('files_search', { root: dir, query: '渠道费用' });
+  check(
+    'files_search matches text from a later slide',
+    (bySlide.content?.[0]?.text ?? '').includes(pptxPath),
+    bySlide.content?.[0]?.text,
+  );
+
+  const byCell = await callTool('files_search', { root: dir, query: '姓名' });
+  check(
+    'files_search matches xlsx text cells, not just the sheet name',
+    (byCell.content?.[0]?.text ?? '').includes(join(dir, 'smoke.xlsx')),
+    byCell.content?.[0]?.text,
+  );
+
+  const byShared = await callTool('files_search', { root: dir, query: '差旅费用' });
+  check(
+    'files_search reads sharedStrings workbooks',
+    (byShared.content?.[0]?.text ?? '').includes(sharedPath),
+    byShared.content?.[0]?.text,
+  );
+
+  const byInline = await callTool('files_search', { root: dir, query: '会议纪要' });
+  check(
+    'files_search reads inline-string workbooks',
+    (byInline.content?.[0]?.text ?? '').includes(inlinePath),
+    byInline.content?.[0]?.text,
+  );
+
+  const relative = await callTool('files_search', { root: 'reports', query: 'x' });
+  check('a relative root is refused, not resolved against the plugin cwd', /absolute path/.test(relative.error ?? ''), relative.error);
+
+  const missing = await callTool('files_search', { root: join(dir, 'does-not-exist'), query: 'x' });
+  check('a missing root is refused', /not a directory/.test(missing.error ?? ''), missing.error);
+
+  const bySheet = await callTool('files_search', { root: dir, query: 'Sheet1' });
+  check(
+    'files_search finds an xlsx by its sheet name',
+    (bySheet.content?.[0]?.text ?? '').includes(join(dir, 'smoke.xlsx')),
+    bySheet.content?.[0]?.text,
+  );
+
+  const byFolder = await callTool('files_search', { root: dir, query: 'reports' });
+  check(
+    'files_search matches folder names, so siblings are discoverable',
+    (byFolder.content?.[0]?.text ?? '').includes(mdPath),
+    byFolder.content?.[0]?.text,
+  );
+
+  const newest = await callTool('files_search', { root: dir });
+  check('an empty query lists the workspace', (newest.details?.results?.length ?? 0) >= 4, JSON.stringify(newest.details?.results?.map((r) => r.path)));
+  check('office owner-lock files (~$...) are skipped', !(newest.details?.results ?? []).some((r) => r.path.includes('~$')), JSON.stringify(newest.details?.results?.map((r) => r.path)));
+  check('details carry absolute paths for office_read', newest.details?.results?.every((r) => r.path.startsWith(dir)), JSON.stringify(newest.details?.results?.[0]));
+
+  // The freshness contract: an edit outside the app must show up in the next
+  // answer. Changing the text AND the size rules out a same-mtime edge.
+  writeFileSync(mdPath, '# 会议记录（修订版）\n\n正文加了一行。\n');
+  const edited = await callTool('files_search', { root: dir, query: '修订版' });
+  check(
+    'an external edit is reflected on the next search',
+    (edited.content?.[0]?.text ?? '').includes('会议记录（修订版）'),
+    edited.content?.[0]?.text,
+  );
+
+  const mdBody = await callTool('files_search', { root: dir, query: '加了一行' });
+  check(
+    'files_search matches md body text, not just the heading',
+    (mdBody.content?.[0]?.text ?? '').includes(mdPath),
+    mdBody.content?.[0]?.text,
+  );
+
+  rmSync(mdPath);
+  const afterDelete = await callTool('files_search', { root: dir, query: '修订版' });
+  check('a deleted file disappears from the index', !(afterDelete.content?.[0]?.text ?? '').includes(mdPath), afterDelete.content?.[0]?.text);
 }
 
 rmSync(dir, { recursive: true, force: true });

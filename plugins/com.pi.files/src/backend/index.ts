@@ -30,6 +30,7 @@ import { basename, join, resolve as resolvePath } from 'node:path';
 import { createBlankPptx, openPptx, savePptx } from '@genoffice/pptx-engine';
 import { applyXlsxEdits, planXlsxEdits, readXlsxStructure, type CellOp } from './xlsx';
 import { DOCX_OP_GROUPS, docxGuide, planDocxCommands, type DocxOp } from './docx';
+import { searchWorkspace } from './file-index';
 import {
   OP_GROUPS,
   opGuide,
@@ -451,6 +452,88 @@ async function toolGuide(p: Record<string, unknown>): Promise<ToolResult> {
   );
 }
 
+/** `2026-10-18 15:22`, local, stable — never locale-dependent. */
+function stamp(ms: number): string {
+  const d = new Date(ms);
+  const p = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/**
+ * Find documents by what they are about, not by their path.
+ *
+ * `office_read` needs a path; this is how the agent gets one when the user only
+ * described the document ("the Q3 report"). The index behind it is a cache —
+ * every call re-stats the workspace, so the answer reflects edits made outside
+ * the app. It answers "which file", never "what is inside": the agent still
+ * calls office_read on the path it picks.
+ */
+async function toolSearch(p: Record<string, unknown>): Promise<ToolResult> {
+  const root = String(p.root ?? '').trim();
+  if (!root) throw new Error('files_search: root is required (the workspace directory to search)');
+  const query = String(p.query ?? '').trim();
+  const rawLimit = Number(p.limit);
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 20;
+
+  const { index, rows } = await searchWorkspace(root, ctx.dataDir, query, limit);
+  const heading = query
+    ? `${rows.length} match(es) for "${query}" in ${index.root} — ${index.total} document(s) indexed`
+    : `${rows.length} most recently modified document(s) in ${index.root} — ${index.total} indexed`;
+
+  const lines = rows.flatMap((row) => {
+    const facts = `  ${row.path}  [${row.ext}]  ${stamp(row.mtimeMs)}${row.title ? `  ${row.title}` : ''}`;
+    // The snippet is why the file came back: a body match is invisible in the
+    // path/title line, and the agent should not have to open the document to
+    // find out whether this is the right hit.
+    return row.snippet ? [facts, `      ${row.snippet}`] : [facts];
+  });
+  const notes: string[] = [];
+  if (rows.length === 0) {
+    notes.push(
+      'Nothing matched. The index covers docx/docm/pptx/pptm/xlsx/xlsm/md/txt/csv, including ' +
+        'their opening body text (PDF is title-only). Try fewer words, a folder name, or an ' +
+        'empty query to list the newest documents.',
+    );
+  }
+  if (index.pending > 0) {
+    notes.push(`${index.pending} file(s) still have no extracted title — call again to continue indexing.`);
+  }
+  if (index.truncated) {
+    notes.push(
+      'The scan hit its size/time limit, so some folders were not indexed. ' +
+        'Pass a narrower workspace folder if the document you need is not here.',
+    );
+  }
+  if (rows.length > 0) {
+    notes.push(
+      'Open the chosen file with office_read (docx/pptx/xlsx) or the read tool (md/txt/csv). ' +
+        'PDFs can be shown in the viewer, but their text cannot be read yet. ' +
+        'This index is a cache and the path is the truth.',
+    );
+  }
+
+  return text(
+    `${heading}\n${lines.join('\n')}${notes.length ? `\n\n${notes.join('\n')}` : ''}`,
+    {
+      root: index.root,
+      query,
+      total: index.total,
+      pending: index.pending,
+      truncated: index.truncated,
+      indexedAt: index.scannedAt,
+      results: rows.map((row) => ({
+        path: row.path,
+        relPath: row.relPath,
+        ext: row.ext,
+        size: row.size,
+        mtime: row.mtimeMs,
+        title: row.title,
+        snippet: row.snippet,
+      })),
+    },
+  );
+}
+
 async function toolRead(p: Record<string, unknown>, sessionId?: string | null): Promise<ToolResult> {
   const path = String(p.path ?? '');
   if (!path) throw new Error('office_read: path is required');
@@ -654,6 +737,8 @@ async function toolEdit(p: Record<string, unknown>, sessionId?: string | null): 
 async function runTool(name: string, p: Record<string, unknown>, call: { sessionId?: string } = {}): Promise<ToolResult> {
   const sessionId = call.sessionId ?? null;
   switch (name) {
+    case 'files_search':
+      return await toolSearch(p);
     case 'office_guide':
       return await toolGuide(p);
     case 'office_read':

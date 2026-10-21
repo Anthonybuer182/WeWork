@@ -341,7 +341,7 @@ var require_BufferList = __commonJS({
         this.head = this.tail = null;
         this.length = 0;
       }, "clear");
-      BufferList.prototype.join = /* @__PURE__ */ __name(function join5(s) {
+      BufferList.prototype.join = /* @__PURE__ */ __name(function join6(s) {
         if (this.length === 0) return "";
         var p = this.head;
         var ret = "" + p.data;
@@ -9992,9 +9992,9 @@ var require_load = __commonJS({
 var require_lib3 = __commonJS({
   "node_modules/jszip/lib/index.js"(exports2, module) {
     "use strict";
-    function JSZip6() {
-      if (!(this instanceof JSZip6)) {
-        return new JSZip6();
+    function JSZip7() {
+      if (!(this instanceof JSZip7)) {
+        return new JSZip7();
       }
       if (arguments.length) {
         throw new Error("The constructor with parameters has been removed in JSZip 3.0, please check the upgrade guide.");
@@ -10003,7 +10003,7 @@ var require_lib3 = __commonJS({
       this.comment = null;
       this.root = "";
       this.clone = function() {
-        var newObj = new JSZip6();
+        var newObj = new JSZip7();
         for (var i in this) {
           if (typeof this[i] !== "function") {
             newObj[i] = this[i];
@@ -10012,17 +10012,17 @@ var require_lib3 = __commonJS({
         return newObj;
       };
     }
-    __name(JSZip6, "JSZip");
-    JSZip6.prototype = require_object();
-    JSZip6.prototype.loadAsync = require_load();
-    JSZip6.support = require_support();
-    JSZip6.defaults = require_defaults();
-    JSZip6.version = "3.10.1";
-    JSZip6.loadAsync = function(content, options) {
-      return new JSZip6().loadAsync(content, options);
+    __name(JSZip7, "JSZip");
+    JSZip7.prototype = require_object();
+    JSZip7.prototype.loadAsync = require_load();
+    JSZip7.support = require_support();
+    JSZip7.defaults = require_defaults();
+    JSZip7.version = "3.10.1";
+    JSZip7.loadAsync = function(content, options) {
+      return new JSZip7().loadAsync(content, options);
     };
-    JSZip6.external = require_external();
-    module.exports = JSZip6;
+    JSZip7.external = require_external();
+    module.exports = JSZip7;
   }
 });
 
@@ -26337,10 +26337,10 @@ var require_PDFDocument = __commonJS({
     var PDFEmbeddedFile_1 = tslib_1.__importDefault(require_PDFEmbeddedFile());
     var PDFJavaScript_1 = tslib_1.__importDefault(require_PDFJavaScript());
     var JavaScriptEmbedder_1 = tslib_1.__importDefault(require_JavaScriptEmbedder());
-    var PDFDocument3 = (
+    var PDFDocument4 = (
       /** @class */
       function() {
-        function PDFDocument4(context, ignoreEncryption, updateMetadata) {
+        function PDFDocument5(context, ignoreEncryption, updateMetadata) {
           var _this = this;
           this.defaultWordBreaks = [" "];
           this.computePages = function() {
@@ -26379,8 +26379,8 @@ var require_PDFDocument = __commonJS({
           if (updateMetadata)
             this.updateInfoDict();
         }
-        __name(PDFDocument4, "PDFDocument");
-        PDFDocument4.load = function(pdf, options) {
+        __name(PDFDocument5, "PDFDocument");
+        PDFDocument5.load = function(pdf, options) {
           if (options === void 0) {
             options = {};
           }
@@ -26398,12 +26398,12 @@ var require_PDFDocument = __commonJS({
                   return [4, core_1.PDFParser.forBytesWithOptions(bytes, parseSpeed, throwOnInvalidObject, capNumbers).parseDocument()];
                 case 1:
                   context = _f.sent();
-                  return [2, new PDFDocument4(context, ignoreEncryption, updateMetadata)];
+                  return [2, new PDFDocument5(context, ignoreEncryption, updateMetadata)];
               }
             });
           });
         };
-        PDFDocument4.create = function(options) {
+        PDFDocument5.create = function(options) {
           if (options === void 0) {
             options = {};
           }
@@ -26416,14 +26416,14 @@ var require_PDFDocument = __commonJS({
               pageTreeRef = context.register(pageTree);
               catalog = core_1.PDFCatalog.withContextAndPages(context, pageTreeRef);
               context.trailerInfo.Root = context.register(catalog);
-              return [2, new PDFDocument4(context, false, updateMetadata)];
+              return [2, new PDFDocument5(context, false, updateMetadata)];
             });
           });
         };
-        PDFDocument4.prototype.registerFontkit = function(fontkit) {
+        PDFDocument5.prototype.registerFontkit = function(fontkit) {
           this.fontkit = fontkit;
         };
-        PDFDocument4.prototype.getForm = function() {
+        PDFDocument5.prototype.getForm = function() {
           var form = this.formCache.access();
           if (form.hasXFA()) {
             console.warn("Removing XFA form data as pdf-lib does not support reading or writing XFA");
@@ -26431,63 +26431,63 @@ var require_PDFDocument = __commonJS({
           }
           return form;
         };
-        PDFDocument4.prototype.getTitle = function() {
+        PDFDocument5.prototype.getTitle = function() {
           var title = this.getInfoDict().lookup(core_1.PDFName.Title);
           if (!title)
             return void 0;
           assertIsLiteralOrHexString(title);
           return title.decodeText();
         };
-        PDFDocument4.prototype.getAuthor = function() {
+        PDFDocument5.prototype.getAuthor = function() {
           var author = this.getInfoDict().lookup(core_1.PDFName.Author);
           if (!author)
             return void 0;
           assertIsLiteralOrHexString(author);
           return author.decodeText();
         };
-        PDFDocument4.prototype.getSubject = function() {
+        PDFDocument5.prototype.getSubject = function() {
           var subject = this.getInfoDict().lookup(core_1.PDFName.Subject);
           if (!subject)
             return void 0;
           assertIsLiteralOrHexString(subject);
           return subject.decodeText();
         };
-        PDFDocument4.prototype.getKeywords = function() {
+        PDFDocument5.prototype.getKeywords = function() {
           var keywords = this.getInfoDict().lookup(core_1.PDFName.Keywords);
           if (!keywords)
             return void 0;
           assertIsLiteralOrHexString(keywords);
           return keywords.decodeText();
         };
-        PDFDocument4.prototype.getCreator = function() {
+        PDFDocument5.prototype.getCreator = function() {
           var creator = this.getInfoDict().lookup(core_1.PDFName.Creator);
           if (!creator)
             return void 0;
           assertIsLiteralOrHexString(creator);
           return creator.decodeText();
         };
-        PDFDocument4.prototype.getProducer = function() {
+        PDFDocument5.prototype.getProducer = function() {
           var producer = this.getInfoDict().lookup(core_1.PDFName.Producer);
           if (!producer)
             return void 0;
           assertIsLiteralOrHexString(producer);
           return producer.decodeText();
         };
-        PDFDocument4.prototype.getCreationDate = function() {
+        PDFDocument5.prototype.getCreationDate = function() {
           var creationDate = this.getInfoDict().lookup(core_1.PDFName.CreationDate);
           if (!creationDate)
             return void 0;
           assertIsLiteralOrHexString(creationDate);
           return creationDate.decodeDate();
         };
-        PDFDocument4.prototype.getModificationDate = function() {
+        PDFDocument5.prototype.getModificationDate = function() {
           var modificationDate = this.getInfoDict().lookup(core_1.PDFName.ModDate);
           if (!modificationDate)
             return void 0;
           assertIsLiteralOrHexString(modificationDate);
           return modificationDate.decodeDate();
         };
-        PDFDocument4.prototype.setTitle = function(title, options) {
+        PDFDocument5.prototype.setTitle = function(title, options) {
           utils_1.assertIs(title, "title", ["string"]);
           var key = core_1.PDFName.of("Title");
           this.getInfoDict().set(key, core_1.PDFHexString.fromText(title));
@@ -26496,63 +26496,63 @@ var require_PDFDocument = __commonJS({
             prefs.setDisplayDocTitle(true);
           }
         };
-        PDFDocument4.prototype.setAuthor = function(author) {
+        PDFDocument5.prototype.setAuthor = function(author) {
           utils_1.assertIs(author, "author", ["string"]);
           var key = core_1.PDFName.of("Author");
           this.getInfoDict().set(key, core_1.PDFHexString.fromText(author));
         };
-        PDFDocument4.prototype.setSubject = function(subject) {
+        PDFDocument5.prototype.setSubject = function(subject) {
           utils_1.assertIs(subject, "author", ["string"]);
           var key = core_1.PDFName.of("Subject");
           this.getInfoDict().set(key, core_1.PDFHexString.fromText(subject));
         };
-        PDFDocument4.prototype.setKeywords = function(keywords) {
+        PDFDocument5.prototype.setKeywords = function(keywords) {
           utils_1.assertIs(keywords, "keywords", [Array]);
           var key = core_1.PDFName.of("Keywords");
           this.getInfoDict().set(key, core_1.PDFHexString.fromText(keywords.join(" ")));
         };
-        PDFDocument4.prototype.setCreator = function(creator) {
+        PDFDocument5.prototype.setCreator = function(creator) {
           utils_1.assertIs(creator, "creator", ["string"]);
           var key = core_1.PDFName.of("Creator");
           this.getInfoDict().set(key, core_1.PDFHexString.fromText(creator));
         };
-        PDFDocument4.prototype.setProducer = function(producer) {
+        PDFDocument5.prototype.setProducer = function(producer) {
           utils_1.assertIs(producer, "creator", ["string"]);
           var key = core_1.PDFName.of("Producer");
           this.getInfoDict().set(key, core_1.PDFHexString.fromText(producer));
         };
-        PDFDocument4.prototype.setLanguage = function(language) {
+        PDFDocument5.prototype.setLanguage = function(language) {
           utils_1.assertIs(language, "language", ["string"]);
           var key = core_1.PDFName.of("Lang");
           this.catalog.set(key, core_1.PDFString.of(language));
         };
-        PDFDocument4.prototype.setCreationDate = function(creationDate) {
+        PDFDocument5.prototype.setCreationDate = function(creationDate) {
           utils_1.assertIs(creationDate, "creationDate", [[Date, "Date"]]);
           var key = core_1.PDFName.of("CreationDate");
           this.getInfoDict().set(key, core_1.PDFString.fromDate(creationDate));
         };
-        PDFDocument4.prototype.setModificationDate = function(modificationDate) {
+        PDFDocument5.prototype.setModificationDate = function(modificationDate) {
           utils_1.assertIs(modificationDate, "modificationDate", [[Date, "Date"]]);
           var key = core_1.PDFName.of("ModDate");
           this.getInfoDict().set(key, core_1.PDFString.fromDate(modificationDate));
         };
-        PDFDocument4.prototype.getPageCount = function() {
+        PDFDocument5.prototype.getPageCount = function() {
           if (this.pageCount === void 0)
             this.pageCount = this.getPages().length;
           return this.pageCount;
         };
-        PDFDocument4.prototype.getPages = function() {
+        PDFDocument5.prototype.getPages = function() {
           return this.pageCache.access();
         };
-        PDFDocument4.prototype.getPage = function(index2) {
+        PDFDocument5.prototype.getPage = function(index2) {
           var pages = this.getPages();
           utils_1.assertRange(index2, "index", 0, pages.length - 1);
           return pages[index2];
         };
-        PDFDocument4.prototype.getPageIndices = function() {
+        PDFDocument5.prototype.getPageIndices = function() {
           return utils_1.range(0, this.getPageCount());
         };
-        PDFDocument4.prototype.removePage = function(index2) {
+        PDFDocument5.prototype.removePage = function(index2) {
           var pageCount = this.getPageCount();
           if (this.pageCount === 0)
             throw new errors_1.RemovePageFromEmptyDocumentError();
@@ -26560,11 +26560,11 @@ var require_PDFDocument = __commonJS({
           this.catalog.removeLeafNode(index2);
           this.pageCount = pageCount - 1;
         };
-        PDFDocument4.prototype.addPage = function(page) {
+        PDFDocument5.prototype.addPage = function(page) {
           utils_1.assertIs(page, "page", ["undefined", [PDFPage_1.default, "PDFPage"], Array]);
           return this.insertPage(this.getPageCount(), page);
         };
-        PDFDocument4.prototype.insertPage = function(index2, page) {
+        PDFDocument5.prototype.insertPage = function(index2, page) {
           var pageCount = this.getPageCount();
           utils_1.assertRange(index2, "index", 0, pageCount);
           utils_1.assertIs(page, "page", ["undefined", [PDFPage_1.default, "PDFPage"], Array]);
@@ -26582,13 +26582,13 @@ var require_PDFDocument = __commonJS({
           this.pageCount = pageCount + 1;
           return page;
         };
-        PDFDocument4.prototype.copyPages = function(srcDoc, indices) {
+        PDFDocument5.prototype.copyPages = function(srcDoc, indices) {
           return tslib_1.__awaiter(this, void 0, void 0, function() {
             var copier, srcPages, copiedPages, idx, len, srcPage, copiedPage, ref;
             return tslib_1.__generator(this, function(_a) {
               switch (_a.label) {
                 case 0:
-                  utils_1.assertIs(srcDoc, "srcDoc", [[PDFDocument4, "PDFDocument"]]);
+                  utils_1.assertIs(srcDoc, "srcDoc", [[PDFDocument5, "PDFDocument"]]);
                   utils_1.assertIs(indices, "indices", [Array]);
                   return [4, srcDoc.flush()];
                 case 1:
@@ -26607,13 +26607,13 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.copy = function() {
+        PDFDocument5.prototype.copy = function() {
           return tslib_1.__awaiter(this, void 0, void 0, function() {
             var pdfCopy, contentPages, idx, len;
             return tslib_1.__generator(this, function(_a) {
               switch (_a.label) {
                 case 0:
-                  return [4, PDFDocument4.create()];
+                  return [4, PDFDocument5.create()];
                 case 1:
                   pdfCopy = _a.sent();
                   return [4, pdfCopy.copyPages(this, this.getPageIndices())];
@@ -26649,7 +26649,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.addJavaScript = function(name, script) {
+        PDFDocument5.prototype.addJavaScript = function(name, script) {
           utils_1.assertIs(name, "name", ["string"]);
           utils_1.assertIs(script, "script", ["string"]);
           var embedder = JavaScriptEmbedder_1.default.for(script, name);
@@ -26657,7 +26657,7 @@ var require_PDFDocument = __commonJS({
           var javaScript = PDFJavaScript_1.default.of(ref, this, embedder);
           this.javaScripts.push(javaScript);
         };
-        PDFDocument4.prototype.attach = function(attachment, name, options) {
+        PDFDocument5.prototype.attach = function(attachment, name, options) {
           if (options === void 0) {
             options = {};
           }
@@ -26685,7 +26685,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.embedFont = function(font, options) {
+        PDFDocument5.prototype.embedFont = function(font, options) {
           if (options === void 0) {
             options = {};
           }
@@ -26728,7 +26728,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.embedStandardFont = function(font, customName) {
+        PDFDocument5.prototype.embedStandardFont = function(font, customName) {
           utils_1.assertIs(font, "font", ["string"]);
           if (!utils_1.isStandardFont(font)) {
             throw new TypeError("`font` must be one of type `StandardFonts`");
@@ -26739,7 +26739,7 @@ var require_PDFDocument = __commonJS({
           this.fonts.push(pdfFont);
           return pdfFont;
         };
-        PDFDocument4.prototype.embedJpg = function(jpg) {
+        PDFDocument5.prototype.embedJpg = function(jpg) {
           return tslib_1.__awaiter(this, void 0, void 0, function() {
             var bytes, embedder, ref, pdfImage;
             return tslib_1.__generator(this, function(_a) {
@@ -26758,7 +26758,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.embedPng = function(png) {
+        PDFDocument5.prototype.embedPng = function(png) {
           return tslib_1.__awaiter(this, void 0, void 0, function() {
             var bytes, embedder, ref, pdfImage;
             return tslib_1.__generator(this, function(_a) {
@@ -26777,7 +26777,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.embedPdf = function(pdf, indices) {
+        PDFDocument5.prototype.embedPdf = function(pdf, indices) {
           if (indices === void 0) {
             indices = [0];
           }
@@ -26790,14 +26790,14 @@ var require_PDFDocument = __commonJS({
                     "string",
                     Uint8Array,
                     ArrayBuffer,
-                    [PDFDocument4, "PDFDocument"]
+                    [PDFDocument5, "PDFDocument"]
                   ]);
                   utils_1.assertIs(indices, "indices", [Array]);
-                  if (!(pdf instanceof PDFDocument4)) return [3, 1];
+                  if (!(pdf instanceof PDFDocument5)) return [3, 1];
                   _a = pdf;
                   return [3, 3];
                 case 1:
-                  return [4, PDFDocument4.load(pdf)];
+                  return [4, PDFDocument5.load(pdf)];
                 case 2:
                   _a = _b.sent();
                   _b.label = 3;
@@ -26809,7 +26809,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.embedPage = function(page, boundingBox2, transformationMatrix) {
+        PDFDocument5.prototype.embedPage = function(page, boundingBox2, transformationMatrix) {
           return tslib_1.__awaiter(this, void 0, void 0, function() {
             var embeddedPage;
             return tslib_1.__generator(this, function(_a) {
@@ -26824,7 +26824,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.embedPages = function(pages, boundingBoxes, transformationMatrices) {
+        PDFDocument5.prototype.embedPages = function(pages, boundingBoxes, transformationMatrices) {
           if (boundingBoxes === void 0) {
             boundingBoxes = [];
           }
@@ -26874,7 +26874,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.flush = function() {
+        PDFDocument5.prototype.flush = function() {
           return tslib_1.__awaiter(this, void 0, void 0, function() {
             return tslib_1.__generator(this, function(_a) {
               switch (_a.label) {
@@ -26902,7 +26902,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.save = function(options) {
+        PDFDocument5.prototype.save = function(options) {
           if (options === void 0) {
             options = {};
           }
@@ -26932,7 +26932,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.saveAsBase64 = function(options) {
+        PDFDocument5.prototype.saveAsBase64 = function(options) {
           if (options === void 0) {
             options = {};
           }
@@ -26952,7 +26952,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.findPageForAnnotationRef = function(ref) {
+        PDFDocument5.prototype.findPageForAnnotationRef = function(ref) {
           var pages = this.getPages();
           for (var idx = 0, len = pages.length; idx < len; idx++) {
             var page = pages[idx];
@@ -26963,7 +26963,7 @@ var require_PDFDocument = __commonJS({
           }
           return void 0;
         };
-        PDFDocument4.prototype.embedAll = function(embeddables) {
+        PDFDocument5.prototype.embedAll = function(embeddables) {
           return tslib_1.__awaiter(this, void 0, void 0, function() {
             var idx, len;
             return tslib_1.__generator(this, function(_a) {
@@ -26989,7 +26989,7 @@ var require_PDFDocument = __commonJS({
             });
           });
         };
-        PDFDocument4.prototype.updateInfoDict = function() {
+        PDFDocument5.prototype.updateInfoDict = function() {
           var pdfLib = "pdf-lib (https://github.com/Hopding/pdf-lib)";
           var now = /* @__PURE__ */ new Date();
           var info = this.getInfoDict();
@@ -27000,7 +27000,7 @@ var require_PDFDocument = __commonJS({
           if (!info.get(core_1.PDFName.of("CreationDate")))
             this.setCreationDate(now);
         };
-        PDFDocument4.prototype.getInfoDict = function() {
+        PDFDocument5.prototype.getInfoDict = function() {
           var existingInfo = this.context.lookup(this.context.trailerInfo.Info);
           if (existingInfo instanceof core_1.PDFDict)
             return existingInfo;
@@ -27008,15 +27008,15 @@ var require_PDFDocument = __commonJS({
           this.context.trailerInfo.Info = this.context.register(newInfo);
           return newInfo;
         };
-        PDFDocument4.prototype.assertFontkit = function() {
+        PDFDocument5.prototype.assertFontkit = function() {
           if (!this.fontkit)
             throw new errors_1.FontkitNotRegisteredError();
           return this.fontkit;
         };
-        return PDFDocument4;
+        return PDFDocument5;
       }()
     );
-    exports2.default = PDFDocument3;
+    exports2.default = PDFDocument4;
     function assertIsLiteralOrHexString(pdfObject) {
       if (!(pdfObject instanceof core_1.PDFHexString) && !(pdfObject instanceof core_1.PDFString)) {
         throw new core_1.UnexpectedObjectTypeError([core_1.PDFHexString, core_1.PDFString], pdfObject);
@@ -27967,12 +27967,12 @@ var init_ipc = __esm({
 });
 
 // vendor/genoffice/apps/pdf/src/main/atomic-write.ts
-import { rename, rm, writeFile } from "node:fs/promises";
+import { rename as rename2, rm, writeFile as writeFile2 } from "node:fs/promises";
 async function writePdfAtomically(targetPath, bytes) {
   const tmp = `${targetPath}.gensave-${process.pid}.tmp`;
   try {
-    await writeFile(tmp, bytes);
-    await rename(tmp, targetPath);
+    await writeFile2(tmp, bytes);
+    await rename2(tmp, targetPath);
   } catch (err) {
     await rm(tmp, { force: true });
     throw err;
@@ -28063,7 +28063,7 @@ var init_font_cmap = __esm({
 // vendor/genoffice/packages/font-metrics/src/sfnt.ts
 import { closeSync, openSync, readdirSync, readSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join as join2 } from "node:path";
 function fontDirs() {
   switch (process.platform) {
     case "darwin":
@@ -28071,16 +28071,16 @@ function fontDirs() {
         "/System/Library/Fonts",
         "/System/Library/Fonts/Supplemental",
         "/Library/Fonts",
-        join(homedir(), "Library/Fonts"),
+        join2(homedir(), "Library/Fonts"),
         // On-demand system font assets: PingFang and other CJK faces live here on
         // recent macOS ( <hash>.asset/AssetData/*.ttc ), not under /System/Library/Fonts
         "/System/Library/AssetsV2/com_apple_MobileAsset_Font7",
         "/System/Library/AssetsV2/com_apple_MobileAsset_Font6"
       ];
     case "win32":
-      return ["C:\\Windows\\Fonts", join(homedir(), "AppData/Local/Microsoft/Windows/Fonts")];
+      return ["C:\\Windows\\Fonts", join2(homedir(), "AppData/Local/Microsoft/Windows/Fonts")];
     default:
-      return ["/usr/share/fonts", "/usr/local/share/fonts", join(homedir(), ".fonts")];
+      return ["/usr/share/fonts", "/usr/local/share/fonts", join2(homedir(), ".fonts")];
   }
 }
 function readAt(fd, pos, len) {
@@ -28149,7 +28149,7 @@ function* fontFiles(dir, depth) {
     return;
   }
   for (const e of entries) {
-    const full = join(dir, e.name);
+    const full = join2(dir, e.name);
     let isDir = e.isDirectory();
     let isFile = e.isFile();
     if (e.isSymbolicLink()) {
@@ -28559,7 +28559,7 @@ var init_font_locate = __esm({
 
 // vendor/genoffice/packages/font-metrics/src/metrics.ts
 import { closeSync as closeSync4, mkdirSync, openSync as openSync4, readFileSync as readFileSync2, statSync as statSync2, writeFileSync } from "node:fs";
-import { dirname, join as join2 } from "node:path";
+import { dirname as dirname2, join as join3 } from "node:path";
 function parseFaceMetrics(fd, offset) {
   const tables = readTableDir(fd, offset);
   if (!tables) return null;
@@ -28585,7 +28585,7 @@ function parseFaceMetrics(fd, offset) {
   };
 }
 function configureMetricsCache(dir) {
-  cacheFile = join2(dir, "font-vertical-metrics.json");
+  cacheFile = join3(dir, "font-vertical-metrics.json");
   persisted = null;
   misses.clear();
 }
@@ -28604,7 +28604,7 @@ function loadCache() {
 function saveCache() {
   if (!cacheFile || !persisted) return;
   try {
-    mkdirSync(dirname(cacheFile), { recursive: true });
+    mkdirSync(dirname2(cacheFile), { recursive: true });
     writeFileSync(cacheFile, JSON.stringify(persisted));
   } catch {
   }
@@ -28705,7 +28705,7 @@ var init_font_locate2 = __esm({
 // vendor/genoffice/apps/pdf/src/main/wasm-path.ts
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname as dirname2, join as join3 } from "node:path";
+import { dirname as dirname3, join as join4 } from "node:path";
 function pdfiumWasmPath() {
   try {
     return req().resolve("@embedpdf/pdfium/pdfium.wasm");
@@ -28720,7 +28720,7 @@ function hbSubsetWasmPath() {
   } catch {
   }
   try {
-    const p = join3(dirname2(r.resolve("harfbuzzjs")), "harfbuzz-subset.wasm");
+    const p = join4(dirname3(r.resolve("harfbuzzjs")), "harfbuzz-subset.wasm");
     if (existsSync(p)) return p;
   } catch {
   }
@@ -28729,7 +28729,7 @@ function hbSubsetWasmPath() {
 var packagedPath, req;
 var init_wasm_path = __esm({
   "vendor/genoffice/apps/pdf/src/main/wasm-path.ts"() {
-    packagedPath = /* @__PURE__ */ __name((fileName) => join3(process.resourcesPath, "wasm", fileName), "packagedPath");
+    packagedPath = /* @__PURE__ */ __name((fileName) => join4(process.resourcesPath, "wasm", fileName), "packagedPath");
     req = /* @__PURE__ */ __name(() => createRequire(import.meta.url), "req");
     __name(pdfiumWasmPath, "pdfiumWasmPath");
     __name(hbSubsetWasmPath, "hbSubsetWasmPath");
@@ -28747,8 +28747,8 @@ function loadHb() {
   return hbPromise;
 }
 function subsetTtf(font, text2) {
-  const run = chain.then(() => subsetTtfInner(font, text2));
-  chain = run.catch(() => void 0);
+  const run = chain2.then(() => subsetTtfInner(font, text2));
+  chain2 = run.catch(() => void 0);
   return run;
 }
 function readCffIndex(b, p) {
@@ -28885,7 +28885,7 @@ async function subsetTtfInner(font, text2) {
     hb.free(fontPtr);
   }
 }
-var HB_MEMORY_MODE_WRITABLE, HB_SUBSET_SETS_LAYOUT_FEATURE_TAG, hbPromise, chain;
+var HB_MEMORY_MODE_WRITABLE, HB_SUBSET_SETS_LAYOUT_FEATURE_TAG, hbPromise, chain2;
 var init_font_subset = __esm({
   "vendor/genoffice/apps/pdf/src/main/font-subset.ts"() {
     init_wasm_path();
@@ -28893,7 +28893,7 @@ var init_font_subset = __esm({
     HB_SUBSET_SETS_LAYOUT_FEATURE_TAG = 6;
     hbPromise = null;
     __name(loadHb, "loadHb");
-    chain = Promise.resolve();
+    chain2 = Promise.resolve();
     __name(subsetTtf, "subsetTtf");
     __name(readCffIndex, "readCffIndex");
     __name(parseCffDict, "parseCffDict");
@@ -29348,11 +29348,11 @@ var init_dist = __esm({
         var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
         if (ENVIRONMENT_IS_NODE) {
           const { createRequire: createRequire2 } = await import("module");
-          let dirname3 = import.meta.url;
-          if (dirname3.startsWith("data:")) {
-            dirname3 = "/";
+          let dirname4 = import.meta.url;
+          if (dirname4.startsWith("data:")) {
+            dirname4 = "/";
           }
-          var require2 = createRequire2(dirname3);
+          var require2 = createRequire2(dirname4);
         }
         var moduleOverrides = Object.assign({}, Module);
         var thisProgram = "./this.program";
@@ -30037,15 +30037,15 @@ var init_dist = __esm({
             return parts;
           }, "normalizeArray"),
           normalize: /* @__PURE__ */ __name((path) => {
-            var isAbsolute = PATH.isAbs(path), trailingSlash = path.substr(-1) === "/";
-            path = PATH.normalizeArray(path.split("/").filter((p) => !!p), !isAbsolute).join("/");
-            if (!path && !isAbsolute) {
+            var isAbsolute2 = PATH.isAbs(path), trailingSlash = path.substr(-1) === "/";
+            path = PATH.normalizeArray(path.split("/").filter((p) => !!p), !isAbsolute2).join("/");
+            if (!path && !isAbsolute2) {
               path = ".";
             }
             if (path && trailingSlash) {
               path += "/";
             }
-            return (isAbsolute ? "/" : "") + path;
+            return (isAbsolute2 ? "/" : "") + path;
           }, "normalize"),
           dirname: /* @__PURE__ */ __name((path) => {
             var result = PATH.splitPath(path), root = result[0], dir = result[1];
@@ -31901,8 +31901,8 @@ var init_dist = __esm({
             }
             var ret;
             var stream = FS.open(path, opts.flags);
-            var stat2 = FS.stat(path);
-            var length = stat2.size;
+            var stat3 = FS.stat(path);
+            var length = stat3.size;
             var buf = new Uint8Array(length);
             FS.read(stream, buf, 0, length, 0);
             if (opts.encoding === "utf8") {
@@ -32386,26 +32386,26 @@ var init_dist = __esm({
             return PATH.join2(dir, path);
           },
           doStat(func, path, buf) {
-            var stat2 = func(path);
-            HEAP32[buf >> 2] = stat2.dev;
-            HEAP32[buf + 4 >> 2] = stat2.mode;
-            HEAPU32[buf + 8 >> 2] = stat2.nlink;
-            HEAP32[buf + 12 >> 2] = stat2.uid;
-            HEAP32[buf + 16 >> 2] = stat2.gid;
-            HEAP32[buf + 20 >> 2] = stat2.rdev;
-            tempI64 = [stat2.size >>> 0, (tempDouble = stat2.size, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)], HEAP32[buf + 24 >> 2] = tempI64[0], HEAP32[buf + 28 >> 2] = tempI64[1];
+            var stat3 = func(path);
+            HEAP32[buf >> 2] = stat3.dev;
+            HEAP32[buf + 4 >> 2] = stat3.mode;
+            HEAPU32[buf + 8 >> 2] = stat3.nlink;
+            HEAP32[buf + 12 >> 2] = stat3.uid;
+            HEAP32[buf + 16 >> 2] = stat3.gid;
+            HEAP32[buf + 20 >> 2] = stat3.rdev;
+            tempI64 = [stat3.size >>> 0, (tempDouble = stat3.size, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)], HEAP32[buf + 24 >> 2] = tempI64[0], HEAP32[buf + 28 >> 2] = tempI64[1];
             HEAP32[buf + 32 >> 2] = 4096;
-            HEAP32[buf + 36 >> 2] = stat2.blocks;
-            var atime = stat2.atime.getTime();
-            var mtime = stat2.mtime.getTime();
-            var ctime = stat2.ctime.getTime();
+            HEAP32[buf + 36 >> 2] = stat3.blocks;
+            var atime = stat3.atime.getTime();
+            var mtime = stat3.mtime.getTime();
+            var ctime = stat3.ctime.getTime();
             tempI64 = [Math.floor(atime / 1e3) >>> 0, (tempDouble = Math.floor(atime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)], HEAP32[buf + 40 >> 2] = tempI64[0], HEAP32[buf + 44 >> 2] = tempI64[1];
             HEAPU32[buf + 48 >> 2] = atime % 1e3 * 1e3 * 1e3;
             tempI64 = [Math.floor(mtime / 1e3) >>> 0, (tempDouble = Math.floor(mtime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)], HEAP32[buf + 56 >> 2] = tempI64[0], HEAP32[buf + 60 >> 2] = tempI64[1];
             HEAPU32[buf + 64 >> 2] = mtime % 1e3 * 1e3 * 1e3;
             tempI64 = [Math.floor(ctime / 1e3) >>> 0, (tempDouble = Math.floor(ctime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)], HEAP32[buf + 72 >> 2] = tempI64[0], HEAP32[buf + 76 >> 2] = tempI64[1];
             HEAPU32[buf + 80 >> 2] = ctime % 1e3 * 1e3 * 1e3;
-            tempI64 = [stat2.ino >>> 0, (tempDouble = stat2.ino, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)], HEAP32[buf + 88 >> 2] = tempI64[0], HEAP32[buf + 92 >> 2] = tempI64[1];
+            tempI64 = [stat3.ino >>> 0, (tempDouble = stat3.ino, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)], HEAP32[buf + 88 >> 2] = tempI64[0], HEAP32[buf + 92 >> 2] = tempI64[1];
             return 0;
           },
           doMsync(addr, stream, len, flags, offset) {
@@ -36167,25 +36167,25 @@ async function rebuildRun(m, doc, page, edit, matches, newText, textPage) {
   }
 }
 async function relabelOpenTypeFontFiles(bytes) {
-  const doc = await import_pdf_lib.PDFDocument.load(bytes);
+  const doc = await import_pdf_lib2.PDFDocument.load(bytes);
   let touched = false;
   for (const [, obj] of doc.context.enumerateIndirectObjects()) {
-    if (!(obj instanceof import_pdf_lib.PDFDict)) continue;
-    if (obj.get(import_pdf_lib.PDFName.of("Type")) !== import_pdf_lib.PDFName.of("FontDescriptor")) continue;
-    const ff = obj.get(import_pdf_lib.PDFName.of("FontFile"));
+    if (!(obj instanceof import_pdf_lib2.PDFDict)) continue;
+    if (obj.get(import_pdf_lib2.PDFName.of("Type")) !== import_pdf_lib2.PDFName.of("FontDescriptor")) continue;
+    const ff = obj.get(import_pdf_lib2.PDFName.of("FontFile"));
     if (!ff) continue;
     const stream = doc.context.lookup(ff);
-    if (!(stream instanceof import_pdf_lib.PDFRawStream)) continue;
+    if (!(stream instanceof import_pdf_lib2.PDFRawStream)) continue;
     let program;
     try {
-      program = (0, import_pdf_lib.decodePDFRawStream)(stream).decode();
+      program = (0, import_pdf_lib2.decodePDFRawStream)(stream).decode();
     } catch {
       continue;
     }
     if (Buffer.from(program.subarray(0, 4)).toString("latin1") !== "OTTO") continue;
-    obj.delete(import_pdf_lib.PDFName.of("FontFile"));
-    obj.set(import_pdf_lib.PDFName.of("FontFile3"), ff);
-    stream.dict.set(import_pdf_lib.PDFName.of("Subtype"), import_pdf_lib.PDFName.of("OpenType"));
+    obj.delete(import_pdf_lib2.PDFName.of("FontFile"));
+    obj.set(import_pdf_lib2.PDFName.of("FontFile3"), ff);
+    stream.dict.set(import_pdf_lib2.PDFName.of("Subtype"), import_pdf_lib2.PDFName.of("OpenType"));
     touched = true;
   }
   return touched ? doc.save({ useObjectStreams: false }) : bytes;
@@ -36590,10 +36590,10 @@ function verifyTextEdits(bytes, edits) {
     });
   });
 }
-var import_pdf_lib, FPDF_PAGEOBJ_TEXT, FPDF_FONT_TYPE1, FPDF_FONT_TRUETYPE, FPDF_TEXTRENDERMODE_FILL_STROKE, FPDF_TEXTRENDERMODE_FILL_STROKE_CLIP, FPDF_LINEJOIN_ROUND, pdfiumPromise, FALLBACK_FONT_PATHS, FALLBACK_SYSTEM_FACES, fallbackPathCache, EDIT_FONT_PATHS, editFontCache, norm2, overlapRatio, rectCoverage, joinX, joinRows, readHeapU32, syntheticBoldWidth, LINE_GAP, styleKeyOf, styledBeyondColor, editStyleRuns, PreserveAbort, applyChain, errMsg;
+var import_pdf_lib2, FPDF_PAGEOBJ_TEXT, FPDF_FONT_TYPE1, FPDF_FONT_TRUETYPE, FPDF_TEXTRENDERMODE_FILL_STROKE, FPDF_TEXTRENDERMODE_FILL_STROKE_CLIP, FPDF_LINEJOIN_ROUND, pdfiumPromise, FALLBACK_FONT_PATHS, FALLBACK_SYSTEM_FACES, fallbackPathCache, EDIT_FONT_PATHS, editFontCache, norm2, overlapRatio, rectCoverage, joinX, joinRows, readHeapU32, syntheticBoldWidth, LINE_GAP, styleKeyOf, styledBeyondColor, editStyleRuns, PreserveAbort, applyChain, errMsg;
 var init_text_edit = __esm({
   "vendor/genoffice/apps/pdf/src/main/text-edit.ts"() {
-    import_pdf_lib = __toESM(require_cjs(), 1);
+    import_pdf_lib2 = __toESM(require_cjs(), 1);
     init_font_cmap();
     init_font_locate2();
     init_font_subset();
@@ -36775,7 +36775,7 @@ var init_text_edit = __esm({
 });
 
 // vendor/genoffice/apps/pdf/src/main/redaction.ts
-import { createHash as createHash2 } from "node:crypto";
+import { createHash as createHash3 } from "node:crypto";
 function intersects(a, b) {
   const [al, ab, ar, at] = [
     Math.min(a[0], a[2]),
@@ -36819,7 +36819,7 @@ function imageHash(m, image) {
     if (m._FPDFImageObj_GetImageDataRaw(image, ptr, size) !== size) {
       throw new Error("PDFium could not inspect image data safely");
     }
-    return createHash2("sha256").update(m.HEAPU8.subarray(ptr, ptr + size)).digest("hex");
+    return createHash3("sha256").update(m.HEAPU8.subarray(ptr, ptr + size)).digest("hex");
   } finally {
     m._free(ptr);
   }
@@ -37671,16 +37671,16 @@ __export(save_pdf_exports, {
   splitPagesBytes: () => splitPagesBytes,
   splitPdfBytes: () => splitPdfBytes
 });
-import { readFile } from "node:fs/promises";
+import { readFile as readFile2 } from "node:fs/promises";
 function validStaticFormFill(value) {
   if (!value || typeof value !== "object") return false;
   const record = value;
   return typeof record.id === "string" && (record.kind === "text" || record.kind === "check" || record.kind === "cross") && Number.isInteger(record.pageIndex) && Array.isArray(record.rect) && record.rect.length === 4 && record.rect.every((entry) => typeof entry === "number" && Number.isFinite(entry));
 }
 async function readStaticFormFills(bytes) {
-  const pdfDoc = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
+  const pdfDoc = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
   const value = pdfDoc.catalog.get(STATIC_FORM_FILLS_KEY);
-  if (!(value instanceof import_pdf_lib2.PDFHexString)) return [];
+  if (!(value instanceof import_pdf_lib3.PDFHexString)) return [];
   try {
     const parsed2 = JSON.parse(value.decodeText());
     return Array.isArray(parsed2) ? parsed2.filter(validStaticFormFill) : [];
@@ -37706,10 +37706,10 @@ function resultingStaticFormFills(request, pageCount) {
 }
 function setVisualSignatureMetadata(annot, fieldName) {
   if (!fieldName) return;
-  annot.set(import_pdf_lib2.PDFName.of("GenOfficeFormField"), import_pdf_lib2.PDFHexString.fromText(fieldName));
+  annot.set(import_pdf_lib3.PDFName.of("GenOfficeFormField"), import_pdf_lib3.PDFHexString.fromText(fieldName));
   annot.set(
-    import_pdf_lib2.PDFName.of("Contents"),
-    import_pdf_lib2.PDFHexString.fromText(`${VISUAL_SIGNATURE_CONTENT_PREFIX}${fieldName}`)
+    import_pdf_lib3.PDFName.of("Contents"),
+    import_pdf_lib3.PDFHexString.fromText(`${VISUAL_SIGNATURE_CONTENT_PREFIX}${fieldName}`)
   );
 }
 function markupAppearance(pdfDoc, m, rect, pageRot) {
@@ -37768,11 +37768,11 @@ function addMarkup(pdfDoc, page, m) {
   appendAnnot(pdfDoc, page, pdfDoc.context.register(annot));
 }
 function appendAnnot(pdfDoc, page, annotRef) {
-  const existing = page.node.lookupMaybe(import_pdf_lib2.PDFName.of("Annots"), import_pdf_lib2.PDFArray);
+  const existing = page.node.lookupMaybe(import_pdf_lib3.PDFName.of("Annots"), import_pdf_lib3.PDFArray);
   if (existing) {
     existing.push(annotRef);
   } else {
-    page.node.set(import_pdf_lib2.PDFName.of("Annots"), pdfDoc.context.obj([annotRef]));
+    page.node.set(import_pdf_lib3.PDFName.of("Annots"), pdfDoc.context.obj([annotRef]));
   }
 }
 function ellipseOps(x1, y1, x2, y2) {
@@ -37812,7 +37812,7 @@ async function addImageStamp(pdfDoc, page, d) {
     P: page.ref,
     AP: { N: pdfDoc.context.register(ap) }
   });
-  annot.set(import_pdf_lib2.PDFName.of("T"), import_pdf_lib2.PDFHexString.fromText("GenOffice"));
+  annot.set(import_pdf_lib3.PDFName.of("T"), import_pdf_lib3.PDFHexString.fromText("GenOffice"));
   setVisualSignatureMetadata(annot, d.formFieldName);
   appendAnnot(pdfDoc, page, pdfDoc.context.register(annot));
 }
@@ -37825,24 +37825,24 @@ function pdfDateString(ms) {
   return `D:${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}${sign}${p(Math.floor(abs / 60))}'${p(abs % 60)}'`;
 }
 function findNoteAnnotRef(pdfDoc, page, target) {
-  const annots = page.node.lookupMaybe(import_pdf_lib2.PDFName.of("Annots"), import_pdf_lib2.PDFArray);
+  const annots = page.node.lookupMaybe(import_pdf_lib3.PDFName.of("Annots"), import_pdf_lib3.PDFArray);
   if (!annots) return null;
   const matches = [];
   for (let i = 0; i < annots.size(); i++) {
     const ref = annots.get(i);
-    if (!(ref instanceof import_pdf_lib2.PDFRef)) continue;
-    const dict = pdfDoc.context.lookupMaybe(ref, import_pdf_lib2.PDFDict);
-    if (!dict || dict.lookupMaybe(import_pdf_lib2.PDFName.of("Subtype"), import_pdf_lib2.PDFName) !== import_pdf_lib2.PDFName.of("Text")) continue;
-    const rectArr = dict.lookupMaybe(import_pdf_lib2.PDFName.of("Rect"), import_pdf_lib2.PDFArray);
+    if (!(ref instanceof import_pdf_lib3.PDFRef)) continue;
+    const dict = pdfDoc.context.lookupMaybe(ref, import_pdf_lib3.PDFDict);
+    if (!dict || dict.lookupMaybe(import_pdf_lib3.PDFName.of("Subtype"), import_pdf_lib3.PDFName) !== import_pdf_lib3.PDFName.of("Text")) continue;
+    const rectArr = dict.lookupMaybe(import_pdf_lib3.PDFName.of("Rect"), import_pdf_lib3.PDFArray);
     if (!rectArr || rectArr.size() !== 4) continue;
     const rect = [];
     for (let j = 0; j < rectArr.size(); j++) {
-      const v = rectArr.lookupMaybe(j, import_pdf_lib2.PDFNumber);
+      const v = rectArr.lookupMaybe(j, import_pdf_lib3.PDFNumber);
       if (v) rect.push(v.asNumber());
     }
     if (rect.length !== 4 || !noteRectsClose(rect, target.rect)) continue;
-    const contents = dict.lookup(import_pdf_lib2.PDFName.of("Contents"));
-    const text2 = contents instanceof import_pdf_lib2.PDFString || contents instanceof import_pdf_lib2.PDFHexString ? contents.decodeText() : "";
+    const contents = dict.lookup(import_pdf_lib3.PDFName.of("Contents"));
+    const text2 = contents instanceof import_pdf_lib3.PDFString || contents instanceof import_pdf_lib3.PDFHexString ? contents.decodeText() : "";
     if (text2 !== target.contents) continue;
     if (ref.objectNumber === target.objNum) return ref;
     matches.push(ref);
@@ -37863,15 +37863,15 @@ function addDrawing(pdfDoc, page, d, noteRefs) {
       F: 4,
       P: page.ref
     });
-    annot2.set(import_pdf_lib2.PDFName.of("Contents"), import_pdf_lib2.PDFHexString.fromText(d.contents));
-    annot2.set(import_pdf_lib2.PDFName.of("T"), import_pdf_lib2.PDFHexString.fromText(d.author || "GenOffice"));
+    annot2.set(import_pdf_lib3.PDFName.of("Contents"), import_pdf_lib3.PDFHexString.fromText(d.contents));
+    annot2.set(import_pdf_lib3.PDFName.of("T"), import_pdf_lib3.PDFHexString.fromText(d.author || "GenOffice"));
     const when = pdfDateString(d.createdMs ?? Date.now());
-    annot2.set(import_pdf_lib2.PDFName.of("CreationDate"), import_pdf_lib2.PDFString.of(when));
-    annot2.set(import_pdf_lib2.PDFName.of("M"), import_pdf_lib2.PDFString.of(when));
+    annot2.set(import_pdf_lib3.PDFName.of("CreationDate"), import_pdf_lib3.PDFString.of(when));
+    annot2.set(import_pdf_lib3.PDFName.of("M"), import_pdf_lib3.PDFString.of(when));
     const parentRef = d.replyToLocalId ? noteRefs?.get(d.replyToLocalId) ?? null : d.replyToSaved ? findNoteAnnotRef(pdfDoc, page, d.replyToSaved) : null;
     if (parentRef) {
-      annot2.set(import_pdf_lib2.PDFName.of("IRT"), parentRef);
-      annot2.set(import_pdf_lib2.PDFName.of("RT"), import_pdf_lib2.PDFName.of("R"));
+      annot2.set(import_pdf_lib3.PDFName.of("IRT"), parentRef);
+      annot2.set(import_pdf_lib3.PDFName.of("RT"), import_pdf_lib3.PDFName.of("R"));
     }
     const ref = pdfDoc.context.register(annot2);
     if (d.localId) noteRefs?.set(d.localId, ref);
@@ -37938,11 +37938,11 @@ function addDrawing(pdfDoc, page, d, noteRefs) {
     BS: { W: d.width },
     AP: { N: pdfDoc.context.register(ap) }
   });
-  if (d.kind === "ink") annot.set(import_pdf_lib2.PDFName.of("InkList"), pdfDoc.context.obj(d.paths));
+  if (d.kind === "ink") annot.set(import_pdf_lib3.PDFName.of("InkList"), pdfDoc.context.obj(d.paths));
   if (d.kind === "line" || d.kind === "arrow") {
-    annot.set(import_pdf_lib2.PDFName.of("L"), pdfDoc.context.obj([...d.from, ...d.to]));
+    annot.set(import_pdf_lib3.PDFName.of("L"), pdfDoc.context.obj([...d.from, ...d.to]));
   }
-  annot.set(import_pdf_lib2.PDFName.of("T"), import_pdf_lib2.PDFHexString.fromText("GenOffice"));
+  annot.set(import_pdf_lib3.PDFName.of("T"), import_pdf_lib3.PDFHexString.fromText("GenOffice"));
   if (d.kind === "ink") setVisualSignatureMetadata(annot, d.formFieldName);
   appendAnnot(pdfDoc, page, pdfDoc.context.register(annot));
 }
@@ -37957,7 +37957,7 @@ function applyFormValues(pdfDoc, values) {
       else rg.clear();
     } else if (v.kind === "choice") {
       const f = form.getField(v.name);
-      if (f instanceof import_pdf_lib2.PDFDropdown || f instanceof import_pdf_lib2.PDFOptionList) {
+      if (f instanceof import_pdf_lib3.PDFDropdown || f instanceof import_pdf_lib3.PDFOptionList) {
         if (v.value) f.select(v.value);
         else f.clear();
       }
@@ -37969,23 +37969,23 @@ function applyFormValues(pdfDoc, values) {
   }
 }
 async function extractPagesBytes(bytes, pages) {
-  const src = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
-  const out = await import_pdf_lib2.PDFDocument.create();
+  const src = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
+  const out = await import_pdf_lib3.PDFDocument.create();
   const valid = pages.filter((p) => p >= 0 && p < src.getPageCount());
   const copied = await out.copyPages(src, valid);
   for (const p of copied) out.addPage(p);
   return out.save({ useObjectStreams: false });
 }
 async function insertPdfBytes(bytes, otherBytes, afterPageIndex) {
-  const dst = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
-  const src = await import_pdf_lib2.PDFDocument.load(otherBytes, { updateMetadata: false });
+  const dst = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
+  const src = await import_pdf_lib3.PDFDocument.load(otherBytes, { updateMetadata: false });
   const copied = await dst.copyPages(src, src.getPageIndices());
   let at = Math.min(Math.max(afterPageIndex + 1, 0), dst.getPageCount());
   for (const p of copied) dst.insertPage(at++, p);
   return { merged: await dst.save({ useObjectStreams: false }), count: copied.length };
 }
 async function insertBlankPageBytes(bytes, afterPageIndex) {
-  const doc = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
+  const doc = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
   const at = Math.min(Math.max(afterPageIndex + 1, 0), doc.getPageCount());
   const ref = doc.getPage(Math.min(Math.max(afterPageIndex, 0), doc.getPageCount() - 1));
   const page = doc.insertPage(at, [ref.getWidth(), ref.getHeight()]);
@@ -37993,12 +37993,12 @@ async function insertBlankPageBytes(bytes, afterPageIndex) {
   return doc.save({ useObjectStreams: false });
 }
 async function splitPdfBytes(bytes, chunkSize) {
-  const src = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
+  const src = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
   const total = src.getPageCount();
   const size = Math.max(1, Math.floor(chunkSize));
   const out = [];
   for (let start = 0; start < total; start += size) {
-    const part = await import_pdf_lib2.PDFDocument.create();
+    const part = await import_pdf_lib3.PDFDocument.create();
     const count = Math.min(size, total - start);
     const copied = await part.copyPages(
       src,
@@ -38017,8 +38017,8 @@ function mergeGrid(perSheet) {
 }
 async function mergePagesBytes(bytes, options) {
   const perSheet = Math.min(Math.max(Math.floor(options.perSheet), 2), 16);
-  const src = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
-  const out = await import_pdf_lib2.PDFDocument.create();
+  const src = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
+  const out = await import_pdf_lib3.PDFDocument.create();
   const total = src.getPageCount();
   const first = src.getPage(0);
   const { cols, rows } = mergeGrid(perSheet);
@@ -38026,7 +38026,7 @@ async function mergePagesBytes(bytes, options) {
   const sheetH = perSheet === 2 ? first.getWidth() : first.getHeight();
   for (const p of src.getPages()) {
     if (!p.node.Contents()) {
-      p.node.set(import_pdf_lib2.PDFName.of("Contents"), src.context.register(src.context.stream("")));
+      p.node.set(import_pdf_lib3.PDFName.of("Contents"), src.context.register(src.context.stream("")));
     }
   }
   const embedded = await out.embedPages(src.getPages());
@@ -38050,7 +38050,7 @@ async function mergePagesBytes(bytes, options) {
       });
     }
     if (options.separator) {
-      const line2 = { thickness: 0.75, color: (0, import_pdf_lib2.rgb)(0.62, 0.62, 0.62) };
+      const line2 = { thickness: 0.75, color: (0, import_pdf_lib3.rgb)(0.62, 0.62, 0.62) };
       for (let c = 1; c < cols; c++) {
         sheet.drawLine({
           start: { x: c * cellW, y: 0 },
@@ -38070,8 +38070,8 @@ async function mergePagesBytes(bytes, options) {
   return out.save({ useObjectStreams: false });
 }
 async function replacePagesBytes(bytes, otherBytes, pages) {
-  const dst = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
-  const src = await import_pdf_lib2.PDFDocument.load(otherBytes, { updateMetadata: false });
+  const dst = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
+  const src = await import_pdf_lib3.PDFDocument.load(otherBytes, { updateMetadata: false });
   const valid = [...new Set(pages.filter((p) => p >= 0 && p < dst.getPageCount()))].sort(
     (a, b) => a - b
   );
@@ -38088,7 +38088,7 @@ async function replacePagesBytes(bytes, otherBytes, pages) {
   };
 }
 async function setPageSizeBytes(bytes, targetW, targetH) {
-  const doc = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
+  const doc = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
   for (const page of doc.getPages()) {
     const rot = (page.getRotation().angle % 360 + 360) % 360;
     const tw = rot === 90 || rot === 270 ? targetH : targetW;
@@ -38119,8 +38119,8 @@ function displayFracToUserRect(rot, box, l, t, r, b) {
   return { x: x0 + l * W, y: y0 + (1 - b) * H, w: (r - l) * W, h: (b - t) * H };
 }
 async function splitPagesBytes(bytes, perPage) {
-  const src = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
-  const out = await import_pdf_lib2.PDFDocument.create();
+  const src = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
+  const out = await import_pdf_lib3.PDFDocument.create();
   const { cols, rows } = mergeGrid(perPage);
   const total = src.getPageCount();
   for (let i = 0; i < total; i++) {
@@ -38149,7 +38149,7 @@ async function splitPagesBytes(bytes, perPage) {
   return out.save({ useObjectStreams: false });
 }
 async function cropPagesBytes(bytes, pages, frac) {
-  const doc = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
+  const doc = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
   const l = Math.min(Math.max(frac.l, 0), 1);
   const t = Math.min(Math.max(frac.t, 0), 1);
   const r = Math.min(Math.max(frac.r, l), 1);
@@ -38165,10 +38165,10 @@ async function cropPagesBytes(bytes, pages, frac) {
   return doc.save({ useObjectStreams: false });
 }
 async function mergePdfBytes(first, others) {
-  const dst = await import_pdf_lib2.PDFDocument.load(first, { updateMetadata: false });
+  const dst = await import_pdf_lib3.PDFDocument.load(first, { updateMetadata: false });
   let appended = 0;
   for (const otherBytes of others) {
-    const src = await import_pdf_lib2.PDFDocument.load(otherBytes, { updateMetadata: false });
+    const src = await import_pdf_lib3.PDFDocument.load(otherBytes, { updateMetadata: false });
     const copied = await dst.copyPages(src, src.getPageIndices());
     for (const p of copied) dst.addPage(p);
     appended += copied.length;
@@ -38239,7 +38239,7 @@ async function verifyContentEdits(bytes, request, skips) {
 }
 async function savePdfToPath(sourcePath, targetPath, request) {
   const { bytes, ...skips } = await applySaveRequest(
-    new Uint8Array(await readFile(sourcePath)),
+    new Uint8Array(await readFile2(sourcePath)),
     request
   );
   await verifyContentEdits(bytes, request, skips);
@@ -38278,12 +38278,12 @@ async function applySaveRequest(bytes, request) {
     bytes = applied.bytes;
     skippedImageEdits = applied.skipped;
   }
-  const pdfDoc = await import_pdf_lib2.PDFDocument.load(bytes, { updateMetadata: false });
+  const pdfDoc = await import_pdf_lib3.PDFDocument.load(bytes, { updateMetadata: false });
   if (request.formValues.length > 0) applyFormValues(pdfDoc, request.formValues);
   const pages = pdfDoc.getPages();
   for (const r of request.rotations ?? []) {
     const page = pages[r.pageIndex];
-    if (page) page.setRotation((0, import_pdf_lib2.degrees)((page.getRotation().angle + r.delta) % 360));
+    if (page) page.setRotation((0, import_pdf_lib3.degrees)((page.getRotation().angle + r.delta) % 360));
   }
   for (const m of request.markups) {
     const page = pages[m.pageIndex];
@@ -38304,10 +38304,10 @@ async function applySaveRequest(bytes, request) {
       rect: e.rect,
       contents: e.oldContents
     });
-    const dict = ref ? pdfDoc.context.lookupMaybe(ref, import_pdf_lib2.PDFDict) : null;
+    const dict = ref ? pdfDoc.context.lookupMaybe(ref, import_pdf_lib3.PDFDict) : null;
     if (!dict) continue;
-    dict.set(import_pdf_lib2.PDFName.of("Contents"), import_pdf_lib2.PDFHexString.fromText(e.contents));
-    dict.set(import_pdf_lib2.PDFName.of("M"), import_pdf_lib2.PDFString.of(pdfDateString(Date.now())));
+    dict.set(import_pdf_lib3.PDFName.of("Contents"), import_pdf_lib3.PDFHexString.fromText(e.contents));
+    dict.set(import_pdf_lib3.PDFName.of("M"), import_pdf_lib3.PDFString.of(pdfDateString(Date.now())));
   }
   for (const s of request.stamps ?? []) {
     const page = pages[s.pageIndex];
@@ -38326,8 +38326,8 @@ async function applySaveRequest(bytes, request) {
   for (const redaction of request.redactions ?? []) {
     const page = pages[redaction.pageIndex];
     if (!page) continue;
-    page.node.delete(import_pdf_lib2.PDFName.of("Thumb"));
-    page.node.delete(import_pdf_lib2.PDFName.of("PieceInfo"));
+    page.node.delete(import_pdf_lib3.PDFName.of("Thumb"));
+    page.node.delete(import_pdf_lib3.PDFName.of("PieceInfo"));
   }
   for (const idx of [...request.deletedPages ?? []].sort((a, b) => b - a)) {
     if (idx >= 0 && idx < pdfDoc.getPageCount() && pdfDoc.getPageCount() > 1) pdfDoc.removePage(idx);
@@ -38347,7 +38347,7 @@ async function applySaveRequest(bytes, request) {
     else
       pdfDoc.catalog.set(
         STATIC_FORM_FILLS_KEY,
-        import_pdf_lib2.PDFHexString.fromText(JSON.stringify(staticFormFills))
+        import_pdf_lib3.PDFHexString.fromText(JSON.stringify(staticFormFills))
       );
   }
   try {
@@ -38361,7 +38361,7 @@ async function applySaveRequest(bytes, request) {
     };
   } catch (err) {
     if (request.formValues.length === 0 || request.redactions?.length) throw err;
-    pdfDoc.getForm().acroForm.dict.set(import_pdf_lib2.PDFName.of("NeedAppearances"), import_pdf_lib2.PDFBool.True);
+    pdfDoc.getForm().acroForm.dict.set(import_pdf_lib3.PDFName.of("NeedAppearances"), import_pdf_lib3.PDFBool.True);
     return {
       bytes: await pdfDoc.save({ useObjectStreams: false, updateFieldAppearances: false }),
       skippedTextEdits,
@@ -38370,15 +38370,15 @@ async function applySaveRequest(bytes, request) {
     };
   }
 }
-var import_pdf_lib2, num, STATIC_FORM_FILLS_KEY, rectsIntersect, quadBounds, SUBTYPE, NOTE_RECT_TOL, noteRectsClose;
+var import_pdf_lib3, num, STATIC_FORM_FILLS_KEY, rectsIntersect, quadBounds, SUBTYPE, NOTE_RECT_TOL, noteRectsClose;
 var init_save_pdf = __esm({
   "vendor/genoffice/apps/pdf/src/main/save-pdf.ts"() {
-    import_pdf_lib2 = __toESM(require_cjs(), 1);
+    import_pdf_lib3 = __toESM(require_cjs(), 1);
     init_ipc();
     init_atomic_write();
     init_redaction();
     num = /* @__PURE__ */ __name((v) => Math.round(v * 100) / 100, "num");
-    STATIC_FORM_FILLS_KEY = import_pdf_lib2.PDFName.of("GenOfficeStaticFormFills");
+    STATIC_FORM_FILLS_KEY = import_pdf_lib3.PDFName.of("GenOfficeStaticFormFills");
     rectsIntersect = /* @__PURE__ */ __name((a, b) => Math.min(a[0], a[2]) < Math.max(b[0], b[2]) && Math.max(a[0], a[2]) > Math.min(b[0], b[2]) && Math.min(a[1], a[3]) < Math.max(b[1], b[3]) && Math.max(a[1], a[3]) > Math.min(b[1], b[3]), "rectsIntersect");
     __name(validStaticFormFill, "validStaticFormFill");
     __name(readStaticFormFills, "readStaticFormFills");
@@ -38732,9 +38732,9 @@ function plugin(handlers) {
 __name(plugin, "plugin");
 
 // src/backend/index.ts
-import { mkdir, readFile as readFile2, stat } from "node:fs/promises";
+import { mkdir as mkdir2, readFile as readFile3, stat as stat2 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, join as join4, resolve as resolvePath } from "node:path";
+import { basename as basename2, join as join5, resolve as resolvePath2 } from "node:path";
 
 // vendor/genoffice/packages/pptx-engine/src/index.ts
 var import_jszip3 = __toESM(require_lib3());
@@ -44344,22 +44344,22 @@ function resolvePlaceholderAnchorCtr(layout, master, type, idx) {
 }
 __name(resolvePlaceholderAnchorCtr, "resolvePlaceholderAnchorCtr");
 function placeholderStyleChain(layout, master, masterTx, type, idx) {
-  const chain2 = [];
+  const chain3 = [];
   const fromLayout = findStyleInMap(layout, type, idx);
-  if (fromLayout) chain2.push({ ...fromLayout, src: "layout placeholder" });
+  if (fromLayout) chain3.push({ ...fromLayout, src: "layout placeholder" });
   const fromMaster = findStyleInMap(master, type, idx);
-  if (fromMaster) chain2.push({ ...fromMaster, src: "master placeholder" });
+  if (fromMaster) chain3.push({ ...fromMaster, src: "master placeholder" });
   const t = type ?? "body";
   const [family, familySrc] = TITLE_TYPES.has(t) ? [masterTx?.title, "master titleStyle"] : BODY_TYPES.has(t) ? [masterTx?.body, "master bodyStyle"] : [masterTx?.other, "master otherStyle"];
-  if (family) chain2.push({ ...family, src: familySrc });
-  return chain2;
+  if (family) chain3.push({ ...family, src: familySrc });
+  return chain3;
 }
 __name(placeholderStyleChain, "placeholderStyleChain");
-function mergeTextStyleChain(chain2, level) {
+function mergeTextStyleChain(chain3, level) {
   const out = {};
   const src = {};
   let any = false;
-  for (const layer of chain2) {
+  for (const layer of chain3) {
     if (!layer) continue;
     const lvl = layer.levels[level] ?? layer.levels[0];
     if (!lvl) continue;
@@ -45139,7 +45139,7 @@ function readLvl(lvl) {
 __name(readLvl, "readLvl");
 function collectAT(node) {
   const out = [];
-  const walk = /* @__PURE__ */ __name((n) => {
+  const walk2 = /* @__PURE__ */ __name((n) => {
     if (n == null || typeof n !== "object") return;
     for (const [k, v] of Object.entries(n)) {
       if (k.startsWith("@_")) continue;
@@ -45150,11 +45150,11 @@ function collectAT(node) {
             out.push(String(t["#text"] ?? ""));
         }
       } else {
-        for (const c of Array.isArray(v) ? v : [v]) walk(c);
+        for (const c of Array.isArray(v) ? v : [v]) walk2(c);
       }
     }
   }, "walk");
-  walk(node);
+  walk2(node);
   return out;
 }
 __name(collectAT, "collectAT");
@@ -46409,7 +46409,7 @@ function parseStroke(spPr, ctx2, fallbackColor) {
     tri: "tri"
   };
   const compound = ln["@_cmpd"] ? cmpdMap[ln["@_cmpd"]] : void 0;
-  const join5 = "a:round" in ln ? "round" : "a:bevel" in ln ? "bevel" : "a:miter" in ln ? "miter" : void 0;
+  const join6 = "a:round" in ln ? "round" : "a:bevel" in ln ? "bevel" : "a:miter" in ln ? "miter" : void 0;
   const headEnd = parseArrowEnd(ln["a:headEnd"]);
   const tailEnd = parseArrowEnd(ln["a:tailEnd"]);
   return {
@@ -46417,7 +46417,7 @@ function parseStroke(spPr, ctx2, fallbackColor) {
     width: intOr(ln["@_w"], 12700),
     ...dash ? { dash: String(dash) } : {},
     ...cap ? { cap } : {},
-    ...join5 ? { join: join5 } : {},
+    ...join6 ? { join: join6 } : {},
     ...compound && compound !== "sng" ? { compound } : {},
     ...headEnd ? { headEnd } : {},
     ...tailEnd ? { tailEnd } : {}
@@ -48577,11 +48577,11 @@ function parseTextBody(txBody, ctx2, phChain = [], inheritedInsets) {
   const ownStyle = parseLstStyleLevels(txBody["a:lstStyle"], ctx2.theme, {
     mediaRels: ctx2.mediaRels
   });
-  const chain2 = [
+  const chain3 = [
     ownStyle ? { ...ownStyle, src: "shape lstStyle" } : void 0,
     ...phChain
   ];
-  const paragraphs = paras.map((p) => parseParagraph(p, ctx2, chain2));
+  const paragraphs = paras.map((p) => parseParagraph(p, ctx2, chain3));
   let autofit = "none";
   if ("a:normAutofit" in bodyPr) autofit = "shrink";
   else if ("a:spAutoFit" in bodyPr) autofit = "resize";
@@ -48654,7 +48654,7 @@ function spcPts(node) {
   return v != null ? (parseInt(v, 10) || 0) / 100 : void 0;
 }
 __name(spcPts, "spcPts");
-function parseParagraph(p, ctx2, chain2 = []) {
+function parseParagraph(p, ctx2, chain3 = []) {
   const pPr = p["a:pPr"] ?? {};
   const alignMap = {
     l: "left",
@@ -48663,7 +48663,7 @@ function parseParagraph(p, ctx2, chain2 = []) {
     just: "justify"
   };
   const level = pPr["@_lvl"] ? parseInt(pPr["@_lvl"], 10) : void 0;
-  const dflt = mergeTextStyleChain(chain2, level ?? 0);
+  const dflt = mergeTextStyleChain(chain3, level ?? 0);
   const defRPrNode = pPr["a:defRPr"];
   const paraStyle = parseDefRPrStyle(defRPrNode, ctx2.theme, ctx2.phClr);
   const runDflt = paraStyle ? { ...dflt, ...paraStyle, src: paragraphSources(dflt, paraStyle) } : dflt;
@@ -53736,19 +53736,19 @@ function registerMaster(archive, masterPath) {
 }
 __name(registerMaster, "registerMaster");
 function importSourceLayout(archive, bundle) {
-  const chain2 = bundle.chain;
-  if (!chain2) return null;
-  const layoutXml = partText(chain2.parts, chain2.layoutPath);
-  const masterXml = partText(chain2.parts, chain2.masterPath);
+  const chain3 = bundle.chain;
+  if (!chain3) return null;
+  const layoutXml = partText(chain3.parts, chain3.layoutPath);
+  const masterXml = partText(chain3.parts, chain3.masterPath);
   if (layoutXml == null || masterXml == null) return null;
-  const themeXml = chain2.themePath ? partText(chain2.parts, chain2.themePath) : null;
+  const themeXml = chain3.themePath ? partText(chain3.parts, chain3.themePath) : null;
   const existing = findIdenticalLayout(archive, masterXml, themeXml, layoutXml);
   if (existing) return existing;
   const pres = archive.readText(PRES_PATH);
   if (!pres || !pres.includes("</p:sldMasterIdLst>")) return null;
-  const pathMap = writeParts(archive, chain2.parts, chain2.contentTypes);
-  const masterPath = pathMap.get(chain2.masterPath);
-  const layoutPath = pathMap.get(chain2.layoutPath);
+  const pathMap = writeParts(archive, chain3.parts, chain3.contentTypes);
+  const masterPath = pathMap.get(chain3.masterPath);
+  const layoutPath = pathMap.get(chain3.layoutPath);
   if (!masterPath || !layoutPath || !registerMaster(archive, masterPath)) return null;
   return layoutPath;
 }
@@ -53760,8 +53760,8 @@ function chooseLayout(archive, bundle, neighbourSlidePath) {
     if (byName) return byName.path;
   }
   if (neighbourSlidePath) {
-    const chain2 = archive.resolveSlideChain(neighbourSlidePath);
-    if (chain2.layoutPath) return chain2.layoutPath;
+    const chain3 = archive.resolveSlideChain(neighbourSlidePath);
+    if (chain3.layoutPath) return chain3.layoutPath;
   }
   return layouts[0]?.path ?? null;
 }
@@ -55150,25 +55150,25 @@ __name(applyHeaderFooter, "applyHeaderFooter");
 function parseSlideFromArchive(archive, slidePath) {
   const slideXml = archive.readText(slidePath);
   if (slideXml == null) return null;
-  const chain2 = archive.resolveSlideChain(slidePath);
+  const chain3 = archive.resolveSlideChain(slidePath);
   const ctx2 = {};
-  const layoutXml = (chain2.layoutPath ? archive.readText(chain2.layoutPath) : void 0) ?? void 0;
-  const masterXml = (chain2.masterPath ? archive.readText(chain2.masterPath) : void 0) ?? void 0;
-  if (chain2.themePath) {
-    const themeXml = archive.readText(chain2.themePath);
+  const layoutXml = (chain3.layoutPath ? archive.readText(chain3.layoutPath) : void 0) ?? void 0;
+  const masterXml = (chain3.masterPath ? archive.readText(chain3.masterPath) : void 0) ?? void 0;
+  if (chain3.themePath) {
+    const themeXml = archive.readText(chain3.themePath);
     if (themeXml) {
       ctx2.theme = parseTheme(themeXml);
       ctx2.theme.clrMap = parseClrMap(masterXml, layoutXml, slideXml);
-      ctx2.themeMediaRels = partMediaRels(archive, chain2.themePath);
+      ctx2.themeMediaRels = partMediaRels(archive, chain3.themePath);
     }
   }
   if (layoutXml) {
-    if (chain2.layoutPath) ctx2.layoutMediaRels = partMediaRels(archive, chain2.layoutPath);
+    if (chain3.layoutPath) ctx2.layoutMediaRels = partMediaRels(archive, chain3.layoutPath);
     ctx2.layoutPlaceholders = parsePlaceholderMap(layoutXml, ctx2.theme, ctx2.layoutMediaRels);
     ctx2.layoutBg = layoutXml;
   }
   if (masterXml) {
-    if (chain2.masterPath) ctx2.masterMediaRels = partMediaRels(archive, chain2.masterPath);
+    if (chain3.masterPath) ctx2.masterMediaRels = partMediaRels(archive, chain3.masterPath);
     ctx2.masterPlaceholders = parsePlaceholderMap(masterXml, ctx2.theme, ctx2.masterMediaRels);
     ctx2.masterTextStyles = parseMasterTextStyles(masterXml, ctx2.theme, ctx2.masterMediaRels);
     ctx2.masterBg = masterXml;
@@ -55281,13 +55281,13 @@ function parseSlideFromArchive(archive, slidePath) {
   const slide = parseSlide({
     path: slidePath,
     slideXml,
-    layoutPath: chain2.layoutPath,
-    masterPath: chain2.masterPath,
+    layoutPath: chain3.layoutPath,
+    masterPath: chain3.masterPath,
     ctx: ctx2
   });
   const decorations = buildDecorations(archive, slidePath, slideXml, slide, layoutXml, masterXml, {
-    layoutPath: chain2.layoutPath,
-    masterPath: chain2.masterPath,
+    layoutPath: chain3.layoutPath,
+    masterPath: chain3.masterPath,
     theme: ctx2.theme,
     masterPlaceholders: ctx2.masterPlaceholders,
     masterTextStyles: ctx2.masterTextStyles,
@@ -55628,31 +55628,31 @@ function setSlideBgGraphicsHidden(opened, slide, hidden) {
 }
 __name(setSlideBgGraphicsHidden, "setSlideBgGraphicsHidden");
 function slideInheritanceCtx(archive, slidePath) {
-  const chain2 = archive.resolveSlideChain(slidePath);
-  const layoutXml = (chain2.layoutPath ? archive.readText(chain2.layoutPath) : void 0) ?? void 0;
-  const masterXml = (chain2.masterPath ? archive.readText(chain2.masterPath) : void 0) ?? void 0;
+  const chain3 = archive.resolveSlideChain(slidePath);
+  const layoutXml = (chain3.layoutPath ? archive.readText(chain3.layoutPath) : void 0) ?? void 0;
+  const masterXml = (chain3.masterPath ? archive.readText(chain3.masterPath) : void 0) ?? void 0;
   let theme;
-  if (chain2.themePath) {
-    const themeXml = archive.readText(chain2.themePath);
+  if (chain3.themePath) {
+    const themeXml = archive.readText(chain3.themePath);
     if (themeXml) {
       theme = parseTheme(themeXml);
       theme.clrMap = parseClrMap(masterXml, layoutXml, archive.readText(slidePath) ?? void 0);
     }
   }
   const presXml = archive.readText("ppt/presentation.xml");
-  const masterMediaRels = chain2.masterPath ? partMediaRels(archive, chain2.masterPath) : void 0;
+  const masterMediaRels = chain3.masterPath ? partMediaRels(archive, chain3.masterPath) : void 0;
   return {
-    layoutPath: chain2.layoutPath,
-    masterPath: chain2.masterPath,
+    layoutPath: chain3.layoutPath,
+    masterPath: chain3.masterPath,
     layoutXml,
     masterXml,
     theme,
     masterPlaceholders: masterXml ? parsePlaceholderMap(masterXml, theme, masterMediaRels) : void 0,
     masterTextStyles: masterXml ? parseMasterTextStyles(masterXml, theme, masterMediaRels) : void 0,
     defaultTextStyle: presXml ? parseDefaultTextStyle(presXml, theme) : void 0,
-    layoutMediaRels: chain2.layoutPath ? partMediaRels(archive, chain2.layoutPath) : void 0,
+    layoutMediaRels: chain3.layoutPath ? partMediaRels(archive, chain3.layoutPath) : void 0,
     masterMediaRels,
-    themeMediaRels: chain2.themePath ? partMediaRels(archive, chain2.themePath) : void 0
+    themeMediaRels: chain3.themePath ? partMediaRels(archive, chain3.themePath) : void 0
   };
 }
 __name(slideInheritanceCtx, "slideInheritanceCtx");
@@ -60655,7 +60655,7 @@ __name(maxRelationshipId, "maxRelationshipId");
 function applySheetPlanToWorkbookXml(workbookXml, plan, additions) {
   const elements = parseSheetElements(workbookXml);
   const originalNames = elements.map((element) => element.name);
-  const renameByOriginal = new Map(plan.renames.map((rename2) => [rename2.sheetName, rename2.newName]));
+  const renameByOriginal = new Map(plan.renames.map((rename3) => [rename3.sheetName, rename3.newName]));
   const removedSet = new Set(plan.removals);
   const finalElements = /* @__PURE__ */ new Map();
   for (const element of elements) {
@@ -65239,11 +65239,11 @@ async function applySheetPlanToPackage(pkg, plan, additions, workbookXml, touche
   const elements = parseSheetElements(workbookXml);
   const originalNames = elements.map((element) => element.name);
   const originalSet = new Set(originalNames);
-  const renameByOriginal = new Map(plan.renames.map((rename2) => [rename2.sheetName, rename2.newName]));
-  for (const rename2 of plan.renames) {
-    validateSheetName(rename2.newName);
-    if (!originalSet.has(rename2.sheetName)) {
-      throw new SheetEditError(`Sheet "${rename2.sheetName}" was not found in the workbook.`);
+  const renameByOriginal = new Map(plan.renames.map((rename3) => [rename3.sheetName, rename3.newName]));
+  for (const rename3 of plan.renames) {
+    validateSheetName(rename3.newName);
+    if (!originalSet.has(rename3.sheetName)) {
+      throw new SheetEditError(`Sheet "${rename3.sheetName}" was not found in the workbook.`);
     }
   }
   for (const addition of additions) validateSheetName(addition.name);
@@ -65394,18 +65394,18 @@ async function applySheetPlanToPackage(pkg, plan, additions, workbookXml, touche
     pkg.remove(removalPaths.get(removal) ?? "");
   }
   for (const part of removedOwnedParts) pkg.remove(part);
-  for (const rename2 of plan.renames) {
+  for (const rename3 of plan.renames) {
     for (const path of survivingWorksheetPaths) {
       if (!await pkg.canPatch(path)) {
-        if (await pkg.containsText(path, rename2.sheetName)) {
+        if (await pkg.containsText(path, rename3.sheetName)) {
           throw new SheetEditError(
-            `${path} references "${rename2.sheetName}" but is too large to rewrite \u2014 renaming this sheet cannot be saved.`
+            `${path} references "${rename3.sheetName}" but is too large to rewrite \u2014 renaming this sheet cannot be saved.`
           );
         }
         continue;
       }
       const xml = await pkg.readText(path);
-      const renamed = renameSheetReferencesInWorksheet(xml, rename2.sheetName, rename2.newName);
+      const renamed = renameSheetReferencesInWorksheet(xml, rename3.sheetName, rename3.newName);
       if (renamed !== xml) {
         pkg.write(path, renamed);
         touchedEntries.add(path);
@@ -65414,7 +65414,7 @@ async function applySheetPlanToPackage(pkg, plan, additions, workbookXml, touche
     for (const chartPath of chartPaths) {
       if (removedOwnedParts.has(chartPath)) continue;
       const xml = await pkg.readText(chartPath);
-      const renamed = renameSheetReferencesInChart(xml, rename2.sheetName, rename2.newName);
+      const renamed = renameSheetReferencesInChart(xml, rename3.sheetName, rename3.newName);
       if (renamed !== xml) {
         pkg.write(chartPath, renamed);
         touchedEntries.add(chartPath);
@@ -65422,13 +65422,13 @@ async function applySheetPlanToPackage(pkg, plan, additions, workbookXml, touche
     }
     for (const cachePath of pivotCacheDefinitionPaths) {
       const xml = await pkg.readText(cachePath);
-      const renamed = renameSheetInPivotCacheSource(xml, rename2.sheetName, rename2.newName);
+      const renamed = renameSheetInPivotCacheSource(xml, rename3.sheetName, rename3.newName);
       if (renamed !== xml) {
         pkg.write(cachePath, renamed);
         touchedEntries.add(cachePath);
       }
     }
-    workbookXml = renameSheetReferencesInDefinedNames(workbookXml, rename2.sheetName, rename2.newName);
+    workbookXml = renameSheetReferencesInDefinedNames(workbookXml, rename3.sheetName, rename3.newName);
   }
   const relationshipsPath = "xl/_rels/workbook.xml.rels";
   const originalRelationships = await pkg.readText(relationshipsPath);
@@ -66557,6 +66557,356 @@ function planDocxCommands(ops, dryRun) {
 }
 __name(planDocxCommands, "planDocxCommands");
 
+// src/backend/file-index.ts
+var import_jszip6 = __toESM(require_lib3(), 1);
+var import_pdf_lib = __toESM(require_cjs(), 1);
+import { createHash as createHash2 } from "node:crypto";
+import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
+import { basename, dirname, isAbsolute, join, resolve as resolvePath } from "node:path";
+var INDEXABLE = /* @__PURE__ */ new Set([
+  "docx",
+  "docm",
+  "pptx",
+  "pptm",
+  "xlsx",
+  "xlsm",
+  "pdf",
+  "md",
+  "markdown",
+  "txt",
+  "csv"
+]);
+var SKIP_DIRS = /* @__PURE__ */ new Set([
+  "node_modules",
+  ".git",
+  ".svn",
+  ".hg",
+  "dist",
+  "build",
+  "out",
+  ".turbo",
+  ".next",
+  ".cache",
+  "vendor"
+]);
+var MAX_FILES = 5e3;
+var MAX_DEPTH = 12;
+var MAX_DIRS = 2e4;
+var WALK_BUDGET_MS = 8e3;
+var MAX_INDEX_FILES = 50;
+var TITLE_BUDGET_MS = 6e3;
+var MAX_TITLE_BYTES = 40 * 1024 * 1024;
+var MAX_PDF_TITLE_BYTES = 20 * 1024 * 1024;
+var TITLE_MAX_CHARS = 80;
+var DIGEST_MAX_CHARS = 1500;
+var extOf = /* @__PURE__ */ __name((name) => {
+  const i = name.lastIndexOf(".");
+  return i > 0 ? name.slice(i + 1).toLowerCase() : "";
+}, "extOf");
+var chain = Promise.resolve();
+function serialize(fn) {
+  const run = chain.then(fn, fn);
+  chain = run.catch(() => void 0);
+  return run;
+}
+__name(serialize, "serialize");
+function indexPath(dataDir, root) {
+  const key = createHash2("sha1").update(root).digest("hex").slice(0, 16);
+  return join(dataDir, "file-index", `${key}.json`);
+}
+__name(indexPath, "indexPath");
+async function loadIndex(file, root) {
+  try {
+    const parsed2 = JSON.parse(await readFile(file, "utf-8"));
+    if (parsed2?.version !== 2 || parsed2.root !== root || !Array.isArray(parsed2.files)) return null;
+    return parsed2;
+  } catch {
+    return null;
+  }
+}
+__name(loadIndex, "loadIndex");
+async function saveIndex(file, index2) {
+  try {
+    await mkdir(dirname(file), { recursive: true });
+    const tmp = `${file}.tmp`;
+    await writeFile(tmp, JSON.stringify(index2), "utf-8");
+    await rename(tmp, file);
+    await pruneIndexes(dirname(file), file);
+  } catch {
+  }
+}
+__name(saveIndex, "saveIndex");
+async function pruneIndexes(dir, current) {
+  try {
+    const names2 = (await readdir(dir)).filter((n) => n.endsWith(".json"));
+    if (names2.length <= MAX_INDEX_FILES) return;
+    const stamped = await Promise.all(
+      names2.map(async (name) => ({ name, info: await stat(join(dir, name)).catch(() => null) }))
+    );
+    const oldestFirst = stamped.filter((x) => x.info !== null).sort((a, b) => a.info.mtimeMs - b.info.mtimeMs);
+    for (const { name } of oldestFirst.slice(0, Math.max(0, oldestFirst.length - MAX_INDEX_FILES))) {
+      const path = join(dir, name);
+      if (path !== current) await unlink(path).catch(() => void 0);
+    }
+  } catch {
+  }
+}
+__name(pruneIndexes, "pruneIndexes");
+async function walk(root, visit) {
+  const stack = [{ dir: root, depth: 0 }];
+  const deadline = Date.now() + WALK_BUDGET_MS;
+  let files = 0;
+  let dirs = 0;
+  while (stack.length > 0) {
+    if (dirs >= MAX_DIRS || Date.now() > deadline) return { truncated: true };
+    const { dir, depth } = stack.pop();
+    dirs++;
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.name.startsWith(".")) continue;
+      if (entry.name.startsWith("~$")) continue;
+      if (entry.isSymbolicLink()) continue;
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (depth >= MAX_DEPTH) continue;
+        if (SKIP_DIRS.has(entry.name.toLowerCase())) continue;
+        stack.push({ dir: path, depth: depth + 1 });
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const ext = extOf(entry.name);
+      if (!INDEXABLE.has(ext)) continue;
+      if (files >= MAX_FILES) return { truncated: true };
+      files++;
+      await visit(path, ext);
+    }
+  }
+  return { truncated: false };
+}
+__name(walk, "walk");
+var unescapeXml3 = /* @__PURE__ */ __name((s) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n))).replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&amp;/g, "&"), "unescapeXml");
+var cleanText = /* @__PURE__ */ __name((s) => s.replace(/\s+/g, " ").trim(), "cleanText");
+var cleanTitle = /* @__PURE__ */ __name((s) => {
+  const t = cleanText(s);
+  if (!t) return null;
+  return t.length > TITLE_MAX_CHARS ? `${t.slice(0, TITLE_MAX_CHARS)}\u2026` : t;
+}, "cleanTitle");
+var cleanDigest = /* @__PURE__ */ __name((parts) => {
+  const t = cleanText(parts.join(" "));
+  if (!t) return null;
+  return t.length > DIGEST_MAX_CHARS ? t.slice(0, DIGEST_MAX_CHARS) : t;
+}, "cleanDigest");
+function tagTexts(xml, tag) {
+  const re = new RegExp(`<(?:\\w+:)?${tag}\\b[^>]*>([\\s\\S]*?)<\\/(?:\\w+:)?${tag}>`, "g");
+  const out = [];
+  let m;
+  while (m = re.exec(xml)) {
+    const t = cleanText(unescapeXml3(m[1].replace(/<[^>]+>/g, "")));
+    if (t) out.push(t);
+  }
+  return out;
+}
+__name(tagTexts, "tagTexts");
+async function docxMeta(bytes) {
+  const zip = await import_jszip6.default.loadAsync(bytes);
+  const xml = await zip.file("word/document.xml")?.async("string");
+  if (!xml) return { title: null, digest: null };
+  const paragraphs = xml.match(/<(?:w:)?p\b[^>]*>[\s\S]*?<\/(?:w:)?p>/g) ?? [];
+  const parts = [];
+  let first = null;
+  let heading = null;
+  for (const para of paragraphs) {
+    const texts = tagTexts(para, "t");
+    if (texts.length === 0) continue;
+    const text2 = cleanText(texts.join(""));
+    if (!text2) continue;
+    parts.push(text2);
+    if (first === null) first = text2;
+    if (heading === null) {
+      const style = /<(?:w:)?pStyle\b[^>]*\b(?:\w+:)?val="([^"]+)"/.exec(para)?.[1] ?? "";
+      const outline = /<(?:w:)?outlineLvl\b[^>]*\b(?:\w+:)?val="([0-5])"/.exec(para)?.[1];
+      if (outline !== void 0 || /heading|title|标题/i.test(style) || /^[1-6]$/.test(style)) {
+        heading = text2;
+      }
+    }
+  }
+  return { title: cleanTitle(heading ?? first ?? ""), digest: cleanDigest(parts) };
+}
+__name(docxMeta, "docxMeta");
+async function pptxMeta(bytes) {
+  const zip = await import_jszip6.default.loadAsync(bytes);
+  const slides = Object.keys(zip.files).map((name) => ({ name, n: Number(/slide(\d+)\.xml$/.exec(name)?.[1] ?? 0) })).filter((s) => s.n > 0).sort((a, b) => a.n - b.n);
+  const parts = [];
+  let chars = 0;
+  for (const slide of slides.slice(0, 50)) {
+    if (chars >= DIGEST_MAX_CHARS) break;
+    const xml = await zip.file(slide.name)?.async("string");
+    if (!xml) continue;
+    const texts = tagTexts(xml, "t");
+    parts.push(...texts);
+    for (const t of texts) chars += t.length + 1;
+  }
+  return { title: cleanTitle(parts[0] ?? ""), digest: cleanDigest(parts) };
+}
+__name(pptxMeta, "pptxMeta");
+async function xlsxMeta(bytes) {
+  const zip = await import_jszip6.default.loadAsync(bytes);
+  const workbook = await zip.file("xl/workbook.xml")?.async("string");
+  const sheetNames = workbook ? [...workbook.matchAll(/<(?:x:)?sheet\b[^>]*\bname="([^"]+)"/g)].map((m) => cleanText(unescapeXml3(m[1]))) : [];
+  const shared = await zip.file("xl/sharedStrings.xml")?.async("string");
+  const strings = shared ? tagTexts(shared, "t") : [];
+  const sheets = Object.keys(zip.files).filter((name) => /^xl\/worksheets\/sheet\d+\.xml$/.test(name)).slice(0, 10);
+  for (const name of sheets) {
+    const xml = await zip.file(name)?.async("string");
+    if (!xml) continue;
+    strings.push(...tagTexts(xml, "t"));
+    const cellRe = /<c\b[^>]*\bt="(?:str|inlineStr)"[^>]*>([\s\S]*?)<\/c>/g;
+    let m;
+    while (m = cellRe.exec(xml)) strings.push(...tagTexts(m[1], "v"));
+  }
+  return {
+    title: cleanTitle(sheetNames[0] ?? ""),
+    digest: cleanDigest([...sheetNames, ...strings])
+  };
+}
+__name(xlsxMeta, "xlsxMeta");
+async function pdfMeta(bytes) {
+  if (bytes.length > MAX_PDF_TITLE_BYTES) return { title: null, digest: null };
+  const doc = await import_pdf_lib.PDFDocument.load(bytes, { updateMetadata: false });
+  return { title: cleanTitle(doc.getTitle() ?? ""), digest: null };
+}
+__name(pdfMeta, "pdfMeta");
+function textMeta(content, markdown) {
+  let title = null;
+  if (markdown) {
+    const heading = /^\s{0,3}#{1,6}\s+(.+)$/m.exec(content);
+    if (heading) title = cleanTitle(heading[1]);
+  }
+  if (!title) {
+    for (const line2 of content.split(/\r?\n/)) {
+      const t = cleanTitle(line2);
+      if (t) {
+        title = t;
+        break;
+      }
+    }
+  }
+  return { title, digest: cleanDigest([content]) };
+}
+__name(textMeta, "textMeta");
+async function extractMeta(path, ext, size) {
+  const isOffice = ext === "docx" || ext === "docm" || ext === "pptx" || ext === "pptm" || ext === "xlsx" || ext === "xlsm";
+  if (size > MAX_TITLE_BYTES && (isOffice || ext === "pdf")) return { title: null, digest: null };
+  if (ext === "docx" || ext === "docm") return docxMeta(new Uint8Array(await readFile(path)));
+  if (ext === "pptx" || ext === "pptm") return pptxMeta(new Uint8Array(await readFile(path)));
+  if (ext === "xlsx" || ext === "xlsm") return xlsxMeta(new Uint8Array(await readFile(path)));
+  if (ext === "pdf") return pdfMeta(new Uint8Array(await readFile(path)));
+  if (size > 2 * 1024 * 1024) return { title: null, digest: null };
+  if (ext === "md" || ext === "markdown") return textMeta(await readFile(path, "utf-8"), true);
+  if (ext === "txt" || ext === "csv") return textMeta(await readFile(path, "utf-8"), false);
+  return { title: null, digest: null };
+}
+__name(extractMeta, "extractMeta");
+async function scanWorkspace(root, dataDir) {
+  if (!isAbsolute(root)) throw new Error(`files_search: root must be an absolute path: ${root}`);
+  const absolute = resolvePath(root);
+  const info = await stat(absolute).catch(() => null);
+  if (!info || !info.isDirectory()) throw new Error(`files_search: not a directory: ${absolute}`);
+  return serialize(async () => {
+    const file = indexPath(dataDir, absolute);
+    const previous = await loadIndex(file, absolute);
+    const prior = new Map((previous?.files ?? []).map((e) => [e.path, e]));
+    const discovered = [];
+    const walked = await walk(absolute, async (path, ext) => {
+      const s = await stat(path).catch(() => null);
+      if (!s || !s.isFile()) return;
+      discovered.push({ path, ext, size: s.size, mtimeMs: s.mtimeMs });
+    });
+    const entries = discovered.map((d) => {
+      const old = prior.get(d.path);
+      const unchanged = old && old.size === d.size && old.mtimeMs === d.mtimeMs && !old.pending;
+      return unchanged ? { ...d, title: old.title, digest: old.digest } : { ...d, title: null, digest: null, pending: true };
+    });
+    const changed = entries.filter((e) => e.pending).sort((a, b) => b.mtimeMs - a.mtimeMs);
+    const deadline = Date.now() + TITLE_BUDGET_MS;
+    let dirty = entries.length !== (previous?.files.length ?? -1);
+    for (const entry of changed) {
+      if (Date.now() > deadline) break;
+      try {
+        const meta = await extractMeta(entry.path, entry.ext, entry.size);
+        entry.title = meta.title;
+        entry.digest = meta.digest;
+      } catch {
+        entry.title = null;
+        entry.digest = null;
+      }
+      delete entry.pending;
+      dirty = true;
+    }
+    let pending = 0;
+    for (const e of entries) if (e.pending) pending++;
+    const next = { version: 2, root: absolute, scannedAt: Date.now(), files: entries };
+    if (dirty || pending !== 0 || !previous) await saveIndex(file, next);
+    return { ...next, pending, total: entries.length, truncated: walked.truncated };
+  });
+}
+__name(scanWorkspace, "scanWorkspace");
+function tokenize2(query) {
+  return query.toLowerCase().replace(/[，、；;,.!?！？:：\s]+/g, " ").split(" ").filter(Boolean);
+}
+__name(tokenize2, "tokenize");
+function scoreEntry(entry, tokens) {
+  const name = basename(entry.path).toLowerCase();
+  const title = (entry.title ?? "").toLowerCase();
+  const digest = (entry.digest ?? "").toLowerCase();
+  const path = entry.path.toLowerCase();
+  let score = 0;
+  for (const token of tokens) {
+    if (name.includes(token)) score += 3;
+    if (title.includes(token)) score += 3;
+    if (digest.includes(token)) score += 2;
+    if (path.includes(token)) score += 1;
+  }
+  return score;
+}
+__name(scoreEntry, "scoreEntry");
+function snippetFor(entry, tokens) {
+  if (tokens.length === 0 || !entry.digest) return null;
+  const lower = entry.digest.toLowerCase();
+  let at = -1;
+  for (const token of tokens) {
+    const i = lower.indexOf(token);
+    if (i >= 0 && (at < 0 || i < at)) at = i;
+  }
+  if (at < 0) return null;
+  const start = Math.max(0, at - 40);
+  const end = Math.min(entry.digest.length, at + 80);
+  return `${start > 0 ? "\u2026" : ""}${entry.digest.slice(start, end)}${end < entry.digest.length ? "\u2026" : ""}`;
+}
+__name(snippetFor, "snippetFor");
+async function searchWorkspace(root, dataDir, query, limit = 20) {
+  const index2 = await scanWorkspace(root, dataDir);
+  const tokens = tokenize2(query);
+  const matches = tokens.length === 0 ? index2.files : index2.files.filter((e) => {
+    const hay = `${e.path}
+${e.title ?? ""}
+${e.digest ?? ""}`.toLowerCase();
+    return tokens.every((t) => hay.includes(t));
+  });
+  const ranked = matches.map((entry) => ({ entry, score: tokens.length === 0 ? 0 : scoreEntry(entry, tokens) })).sort((a, b) => b.score - a.score || b.entry.mtimeMs - a.entry.mtimeMs).slice(0, Math.max(1, Math.min(limit, 100))).map(({ entry }) => ({
+    ...entry,
+    relPath: entry.path.slice(index2.root.length).replace(/^[/\\]/, ""),
+    snippet: snippetFor(entry, tokens)
+  }));
+  return { index: index2, rows: ranked };
+}
+__name(searchWorkspace, "searchWorkspace");
+
 // vendor/genoffice/packages/pptx-ops/src/ops/registry.ts
 var GuidedError = class extends Error {
   static {
@@ -66573,7 +66923,7 @@ function requireHexColor(value, opName, field) {
 __name(requireHexColor, "requireHexColor");
 var XML_INVALID_RE = new RegExp("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\uFFFE\\uFFFF]|\\p{Cs}", "u");
 function assertXmlSafeStrings(op) {
-  const walk = /* @__PURE__ */ __name((value, path) => {
+  const walk2 = /* @__PURE__ */ __name((value, path) => {
     if (typeof value === "string") {
       if (XML_INVALID_RE.test(value)) {
         throw new GuidedError(
@@ -66583,15 +66933,15 @@ function assertXmlSafeStrings(op) {
       return;
     }
     if (Array.isArray(value)) {
-      value.forEach((v, i) => walk(v, `${path}[${i}]`));
+      value.forEach((v, i) => walk2(v, `${path}[${i}]`));
       return;
     }
     if (value && typeof value === "object" && !ArrayBuffer.isView(value)) {
-      for (const [k, v] of Object.entries(value)) walk(v, path ? `${path}.${k}` : k);
+      for (const [k, v] of Object.entries(value)) walk2(v, path ? `${path}.${k}` : k);
     }
   }, "walk");
   for (const [k, v] of Object.entries(op)) {
-    if (k !== "op") walk(v, k);
+    if (k !== "op") walk2(v, k);
   }
 }
 __name(assertXmlSafeStrings, "assertXmlSafeStrings");
@@ -70266,22 +70616,22 @@ register({
   }
 });
 
-// raw-text:/Users/weiqun/AI/WeWork/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/text.md
+// raw-text:/Users/simba/AI/pi-coding-agent-desktop/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/text.md
 var text_default = '# Text ops\n\n> Replace or restyle the text of a text box, shape or table: whole-body rewrite (setText), run-level font patch (setFont), paragraph format patch (setParagraphFormat), typeset math (insertEquation).\n\nAll three take `target:{slide, el}`. `el` is an element id from the outline or\n`read_slide` (`e_*` ids are durable). For a direct child of a group put the\nchild id in `target.el` and add `group:"<group id>"`.\n\nFont sizes are points. Colors are `"#RRGGBB"`.\n\n### setText\n\n`{paragraphs:[{runs:[{text,bold?,italic?,fontSize?,color?}],align?}]} (group children: add group:"<group id>")`\n\nReplaces the element\'s entire text with the given paragraphs. Runs you do not\nrestyle inherit the formatting of the run they replace (position-wise), so a\nplain `{text}` run keeps the original size, color and font. A shape that has\nnever had text gets a text body created (autoshapes default to centered text).\n\n| Field                                                    | Type                                                                                          | Notes                                                                                                                                                                                                                  |\n| -------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n| paragraphs                                               | array                                                                                         | Required, one object per paragraph; an empty array clears the text                                                                                                                                                     |\n| paragraphs[].runs                                        | array of `{text, bold?, italic?, underline?, strike?, fontSize?, fontFamily?, color?, link?}` | `fontSize` in pt; `link` is `{kind:"url",url}`, `{kind:"slide",slideIndex}`, `{kind:"action",action}` (`nextslide` / `previousslide` / `firstslide` / `lastslide` / `lastslideviewed` / `endshow`) or `null` to remove |\n| paragraphs[].align                                       | `"left"` / `"center"` / `"right"` / `"justify"`                                               | Optional                                                                                                                                                                                                               |\n| paragraphs[].level                                       | 0..8                                                                                          | Indent level for multi-level lists                                                                                                                                                                                     |\n| paragraphs[].bullet                                      | `"char"` / `"number"` / `"none"`                                                              | Optional; `bulletChar` sets a custom glyph                                                                                                                                                                             |\n| paragraphs[].lineSpacingPct, spaceBeforePt, spaceAfterPt | number                                                                                        | Optional paragraph spacing                                                                                                                                                                                             |\n| paragraphs[].rtl                                         | boolean                                                                                       | Optional base direction                                                                                                                                                                                                |\n| group                                                    | string                                                                                        | Only for a direct child of a group: the group id                                                                                                                                                                       |\n\n```json\n{\n  "op": "setText",\n  "target": { "slide": 0, "el": "e_TEXT" },\n  "paragraphs": [\n    { "runs": [{ "text": "Quarterly Review", "bold": true, "fontSize": 36 }], "align": "left" },\n    { "runs": [{ "text": "Q3 highlights and outlook" }] }\n  ]\n}\n```\n\n```json\n{\n  "op": "setText",\n  "target": { "slide": 0, "el": "e_CHILD" },\n  "group": "e_GROUP",\n  "paragraphs": [{ "runs": [{ "text": "Step 1" }] }]\n}\n```\n\nCommon mistakes\n\n- Passing only the changed paragraph: the array replaces the whole body, so send every paragraph that should remain.\n- Targeting a picture, chart or connector: only text boxes, shapes and table cells (`setTableCell`) hold text.\n- Writing text into a group child without `group`: the child id alone does not resolve on the slide.\n\nRelated: `setFont` (restyle without changing the words), `setTableCell` (table cells), `findReplace` (deck-wide substitutions).\n\n### setFont\n\n`{font:{fontFamily?,fontSizePt?,bold?,italic?,underline?,strike?,color?}} \u2014 merges onto every run of the element`\n\nApplies the given properties to every run of the element (or every cell of a\ntable) and leaves everything else untouched. Use it for "make the title blue\nand bold" style requests; use `setText` when the words change.\n\n| Field                                | Type        | Notes                                          |\n| ------------------------------------ | ----------- | ---------------------------------------------- |\n| font.fontFamily                      | string      | Omit to keep the theme font (recommended)      |\n| font.fontSizePt                      | number > 0  | Points                                         |\n| font.bold, italic, underline, strike | boolean     | Only the keys you pass change                  |\n| font.color                           | `"#RRGGBB"` | Explicit color; clears theme-color inheritance |\n| group                                | string      | Only for a direct child of a group             |\n\n```json\n{\n  "op": "setFont",\n  "target": { "slide": 0, "el": "e_TEXT" },\n  "font": { "color": "#1A73E8", "bold": true }\n}\n```\n\n```json\n{ "op": "setFont", "target": { "slide": 0, "el": "e_TABLE" }, "font": { "fontSizePt": 12 } }\n```\n\nCommon mistakes\n\n- Color names such as `"blue"`: only hex `"#RRGGBB"` is accepted.\n- `fontSizePt` of 0 or negative: must be a positive number of points.\n- Expecting a partial-run change: the patch is element-wide; for one word use `setText` with per-run styling.\n\n### setParagraphFormat\n\n`{format:{align?,bullet?,lineSpacingPct?,spaceBeforePt?,spaceAfterPt?}}`\n\nParagraph-level formatting for every paragraph of the element: alignment,\nbullets, spacing, direction, indent level.\n\n| Field                                     | Type                                            | Notes                                        |\n| ----------------------------------------- | ----------------------------------------------- | -------------------------------------------- |\n| format.align                              | `"left"` / `"center"` / `"right"` / `"justify"` |                                              |\n| format.bullet                             | `"char"` / `"number"` / `"none"`                | `"char"` uses `bulletChar` or a round bullet |\n| format.bulletChar                         | string                                          | Custom glyph, with `bullet:"char"`           |\n| format.bulletSizePct                      | number >= 0                                     | Percent of text size (100 = same)            |\n| format.bulletColor                        | `"#RRGGBB"`                                     |                                              |\n| format.bulletHangEmu                      | number >= 0                                     | Hanging indent in EMU                        |\n| format.lineSpacingPct                     | number >= 0                                     | 100 = single spacing                         |\n| format.spaceBeforePt, format.spaceAfterPt | number >= 0                                     | Points                                       |\n| format.rtl                                | boolean                                         | Base direction                               |\n| format.indentDelta                        | 1 or -1                                         | Shift the list level (clamped 0..8)          |\n| group                                     | string                                          | Only for a direct child of a group           |\n\n```json\n{\n  "op": "setParagraphFormat",\n  "target": { "slide": 0, "el": "e_TEXT" },\n  "format": { "bullet": "char", "lineSpacingPct": 120, "spaceAfterPt": 6 }\n}\n```\n\nCommon mistakes\n\n- Negative spacing values: all `...Pct` / `...Pt` / `...Emu` fields must be >= 0.\n- Using `setParagraphFormat` to change font size: that is a run property, use `setFont`.\n\n### insertEquation\n\n`{latex,position?} \u2014 target:{slide, el}; or {latex,box:{x,y,cx,cy}} to create a text box for it`\n\nAdds a typeset equation (PowerPoint\'s own math format) as a centered paragraph\nat the `position` (`"end"`, default, or `"start"`) of a text or shape element,\nor in a new text box at `box` (EMU, unit suffixes allowed). Older readers and\nthe GenOffice preview show the linearized text (`E=mc\xB2`); PowerPoint 2010+\nrenders the formula. LaTeX subset: `\\frac`, `\\sqrt[n]`, `^`, `_`,\n`\\sum`/`\\int`/`\\prod` with limits, `\\left(` `\\right)`, matrices, Greek\nletters, accents, `\\text{}`.\n\n```json\n{\n  "op": "insertEquation",\n  "target": { "slide": 0, "el": "e_TEXT" },\n  "latex": "E = mc^2"\n}\n```\n\n```json\n{\n  "op": "insertEquation",\n  "target": { "slide": 0 },\n  "box": { "x": 914400, "y": 2743200, "cx": 4572000, "cy": 914400 },\n  "latex": "\\\\frac{a}{b} + \\\\sqrt{x^2 + y^2}"\n}\n```\n';
 
-// raw-text:/Users/weiqun/AI/WeWork/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/element.md
+// raw-text:/Users/simba/AI/pi-coding-agent-desktop/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/element.md
 var element_default = '# Element ops\n\n> Change one existing element: fill, stroke, position and size, crop, opacity, z-order, grouping, shape geometry, text-body properties, effects, hyperlinks, deletion.\n\nEvery op here takes `target:{slide, el}` unless its signature says otherwise\n(`flipElements` and `groupElements` take a list in `els`). Ops that say\n"group children" accept a direct child of a group when you add\n`group:"<group id>"` and put the child id in `target.el`.\n\nGeometry is document-space EMU: 1 pt = 12700 EMU, 1 px = 9525 EMU on a\nstandard 1280 px wide deck (`read_slide` reports the exact factor for the\ncurrent deck). Angles are degrees unless the field says otherwise.\n\n### deleteElement\n\n`{} \u2014 no fields besides target`\n\nRemoves a top-level element. To delete one member of a group, `ungroupElement`\nthe group first (its children become top-level and get fresh ids).\n\n```json\n{ "op": "deleteElement", "target": { "slide": 0, "el": "e_SHAPE" } }\n```\n\nCommon mistakes\n\n- Deleting a group child directly: the id does not resolve at top level; ungroup first or delete the whole group.\n\n### setFill\n\n`{fill:"#RRGGBB"|"none"|{stops:[{pos,color}],angle?}}`\n\nSolid, translucent or gradient fill of a text box or shape. Pictures, tables,\ncharts and connectors have no fill. Picture fills are `setImageFill` (UI only).\n\n| Field       | Type                                                                      | Notes                                                      |\n| ----------- | ------------------------------------------------------------------------- | ---------------------------------------------------------- |\n| fill        | `"none"`, `"#RRGGBB"`, `"#RRGGBBAA"` or `{stops, angle?, radial?, path?}` | Alpha byte `AA`: 00 transparent .. FF opaque               |\n| fill.stops  | array of `{pos, color}`                                                   | At least two; `pos` 0..1                                   |\n| fill.angle  | number                                                                    | Linear gradient angle in 1/60000 degree (90 deg = 5400000) |\n| fill.radial | boolean                                                                   | Radial gradient instead of linear                          |\n| group       | string                                                                    | Only for a direct child of a group                         |\n\n```json\n{ "op": "setFill", "target": { "slide": 0, "el": "e_SHAPE" }, "fill": "#1A73E8" }\n```\n\n```json\n{\n  "op": "setFill",\n  "target": { "slide": 0, "el": "e_SHAPE" },\n  "fill": {\n    "stops": [\n      { "pos": 0, "color": "#1A73E8" },\n      { "pos": 1, "color": "#FFFFFF" }\n    ],\n    "angle": 5400000\n  }\n}\n```\n\nCommon mistakes\n\n- `null` to remove a fill: use `"none"`.\n- Gradient with one stop: at least two stops are required.\n- Targeting a picture: use `setPictureOpacity` / `setImageFill` instead.\n\nRelated: `setStroke`, `setBackground` (page background, a slide op).\n\n### setStroke\n\n`{stroke:{color:"#RRGGBB",widthEmu}|null} \u2014 null removes the outline`\n\nOutline of a text box, shape or picture (picture border).\n\n| Field           | Type                                                        | Notes                                                          |\n| --------------- | ----------------------------------------------------------- | -------------------------------------------------------------- |\n| stroke          | object or `null`                                            | `null` removes the outline                                     |\n| stroke.color    | `"#RRGGBB"`                                                 | Required when stroke is an object                              |\n| stroke.widthEmu | number > 0                                                  | 12700 EMU = 1 pt                                               |\n| stroke.dash     | string                                                      | Preset dash name (`"dash"`, `"sysDot"`, ...); `"solid"` clears |\n| stroke.cap      | `"flat"` / `"rnd"` / `"sq"`                                 | Optional                                                       |\n| stroke.compound | `"sng"` / `"dbl"` / `"thickThin"` / `"thinThick"` / `"tri"` | Optional                                                       |\n| stroke.join     | `"round"` / `"bevel"` / `"miter"`                           | Optional                                                       |\n| stroke.gradient | `{stops:[{pos,color}], angle}`                              | Gradient line; angle in 1/60000 degree                         |\n| group           | string                                                      | Only for a direct child of a group                             |\n\n```json\n{\n  "op": "setStroke",\n  "target": { "slide": 0, "el": "e_SHAPE" },\n  "stroke": { "color": "#333333", "widthEmu": 19050 }\n}\n```\n\n```json\n{ "op": "setStroke", "target": { "slide": 0, "el": "e_PICTURE" }, "stroke": null }\n```\n\nCommon mistakes\n\n- Width in points: `widthEmu` is EMU; multiply points by 12700.\n- `remove:true` or `"none"`: the outline is removed by passing `stroke: null`.\n\n### setTransform\n\n`{box:{x,y,cx,cy},rotDeg?} (group children: absBox instead of box, plus group:"<group id>")`\n\nMoves, resizes and rotates an element. `box` is the full new frame in EMU; pass\nall four numbers even when only one changes (read the current values from\n`read_slide` or an `execute_slide_script` `els` entry).\n\n| Field           | Type                 | Notes                                                                      |\n| --------------- | -------------------- | -------------------------------------------------------------------------- |\n| box             | `{x, y, cx, cy}` EMU | Required for top-level elements                                            |\n| rotDeg          | number               | Degrees clockwise; omitted = 0                                             |\n| absBox          | `{x, y, cx, cy}` EMU | Group children only: document-space frame (the op converts to child space) |\n| group           | string               | Group children only                                                        |\n| resizeTableGrid | boolean              | Tables only: redistribute columns/rows to the new frame                    |\n\n```json\n{\n  "op": "setTransform",\n  "target": { "slide": 0, "el": "e_TEXT" },\n  "box": { "x": 914400, "y": 685800, "cx": 7315200, "cy": 1143000 }\n}\n```\n\n```json\n{\n  "op": "setTransform",\n  "target": { "slide": 0, "el": "e_CHILD" },\n  "group": "e_GROUP",\n  "absBox": { "x": 1828800, "y": 1828800, "cx": 1828800, "cy": 914400 },\n  "rotDeg": 15\n}\n```\n\nCommon mistakes\n\n- Pixel values in `box`: convert with the px-to-EMU factor from `read_slide`.\n- Sending only `cx`/`cy`: the rect must carry all of x, y, cx, cy.\n- For several elements with relative math (align, distribute) prefer `execute_slide_script`, which computes from live geometry.\n\n### setConnectorEndpoints\n\n`{p1:{x,y},p2:{x,y},start?:{targetId,idx}|null,end?:{targetId,idx}|null}`\n\nRe-routes a connector between two points and optionally attaches its ends to\nshapes so it follows later moves. The element must be a connector (line,\narrow, elbow or curved connector).\n\n| Field      | Type                                 | Notes                                                                                                 |\n| ---------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------- |\n| p1, p2     | `{x, y}` EMU                         | Required; frame and flips are derived from them                                                       |\n| start, end | `{targetId, idx}`, `null` or omitted | Attach to connection point `idx` of an element; `null` detaches; omitted keeps the current attachment |\n\n```json\n{\n  "op": "setConnectorEndpoints",\n  "target": { "slide": 0, "el": "e_LINE" },\n  "p1": { "x": 914400, "y": 914400 },\n  "p2": { "x": 3657600, "y": 2743200 },\n  "start": { "targetId": "e_SHAPE", "idx": 3 },\n  "end": null\n}\n```\n\nCommon mistakes\n\n- Using it on a plain shape: only connectors are accepted; for shapes use `setTransform`.\n- A `targetId` that is not on the slide: the op fails instead of silently detaching; pass `null` to detach.\n\n### flipElements\n\n`{els:[id,\u2026],axis:"h"|"v"} \u2014 target.el unused`\n\nMirrors one or more elements horizontally or vertically around their own\ncenters. Any element with a frame flips (shapes, text boxes, pictures, groups).\n\n| Field | Type           | Notes                                             |\n| ----- | -------------- | ------------------------------------------------- |\n| els   | string[]       | Non-empty list of element ids on `target.slide`   |\n| axis  | `"h"` or `"v"` |                                                   |\n| group | string         | Optional: flip children inside that group instead |\n\n```json\n{ "op": "flipElements", "target": { "slide": 0 }, "els": ["e_SHAPE", "e_PICTURE"], "axis": "h" }\n```\n\n### setPictureSrcRect\n\n`{srcRect:{l,t,r,b}|null} \u2014 crop fractions 0..1, null removes the crop`\n\nNon-destructive crop of a picture: each side is the fraction of the source\nimage removed from that edge. The frame stays; the remaining image stretches to\nfill it. Optionally pass `box` to shrink the frame in the same op.\n\n| Field   | Type                         | Notes                                                                      |\n| ------- | ---------------------------- | -------------------------------------------------------------------------- |\n| srcRect | `{l?, t?, r?, b?}` or `null` | Each 0..1 (exclusive of 1); `l + r < 1` and `t + b < 1`; missing sides = 0 |\n| box     | `{x, y, cx, cy}` EMU         | Optional new frame applied together with the crop                          |\n\n```json\n{\n  "op": "setPictureSrcRect",\n  "target": { "slide": 0, "el": "e_PICTURE" },\n  "srcRect": { "l": 0.1, "t": 0, "r": 0.1, "b": 0.2 }\n}\n```\n\n```json\n{ "op": "setPictureSrcRect", "target": { "slide": 0, "el": "e_PICTURE" }, "srcRect": null }\n```\n\nCommon mistakes\n\n- Percentages such as 10: fractions are 0..1, so 10 percent is 0.1.\n- Opposing crops summing to 1 or more: nothing would remain visible.\n\n### setPictureOpacity\n\n`{opacity:0..1}`\n\nWhole-image transparency of a picture. `1` is fully opaque and removes the effect.\n\n```json\n{ "op": "setPictureOpacity", "target": { "slide": 0, "el": "e_PICTURE" }, "opacity": 0.6 }\n```\n\nCommon mistakes\n\n- Percent values: 60 percent is `0.6`.\n- Non-picture targets: shapes take translucency through `setFill` with an `"#RRGGBBAA"` color.\n\n### reorderElement\n\n`{dir:"front"|"back"|"forward"|"backward"}`\n\nChanges the z-order (stacking) of an element on its slide.\n\n```json\n{ "op": "reorderElement", "target": { "slide": 0, "el": "e_SHAPE" }, "dir": "back" }\n```\n\nCommon mistakes\n\n- Repeating `front`/`back` on an element already at that extreme fails; check the outline order first.\n\n### groupElements\n\n`{els:[id,id,\u2026]} \u2014 at least two ids; target.el unused`\n\nGroups two or more top-level elements. The result reports the new group id in\n`created`; the children keep editable through `group:"<group id>"`.\n\n```json\n{ "op": "groupElements", "target": { "slide": 0 }, "els": ["e_SHAPE", "e_TEXT"] }\n```\n\n### ungroupElement\n\n`{} \u2014 target.el is the group`\n\nDissolves a group; its direct children become top-level elements with new ids\n(positions preserved). Read the slide again before editing them.\n\n```json\n{ "op": "ungroupElement", "target": { "slide": 0, "el": "e_GROUP" } }\n```\n\n### setShapeGeometry\n\n`{prst:"<OOXML preset geometry name>"}`\n\nSwaps the preset geometry of a shape (for example `rect` to `roundRect`,\n`ellipse`, `triangle`, `rightArrow`, `chevron`, `star5`, `hexagon`). Text,\nfill, stroke and frame stay.\n\n```json\n{ "op": "setShapeGeometry", "target": { "slide": 0, "el": "e_SHAPE" }, "prst": "hexagon" }\n```\n\nCommon mistakes\n\n- Applying it to a picture, table or chart: only shapes with a preset geometry qualify.\n\n### setShapeAdjust\n\n`{adjust:{<gdName>:number,\u2026}} \u2014 preset-geometry avLst values (group children: add group)`\n\nSets adjustment handles of a preset geometry, for example the corner radius of\na rounded rectangle (`adj`, 0..50000) or arrow head proportions (`adj1`,\n`adj2`).\n\n```json\n{ "op": "setShapeAdjust", "target": { "slide": 0, "el": "e_SHAPE" }, "adjust": { "adj": 16667 } }\n```\n\nCommon mistakes\n\n- Fractions like 0.25: adjustment values are the raw avLst numbers (25 percent of the range is 25000 for most presets).\n\n### setTextAnchor\n\n`{anchor:"top"|"middle"|"bottom"}`\n\nVertical alignment of the text inside its box.\n\n```json\n{ "op": "setTextAnchor", "target": { "slide": 0, "el": "e_TEXT" }, "anchor": "middle" }\n```\n\n### setTextBodyProps\n\n`{props:{vert?:"horz"|"eaVert"|"vert"|"vert270"|"wordArtVert",autofit?:"none"|"shrink"|"resize",insets?:{l?,t?,r?,b?} (EMU),wrap?:boolean}}`\n\nText-body properties: writing direction, autofit behavior, internal margins and\nword wrap. Pass at least one property.\n\n| Field         | Type                                                             | Notes                                                           |\n| ------------- | ---------------------------------------------------------------- | --------------------------------------------------------------- |\n| props.vert    | `"horz"` / `"eaVert"` / `"vert"` / `"vert270"` / `"wordArtVert"` | `"horz"` clears vertical text                                   |\n| props.autofit | `"none"` / `"shrink"` / `"resize"`                               | `shrink` scales text down on overflow, `resize` grows the shape |\n| props.insets  | `{l?, t?, r?, b?}` EMU                                           | Only the given sides change                                     |\n| props.wrap    | boolean                                                          | `false` lets a line overflow instead of wrapping                |\n\n```json\n{\n  "op": "setTextBodyProps",\n  "target": { "slide": 0, "el": "e_TEXT" },\n  "props": { "autofit": "shrink", "insets": { "l": 91440, "r": 91440 } }\n}\n```\n\n### setEffects\n\n`{effects:{shadow?:{color:"#RRGGBB(AA)",blurRad,dist,dirDeg,inner?,sx?,sy?,kxDeg?}|null,glow?:{color,radius}|null,reflection?:{blurRad,startA(0..1),endPos(0..1),dist}|null,softEdge?:EMU|null}} \u2014 null clears; EMU distances (12700/pt)`\n\nShadow, glow, reflection and soft-edge effects. Each key you pass is replaced;\n`null` clears that effect; keys you omit stay as they are. Pass at least one key.\n\n| Field              | Type                                                                         | Notes                                                                         |\n| ------------------ | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |\n| effects.shadow     | `{color, blurRad, dist, dirDeg, inner?, sx?, sy?, kxDeg?, kyDeg?}` or `null` | `color` may carry alpha `"#RRGGBBAA"`; `blurRad`/`dist` EMU; `dirDeg` degrees |\n| effects.glow       | `{color, radius}` or `null`                                                  | `radius` EMU                                                                  |\n| effects.reflection | `{blurRad, startA, endPos, dist}` or `null`                                  | `startA`/`endPos` fractions 0..1                                              |\n| effects.softEdge   | number EMU or `null`                                                         | Feather radius                                                                |\n\n```json\n{\n  "op": "setEffects",\n  "target": { "slide": 0, "el": "e_SHAPE" },\n  "effects": { "shadow": { "color": "#00000066", "blurRad": 50800, "dist": 38100, "dirDeg": 90 } }\n}\n```\n\n```json\n{\n  "op": "setEffects",\n  "target": { "slide": 0, "el": "e_SHAPE" },\n  "effects": { "shadow": null, "glow": null }\n}\n```\n\nCommon mistakes\n\n- An empty `effects` object: at least one of shadow/glow/reflection/softEdge is required.\n- Points for `dist`/`blurRad`: these are EMU (12700 per point).\n\n### setLink\n\n`{link:{kind:"url",url}|{kind:"slide",slideIndex}|{kind:"action",action}|null}`\n\nHyperlink on a whole element (click action). `null` removes the link. Links on\nindividual runs are set through `setText` run `link` fields.\n\n| Field       | Type                                                                                                   | Notes                                                                                                                    |\n| ----------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |\n| link.kind   | `"url"` / `"slide"` / `"action"`                                                                       | `url` opens in the browser; `slide` jumps to `slideIndex` (0-based); `action` is a PowerPoint show action                |\n| link.action | `"nextslide"` / `"previousslide"` / `"firstslide"` / `"lastslide"` / `"lastslideviewed"` / `"endshow"` | Written as `ppaction://hlinkshowjump` with no relationship, exactly like PowerPoint\'s Action Settings navigation buttons |\n\n```json\n{\n  "op": "setLink",\n  "target": { "slide": 0, "el": "e_SHAPE" },\n  "link": { "kind": "url", "url": "https://example.com" }\n}\n```\n\n```json\n{\n  "op": "setLink",\n  "target": { "slide": 0, "el": "e_SHAPE" },\n  "link": { "kind": "slide", "slideIndex": 1 }\n}\n```\n\n```json\n{\n  "op": "setLink",\n  "target": { "slide": 0, "el": "e_SHAPE" },\n  "link": { "kind": "action", "action": "nextslide" }\n}\n```\n\n### alignElements\n\n`{els:[ids],mode:"left"|"centerH"|"right"|"top"|"centerV"|"bottom",to?:"selection"|"slide"}`\n\nLines up several top-level elements on one edge or center line. By default\nthe reference is the selection\'s bounding box (at least two elements);\n`to: "slide"` aligns to the slide edges and accepts a single element. Frames\nare the axis-aligned boxes `slides read` reports (rotation is ignored, as in\nPowerPoint\'s Align menu); attached connectors follow.\n\n| Field | Type                                 | Notes                                                                   |\n| ----- | ------------------------------------ | ----------------------------------------------------------------------- |\n| els   | array of element ids                 | Top-level elements only; group children are refused (arrange the group) |\n| mode  | see signature                        | `centerH` = same vertical center line, `centerV` = same horizontal one  |\n| to    | `"selection"` (default) or `"slide"` | Reference box                                                           |\n\n```json\n{\n  "op": "alignElements",\n  "target": { "slide": 0 },\n  "els": ["e_TEXT", "e_SHAPE"],\n  "mode": "left"\n}\n```\n\nCommon mistakes\n\n- One element without `to: "slide"`: aligning a single box to itself does nothing.\n- Expecting text inside the box to move: this moves frames; text alignment is `setParagraphFormat`.\n\n### distributeElements\n\n`{els:[ids],axis:"horizontal"|"vertical",to?:"selection"|"slide"}`\n\nSpaces elements evenly along one axis. `selection` (default, at least three\nelements) keeps the two outer elements and spreads the gaps between the rest;\n`to: "slide"` gives equal gaps between the slide edges and every element (one\nor more elements). Only the coordinate along `axis` changes.\n\n```json\n{\n  "op": "distributeElements",\n  "target": { "slide": 0 },\n  "els": ["e_TEXT", "e_SHAPE", "e_PICTURE"],\n  "axis": "horizontal"\n}\n```\n\nCommon mistakes\n\n- Two elements with the default `to`: there is no gap to even out; align them or pass `to: "slide"`.\n\n### setImageFill (not-ai-callable)\n\n`{source:{mediaPath}|{bytes:base64|dataURL,ext},tile?} \u2014 use the image tools instead`\n\nPicture or texture fill of a shape. The payload is image bytes or an existing\nmedia part path, which the model cannot produce; the UI\'s fill picker uses it.\n';
 
-// raw-text:/Users/weiqun/AI/WeWork/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/insert.md
+// raw-text:/Users/simba/AI/pi-coding-agent-desktop/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/insert.md
 var insert_default = '# Insert ops\n\n> Create new elements on a slide: text boxes, preset shapes and lines (addElement), connectors glued to shapes, tables, native charts, SmartArt-style diagrams.\n\nInsert ops take `target:{slide}` (no `el`) and an `offset:{x,y,cx,cy}` frame\nin document-space EMU. They report the new element id in `created`; later ops\nin the same transaction cannot reference it yet, so insert first and style in\nthe next call, or pass the style inline where the op supports it.\n\n### addElement\n\n`{kind:"textbox"|<preset geometry>,offset:{x,y,cx,cy},paragraphs?,fill?,stroke?,adjustments?:{<gd name>:val},bodyPr?:{autoFit?:"shrink"|"resize"}}`\n\nAdds a text box, a preset-geometry shape, or a line/connector.\n\n| Field       | Type                                                                                           | Notes                                                                                                                                                                                                                                              |\n| ----------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n| kind        | string                                                                                         | `"textbox"`; a preset geometry (`rect`, `roundRect`, `ellipse`, `triangle`, `diamond`, `rightArrow`, `chevron`, `star5`, `hexagon`, `wedgeRoundRectCallout`, ...); or a line kind `line`, `lineArrow`, `lineArrowDouble`, `lineBent`, `lineCurved` |\n| offset      | `{x, y, cx, cy}` EMU                                                                           | Required                                                                                                                                                                                                                                           |\n| paragraphs  | array of `{runs:[{text, bold?, italic?, underline?, fontSize?, fontFamily?, color?}], align?}` | Optional text; `fontSize` in pt                                                                                                                                                                                                                    |\n| fill        | `"#RRGGBB"` or `"#RRGGBBAA"`                                                                   | Solid fill; text boxes have none by default                                                                                                                                                                                                        |\n| stroke      | `{color, widthEmu}`                                                                            | Outline; lines default to a 1 pt black stroke                                                                                                                                                                                                      |\n| adjustments | `{<gdName>: number}`                                                                           | Preset adjust values, e.g. `{"adj": 25000}` for a roundRect radius                                                                                                                                                                                 |\n| bodyPr      | `{autoFit?, wrap?, anchor?, insetsEmu?}`                                                       | `autoFit` `"shrink"` or `"resize"`; `wrap` `"square"`/`"none"`; `anchor` `"t"`/`"ctr"`/`"b"`                                                                                                                                                       |\n\n```json\n{\n  "op": "addElement",\n  "target": { "slide": 1 },\n  "kind": "textbox",\n  "offset": { "x": 914400, "y": 685800, "cx": 7315200, "cy": 914400 },\n  "paragraphs": [\n    { "runs": [{ "text": "Key Takeaways", "bold": true, "fontSize": 32 }], "align": "left" }\n  ],\n  "bodyPr": { "autoFit": "shrink" }\n}\n```\n\n```json\n{\n  "op": "addElement",\n  "target": { "slide": 1 },\n  "kind": "roundRect",\n  "offset": { "x": 914400, "y": 2286000, "cx": 3200400, "cy": 1600200 },\n  "fill": "#E8F0FE",\n  "stroke": { "color": "#1A73E8", "widthEmu": 12700 },\n  "adjustments": { "adj": 16667 },\n  "paragraphs": [\n    { "runs": [{ "text": "Card title", "bold": true, "color": "#1A73E8" }], "align": "center" }\n  ]\n}\n```\n\n```json\n{\n  "op": "addElement",\n  "target": { "slide": 1 },\n  "kind": "lineArrow",\n  "offset": { "x": 4572000, "y": 3048000, "cx": 1828800, "cy": 0 }\n}\n```\n\nCommon mistakes\n\n- Building whole pages element by element on an empty deck: use `generate_deck`; `addElement` is for adding to an already designed page.\n- Pixel frames: convert with the px-to-EMU factor from `read_slide`.\n- `autoFit` values other than `"shrink"`/`"resize"`.\n\n### addConnector\n\n`{from,to,kind?:"straight"|"elbow"|"curved",fromSide?,toSide?,arrow?:"none"|"end"|"both",line?:{color?,widthPt?,dash?}}`\n\nDraws a connector glued to two shapes (`a:stCxn`/`a:endCxn`), so PowerPoint\nand later `setTransform` moves keep it attached. When `fromSide`/`toSide`\n(`top`/`left`/`bottom`/`right`) are omitted, the pair of edge midpoints that\nare closest to each other is chosen. The frame is derived from the two\nconnection points; the new element id is in `created`.\n\n| Field            | Type                                    | Notes                                                                        |\n| ---------------- | --------------------------------------- | ---------------------------------------------------------------------------- |\n| from, to         | element ids                             | Two different top-level elements on `target.slide`                           |\n| kind             | `straight` (default), `elbow`, `curved` |                                                                              |\n| fromSide, toSide | side name                               | Pin one or both ends; omitted sides are chosen automatically                 |\n| arrow            | `none`, `end` (default), `both`         | Arrowhead at the `to` end, both ends, or none                                |\n| line             | `{color?, widthPt?, dash?}`             | Defaults 1 pt black solid; `dash` is an OOXML preset (`dash`, `sysDot`, ...) |\n\n```json\n{\n  "op": "addConnector",\n  "target": { "slide": 0 },\n  "from": "e_SHAPE",\n  "to": "e_PICTURE",\n  "kind": "elbow",\n  "line": { "color": "#1A73E8", "widthPt": 1.5 }\n}\n```\n\nCommon mistakes\n\n- Drawing a free line with `addElement` and hoping it follows the shapes: only `addConnector` (or `setConnectorEndpoints` with `start`/`end`) attaches.\n- Using it between a group child and a shape: connect to the group (top-level ids only).\n\n### addPicture (not-ai-callable)\n\n`{bytes:base64|dataURL,ext?,offset} \u2014 use insert_web_image instead`\n\nEmbeds image bytes as a new picture. The model inserts images through\n`insert_web_image` (URL) so the main process downloads and center-crops them.\n\n### replacePicture (not-ai-callable)\n\n`{bytes:base64|dataURL,ext?} \u2014 use replace_image instead`\n\nSwaps a picture\'s bytes in place. The model uses `replace_image` with a URL.\n\n### addTable\n\n`{rows,cols,offset:{x,y,cx,cy},colWidthsEmu?,rowHeightsEmu?,cellProps?:[[{gridSpan?,rowSpan?,hMerge?,vMerge?,anchor?}]]}`\n\nInserts a native table with PowerPoint\'s default style and empty cells. Fill\ncells afterwards with `setTableCell` (one op per cell, same transaction is\nfine once you know the table id from the first result).\n\n| Field         | Type                                                                | Notes                                                                    |\n| ------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------ |\n| rows, cols    | integer >= 1                                                        |                                                                          |\n| offset        | `{x, y, cx, cy}` EMU                                                | Columns and rows split the frame equally unless widths/heights are given |\n| colWidthsEmu  | number[]                                                            | Exactly `cols` positive values                                           |\n| rowHeightsEmu | number[]                                                            | Exactly `rows` positive values                                           |\n| cellProps     | array of rows of `{gridSpan?, rowSpan?, hMerge?, vMerge?, anchor?}` | Row-major; `anchor` `"t"`/`"ctr"`/`"b"`; use for pre-merged headers      |\n\n```json\n{\n  "op": "addTable",\n  "target": { "slide": 1 },\n  "rows": 3,\n  "cols": 3,\n  "offset": { "x": 914400, "y": 1371600, "cx": 7315200, "cy": 2286000 }\n}\n```\n\n```json\n{\n  "op": "addTable",\n  "target": { "slide": 1 },\n  "rows": 2,\n  "cols": 2,\n  "offset": { "x": 914400, "y": 1371600, "cx": 5486400, "cy": 1371600 },\n  "colWidthsEmu": [1828800, 3657600],\n  "cellProps": [\n    [{ "gridSpan": 2 }, { "hMerge": true }],\n    [{}, {}]\n  ]\n}\n```\n\nCommon mistakes\n\n- `colWidthsEmu` with the wrong count: it must list exactly one width per column.\n- Passing cell text here: the op creates empty cells; write text with `setTableCell`.\n\n### addChart\n\n`{kind:"bar"|"barStacked"|"line"|"area"|"pie"|"doughnut"|"scatter"|"radar"|"comboBarLine",categories:[\u2026],series:[{name,values:[\u2026]}],offset,title?,colorScheme?:["#RRGGBB"],holeSizePct?}`\n\nInserts a native, PowerPoint-editable chart.\n\n| Field       | Type                                              | Notes                                                                                                                                                                                                     |\n| ----------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n| kind        | see signature                                     | `comboBarLine` draws the last series as a line on a secondary axis                                                                                                                                        |\n| categories  | string[]                                          | At least one; the x-axis labels                                                                                                                                                                           |\n| series      | array of `{name, values:number[]}`                | At least one; each `values` length should equal `categories` length                                                                                                                                       |\n| offset      | `{x, y, cx, cy}` EMU                              |                                                                                                                                                                                                           |\n| title       | string                                            | Optional chart title                                                                                                                                                                                      |\n| colorScheme | `"#RRGGBB"[]`                                     | Optional series colors, cycled; omit to follow the theme                                                                                                                                                  |\n| holeSizePct | number                                            | Doughnut hole size (10..90)                                                                                                                                                                               |\n| barDir      | `"bar"`                                           | Optional: horizontal bars instead of columns                                                                                                                                                              |\n| dataSource  | `"user"` / `"document"` / `"search"` / `"sample"` | Where the numbers came from; checked by apply_ops before the batch runs (not part of the op itself). `"search"` needs a web_search in this conversation; `"sample"` figures must be disclosed to the user |\n\n```json\n{\n  "op": "addChart",\n  "target": { "slide": 1 },\n  "kind": "bar",\n  "title": "Revenue by quarter",\n  "categories": ["Q1", "Q2", "Q3", "Q4"],\n  "series": [{ "name": "Revenue", "values": [120, 135, 150, 170] }],\n  "offset": { "x": 914400, "y": 1371600, "cx": 7315200, "cy": 3657600 },\n  "dataSource": "user"\n}\n```\n\n```json\n{\n  "op": "addChart",\n  "target": { "slide": 1 },\n  "kind": "doughnut",\n  "holeSizePct": 55,\n  "categories": ["Direct", "Partner", "Online"],\n  "series": [{ "name": "Share", "values": [45, 30, 25] }],\n  "offset": { "x": 2743200, "y": 1371600, "cx": 3657600, "cy": 3657600 },\n  "colorScheme": ["#1A73E8", "#34A853", "#FBBC04"]\n}\n```\n\nCommon mistakes\n\n- Inventing numbers: every value needs a source (user, deck, or a search in this conversation); with none, use illustrative values and say so to the user.\n- `values` shorter or longer than `categories`.\n- Editing an existing chart with `addChart`: use the `edit_chart` tool, which keeps position and z-order.\n\n### addSmartArt\n\n`{layout,items:[\u2026],offset}`\n\nInserts a SmartArt-style diagram built from grouped shapes.\n\n| Field  | Type                                                                                     | Notes                     |\n| ------ | ---------------------------------------------------------------------------------------- | ------------------------- |\n| layout | `"list"` / `"process"` / `"cycle"` / `"hierarchy"` / `"pyramid"` / `"matrix"` / `"venn"` |                           |\n| items  | string[]                                                                                 | 1..8 node texts, in order |\n| offset | `{x, y, cx, cy}` EMU                                                                     |                           |\n\n```json\n{\n  "op": "addSmartArt",\n  "target": { "slide": 1 },\n  "layout": "process",\n  "items": ["Discover", "Design", "Deliver"],\n  "offset": { "x": 914400, "y": 1828800, "cx": 7315200, "cy": 1828800 }\n}\n```\n\n### addMedia (not-ai-callable)\n\n`{kind:"video"|"audio",bytes:base64|dataURL,ext,offset}`\n\nEmbeds a video or audio file; bytes payload from the UI file picker.\n\n### addModel3d (not-ai-callable)\n\n`{bytes,ext,offset} \u2014 bytes payload`\n\nEmbeds a 3D model; bytes payload from the UI file picker.\n\n### pasteElements (not-ai-callable)\n\n`{items,dx,dy} \u2014 clipboard payload`\n\nPastes copied elements; the payload comes from the internal clipboard.\n';
 
-// raw-text:/Users/weiqun/AI/WeWork/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/table.md
+// raw-text:/Users/simba/AI/pi-coding-agent-desktop/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/table.md
 var table_default = '# Table ops\n\n> Edit an existing table element: cell text, merges, row/column structure, row heights, column widths, cell anchors, style presets and borders.\n\nAll ops take `target:{slide, el}` where `el` is the table\'s id (type `table` in\nthe outline). `row` and `col` are 0-based. Chart edits (`setChart`) live in the\n`edit_chart` tool.\n\n### setTableCell\n\n`{row,col,paragraphs}`\n\nReplaces one cell\'s text. Runs you do not restyle inherit the cell\'s current\nformatting, so plain `{text}` runs keep size, color and bold.\n\n| Field      | Type                                                                                            | Notes                   |\n| ---------- | ----------------------------------------------------------------------------------------------- | ----------------------- |\n| row, col   | integer                                                                                         | 0-based                 |\n| paragraphs | array of `{runs:[{text, bold?, italic?, fontSize?, color?}], align?, bullet?, lineSpacingPct?}` | Same shape as `setText` |\n\n```json\n{\n  "op": "setTableCell",\n  "target": { "slide": 0, "el": "e_TABLE" },\n  "row": 0,\n  "col": 0,\n  "paragraphs": [{ "runs": [{ "text": "Metric", "bold": true }], "align": "center" }]\n}\n```\n\nCommon mistakes\n\n- Passing the cell text as a string: it must be a paragraph array.\n- Row or column outside the grid: the op reports the failing (row, col).\n\n### tableMerge\n\n`{kind:"merge-right"|"merge-down"|"split",row,col}`\n\nMerges the cell at (row, col) with its right or lower neighbor, or splits a\nmerged cell back into its grid cells.\n\n```json\n{\n  "op": "tableMerge",\n  "target": { "slide": 0, "el": "e_TABLE" },\n  "kind": "merge-right",\n  "row": 0,\n  "col": 0\n}\n```\n\nCommon mistakes\n\n- Merging across an existing merge boundary: the op refuses; split first.\n\n### tableStructure\n\n`{kind:"insert-row"|"delete-row"|"insert-col"|"delete-col",index,before?}`\n\nInserts or deletes a row or column. Insert goes after `index` unless\n`before:true`.\n\n```json\n{\n  "op": "tableStructure",\n  "target": { "slide": 0, "el": "e_TABLE" },\n  "kind": "insert-row",\n  "index": 1\n}\n```\n\n```json\n{\n  "op": "tableStructure",\n  "target": { "slide": 0, "el": "e_TABLE" },\n  "kind": "delete-col",\n  "index": 0\n}\n```\n\nCommon mistakes\n\n- Tables with merged cells refuse row/column surgery: split the merges first (`tableMerge` with `kind:"split"`).\n\n### setTableRowHeight\n\n`{row,hEmu}`\n\nSets one row\'s height in EMU (the table frame grows or shrinks accordingly).\n\n```json\n{ "op": "setTableRowHeight", "target": { "slide": 0, "el": "e_TABLE" }, "row": 0, "hEmu": 457200 }\n```\n\n### setTableCellAnchor\n\n`{row,col,anchor:"top"|"middle"|"bottom"}`\n\nVertical alignment of the text inside one cell.\n\n```json\n{\n  "op": "setTableCellAnchor",\n  "target": { "slide": 0, "el": "e_TABLE" },\n  "row": 0,\n  "col": 1,\n  "anchor": "middle"\n}\n```\n\n### setTableColWidth\n\n`{col,wEmu}`\n\nSets one column\'s width in EMU.\n\n```json\n{ "op": "setTableColWidth", "target": { "slide": 0, "el": "e_TABLE" }, "col": 0, "wEmu": 2743200 }\n```\n\n### setTableStyle\n\n`{styleName} | {styleId?,firstRow?,lastRow?,firstCol?,lastCol?,bandRow?,bandCol?,keepFormatting?,shadingColor?,borderColor?,borderWidthPt?,borderPreset?}`\n\nRestyles the whole table: apply one fixed-color preset by `styleName`, pick one\nof PowerPoint\'s 74 built-in styles by `styleId` (gallery name such as\n`"Medium Style 2 - Accent 1"` or its GUID; they follow the deck\'s theme\ncolors), or change individual region flags, cell shading and border lines. A\npreset wins over the other fields; a preset or `styleId` clears direct cell\nfills and borders like PowerPoint\'s style gallery (`keepFormatting: true`\nkeeps them). `slides read` shows a table\'s current `style`.\n\n| Field                               | Type                  | Notes                                                                                                                                                                                                                                          |\n| ----------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n| styleName                           | string                | `none`, `lightGrid`, `zebraBlue`, `zebraGray`, `headerDarkBlue`, `headerOrange`, `noBorder`, `fullBorder`                                                                                                                                      |\n| styleId                             | string                | Built-in gallery name or `{GUID}`: `No Style, No Grid`, `No Style, Table Grid`, `Themed Style 1/2 - Accent N`, `Light Style 1/2/3 [- Accent N]`, `Medium Style 1/2/3/4 [- Accent N]`, `Dark Style 1 [- Accent N]`, `Dark Style 2 [- Accent N]` |\n| firstRow                            | boolean               | Header-row emphasis                                                                                                                                                                                                                            |\n| lastRow, firstCol, lastCol, bandCol | boolean               | Total row, first/last column emphasis, banded columns                                                                                                                                                                                          |\n| bandRow                             | boolean               | Banded rows                                                                                                                                                                                                                                    |\n| keepFormatting                      | boolean               | With `styleId`: keep direct cell fills/borders instead of clearing them                                                                                                                                                                        |\n| shadingColor                        | `#RRGGBB` or `"none"` | Cell fill for every cell                                                                                                                                                                                                                       |\n| borderColor                         | `#RRGGBB`             | Border line color                                                                                                                                                                                                                              |\n| borderWidthPt                       | number (pt)           | Border line width; > 0                                                                                                                                                                                                                         |\n| borderPreset                        | `"all"` or `"none"`   | Draw all border lines, or clear them                                                                                                                                                                                                           |\n\n```json\n{ "op": "setTableStyle", "target": { "slide": 0, "el": "e_TABLE" }, "styleName": "zebraBlue" }\n```\n\n```json\n{\n  "op": "setTableStyle",\n  "target": { "slide": 0, "el": "e_TABLE" },\n  "styleId": "Medium Style 2 - Accent 1",\n  "firstRow": true,\n  "bandRow": true\n}\n```\n\n```json\n{\n  "op": "setTableStyle",\n  "target": { "slide": 0, "el": "e_TABLE" },\n  "firstRow": true,\n  "borderPreset": "all",\n  "borderColor": "#BFBFBF",\n  "borderWidthPt": 1\n}\n```\n\nCommon mistakes\n\n- Passing a color name (`"blue"`): colors are `#RRGGBB`.\n- Mixing `styleName` with the other fields: the preset is applied and the rest is ignored.\n- A built-in name in `styleName`: gallery names and GUIDs go in `styleId`.\n- Restyling one cell\'s text: that is `setTableCell` with styled runs, not this op.\n\n### setChart (not-ai-callable)\n\n`{patch:ChartEdit} \u2014 use the edit_chart tool instead`\n\nChanges a chart\'s type, data, colors or elements. The `edit_chart` tool exposes\nthis with a validated schema.\n';
 
-// raw-text:/Users/weiqun/AI/WeWork/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/slide.md
+// raw-text:/Users/simba/AI/pi-coding-agent-desktop/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/slide.md
 var slide_default = '# Slide ops\n\n> Whole-page operations: delete, duplicate, insert blank or by layout, move, background, hide, transition, auto-advance, animations, speaker notes, comments.\n\nSlide ops take `target:{slide}` only. `slide` is a 0-based index or a durable\n`"s_<n>"` id from the outline. Structural ops (delete, duplicate, insert, move)\nshift later indices; when you batch several in one transaction, later ops are\nstill resolved against the live deck, so prefer durable ids or order the batch\nfrom the last page to the first.\n\n### deleteSlide\n\n`{}`\n\nRemoves the page. A deck must keep at least one slide.\n\n```json\n{ "op": "deleteSlide", "target": { "slide": 1 } }\n```\n\n### duplicateSlide\n\n`{}`\n\nInserts a copy right after the page. `clearText:true` empties the text boxes\nso the copy serves as a layout-preserving blank.\nThe copy lands at the source index + 1; the result echoes only the source\ntarget, so address the new page by that index when you fill it.\n\n```json\n{ "op": "duplicateSlide", "target": { "slide": 0 } }\n```\n\n```json\n{ "op": "duplicateSlide", "target": { "slide": 0 }, "clearText": true }\n```\n\n### addBlankSlide\n\n`{} \u2014 inserts after target.slide`\n\nInserts a new blank page (same layout and background as `target.slide`) right\nafter it.\n\n```json\n{ "op": "addBlankSlide", "target": { "slide": "s_1" } }\n```\n\n### addSlideWithLayout\n\n`{layout:<name>|<index>} \u2014 inserts after target.slide (default: after the last slide)`\n\nInserts a page bound to one of the deck\'s layouts, with that layout\'s\nplaceholders as empty prompt boxes. `layout` is the layout\'s gallery name or\nits 0-based index as listed by `slides read --layouts`; the error names every\nlayout when the reference misses. The new slide\'s id is reported in `created`.\n\n```json\n{ "op": "addSlideWithLayout", "target": { "slide": "s_1" }, "layout": "Blank" }\n```\n\nCommon mistakes\n\n- Guessing layout names from another deck: list them with `slides read --layouts` first.\n- Filling the new placeholders in the same batch: they get ids only after the insert; `slides read` the new slide, then `setText`.\n\n### pasteSlide (not-ai-callable)\n\n`{afterIndex,bundle|png,mode?} \u2014 clipboard payload`\n\nPastes a copied slide bundle from the internal clipboard.\n\n### insertSlidePptx (not-ai-callable)\n\n`{source,at?,replace?} \u2014 generated-page landing payload (use generate_deck/regenerate_slide)`\n\nLands a generated one-slide pptx into the deck; the generation tools call it.\n\n### moveSlide\n\n`{to} \u2014 0-based destination index`\n\nMoves the page to a new position.\n\n```json\n{ "op": "moveSlide", "target": { "slide": 1 }, "to": 0 }\n```\n\n### setSlideLayout\n\n`{layout?:<name>|<index>} \u2014 omitted: snap placeholders back to the current layout`\n\nRe-links the page to another layout (existing shapes stay where they are;\nmissing layout placeholders are added as empty prompt boxes). Without `layout`\nthe current layout is re-applied, moving placeholders back to their layout\npositions.\n\n```json\n{ "op": "setSlideLayout", "target": { "slide": 0 }, "layout": 0 }\n```\n\n### setBackground\n\n`{kind:"solid"|"gradient"|"reset"|"graphics"|"image",color?,from?,to?,angleDeg?,radial?,hidden?} \u2014 image kind needs a bytes source (use set_slide_background)`\n\nPage background. Full-bleed decorative rectangles that act as a backdrop are\nrecolored along with it. One slide per op; for "all pages" send one op per\nslide in the same transaction.\n\n| Kind         | Fields                               | Notes                                                                                 |\n| ------------ | ------------------------------------ | ------------------------------------------------------------------------------------- |\n| `"solid"`    | `color`                              | `"#RRGGBB"`                                                                           |\n| `"gradient"` | `from`, `to`, `angleDeg?`, `radial?` | Two-stop gradient; `angleDeg` in degrees (default 0); `radial:true` ignores the angle |\n| `"reset"`    | none                                 | Remove the page override and inherit the layout/master background                     |\n| `"graphics"` | `hidden`                             | `true` hides the master\'s background graphics on this page                            |\n| `"image"`    | `source`                             | Bytes or media-part payload; not usable from `apply_ops`                              |\n\n```json\n{ "op": "setBackground", "target": { "slide": 0 }, "kind": "solid", "color": "#0B1F3A" }\n```\n\n```json\n{\n  "op": "setBackground",\n  "target": { "slide": 1 },\n  "kind": "gradient",\n  "from": "#0B1F3A",\n  "to": "#1A73E8",\n  "angleDeg": 90\n}\n```\n\n```json\n{ "op": "setBackground", "target": { "slide": 1 }, "kind": "reset" }\n```\n\nCommon mistakes\n\n- Dark backgrounds without lightening the text: follow up with `setFont` color changes on the page\'s text.\n- `kind:"image"` from the model: use the picture tools; the op needs bytes.\n\n### setHidden\n\n`{hidden:boolean}`\n\nHides or shows the page in the slide show (it stays in the deck).\n\n```json\n{ "op": "setHidden", "target": { "slide": 1 }, "hidden": true }\n```\n\n### setTransition\n\n`{kind:"none"|"fade"|"push"|"wipe"|\u2026}`\n\nSlide transition. Accepted kinds: `none`, `morph`, `fade`, `push`, `wipe`,\n`split`, `circle`, `cover`, `pull`, `dissolve`, `zoom`, `random`.\n\n```json\n{ "op": "setTransition", "target": { "slide": 0 }, "kind": "fade" }\n```\n\nCommon mistakes\n\n- Names from other tools such as `"slide"` or `"cut"`: only the kinds listed above are accepted; the error lists them.\n\n### setAdvanceTime\n\n`{ms:number|null} \u2014 auto-advance; null clears`\n\nAutomatic advance after the given milliseconds; `null` returns to click-to-advance.\n\n```json\n{ "op": "setAdvanceTime", "target": { "slide": 0 }, "ms": 5000 }\n```\n\n### setAnimations (not-ai-callable)\n\n`{items:[{spid,effect,trigger,durationMs,delayMs,\u2026}]} \u2014 spid-addressed (cNvPr id), no id translation yet`\n\nRewrites the page\'s animation timeline; addressed by raw shape ids, so the UI\nanimation pane owns it for now.\n\n### addAnimation\n\n`{effect,kind?,trigger?,duration?,delay?,direction?,paragraph?,motionPath?,presetXml?,after?} \u2014 target:{slide, el}; one effect appended to the page timeline`\n\nAdds one animation for the element at the end of the page\'s timeline (or right\nafter position `after`). The timeline is read back as `animations[]` in\n`slides read`, each item with its `seq` (0-based position), `el`, `effect`,\n`kind`, `trigger`, `durationMs`, `delayMs`.\n\n| Field      | Type                                                                                                                                                                                                           | Notes                                                                                                                                             |\n| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |\n| effect     | entrance `appear` `fade` `flyIn` `wipe` `wipeDown` `splitIn` `bounce` `flipIn` `zoom`; emphasis `pulse` `spin` `grow` `teeter`; exit `disappear` `fadeOut` `flyOut` `wipeOut` `shrink` `zoomOut`; `motionPath` | Required unless `presetXml` is given                                                                                                              |\n| kind       | `"entrance"` / `"emphasis"` / `"exit"` / `"path"`                                                                                                                                                              | Optional cross-check; rejected when it does not match the effect                                                                                  |\n| trigger    | `"onClick"` (default) / `"withPrev"` / `"afterPrev"`                                                                                                                                                           | `withPrev` starts with the previous effect, `afterPrev` after it ends                                                                             |\n| duration   | ms >= 0                                                                                                                                                                                                        | Default per effect (appear 0, fade 500, spin 2000, \u2026); `durationMs` also accepted                                                                 |\n| delay      | ms >= 0                                                                                                                                                                                                        | Default 0; `delayMs` also accepted                                                                                                                |\n| direction  | `"top"` / `"bottom"` / `"left"` / `"right"`                                                                                                                                                                    | Only for `flyIn`, `flyOut`, `wipe`, `wipeOut` (default bottom)                                                                                    |\n| paragraph  | 0-based index                                                                                                                                                                                                  | Animate one paragraph of a text body instead of the whole shape                                                                                   |\n| motionPath | `"M 0 0 L 0.25 0"`                                                                                                                                                                                             | With `effect:"motionPath"`; coordinates are fractions of the slide size                                                                           |\n| presetXml  | one `<p:par>\u2026</p:par>` block                                                                                                                                                                                   | Verbatim effect exported from PowerPoint for presets outside the list; every `<p:spTgt spid>` must be this element\'s shape id; kept byte-for-byte |\n| after      | seq                                                                                                                                                                                                            | Insert right after that timeline position instead of appending                                                                                    |\n\n```json\n{\n  "op": "addAnimation",\n  "target": { "slide": 0, "el": "e_TEXT" },\n  "effect": "flyIn",\n  "direction": "left",\n  "trigger": "afterPrev",\n  "duration": 600\n}\n```\n\n### removeAnimation\n\n`{seq} \u2014 target:{slide}; or target:{slide, el} to drop every animation of that element`\n\nRemoves one timeline item by `seq`, or all items targeting an element. Later\nitems renumber; read the page again before the next batch.\n\n```json\n{ "op": "removeAnimation", "target": { "slide": 0, "el": "e_TEXT" } }\n```\n\n### reorderAnimation\n\n`{seq,to} \u2014 target:{slide}; move a timeline item`\n\nMoves the item at `seq` to position `to` (both 0-based, inside the timeline).\n\n```json\n{ "op": "reorderAnimation", "target": { "slide": 0 }, "seq": 2, "to": 0 }\n```\n\n### setNotes\n\n`{text} \u2014 speaker notes`\n\nReplaces the page\'s speaker notes (paragraphs separated by newlines). An empty\nstring clears them. Notes never affect the canvas.\n\n```json\n{\n  "op": "setNotes",\n  "target": { "slide": 0 },\n  "text": "Open with the headline number.\\nPause for questions before the next section."\n}\n```\n\n### addComment\n\n`{text,author}`\n\nAdds a review comment to the page.\n\n```json\n{\n  "op": "addComment",\n  "target": { "slide": 0 },\n  "text": "Consider a stronger verb in the title.",\n  "author": "AI Assistant"\n}\n```\n\n### deleteComment\n\n`{authorId,idx}`\n\nRemoves a comment identified by its author id and index within that author\'s\ncomments on the page (both come from the comments pane data).\n\n```json\n{ "op": "deleteComment", "target": { "slide": 0 }, "authorId": 0, "idx": 0 }\n```\n';
 
-// raw-text:/Users/weiqun/AI/WeWork/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/deck.md
+// raw-text:/Users/simba/AI/pi-coding-agent-desktop/plugins/com.pi.files/vendor/genoffice/packages/pptx-ops/src/prompts/ops/deck.md
 var deck_default = '# Deck ops\n\n> Presentation-wide operations with no target: page size, find and replace, header/footer, theme, sections.\n\nDeck ops carry no `target`. They affect every slide (or the presentation\'s\nmetadata), so read the deck outline first and confirm the scope with the user\nwhen the request is ambiguous.\n\n### setSlideSize\n\n`{cx,cy} \u2014 EMU page size, whole deck`\n\nChanges the page size of the whole deck. Element positions are not rescaled;\nfollow up with `execute_slide_script` when content must be re-laid out.\nCommon sizes: 16:9 is 12192000 x 6858000, 4:3 is 9144000 x 6858000.\n\n```json\n{ "op": "setSlideSize", "cx": 12192000, "cy": 6858000 }\n```\n\n### findReplace\n\n`{find,replace,matchCase?,slideIndex?} \u2014 whole deck unless slideIndex`\n\nText substitution inside runs across text boxes, shapes, table cells and direct\ngroup children. Matches that span two differently formatted runs are not\nreplaced.\n\n| Field      | Type             | Notes                                       |\n| ---------- | ---------------- | ------------------------------------------- |\n| find       | non-empty string |                                             |\n| replace    | string           | May be empty to delete the text             |\n| matchCase  | boolean          | Default false                               |\n| slideIndex | integer          | Restrict to one page                        |\n| elementId  | string           | Restrict to one element (with `slideIndex`) |\n| firstOnly  | boolean          | Replace only the first match                |\n\n```json\n{ "op": "findReplace", "find": "2023", "replace": "2024" }\n```\n\n```json\n{\n  "op": "findReplace",\n  "find": "Acme Corp",\n  "replace": "Acme Corporation",\n  "matchCase": true,\n  "slideIndex": 0\n}\n```\n\nCommon mistakes\n\n- Expecting a report of zero changes: the op fails when nothing matched, so a "not found" error is normal feedback, not a fault.\n\n### applyHeaderFooter\n\n`{settings:{footer?,slideNum?,date?,dateAuto?}} \u2014 every slide`\n\nFooter text, slide numbers and date on every page (through the master\'s\nplaceholders).\n\n| Field             | Type             | Notes                                         |\n| ----------------- | ---------------- | --------------------------------------------- |\n| settings.footer   | string or `null` | `null` or empty hides the footer              |\n| settings.slideNum | boolean          | Show page numbers                             |\n| settings.date     | string or `null` | Fixed date text; `null` or empty hides it     |\n| settings.dateAuto | boolean          | Dynamic date field that updates in PowerPoint |\n\n```json\n{\n  "op": "applyHeaderFooter",\n  "settings": { "footer": "Acme Corporation - Confidential", "slideNum": true }\n}\n```\n\nCommon mistakes\n\n- Re-sending identical settings: the op reports "nothing changed" as an error; skip it when the values are already in place.\n\n### setSections\n\n`{sections:[{id,name,slideIndices},\u2026]} \u2014 full replace`\n\nReplaces the whole section list. Each section lists the 0-based indices of its\nslides in order; every slide should belong to exactly one section. Ids are\nGUIDs in braces; reuse existing ids to keep a section\'s identity, mint a new\nGUID for a new one.\n\n```json\n{\n  "op": "setSections",\n  "sections": [\n    { "id": "SECTION_ID", "name": "Introduction", "slideIndices": [0] },\n    { "id": "{6F1D2B0A-4C3E-4F58-9A21-0D7E5B3C9A11}", "name": "Details", "slideIndices": [1] }\n  ]\n}\n```\n\nRelated: `addSection`, `renameSection`, `removeSection`, `moveSection` for single changes.\n\n### applyTheme\n\n`{name,colors:{dk1?,lt1?,dk2?,lt2?,accent1?..accent6?,hlink?,folHlink?},majorFont?,minorFont?} \u2014 "#RRGGBB" slots, whole deck`\n\nRewrites the theme color scheme (and optionally the heading/body fonts) of the\nwhole deck, remapping explicit colors that matched the old scheme. Pages\nwithout their own background get the new `lt1` color.\n\n| Field     | Type                                  | Notes                                                                                                  |\n| --------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------ |\n| name      | non-empty string                      | Theme name written into the file                                                                       |\n| colors    | object of scheme slots to `"#RRGGBB"` | Slots: `dk1`, `lt1`, `dk2`, `lt2`, `accent1`..`accent6`, `hlink`, `folHlink`; six hex digits, no alpha |\n| majorFont | string                                | Heading font                                                                                           |\n| minorFont | string                                | Body font                                                                                              |\n\n```json\n{\n  "op": "applyTheme",\n  "name": "Ocean",\n  "colors": {\n    "dk1": "#0B1F3A",\n    "lt1": "#FFFFFF",\n    "dk2": "#1F3B5C",\n    "lt2": "#E8F0FE",\n    "accent1": "#1A73E8",\n    "accent2": "#34A853",\n    "accent3": "#FBBC04",\n    "accent4": "#EA4335",\n    "accent5": "#9AA0A6",\n    "accent6": "#5F6368",\n    "hlink": "#1A73E8",\n    "folHlink": "#7B1FA2"\n  },\n  "majorFont": "Georgia",\n  "minorFont": "Calibri"\n}\n```\n\nCommon mistakes\n\n- Alpha in scheme colors (`"#RRGGBBAA"`): theme slots take six hex digits only.\n- Passing `colors` as an array: it is a slot-to-color object.\n\n### addSection\n\n`{atSlideIndex,name}`\n\nStarts a new section at the given slide (that slide and the following ones up to\nthe next section move into it).\n\n```json\n{ "op": "addSection", "atSlideIndex": 1, "name": "Appendix" }\n```\n\n### renameSection\n\n`{id,name}`\n\n```json\n{ "op": "renameSection", "id": "SECTION_ID", "name": "Overview" }\n```\n\n### removeSection\n\n`{id} \u2014 keeps the slides`\n\nRemoves the section header; its slides join the previous section.\n\n```json\n{ "op": "removeSection", "id": "SECTION_ID" }\n```\n\n### moveSection\n\n`{id,dir:"up"|"down"}`\n\nSwaps the section (with all its slides) with its neighbor.\n\n```json\n{ "op": "moveSection", "id": "SECTION_ID", "dir": "down" }\n```\n';
 
 // vendor/genoffice/packages/pptx-ops/src/op-docs.ts
@@ -70600,7 +70950,7 @@ var ctx;
 var MAX_READ_BYTES = 200 * 1024 * 1024;
 function samePath(a, b) {
   try {
-    return resolvePath(a) === resolvePath(b);
+    return resolvePath2(a) === resolvePath2(b);
   } catch {
     return a === b;
   }
@@ -70713,7 +71063,7 @@ function waitMcpReady(path, timeoutMs) {
       remove();
       reject(
         new Error(
-          `the viewer did not finish opening ${basename(path)} within ${Math.round(timeoutMs / 1e3)}s \u2014 is the file still readable?`
+          `the viewer did not finish opening ${basename2(path)} within ${Math.round(timeoutMs / 1e3)}s \u2014 is the file still readable?`
         )
       );
     }, timeoutMs);
@@ -70781,12 +71131,12 @@ function mcpCommand(command, payload, timeoutMs = 12e4) {
 }
 __name(mcpCommand, "mcpCommand");
 async function readOfficeBytes(path) {
-  const info = await stat(path).catch(() => null);
+  const info = await stat2(path).catch(() => null);
   if (!info || !info.isFile()) throw new Error(`not a file: ${path}`);
   if (info.size > MAX_READ_BYTES) {
     throw new Error(`file too large for the engine (${Math.round(info.size / 1e6)}MB > ${MAX_READ_BYTES / 1e6}MB)`);
   }
-  return new Uint8Array(await readFile2(path));
+  return new Uint8Array(await readFile3(path));
 }
 __name(readOfficeBytes, "readOfficeBytes");
 async function writeOfficeBytes(path, bytes, expectedMtime) {
@@ -70809,7 +71159,7 @@ var docCard = /* @__PURE__ */ __name((filePath, opCount, ext) => ({
       component: "Row",
       props: { gap: 2 },
       children: [
-        { component: "Text", props: { text: basename(filePath), weight: "bold" } },
+        { component: "Text", props: { text: basename2(filePath), weight: "bold" } },
         { component: "Badge", props: { text: ext.toUpperCase() } }
       ]
     },
@@ -70854,6 +71204,68 @@ Call office_guide again with { group } for one group's field tables and examples
   );
 }
 __name(toolGuide, "toolGuide");
+function stamp(ms) {
+  const d = new Date(ms);
+  const p = /* @__PURE__ */ __name((n) => String(n).padStart(2, "0"), "p");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+__name(stamp, "stamp");
+async function toolSearch(p) {
+  const root = String(p.root ?? "").trim();
+  if (!root) throw new Error("files_search: root is required (the workspace directory to search)");
+  const query = String(p.query ?? "").trim();
+  const rawLimit = Number(p.limit);
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 20;
+  const { index: index2, rows } = await searchWorkspace(root, ctx.dataDir, query, limit);
+  const heading = query ? `${rows.length} match(es) for "${query}" in ${index2.root} \u2014 ${index2.total} document(s) indexed` : `${rows.length} most recently modified document(s) in ${index2.root} \u2014 ${index2.total} indexed`;
+  const lines = rows.flatMap((row) => {
+    const facts = `  ${row.path}  [${row.ext}]  ${stamp(row.mtimeMs)}${row.title ? `  ${row.title}` : ""}`;
+    return row.snippet ? [facts, `      ${row.snippet}`] : [facts];
+  });
+  const notes = [];
+  if (rows.length === 0) {
+    notes.push(
+      "Nothing matched. The index covers docx/docm/pptx/pptm/xlsx/xlsm/md/txt/csv, including their opening body text (PDF is title-only). Try fewer words, a folder name, or an empty query to list the newest documents."
+    );
+  }
+  if (index2.pending > 0) {
+    notes.push(`${index2.pending} file(s) still have no extracted title \u2014 call again to continue indexing.`);
+  }
+  if (index2.truncated) {
+    notes.push(
+      "The scan hit its size/time limit, so some folders were not indexed. Pass a narrower workspace folder if the document you need is not here."
+    );
+  }
+  if (rows.length > 0) {
+    notes.push(
+      "Open the chosen file with office_read (docx/pptx/xlsx) or the read tool (md/txt/csv). PDFs can be shown in the viewer, but their text cannot be read yet. This index is a cache and the path is the truth."
+    );
+  }
+  return text(
+    `${heading}
+${lines.join("\n")}${notes.length ? `
+
+${notes.join("\n")}` : ""}`,
+    {
+      root: index2.root,
+      query,
+      total: index2.total,
+      pending: index2.pending,
+      truncated: index2.truncated,
+      indexedAt: index2.scannedAt,
+      results: rows.map((row) => ({
+        path: row.path,
+        relPath: row.relPath,
+        ext: row.ext,
+        size: row.size,
+        mtime: row.mtimeMs,
+        title: row.title,
+        snippet: row.snippet
+      }))
+    }
+  );
+}
+__name(toolSearch, "toolSearch");
 async function toolRead(p, sessionId) {
   const path = String(p.path ?? "");
   if (!path) throw new Error("office_read: path is required");
@@ -70915,7 +71327,7 @@ async function toolEdit(p, sessionId) {
   const dryRun = p.dryRun === true;
   const ext = path.toLowerCase().split(".").pop();
   if (ext === "xlsx") {
-    const info2 = await stat(path);
+    const info2 = await stat2(path);
     const bytes2 = await readOfficeBytes(path);
     const cellOps = ops;
     if (dryRun) {
@@ -70958,7 +71370,7 @@ ${plan}`, {
       });
     }
     if (saved?.ok !== true) throw new Error(`office_edit: the document could not be saved to ${path}`);
-    const info2 = await stat(path).catch(() => null);
+    const info2 = await stat2(path).catch(() => null);
     return {
       ...text(`applied ${ops.length} op(s) to ${path} and saved`, {
         applied: true,
@@ -70972,7 +71384,7 @@ ${plan}`, {
   if (ext !== "pptx") {
     return text(`office_edit: "${ext}" is not wired yet \u2014 pptx, xlsx and docx are. Do not retry; this format has no structural editing yet.`);
   }
-  const info = await stat(path);
+  const info = await stat2(path);
   const opened = await openPptx(await readOfficeBytes(path));
   const result = runTxn(opened, { dryRun, ops });
   if (result.failures && result.failures.length > 0) {
@@ -71012,6 +71424,8 @@ __name(toolEdit, "toolEdit");
 async function runTool(name, p, call = {}) {
   const sessionId = call.sessionId ?? null;
   switch (name) {
+    case "files_search":
+      return await toolSearch(p);
     case "office_guide":
       return await toolGuide(p);
     case "office_read":
@@ -71123,9 +71537,9 @@ async function onUiRequest(method, params = {}, panelId) {
       return { ok: true };
     }
     case "file.scratchPath": {
-      const dir = join4(tmpdir(), "pi-files-preview");
-      await mkdir(dir, { recursive: true });
-      return { path: join4(dir, `preview-${process.pid}.html`) };
+      const dir = join5(tmpdir(), "pi-files-preview");
+      await mkdir2(dir, { recursive: true });
+      return { path: join5(dir, `preview-${process.pid}.html`) };
     }
     case "file.pickOpenPath": {
       const opened = await ctx.call("dialog.openFile", {
@@ -71154,7 +71568,7 @@ async function onUiRequest(method, params = {}, panelId) {
     }
     case "file.stat": {
       const path = String(params.path ?? "");
-      const info = await stat(path);
+      const info = await stat2(path);
       return { path, size: info.size, mtime: info.mtimeMs };
     }
     case "pdf.save": {
@@ -71162,7 +71576,7 @@ async function onUiRequest(method, params = {}, panelId) {
       if (!path) throw new Error("pdf.save: path is required");
       const { applySaveRequest: applySaveRequest2 } = await Promise.resolve().then(() => (init_save_pdf(), save_pdf_exports));
       const { bytes, ...skips } = await applySaveRequest2(
-        new Uint8Array(await readFile2(path)),
+        new Uint8Array(await readFile3(path)),
         params
       );
       const written = await ctx.call("filesystem.write", {

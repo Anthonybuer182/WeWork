@@ -2,7 +2,7 @@
   "id": "com.pi.files",
   "name": "文件中心",
   "description": "文件中心 — 自包含的 office 引擎（创建/编辑/预览 docx/pptx/xlsx/pdf），基于内置的 GenOffice 引擎（Apache-2.0），无需外部工具或联网安装",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "apiVersion": 5,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -110,6 +110,31 @@
           "required": [
             "path",
             "ops"
+          ]
+        }
+      },
+      {
+        "name": "files_search",
+        "description": "Find documents in a workspace by what they are about. Use it when the user refers to a file without giving its path (\"the Q3 report\", \"the proposal that mentions the budget\"): it matches file names, folders, extracted titles and a short digest of each document's opening text. Returns absolute paths plus the matched snippet. The index re-checks every file before answering, so edits made outside the app are seen.",
+        "readOnly": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "root": {
+              "type": "string",
+              "description": "Absolute path of the workspace directory to search. Usually the session's working directory."
+            },
+            "query": {
+              "type": "string",
+              "description": "A few keywords to match against file names, folder names, document titles and the opening body text — pass keywords, not the user's whole sentence (\"华东 预算\", not \"帮我找那份提过华东预算的文件\"). Every word must appear; case-insensitive. Empty returns the most recently modified documents."
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum entries to return. Defaults to 20."
+            }
+          },
+          "required": [
+            "root"
           ]
         }
       },
