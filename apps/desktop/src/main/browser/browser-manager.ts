@@ -712,13 +712,23 @@ export class BrowserManager {
     // Listen for CDP events
     wc.debugger.on('message', (_event, method: string, params: Record<string, unknown>) => {
       if (method === 'Page.frameNavigated' && params?.frame) {
-        const frame = params.frame as { url?: string; parentId?: string };
+        const frame = params.frame as { id?: string; url?: string; parentId?: string };
         // A new top document invalidates every frame world and ref mapping.
         if (!frame.parentId) {
           t.frameContexts = null;
           t.frameRefBase = null;
           t.refFrames = null;
           t.frameSeq = 0;
+        } else if (frame.id) {
+          // A child frame that navigates gets a NEW execution context; keeping
+          // the old id would make every later frame snapshot fail silently.
+          t.frameContexts?.delete(frame.id);
+          t.frameRefBase?.delete(frame.id);
+          if (t.refFrames) {
+            for (const [ref, fid] of t.refFrames) {
+              if (fid === frame.id) t.refFrames.delete(ref);
+            }
+          }
         }
         const url = frame.url || '';
         if (url && !url.startsWith('about:')) {
@@ -1239,9 +1249,10 @@ export class BrowserManager {
         contextId: ctx,
       });
       // Refs from different documents must not collide — the model passes a
-      // bare [N] and the host routes it by number. Give every frame its own
-      // thousand-number band.
-      const base = 1000 * ++t.frameSeq;
+      // bare [N] and the host routes it by number. Each frame gets a wide
+      // number band: a big main document can hand out refs past 999, which
+      // would otherwise land inside the next frame's range.
+      const base = 100000 * ++t.frameSeq;
       await this.sendCommand(t, 'Runtime.evaluate', {
         expression: `window.__piRefSeq = ${base};`,
         contextId: ctx,
