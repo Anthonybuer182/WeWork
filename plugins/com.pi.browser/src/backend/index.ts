@@ -819,13 +819,19 @@ async function runActStep(
   step: Record<string, unknown>,
   ctx: PluginContext,
   tid?: string,
+  sessionKey?: string | null,
 ): Promise<string> {
   const tabArg = tid ? { tabId: tid } : {};
 
   if (typeof step.click === 'string') {
     const selector = step.click;
     const dialog = step.dialog === 'accept' ? { dialog: 'accept' } : {};
-    const r = await ctx.call<{ clicked: boolean; effect?: string; error?: string }>('browser.click', { selector, ...dialog, ...tabArg });
+    const r = await ctx.call<{ clicked: boolean; effect?: string; error?: string }>('browser.click', {
+      selector,
+      ...dialog,
+      ...(sessionKey ? { sessionId: sessionKey } : {}),
+      ...tabArg,
+    });
     if (r.error || !r.clicked) throw new Error(r.error ?? `点击 "${selector}" 失败`);
     return `点击 "${selector}"${r.effect ? ` · ${r.effect}` : ''}`;
   }
@@ -1838,7 +1844,7 @@ plugin({
         for (let i = 0; i < steps.length; i++) {
           const step = steps[i] && typeof steps[i] === 'object' ? steps[i] : {};
           try {
-            log.push(`${i + 1}. ${await runActStep(step, ctx, tid)}`);
+            log.push(`${i + 1}. ${await runActStep(step, ctx, tid, sessionKey)}`);
           } catch (err) {
             failedAt = i;
             log.push(`${i + 1}. 失败：${err instanceof Error ? err.message : String(err)}`);
@@ -1876,6 +1882,7 @@ plugin({
         const r = await ctx.call<{ clicked: boolean; effect?: string; error?: string }>('browser.click', {
           selector,
           ...(params.dialog === 'accept' ? { dialog: 'accept' } : {}),
+          ...(sessionKey ? { sessionId: sessionKey } : {}),
           ...(tid ? { tabId: tid } : {}),
         });
         return actionResult(`点击 "${selector}"`, r);

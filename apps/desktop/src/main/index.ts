@@ -117,11 +117,16 @@ if (!gotLock) {
     // spawn backend UtilityProcesses, serve pi-plugin:// and expose IPC.
     // Created BEFORE the SDK IPC handlers so plugin tools can be injected
     // into the agent session (customTools).
+    // Permission modes are created below (they need the window for their
+    // approval card), but the plugin kernel is built first. This indirection
+    // lets the browser capability ask for a session's mode at call time.
+    let permissionModeFor: (sessionId: string) => 'default' | 'full' = () => 'default';
     const pluginSystem = new PluginSystem({
       browserManager,
       vlmAnalyzer,
       // chat.send: relay a plugin's message to the renderer, which owns the composer.
       sendToRenderer: (channel, payload) => mainWindow?.webContents.send(channel, payload),
+      getPermissionMode: (sessionId) => permissionModeFor(sessionId),
     });
     // Register IPC handlers BEFORE init completes — the file:// renderer loads
     // in milliseconds in packaged builds, and its first `pi:plugin:list` must
@@ -172,6 +177,7 @@ if (!gotLock) {
       },
     );
     registerPermissionIpc(permissionService);
+    permissionModeFor = (sessionId) => permissionService.getMode(sessionId);
 
     const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {
       customToolsProvider: () => [...hostTools, ...pluginSystem.aggregateTools()],

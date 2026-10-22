@@ -833,12 +833,17 @@ function actionResult(prefix, r, extra = "") {
   return `${prefix}\u6210\u529F${r.effect ? ` \xB7 ${r.effect}` : ""}${extra}`;
 }
 __name(actionResult, "actionResult");
-async function runActStep(step, ctx, tid) {
+async function runActStep(step, ctx, tid, sessionKey) {
   const tabArg = tid ? { tabId: tid } : {};
   if (typeof step.click === "string") {
     const selector = step.click;
     const dialog = step.dialog === "accept" ? { dialog: "accept" } : {};
-    const r = await ctx.call("browser.click", { selector, ...dialog, ...tabArg });
+    const r = await ctx.call("browser.click", {
+      selector,
+      ...dialog,
+      ...sessionKey ? { sessionId: sessionKey } : {},
+      ...tabArg
+    });
     if (r.error || !r.clicked) throw new Error(r.error ?? `\u70B9\u51FB "${selector}" \u5931\u8D25`);
     return `\u70B9\u51FB "${selector}"${r.effect ? ` \xB7 ${r.effect}` : ""}`;
   }
@@ -1661,7 +1666,7 @@ plugin({
         for (let i = 0; i < steps.length; i++) {
           const step = steps[i] && typeof steps[i] === "object" ? steps[i] : {};
           try {
-            log.push(`${i + 1}. ${await runActStep(step, ctx, tid)}`);
+            log.push(`${i + 1}. ${await runActStep(step, ctx, tid, sessionKey)}`);
           } catch (err) {
             failedAt = i;
             log.push(`${i + 1}. \u5931\u8D25\uFF1A${err instanceof Error ? err.message : String(err)}`);
@@ -1692,6 +1697,7 @@ plugin({
         const r = await ctx.call("browser.click", {
           selector,
           ...params.dialog === "accept" ? { dialog: "accept" } : {},
+          ...sessionKey ? { sessionId: sessionKey } : {},
           ...tid ? { tabId: tid } : {}
         });
         return actionResult(`\u70B9\u51FB "${selector}"`, r);

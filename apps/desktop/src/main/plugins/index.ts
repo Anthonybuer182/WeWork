@@ -90,6 +90,7 @@ export class PluginSystem {
     browserManager?: BrowserManager;
     vlmAnalyzer?: VlmAnalyzer;
     sendToRenderer?: (channel: string, payload: unknown) => void;
+    getPermissionMode?: (sessionId: string) => 'default' | 'full';
   }) {
     this.registry = new PluginRegistry({ ...opts, appVersion: app.getVersion() });
     this.capabilityHub = new CapabilityHub({
@@ -98,6 +99,7 @@ export class PluginSystem {
       browserManager: opts?.browserManager,
       vlmAnalyzer: opts?.vlmAnalyzer,
       sendToRenderer: opts?.sendToRenderer,
+      getPermissionMode: opts?.getPermissionMode,
     });
     this.marketplace = new PluginMarketplace(this.registry);
   }

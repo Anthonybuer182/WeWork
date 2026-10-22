@@ -20,6 +20,8 @@ export interface CapabilityDeps {
   vlmAnalyzer?: VlmAnalyzer;
   /** Push a message to the renderer (used by chat.send). */
   sendToRenderer?: (channel: string, payload: unknown) => void;
+  /** The conversation's permission mode (默认 / 完全访问), for dialog policy. */
+  getPermissionMode?: (sessionId: string) => 'default' | 'full';
 }
 
 interface CapabilitySpec {
@@ -38,6 +40,7 @@ export class CapabilityHub {
   private readonly browserManager?: BrowserManager;
   private readonly vlmAnalyzer?: VlmAnalyzer;
   private readonly sendToRenderer?: (channel: string, payload: unknown) => void;
+  private readonly getPermissionMode?: (sessionId: string) => 'default' | 'full';
   private readonly capabilities = new Map<string, CapabilitySpec>();
   /**
    * The tab→conversation map. The host owns it because views live and die
@@ -52,6 +55,7 @@ export class CapabilityHub {
     this.tabRegistry = new TabRegistry(deps.browserManager!);
     this.vlmAnalyzer = deps.vlmAnalyzer;
     this.sendToRenderer = deps.sendToRenderer;
+    this.getPermissionMode = deps.getPermissionMode;
 
     this.registerCapabilities();
   }
@@ -404,12 +408,18 @@ export class CapabilityHub {
     });
     this.capabilities.set('browser.click', {
       permission: 'browser',
-      handler: async ({ params }) =>
-        (await bm()).click(
-          String(params.selector ?? ''),
-          tabIdOf(params),
-          params.dialog === 'accept' ? 'accept' : 'dismiss',
-        ),
+      handler: async ({ params }) => {
+        const explicit =
+          params.dialog === 'accept' || params.dialog === 'dismiss' ? params.dialog : undefined;
+        const sessionId = typeof params.sessionId === 'string' ? params.sessionId : '';
+        // 完全访问 means the user already handed over the whole session, so a
+        // page's confirm() is answered instead of bouncing back for an explicit
+        // retry. In 默认 the dialog stays dismissed — the approval card is
+        // where the user says yes.
+        const fallback =
+          sessionId && this.getPermissionMode?.(sessionId) === 'full' ? 'accept' : 'dismiss';
+        return (await bm()).click(String(params.selector ?? ''), tabIdOf(params), explicit ?? fallback);
+      },
     });
     this.capabilities.set('browser.upload', {
       permission: 'browser',

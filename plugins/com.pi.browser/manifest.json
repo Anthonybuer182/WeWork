@@ -2,7 +2,7 @@
   "id": "com.pi.browser",
   "name": "浏览器自动化",
   "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航;面板地址栏带收藏和历史;网页里划词弹出复合框(引用标签 + 问题输入框,翻译/解释/收藏,回车把问题连同引用发送到对话),翻译与解释由 agent 完成后回显在框内。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
-  "version": "0.9.5",
+  "version": "0.9.7",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -203,7 +203,7 @@
       },
       {
         "name": "browser_click",
-        "description": "Click an element in the built-in browser. Waits up to 5s for the element, scrolls it into view, then clicks. The result reports what changed on the page (new text or a URL change), so you do NOT need to re-check with browser_get_state or browser_evaluate. On failure the result suggests similar elements. If the click opens a confirm(), the dialog is DISMISSED by default and the result says what was asked; pass dialog:\"accept\" ONLY when the user explicitly asked you to confirm — never on your own judgment.",
+        "description": "Click an element in the built-in browser. Waits up to 5s for the element, scrolls it into view, then clicks. The result reports what changed on the page (new text or a URL change), so you do NOT need to re-check with browser_get_state or browser_evaluate. On failure the result suggests similar elements. If the click opens a confirm(), the answer depends on the session permission mode: DISMISSED in 默认 (the user approves risky steps one by one), ACCEPTED in 完全访问 (the user already delegated the session). The result always reports what the dialog asked and what was chosen; pass dialog to override.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -221,7 +221,7 @@
                 "accept",
                 "dismiss"
               ],
-              "description": "How to answer a confirm()/alert() that this click triggers. Default dismiss. Pass accept ONLY when the user explicitly asked to confirm this action."
+              "description": "How to answer a confirm()/alert() raised by this click. Omit it to follow the session permission mode (默认 → dismiss, 完全访问 → accept). Pass accept/dismiss only to override that."
             }
           },
           "required": [
@@ -232,7 +232,7 @@
       },
       {
         "name": "browser_act",
-        "description": "Run several browser steps in one call: click / fill / select / upload / hover / wait. Steps run in order and stop at the first failure; the result lists what each step did plus the page's CURRENT interactive snapshot — that snapshot is authoritative, so do NOT follow up with browser_get_state or browser_evaluate to confirm. Use it for sequences you can already see on the page (fill every field, then submit). Do NOT batch a step whose target only appears after an earlier one — click that first, look, then batch the rest. A click that raises a confirm() is dismissed unless the step sets dialog:\"accept\".",
+        "description": "Run several browser steps in one call: click / fill / select / upload / hover / wait. Steps run in order and stop at the first failure; the result lists what each step did plus the page's CURRENT interactive snapshot — that snapshot is authoritative, so do NOT follow up with browser_get_state or browser_evaluate to confirm. Use it for sequences you can already see on the page (fill every field, then submit). Do NOT batch a step whose target only appears after an earlier one — click that first, look, then batch the rest. A click that raises a confirm() follows the session permission mode (默认 → dismiss, 完全访问 → accept).",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -313,7 +313,7 @@
                       "accept",
                       "dismiss"
                     ],
-                    "description": "Answer a confirm()/alert() raised by this step. Default dismiss; accept only when the user explicitly asked to confirm."
+                    "description": "Answer a confirm()/alert() raised by this step. Omit to follow the session permission mode (默认 → dismiss, 完全访问 → accept)."
                   }
                 },
                 "additionalProperties": false
