@@ -2,7 +2,7 @@
   "id": "com.pi.browser",
   "name": "浏览器自动化",
   "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航;面板地址栏带收藏和历史;网页里划词弹出复合框(引用标签 + 问题输入框,翻译/解释/收藏,回车把问题连同引用发送到对话),翻译与解释由 agent 完成后回显在框内。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
-  "version": "0.9.16",
+  "version": "0.9.19",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -83,13 +83,13 @@
       },
       {
         "name": "browser_recipes",
-        "description": "List recorded shortcut operations (recipes) for favorited sites: the steps, what each step was expected to do, how often it ran, when it last worked. After navigating to a site that mentions saved operations, read them here and run the steps with browser_act.",
+        "description": "List recorded shortcut operations (recipes) for this SITE (registrable domain, so subdomains are included): the steps, what each step was expected to do, how often it ran, when it last worked. After navigating to a site that mentions saved operations, read them here and run the steps with browser_act.",
         "inputSchema": {
           "type": "object",
           "properties": {
             "origin": {
               "type": "string",
-              "description": "Only show recipes for this site, e.g. https://www.bilibili.com"
+              "description": "Only show recipes for this origin or site, e.g. https://search.bilibili.com or bilibili.com"
             }
           },
           "additionalProperties": false

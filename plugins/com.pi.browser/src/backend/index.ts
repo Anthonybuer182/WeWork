@@ -35,6 +35,7 @@
  * of reach); the 划词 switch in the panel footer turns the whole thing off.
  */
 import { plugin, type PluginContext } from '@pi/plugin-sdk';
+import { getDomain } from 'tldts';
 
 /**
  * Loading a page waits on the outside world. The SDK's 30s default is right for
@@ -165,6 +166,10 @@ interface RecipeStep {
 interface Recipe {
   id: string;
   origin: string;
+  /** Registrable domain (bilibili.com) — what a person calls "this site". */
+  site: string;
+  /** Recent pathnames where it succeeded; drives "本页" ranking, never filters. */
+  paths: string[];
   name: string;
   params: number;
   steps: RecipeStep[];
@@ -960,6 +965,38 @@ function originOfUrl(url: string): string {
   }
 }
 
+/**
+ * The site a URL belongs to, by the public suffix list — `bbc.co.uk` is one
+ * site, `a.github.io` is not GitHub. IPs have no registrable domain, so they
+ * fall back to the host. This is for grouping and ranking only; execution
+ * stays on the origin, which is the browser's own trust boundary.
+ */
+function siteOf(url: string): string {
+  const domain = getDomain(url);
+  if (domain) return domain;
+  try {
+    return new URL(url).host;
+  } catch {
+    return '';
+  }
+}
+
+function pathOf(url: string): string {
+  try {
+    return new URL(url).pathname || '/';
+  } catch {
+    return '/';
+  }
+}
+
+/** 0 = exactly this page, 1 = same first path segment, 2 = elsewhere on the site. */
+function pathRank(recipe: Recipe, currentPath: string): number {
+  if (recipe.paths.includes(currentPath)) return 0;
+  const seg = (p: string): string => p.split('/').filter(Boolean)[0] ?? '';
+  if (currentPath !== '/' && recipe.paths.some((p) => seg(p) === seg(currentPath))) return 1;
+  return 2;
+}
+
 /** Favoriting is the consent: only favorited sites keep recipes. */
 function isFavoriteOrigin(origin: string): boolean {
   return !!origin && favorites.some((f) => originOfUrl(f.url) === origin);
@@ -1091,12 +1128,16 @@ async function recordRecipe(
   }
 
   const signature = recipeSignature(steps);
-  const existing = recipes.find((r) => recipeSignature(r.steps) === signature);
+  // Same steps on a DIFFERENT origin are a different operation: #name means
+  // different things on two sites.
+  const existing = recipes.find((r) => r.origin === origin && recipeSignature(r.steps) === signature);
+  const path = pathOf(url ?? '');
   if (existing) {
     existing.steps = steps;
     existing.uses += 1;
     existing.lastOk = Date.now();
     existing.failures = 0;
+    existing.paths = [path, ...existing.paths.filter((p) => p !== path)].slice(0, 3);
     if (name) existing.name = name;
     await save(ctx, RECIPES_KEY, recipes, 'recipes');
     return existing;
@@ -1105,7 +1146,9 @@ async function recordRecipe(
   const recipe: Recipe = {
     id: `r${Date.now().toString(36)}`,
     origin,
-    name: (name ?? '').trim() || `${(title ?? '此站操作').slice(0, 24)}（${steps.length} 步）`,
+    site: siteOf(origin),
+    paths: [path],
+    name: (name ?? '').trim() || (title ?? '此站操作').slice(0, 24),
     params,
     steps,
     uses: 1,
@@ -1185,7 +1228,18 @@ async function loadState(ctx: PluginContext): Promise<void> {
   ]);
   if (Array.isArray(h)) history = h as HistoryEntry[];
   if (Array.isArray(f)) favorites = f as Favorite[];
-  if (Array.isArray(r)) recipes = r as Recipe[];
+  if (Array.isArray(r)) {
+    // Rows written before site/paths existed still load: fill them in.
+    recipes = (r as Recipe[]).map((x) => ({
+      ...x,
+      // Old auto-names carried the step count; display adds it, so strip it.
+      name: String(x.name ?? '').replace(/（\d+ 步）\s*$/, ''),
+      site: x.site || siteOf(x.origin),
+      paths: Array.isArray(x.paths) ? x.paths : [],
+      uses: x.uses ?? 0,
+      failures: x.failures ?? 0,
+    }));
+  }
   if (Array.isArray(c)) clips = c as Clip[];
   const settings = s as { private?: boolean; selPopup?: boolean } | undefined;
   privateMode = Boolean(settings?.private);
@@ -1794,7 +1848,19 @@ plugin({
         return { favorites: found.favorites, history: found.history };
       }
       case 'recipes.list': {
-        return { recipes };
+        const url = String(params.url ?? lastUrl ?? '');
+        const currentSite = siteOf(url);
+        const currentOrigin = originOfUrl(url);
+        const currentPath = pathOf(url);
+        const mine = recipes
+          .filter((r) => !currentSite || r.site === currentSite)
+          .sort(
+            (x, y) =>
+              Number(x.origin !== currentOrigin) - Number(y.origin !== currentOrigin) ||
+              pathRank(x, currentPath) - pathRank(y, currentPath) ||
+              y.lastOk - x.lastOk,
+          );
+        return { recipes: mine, site: currentSite, origin: currentOrigin, path: currentPath };
       }
       case 'recipes.delete': {
         const id = String(params.id ?? '');
@@ -1966,10 +2032,16 @@ plugin({
         if (result?.page?.authKind === 'login') {
           return `${head}\n\n⚠️ 这是一个登录页。登录必须由用户完成（账号密码、短信验证码、扫码都不是 agent 该做的）。请在右侧面板里由用户登录，完成后再继续。`;
         }
-        const site = liveRecipes(originOfUrl(finalUrl));
-        if (site.length === 0) return head;
-        return `${head}\n\n本站有 ${site.length} 个已记录的快捷操作：${site
-          .map((r) => `${r.name}（${r.steps.length} 步）`)
+        const here = pathOf(finalUrl);
+        const nearby = liveRecipes(originOfUrl(finalUrl))
+          .map((r) => ({ r, rank: pathRank(r, here) }))
+          .sort((x, y) => x.rank - y.rank || y.r.lastOk - x.r.lastOk)
+          .slice(0, 5);
+        if (nearby.length === 0) return head;
+        const where = (rank: number): string =>
+          rank === 0 ? '，本页' : rank === 1 ? '，同栏目' : '';
+        return `${head}\n\n本站有 ${nearby.length} 个已记录的快捷操作：${nearby
+          .map(({ r, rank }) => `${r.name}（${r.steps.length} 步${where(rank)}）`)
           .join('、')}。用 browser_recipes 查看步骤，再按 browser_act 执行；某一步的预期对不上就停下自己操作。`;
       }
 
@@ -2289,8 +2361,19 @@ plugin({
       }
 
       case 'browser_recipes': {
-        const origin = params.origin ? originOfUrl(normalizeUrl(String(params.origin))) : '';
-        const site = origin ? recipes.filter((r) => r.origin === origin) : recipes;
+        // Accepts either an origin (https://search.bilibili.com) or a site
+        // (bilibili.com) — a bare host means "everything under that site".
+        const raw = String(params.origin ?? '').trim();
+        let site = recipes;
+        if (raw) {
+          if (raw.includes('://')) {
+            const origin = originOfUrl(normalizeUrl(raw));
+            site = recipes.filter((r) => r.origin === origin);
+          } else {
+            const wanted = siteOf(normalizeUrl(raw));
+            site = recipes.filter((r) => r.site === wanted);
+          }
+        }
         if (site.length === 0) {
           return '还没有记录任何快捷操作。收藏一个站点并在上面成功执行一次 browser_act 后会自动记录。';
         }
@@ -2299,7 +2382,9 @@ plugin({
             .map((r) => {
               const stale = r.failures >= 2 ? ' [已失效]' : '';
               return [
-                `${r.name}（${r.origin}，${r.steps.length} 步，用过 ${r.uses} 次，上次成功 ${formatWhen(r.lastOk)}）${stale}`,
+                `${r.name}（${r.site || r.origin}，${r.paths && r.paths.length ? r.paths.join('、') + ' · ' : ''}${
+                  r.steps.length
+                } 步，用过 ${r.uses} 次，上次成功 ${formatWhen(r.lastOk)}）${stale}`,
                 ...r.steps.map(
                   (st, i) =>
                     `  ${i + 1}. ${st.kind} ${st.target}${st.value ? ` = ${st.value}` : ''}${

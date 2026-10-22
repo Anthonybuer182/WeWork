@@ -10,7 +10,8 @@
     "test:backend": "node scripts/smoke-backend.mjs"
   },
   "dependencies": {
-    "@pi/plugin-sdk": "file:../../packages/plugin-sdk"
+    "@pi/plugin-sdk": "file:../../packages/plugin-sdk",
+    "tldts": "^7.4.19"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",

@@ -132,6 +132,7 @@
        out of the keyboard-highlight indexing (.row → flatItems). */
     .recipe-row { display: flex; align-items: center; gap: 8px; padding: 5px 12px; }
     .recipe-row .row-x { visibility: visible; }
+    .recipe-note { padding: 2px 12px 4px; font-size: 11px; color: hsl(var(--muted-foreground, 217 9% 59%)); }
     .row-x:hover { background: hsl(var(--border, 218 14% 20%)); color: hsl(var(--foreground, 220 21% 92%)); }
     .empty {
       padding: 16px 12px;
@@ -628,6 +629,8 @@
         favorites: [],   // last omnibox.search answer
         history: [],
         recipes: [],     // recorded operations for the CURRENT site
+        recipeSite: '',  // registrable domain those recipes belong to
+        recipeOrigin: '',
         active: -1,      // highlighted row across both sections
         tabs: [],        // this conversation's tabs (mirror of the backend)
         activeTabId: '',
@@ -668,7 +671,9 @@
         // textContent here would erase the icon.
         btnStar.classList.toggle('on', state.favorited);
         btnStar.setAttribute('aria-pressed', state.favorited ? 'true' : 'false');
-        btnStar.title = state.favorited ? '取消收藏' : '收藏此页';
+        btnStar.title = state.favorited
+          ? '取消收藏（本站已记录的快捷方式会保留，可在地址栏删除）'
+          : '收藏此页（收藏后本站重复的操作会记成快捷方式）';
       }
 
       // ── Omnibox ──
@@ -703,12 +708,12 @@
           .catch(function () {});
         // Recipes belong to the site on screen, so they are fetched alongside
         // and filtered here — the omnibox query itself is about addresses.
-        window.piSDK.request('recipes.list', {})
+        window.piSDK.request('recipes.list', { url: state.url })
           .then(function (rr) {
             if (seq !== searchSeq) return;
-            var origin = '';
-            try { origin = new URL(state.url).origin; } catch (e) {}
-            state.recipes = ((rr && rr.recipes) || []).filter(function (r) { return r.origin === origin; });
+            state.recipes = (rr && rr.recipes) || [];
+            state.recipeSite = (rr && rr.site) || '';
+            state.recipeOrigin = (rr && rr.origin) || '';
             renderList();
           })
           .catch(function () {});
@@ -732,20 +737,26 @@
           }
         }
         if (state.recipes.length) {
-          rows.push('<div class="sec">⚡ 本站配方</div>');
+          rows.push('<div class="sec">⚡ ' + esc(state.recipeSite || '本站') + ' 配方</div>');
           for (i = 0; i < state.recipes.length; i++) {
             var rec = state.recipes[i];
             var stale = rec.failures >= 2 ? ' · 已失效' : '';
+            var host = rec.origin !== state.recipeOrigin ? esc(rec.origin.replace(/^https?:\/\//, '')) + ' · ' : '';
             rows.push(
               '<div class="recipe-row">' +
                 '<div class="row-main">' +
                   '<div class="row-title">' + esc(rec.name) + '</div>' +
-                  '<div class="row-url">' + rec.steps.length + ' 步 · 用过 ' + rec.uses + ' 次' + stale + '</div>' +
+                  '<div class="row-url">' + host + rec.steps.length + ' 步 · 用过 ' + rec.uses + ' 次' + stale + '</div>' +
                 '</div>' +
                 '<button class="row-x" data-recipe="' + esc(rec.id) + '" title="删除这条配方">✕</button>' +
               '</div>'
             );
           }
+        }
+        // Consent is shown where the recipes appear: this is what favoriting
+        // turned on, and where it can be undone.
+        if (state.favorited) {
+          rows.push('<div class="recipe-note">已收藏本站：成功完成的操作会自动记成快捷方式，条目可在上方删除。</div>');
         }
         if (!rows.length) {
           rows.push('<div class="empty">' +
