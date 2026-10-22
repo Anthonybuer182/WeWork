@@ -830,7 +830,16 @@ let titleTimer: ReturnType<typeof setTimeout> | null = null;
  * arriving while the initial read is still in flight would otherwise be folded
  * into an empty list and then wiped by the load finishing behind it.
  */
-let loaded: Promise<void> = Promise.resolve();
+/**
+ * Plugin state is read once, on first use. It used to start as a RESOLVED
+ * promise, so a panel request racing plugin init saw empty history/recipes
+ * and then never asked again. The first caller now performs the load.
+ */
+let loadPromise: Promise<void> | null = null;
+function ensureLoaded(ctx: PluginContext): Promise<void> {
+  if (!loadPromise) loadPromise = loadState(ctx);
+  return loadPromise;
+}
 
 // ── Small helpers ────────────────────────────────────────────────────────
 
@@ -1621,7 +1630,7 @@ async function setSelPopup(ctx: PluginContext, on: boolean): Promise<void> {
 
 plugin({
   async onInit(ctx) {
-    loaded = loadState(ctx);
+    await ensureLoaded(ctx);
     // Seed from the engine so a panel mounted before the first host event
     // still shows the right address.
     try {
@@ -1635,7 +1644,7 @@ plugin({
   async onPanelMounted(panelId, _params, ctx, meta) {
     mountedPanels.add(panelId);
     panelSession = meta?.sessionId ?? panelSession;
-    await loaded;
+    await ensureLoaded(ctx);
     // The popup only matters while someone can see the page — and the poll
     // that carries its clicks back is what "someone is looking" buys.
     syncPoll(ctx);
@@ -1665,7 +1674,7 @@ plugin({
 
   async onRequest(panelId, method, params, ctx) {
     void panelId;
-    await loaded;
+    await ensureLoaded(ctx);
     // The panel serves the conversation on screen; its tab actions go to that
     // bucket. A nav with an empty bucket must CREATE the conversation's tab —
     // falling through to the manager's active tab would navigate whatever
@@ -1949,14 +1958,14 @@ plugin({
     if (event === 'session.changed') {
       // The conversation on screen changed: mirror its bucket and repaint.
       panelSession = d.sessionId ?? null;
-      await loaded;
+      await ensureLoaded(ctx);
       await syncBucket(ctx);
       return;
     }
     if (event === 'browser.tabOpened') {
       // A popup became a tab — in the opener's conversation. The host already
       // created it; record it here so the strip shows it.
-      await loaded;
+      await ensureLoaded(ctx);
       const tabId = String(d.tabId ?? '');
       if (!tabId) return;
       const key = bucketKey((d as { sessionId?: string }).sessionId);
@@ -1968,7 +1977,7 @@ plugin({
       return;
     }
     if (event !== 'browser.urlChanged') return;
-    await loaded;
+    await ensureLoaded(ctx);
     const tabId = String(d.tabId ?? '');
     const url = String(d.url ?? '');
     if (!url) return;

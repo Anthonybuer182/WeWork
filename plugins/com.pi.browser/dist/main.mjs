@@ -1667,7 +1667,12 @@ var injectTimer = null;
 var pendingNote = null;
 var lastRecordedKey = "";
 var titleTimer = null;
-var loaded = Promise.resolve();
+var loadPromise = null;
+function ensureLoaded(ctx) {
+  if (!loadPromise) loadPromise = loadState(ctx);
+  return loadPromise;
+}
+__name(ensureLoaded, "ensureLoaded");
 function describe2(err) {
   return err instanceof Error ? err.message : String(err);
 }
@@ -2286,7 +2291,7 @@ async function setSelPopup(ctx, on) {
 __name(setSelPopup, "setSelPopup");
 plugin({
   async onInit(ctx) {
-    loaded = loadState(ctx);
+    await ensureLoaded(ctx);
     try {
       const state = await ctx.call("browser.getUrl");
       if (state?.url) lastUrl = state.url;
@@ -2296,7 +2301,7 @@ plugin({
   async onPanelMounted(panelId, _params, ctx, meta) {
     mountedPanels.add(panelId);
     panelSession = meta?.sessionId ?? panelSession;
-    await loaded;
+    await ensureLoaded(ctx);
     syncPoll(ctx);
     await syncBucket(ctx);
     scheduleInject(ctx);
@@ -2316,7 +2321,7 @@ plugin({
     }
   },
   async onRequest(panelId, method, params, ctx) {
-    await loaded;
+    await ensureLoaded(ctx);
     const key = bucketKey();
     switch (method) {
       case "nav.open": {
@@ -2572,12 +2577,12 @@ plugin({
     const d = data ?? {};
     if (event === "session.changed") {
       panelSession = d.sessionId ?? null;
-      await loaded;
+      await ensureLoaded(ctx);
       await syncBucket(ctx);
       return;
     }
     if (event === "browser.tabOpened") {
-      await loaded;
+      await ensureLoaded(ctx);
       const tabId2 = String(d.tabId ?? "");
       if (!tabId2) return;
       const key = bucketKey(d.sessionId);
@@ -2589,7 +2594,7 @@ plugin({
       return;
     }
     if (event !== "browser.urlChanged") return;
-    await loaded;
+    await ensureLoaded(ctx);
     const tabId = String(d.tabId ?? "");
     const url = String(d.url ?? "");
     if (!url) return;
