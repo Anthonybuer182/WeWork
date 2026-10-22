@@ -1735,18 +1735,25 @@ plugin({
         // Open on the conversation's focused tab; create one when it has none
         // (a fresh conversation's first navigate is its first tab).
         const tab = tid ? { id: tid } : await ensureTab(ctx, bucketKey(sessionKey));
-        const result = await ctx.call<{ url?: string; title?: string }>(
-          'browser.navigate',
-          { url, tabId: tab.id },
-          { timeoutMs: NAVIGATE_TIMEOUT_MS },
-        );
+        const result = await ctx.call<{
+          url?: string;
+          title?: string;
+          page?: { authKind?: 'captcha' | 'login' | null };
+        }>('browser.navigate', { url, tabId: tab.id }, { timeoutMs: NAVIGATE_TIMEOUT_MS });
         const finalUrl = result?.url ?? url;
         // Keep the mirror row in step (the urlChanged event does it too, but
         // the direct answer is here now).
         const row = bucketFor(bucketKey(sessionKey)).tabs.find((t) => t.id === tab.id);
         if (row) row.url = finalUrl;
         pushTabs(ctx);
-        return `已打开 ${finalUrl}${result?.title ? ` — ${result.title}` : ''}`;
+        const head = `已打开 ${finalUrl}${result?.title ? ` — ${result.title}` : ''}`;
+        if (result?.page?.authKind === 'captcha') {
+          return `${head}\n\n⚠️ 这个页面需要人工完成人机验证。请在右侧浏览器面板里由用户完成；不要尝试点击或绕过。用户完成后再继续。`;
+        }
+        if (result?.page?.authKind === 'login') {
+          return `${head}\n\n⚠️ 这是一个登录页。登录必须由用户完成（账号密码、短信验证码、扫码都不是 agent 该做的）。请在右侧面板里由用户登录，完成后再继续。`;
+        }
+        return head;
       }
 
       case 'browser_tab_list': {

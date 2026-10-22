@@ -23,6 +23,12 @@ export interface PageAnalysis {
   hasForm: boolean;
   /** Human-readable summary of page state, e.g. "Gate page with low-risk action(s): '登录'. Safe to auto-click." */
   summary: string;
+  /**
+   * Human-only gates. 'captcha' asserts a person is present; 'login' asserts
+   * whose account this is. The agent must hand these back to the user rather
+   * than clicking or typing through them.
+   */
+  authKind?: 'captcha' | 'login' | null;
 }
 
 /** Result of a single navigation step in a walk. */
@@ -142,6 +148,15 @@ class BrowserTab {
     }
   }
 }
+
+/** Returned instead of typing into a password field. */
+const PASSWORD_REFUSAL = (selector: string) => ({
+  selector,
+  value: '',
+  error:
+    '密码字段必须由用户本人填写——认证动作（登录、验证码）不由 agent 完成。' +
+    '请在右侧浏览器面板里由用户登录，完成后再继续。',
+});
 
 /** What the page looked like around an action, for the "what happened" line. */
 export interface PageProbe {
@@ -824,7 +839,11 @@ export class BrowserManager {
     if (!t.alive()) return;
     try {
       // Inject the helpers (idempotent — checks window.__piHelpers)
-      wc.executeJavaScript(BROWSER_HELPERS_JS).catch(() => {});
+      wc.executeJavaScript(BROWSER_HELPERS_JS).catch((err) => {
+        // A syntax error in the helpers used to vanish here, leaving every
+        // page without a snapshot or resolver. Never swallow it silently.
+        console.error('[BrowserManager] helper injection failed:', err);
+      });
       // Also inject window.open override
       wc.executeJavaScript(`
         if (!window.__pi_open_override) {
@@ -1034,7 +1053,9 @@ export class BrowserManager {
       let page = await this.analyzePage(t);
 
       // Auto-handle gate pages: click low-risk actions (login, agree, confirm, etc.)
-      if (autoHandleGate) {
+      // Never click through a human-verification or login gate: those exist to
+      // prove a person is here, and the agent must not stand in for one.
+      if (autoHandleGate && !page.authKind) {
         let retries = 0;
         while (page.pageState === 'gate' && retries < maxGateRetries) {
           const lowRiskAction = page.coreActions.find((a) => a.risk === 'low');
@@ -1539,6 +1560,32 @@ export class BrowserManager {
   }
 
   /** Click an element by selector. Supports CSS, :has-text(), role=, text=, and [N] ref. */
+  /**
+   * A password input is a credential the agent must never type. Authentication
+   * is the user's act: a CAPTCHA proves a person is present, a login asserts
+   * whose account this is. Enforced here, not just asked for in a description —
+   * a model that ignores the warning must not be able to proceed.
+   */
+  private async isPasswordField(t: BrowserTab, selector: string, frameId: string | null): Promise<boolean> {
+    const expr = `(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el || el.tagName !== 'INPUT') return false;
+      var type = String(el.type || '').toLowerCase();
+      var ac = String(el.getAttribute('autocomplete') || '').toLowerCase();
+      return type === 'password' || ac === 'current-password' || ac === 'new-password';
+    })()`;
+    try {
+      if (frameId) return (await this.evaluateInFrame(t, frameId, expr)) === true;
+      const r = await this.sendCommand(t, 'Runtime.evaluate', {
+        expression: this.buildExpression(expr),
+        returnByValue: true,
+      });
+      return (r as { result?: { value?: boolean } })?.result?.value === true;
+    } catch {
+      return false;
+    }
+  }
+
   /** Cheap before/after view of the page, used to say what an action did. */
   private async probe(t: BrowserTab): Promise<PageProbe | undefined> {
     try {
@@ -1692,6 +1739,7 @@ export class BrowserManager {
   ): Promise<{ selector: string; value: string; effect?: string; error?: string }> {
     const ctx = await this.frameContext(t, frameId);
     if (!ctx) return { selector, value, error: '无法进入该 iframe' };
+    if (await this.isPasswordField(t, selector, frameId)) return PASSWORD_REFUSAL(selector);
     const focusExpr = `(function(){
       var el=window.piResolveSelector(${JSON.stringify(selector)});
       if(!el) return null;
@@ -1981,6 +2029,7 @@ export class BrowserManager {
     const frameId = this.frameForSelector(t, selector);
     if (frameId) return this.fillInFrame(t, selector, value, frameId);
     const found = await this.waitForElement(selector, 5000, t);
+    if (await this.isPasswordField(t, selector, null)) return PASSWORD_REFUSAL(selector);
     if (!found) {
       return { selector, value, error: `Element not found: "${selector}"` };
     }

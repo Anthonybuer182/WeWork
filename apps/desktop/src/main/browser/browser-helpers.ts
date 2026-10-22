@@ -1129,6 +1129,28 @@ export const BROWSER_HELPERS_JS = `
       'form, input[type="text"], input[type="email"], input[type="password"]'
     ).length > 0;
 
+    // ── Human verification / login gate ──
+    // A CAPTCHA asserts that a person is present; a login asserts whose
+    // account this is. Neither is the agent's to complete — it hands the page
+    // back to the user instead of trying to click or type through it.
+    var authKind = null;
+    var fullText = (document.body && document.body.innerText || '').slice(0, 2000);
+    var headText = ((document.title || '') + ' ' + fullText).toLowerCase();
+    var challengeRe = /just a moment|verify you are (a )?human|checking your browser|enable javascript and cookies|\u4eba\u673a\u9a8c\u8bc1|\u5b89\u5168\u9a8c\u8bc1|\u6ed1\u52a8\u9a8c\u8bc1|\u62d6\u52a8\u6ed1\u5757|\u5b8c\u6210\u9a8c\u8bc1|\u9a8c\u8bc1\u8eab\u4efd|cf-challenge|challenge-platform/;
+    if (challengeRe.test(headText) ||
+        document.querySelector('#challenge-form, .cf-browser-verification, iframe[src*="challenges.cloudflare.com"]')) {
+      authKind = 'captcha';
+    } else if (
+      document.querySelector('input[type="password"]') ||
+      (pageState === 'gate' &&
+        /sign in|log in|login|sign up|register|\u767b\u5f55|\u6ce8\u518c|\u626b\u7801|\u9a8c\u8bc1\u7801|authentication/.test(headText))
+    ) {
+      // A password field IS an authentication form wherever it appears (a
+      // settings page that changes a password is equally the user's job).
+      // Login flows without one (QR, SSO) are caught by the gate + wording rule.
+      authKind = 'login';
+    }
+
     // ── Generate summary ──
     var summary = '';
     if (pageState === 'gate') {
@@ -1156,12 +1178,19 @@ export const BROWSER_HELPERS_JS = `
       summary = 'Page appears empty (no visible interactive elements). May be loading or require JS execution.';
     }
 
+    if (authKind === 'captcha') {
+      summary = 'This page is a human-verification challenge. It must be completed by the user, not the agent.';
+    } else if (authKind === 'login') {
+      summary = "This page is a login form. Signing in is the user's action, not the agent's.";
+    }
+
     return {
       pageState: pageState,
       elementCount: visible.length,
       coreActions: coreActions,
       hasForm: hasForm,
-      summary: summary
+      summary: summary,
+      authKind: authKind
     };
   };
 

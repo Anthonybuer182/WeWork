@@ -1578,16 +1578,23 @@ plugin({
       case "browser_navigate": {
         const url = normalizeUrl(params.url);
         const tab = tid ? { id: tid } : await ensureTab(ctx, bucketKey(sessionKey));
-        const result = await ctx.call(
-          "browser.navigate",
-          { url, tabId: tab.id },
-          { timeoutMs: NAVIGATE_TIMEOUT_MS }
-        );
+        const result = await ctx.call("browser.navigate", { url, tabId: tab.id }, { timeoutMs: NAVIGATE_TIMEOUT_MS });
         const finalUrl = result?.url ?? url;
         const row = bucketFor(bucketKey(sessionKey)).tabs.find((t) => t.id === tab.id);
         if (row) row.url = finalUrl;
         pushTabs(ctx);
-        return `\u5DF2\u6253\u5F00 ${finalUrl}${result?.title ? ` \u2014 ${result.title}` : ""}`;
+        const head = `\u5DF2\u6253\u5F00 ${finalUrl}${result?.title ? ` \u2014 ${result.title}` : ""}`;
+        if (result?.page?.authKind === "captcha") {
+          return `${head}
+
+\u26A0\uFE0F \u8FD9\u4E2A\u9875\u9762\u9700\u8981\u4EBA\u5DE5\u5B8C\u6210\u4EBA\u673A\u9A8C\u8BC1\u3002\u8BF7\u5728\u53F3\u4FA7\u6D4F\u89C8\u5668\u9762\u677F\u91CC\u7531\u7528\u6237\u5B8C\u6210\uFF1B\u4E0D\u8981\u5C1D\u8BD5\u70B9\u51FB\u6216\u7ED5\u8FC7\u3002\u7528\u6237\u5B8C\u6210\u540E\u518D\u7EE7\u7EED\u3002`;
+        }
+        if (result?.page?.authKind === "login") {
+          return `${head}
+
+\u26A0\uFE0F \u8FD9\u662F\u4E00\u4E2A\u767B\u5F55\u9875\u3002\u767B\u5F55\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210\uFF08\u8D26\u53F7\u5BC6\u7801\u3001\u77ED\u4FE1\u9A8C\u8BC1\u7801\u3001\u626B\u7801\u90FD\u4E0D\u662F agent \u8BE5\u505A\u7684\uFF09\u3002\u8BF7\u5728\u53F3\u4FA7\u9762\u677F\u91CC\u7531\u7528\u6237\u767B\u5F55\uFF0C\u5B8C\u6210\u540E\u518D\u7EE7\u7EED\u3002`;
+        }
+        return head;
       }
       case "browser_tab_list": {
         const b = bucketFor(bucketKey(sessionKey));
