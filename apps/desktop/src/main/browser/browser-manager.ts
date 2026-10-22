@@ -327,6 +327,7 @@ export class BrowserManager {
   tabList(): TabInfo[] {
     const live: TabInfo[] = [];
     for (const t of this.tabs.values()) {
+      if (!t.alive()) continue;
       live.push({
         id: t.id,
         url: t.wc.getURL() ?? '',
@@ -603,6 +604,12 @@ export class BrowserManager {
     // the embedded view's surface to go permanently white).
     wc.on('render-process-gone', (_event, details) => {
       console.error('[BrowserManager] render-process-gone:', details.reason, details);
+      // A dead renderer cannot be reused. Leaving the tab in the map makes
+      // every later navigate fail with "Browser tab not available" until the
+      // app restarts; dropping it lets the next navigate create a fresh one.
+      try {
+        this.closeTab(t.id);
+      } catch {}
     });
     wc.on('unresponsive', () => {
       console.warn('[BrowserManager] webContents became unresponsive');
