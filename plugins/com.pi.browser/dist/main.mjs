@@ -1016,8 +1016,15 @@ async function recordRecipe(ctx, rawSteps, effects, url, name, title, tid) {
   }
   if (steps.length === 0) return null;
   for (const st of steps) {
-    if (!st.expect) continue;
-    for (const v of valueMap) st.expect = st.expect.split(v.value).join(v.token);
+    if (st.kind === "fill" && st.value) {
+      st.expect = `\u5DF2\u5199\u5165\uFF0C\u5F53\u524D\u503C\u300C${st.value}\u300D`;
+    } else if (st.kind === "select" && st.value) {
+      st.expect = `\u5DF2\u9009\u4E2D\u300C${st.value}\u300D`;
+    } else if (st.expect) {
+      for (const v of valueMap) {
+        if (v.value.length >= 2) st.expect = st.expect.split(v.value).join(v.token);
+      }
+    }
   }
   const signature = recipeSignature(steps);
   const existing = recipes.find((r) => recipeSignature(r.steps) === signature);
@@ -1833,8 +1840,13 @@ plugin({
         );
         const recipeName = params.recipe ? String(params.recipe).trim() : "";
         if (recipeName) {
-          const known = recipes.find((r) => r.name === recipeName);
-          if (known) {
+          const currentOrigin = originOfUrl(state?.url ?? "");
+          const known = recipes.find(
+            (r) => r.name === recipeName && (!currentOrigin || r.origin === currentOrigin)
+          );
+          const kindOf = /* @__PURE__ */ __name((st) => typeof st.click === "string" ? "click" : st.fill ? "fill" : st.select ? "select" : st.upload ? "upload" : typeof st.hover === "string" ? "hover" : "wait", "kindOf");
+          const sameShape = !!known && steps.length === known.steps.length && steps.every((st, i) => kindOf(st ?? {}) === known.steps[i].kind);
+          if (known && sameShape) {
             if (failedAt < 0) {
               known.uses += 1;
               known.lastOk = Date.now();

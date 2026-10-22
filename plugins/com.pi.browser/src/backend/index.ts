@@ -1074,10 +1074,20 @@ async function recordRecipe(
   }
   if (steps.length === 0) return null;
 
-  // Swap recorded values for their placeholders inside every expectation.
+  // Expectations must survive a different input. Fill/select get a generic
+  // sentence instead of string surgery; page-text effects only swap values
+  // long enough to be unmistakable — a one-character value like "无" would
+  // otherwise rewrite 页面没有明显变化 into nonsense.
   for (const st of steps) {
-    if (!st.expect) continue;
-    for (const v of valueMap) st.expect = st.expect.split(v.value).join(v.token);
+    if (st.kind === 'fill' && st.value) {
+      st.expect = `已写入，当前值「${st.value}」`;
+    } else if (st.kind === 'select' && st.value) {
+      st.expect = `已选中「${st.value}」`;
+    } else if (st.expect) {
+      for (const v of valueMap) {
+        if (v.value.length >= 2) st.expect = st.expect.split(v.value).join(v.token);
+      }
+    }
   }
 
   const signature = recipeSignature(steps);
@@ -2078,8 +2088,30 @@ plugin({
         // retirement (two consecutive failures hide it from the navigate hint).
         const recipeName = params.recipe ? String(params.recipe).trim() : '';
         if (recipeName) {
-          const known = recipes.find((r) => r.name === recipeName);
-          if (known) {
+          const currentOrigin = originOfUrl(state?.url ?? '');
+          const known = recipes.find(
+            (r) => r.name === recipeName && (!currentOrigin || r.origin === currentOrigin),
+          );
+          // The model may CLAIM a recipe while improvising different steps.
+          // Only a same-shape run is that recipe's health: otherwise an
+          // adapted (possibly broken) run would keep resetting its failures.
+          const kindOf = (st: Record<string, unknown>): string =>
+            typeof st.click === 'string'
+              ? 'click'
+              : st.fill
+                ? 'fill'
+                : st.select
+                  ? 'select'
+                  : st.upload
+                    ? 'upload'
+                    : typeof st.hover === 'string'
+                      ? 'hover'
+                      : 'wait';
+          const sameShape =
+            !!known &&
+            steps.length === known.steps.length &&
+            steps.every((st, i) => kindOf(st ?? {}) === known.steps[i].kind);
+          if (known && sameShape) {
             if (failedAt < 0) {
               known.uses += 1;
               known.lastOk = Date.now();
