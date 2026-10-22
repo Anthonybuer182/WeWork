@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>严格表单</title>
+<style>body{font:14px/1.6 system-ui;margin:40px}label{display:block;margin:10px 0 4px}input{width:320px;padding:6px}button{margin-top:14px;padding:6px 16px}#out{margin-top:14px;color:#1565c0}</style>
+<h2>严格表单</h2>
+<label for="strict">姓名（只接受键盘输入）</label><input id="strict" placeholder="姓名">
+<button id="sb">提交</button>
+<div id="out"></div>
+<script>
+const inp=document.getElementById('strict');
+let typed=false, last='';
+inp.addEventListener('keydown',()=>{typed=true;});
+inp.addEventListener('input',()=>{
+  if(!typed){ inp.value=last; return; }   // programmatic writes are rejected
+  last=inp.value;
+});
+document.getElementById('sb').onclick=()=>{document.getElementById('out').textContent='提交成功：'+inp.value;};
+</script>

@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>项目管理</title>
+<style>body{font:14px/1.6 system-ui;margin:40px}button{padding:7px 16px}#dlg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35)}#box{position:absolute;top:30%;left:50%;transform:translateX(-50%);background:#fff;padding:20px 24px;border-radius:8px;width:300px}input{width:100%;padding:7px;box-sizing:border-box;margin:8px 0 12px}#out{margin-top:16px;color:#2e7d32}</style>
+<h2>项目管理</h2>
+<button id="open">新建项目</button>
+<div id="out"></div>
+<div id="dlg"><div id="box"><strong>新建项目</strong><input id="mname" placeholder="项目名称"><button id="ok">确定</button></div></div>
+<script>
+document.getElementById('open').onclick=function(){document.getElementById('dlg').style.display='block';};
+document.getElementById('ok').onclick=function(){
+  document.getElementById('dlg').style.display='none';
+  document.getElementById('out').textContent='已创建：'+document.getElementById('mname').value;
+};
+</script>

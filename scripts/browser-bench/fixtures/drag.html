@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>拖拽上传</title>
+<style>body{font:14px/1.6 system-ui;margin:40px}#zone{width:420px;height:150px;border:2px dashed #90a4ae;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#546e7a}#zone.over{background:#e3f2fd;border-color:#1976d2}#out{margin-top:14px;color:#2e7d32}</style>
+<div id="zone">把文件拖到这里上传</div>
+<div id="out"></div>
+<script>
+const z=document.getElementById('zone');
+['dragenter','dragover'].forEach(e=>z.addEventListener(e,ev=>{ev.preventDefault();z.classList.add('over');}));
+z.addEventListener('dragleave',()=>z.classList.remove('over'));
+z.addEventListener('drop',ev=>{ev.preventDefault();z.classList.remove('over');
+  const f=ev.dataTransfer.files[0];
+  document.getElementById('out').textContent = f?('已上传：'+f.name+'（'+f.size+' 字节）'):'没有拿到文件';
+});
+</script>

@@ -1,0 +1,22 @@
+<!doctype html><meta charset="utf-8"><title>控制台</title>
+<style>body{font:14px/1.6 system-ui;margin:40px}nav a{margin-right:14px;color:#1565c0;cursor:pointer}label{display:block;margin:12px 0 4px}input{width:280px;padding:6px}button{margin-top:12px;padding:6px 16px}#view{margin-top:20px}</style>
+<nav><a id="n-home">首页</a><a id="n-settings">设置</a></nav>
+<div id="view"></div>
+<script>
+function render(){
+  var v=document.getElementById('view');
+  if(location.hash==='#settings'){
+    v.innerHTML='<label>昵称</label><input id="nick" placeholder="昵称"><br><button id="save">保存</button>';
+    document.getElementById('save').onclick=function(){
+      var n=document.getElementById('nick').value;
+      v.textContent='昵称已保存：'+n;
+    };
+  } else {
+    v.textContent='首页：欢迎回来';
+  }
+}
+document.getElementById('n-home').onclick=function(){location.hash='#home';};
+document.getElementById('n-settings').onclick=function(){location.hash='#settings';};
+window.addEventListener('hashchange',render);
+render();
+</script>

@@ -1,0 +1,6 @@
+<!doctype html><meta charset="utf-8"><title>内嵌表单</title>
+<style>body{font:14px/1.6 system-ui;margin:20px}label{display:block;margin:8px 0 4px}input{width:100%;padding:6px;box-sizing:border-box}button{margin-top:12px;padding:6px 16px}#ok{color:#2e7d32;margin-top:10px}</style>
+<label for="xn">收货人</label><input id="xn" placeholder="姓名">
+<button id="xb">保存</button>
+<div id="ok"></div>
+<script>document.getElementById('xb').onclick=()=>{document.getElementById('ok').textContent='已保存：'+document.getElementById('xn').value;};</script>

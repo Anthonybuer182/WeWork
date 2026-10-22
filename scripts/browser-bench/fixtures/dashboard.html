@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><title>工作台</title>
+<style>body{font:14px/1.6 system-ui;margin:60px}h1{color:#1565c0}#out{margin-top:20px;color:#2e7d32}</style>
+<h1>工作台</h1>
+<div id="out"></div>
+<button id="logout">退出登录</button>
+<script>
+var u=new URLSearchParams(location.search).get('user')||'(未知)';
+document.getElementById('out').textContent='欢迎，'+u;
+document.getElementById('logout').onclick=function(){document.getElementById('out').textContent='已退出';};
+</script>

@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>报表中心</title>
+<style>body{font:14px/1.6 system-ui;margin:40px}.nav{position:relative;display:inline-block;padding:8px 14px;background:#eee;border-radius:6px;cursor:pointer}#menu{display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid #ccc;border-radius:6px;min-width:140px;box-shadow:0 4px 12px rgba(0,0,0,.12)}.nav:hover #menu{display:block}#menu div{padding:8px 12px;cursor:pointer}#menu div:hover{background:#f0f0f0}#out{margin-top:40px;color:#1565c0}</style>
+<h2>报表中心</h2>
+<div class="nav">更多操作
+  <div id="menu">
+    <div id="export">导出报告</div>
+    <div id="refresh">刷新数据</div>
+  </div>
+</div>
+<div id="out"></div>
+<script>
+document.getElementById('export').onclick=()=>{document.getElementById('out').textContent='已导出报告';};
+document.getElementById('refresh').onclick=()=>{document.getElementById('out').textContent='已刷新';};
+</script>

@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><title>加载中</title>
+<style>body{font:14px/1.6 system-ui;margin:40px}label{display:block;margin:8px 0 4px}input{width:320px;padding:6px}button{margin-top:12px;padding:6px 16px}#ok{margin-top:12px;color:#2e7d32}</style>
+<h2>月度报表</h2>
+<div id="app">正在加载…</div>
+<script>
+setTimeout(()=>{
+  document.getElementById('app').innerHTML='<label for="sn">报表名称</label><input id="sn" placeholder="名称"><br><button id="sbtn">生成</button><div id="ok"></div>';
+  document.getElementById('sbtn').onclick=()=>{document.getElementById('ok').textContent='已生成：'+document.getElementById('sn').value;};
+},3000);
+</script>

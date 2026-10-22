@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>登录</title>
+<style>body{font:14px/1.6 system-ui;margin:60px;max-width:360px}label{display:block;margin:10px 0 4px}input{width:100%;padding:7px;box-sizing:border-box}button{margin-top:16px;width:100%;padding:9px;background:#1565c0;color:#fff;border:0;border-radius:6px;cursor:pointer}#err{color:#c62828;margin-top:10px}</style>
+<h2>登录</h2>
+<label for="u">账号</label><input id="u" placeholder="账号">
+<label for="p">密码</label><input id="p" type="password" placeholder="密码">
+<button id="b">登 录</button>
+<div id="err"></div>
+<script>
+document.getElementById('b').addEventListener('click',function(){
+  var u=document.getElementById('u').value, p=document.getElementById('p').value;
+  if(!u||!p){document.getElementById('err').textContent='请填写账号和密码';return;}
+  location.href='dashboard.html?user='+encodeURIComponent(u)+'&r='+(new URLSearchParams(location.search).get('r')||'');
+});
+</script>

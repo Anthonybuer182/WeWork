@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>危险操作</title>
+<style>body{font:14px/1.6 system-ui;margin:40px}button{padding:8px 18px;background:#c62828;color:#fff;border:0;border-radius:6px;cursor:pointer}#out{margin-top:16px;color:#2e7d32}</style>
+<h2>批量删除</h2>
+<button id="del">删除全部</button>
+<div id="out"></div>
+<script>
+document.getElementById('del').onclick=()=>{
+  if(confirm('确定删除全部 12 条记录？')){document.getElementById('out').textContent='已删除 12 条记录';}
+  else{document.getElementById('out').textContent='已取消';}
+};
+</script>

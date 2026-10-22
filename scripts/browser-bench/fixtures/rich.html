@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><title>会议纪要</title>
+<style>body{font:14px/1.6 system-ui;margin:40px}#editor{width:480px;min-height:90px;border:1px solid #ccc;border-radius:6px;padding:8px}button{margin-top:12px;padding:6px 16px}#out{margin-top:14px;color:#2e7d32}</style>
+<h2>会议纪要</h2>
+<div id="editor" contenteditable="true" data-placeholder="在这里写纪要"></div>
+<button id="save">保存</button>
+<div id="out"></div>
+<script>
+document.getElementById('save').onclick=function(){
+  var t=document.getElementById('editor').innerText.trim();
+  document.getElementById('out').textContent='已保存：'+t;
+};
+</script>

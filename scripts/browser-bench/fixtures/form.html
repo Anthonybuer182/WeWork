@@ -1,0 +1,21 @@
+<!doctype html><meta charset="utf-8"><title>报销申请</title>
+<style>body{font:14px/1.6 system-ui;margin:40px;max-width:560px}label{display:block;margin:12px 0 4px}input,select,textarea{width:100%;padding:6px;box-sizing:border-box}button{margin-top:16px;padding:8px 18px}#result{display:none;margin-top:16px;padding:10px;background:#e8f5e9;border:1px solid #81c784}</style>
+<h2>报销申请</h2>
+<form id="f">
+  <label for="name">姓名</label><input id="name" name="name" placeholder="请输入姓名">
+  <label for="city">城市</label>
+  <select id="city" name="city"><option value="">请选择</option><option>北京</option><option>上海</option><option>南京</option></select>
+  <label for="memo">备注</label><textarea id="memo" name="memo" rows="3" placeholder="选填"></textarea>
+  <label><input type="checkbox" id="sub" style="width:auto"> 订阅审批通知</label>
+  <button type="submit">提交</button>
+</form>
+<div id="result"></div>
+<script>
+document.getElementById('f').addEventListener('submit',e=>{
+  e.preventDefault();
+  const g=id=>document.getElementById(id).value;
+  const r=document.getElementById('result');
+  r.style.display='block';
+  r.textContent='提交成功：'+g('name')+' / '+g('city')+' / 订阅='+document.getElementById('sub').checked;
+});
+</script>
