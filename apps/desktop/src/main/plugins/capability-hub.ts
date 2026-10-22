@@ -421,6 +421,11 @@ export class CapabilityHub {
         return (await bm()).click(String(params.selector ?? ''), tabIdOf(params), explicit ?? fallback);
       },
     });
+    this.capabilities.set('browser.describe', {
+      permission: 'browser',
+      handler: async ({ params }) =>
+        (await bm()).describe(String(params.selector ?? ''), tabIdOf(params)),
+    });
     this.capabilities.set('browser.upload', {
       permission: 'browser',
       handler: async ({ params }) =>

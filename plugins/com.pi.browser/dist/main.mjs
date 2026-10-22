@@ -1809,30 +1809,12 @@ function liveRecipes(origin) {
 }
 __name(liveRecipes, "liveRecipes");
 async function stabilizeTarget(ctx, tid, selector) {
-  const expr = `(function(){
-    var el = window.piResolveSelector(${JSON.stringify(selector)});
-    if (!el) return '';
-    var tag = el.tagName.toLowerCase();
-    var id = el.getAttribute('id') || '';
-    if (id && !/^(r\\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) return '#' + id;
-    var name = el.getAttribute('name') || '';
-    if (name) return '[name="' + name + '"]';
-    var ph = el.getAttribute('placeholder') || '';
-    if (ph) return 'input[placeholder="' + ph + '"]';
-    var label = el.getAttribute('aria-label') || '';
-    var text = (el.textContent || '').trim().replace(/\\s+/g, ' ');
-    if (label) return tag === 'button' ? 'role=button[name="' + label + '"]' : 'text="' + label + '"';
-    if (tag === 'button' && text && text.length <= 24) return 'role=button[name="' + text + '"]';
-    if (text && text.length <= 24) return 'text="' + text + '"';
-    return ${JSON.stringify(selector)};
-  })()`;
   try {
-    const r = await ctx.call("browser.evaluate", {
-      expression: expr,
+    const r = await ctx.call("browser.describe", {
+      selector,
       ...tid ? { tabId: tid } : {}
     });
-    const value = String(r?.result ?? "");
-    return value || selector;
+    return String(r?.target ?? "") || selector;
   } catch {
     return selector;
   }
@@ -2496,6 +2478,32 @@ plugin({
           (x, y) => Number(x.origin !== currentOrigin) - Number(y.origin !== currentOrigin) || pathRank(x, currentPath) - pathRank(y, currentPath) || y.lastOk - x.lastOk
         );
         return { recipes: mine, site: currentSite, origin: currentOrigin, path: currentPath };
+      }
+      case "recipes.update": {
+        const id = String(params.id ?? "");
+        const target = recipes.find((r) => r.id === id);
+        if (!target) return { ok: false, error: "recipe not found" };
+        const name = String(params.name ?? "").trim();
+        if (name) target.name = name.slice(0, 40);
+        if (Array.isArray(params.steps)) {
+          const allowed = /* @__PURE__ */ new Set(["fill", "select", "click", "upload", "hover", "wait"]);
+          const cleaned = [];
+          for (const raw of params.steps) {
+            const kind = String(raw?.kind ?? "");
+            const stepTarget = String(raw?.target ?? "").trim();
+            if (!allowed.has(kind) || !stepTarget) continue;
+            const value = raw?.value == null ? void 0 : String(raw.value);
+            const expect = raw?.expect == null ? void 0 : String(raw.expect).trim() || void 0;
+            cleaned.push({ kind, target: stepTarget, ...value ? { value } : {}, ...expect ? { expect } : {} });
+          }
+          if (cleaned.length === 0) return { ok: false, error: "empty steps" };
+          target.steps = cleaned;
+          target.params = cleaned.filter((x) => x.kind === "fill" || x.kind === "select").length;
+        }
+        target.failures = 0;
+        await save(ctx, RECIPES_KEY, recipes, "recipes");
+        broadcast(ctx, "ui.recipesChanged", { recipes });
+        return { ok: true };
       }
       case "recipes.delete": {
         const id = String(params.id ?? "");

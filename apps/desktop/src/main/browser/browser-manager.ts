@@ -1586,6 +1586,50 @@ export class BrowserManager {
     }
   }
 
+  /**
+   * Describe an element in a form that survives the next page load: id, then
+   * name/placeholder, then role+name, then visible text — never a ref, which
+   * is a handle into THIS document. Resolves through frames exactly like the
+   * actions do, so a step recorded inside an iframe stays usable.
+   */
+  async describe(selector: string, tabId?: string): Promise<{ target: string }> {
+    const t = this.requireTab(tabId);
+    const expr = `(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return '';
+      var tag = el.tagName.toLowerCase();
+      var id = el.getAttribute('id') || '';
+      if (id && !/^(r\\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) return '#' + id;
+      var name = el.getAttribute('name') || '';
+      if (name) return '[name="' + name + '"]';
+      var ph = el.getAttribute('placeholder') || '';
+      if (ph) return 'input[placeholder="' + ph + '"]';
+      var label = el.getAttribute('aria-label') || '';
+      var text = (el.textContent || '').trim().replace(/\\s+/g, ' ');
+      if (label) return tag === 'button' ? 'role=button[name="' + label + '"]' : 'text="' + label + '"';
+      if (tag === 'button' && text && text.length <= 24) return 'role=button[name="' + text + '"]';
+      if (text && text.length <= 24) return 'text="' + text + '"';
+      return '';
+    })()`;
+    try {
+      const frameId = this.frameForSelector(t, selector);
+      let value: unknown;
+      if (frameId) {
+        value = await this.evaluateInFrame(t, frameId, expr);
+      } else {
+        const r = await this.sendCommand(t, 'Runtime.evaluate', {
+          expression: this.buildExpression(expr),
+          returnByValue: true,
+        });
+        value = (r as { result?: { value?: unknown } })?.result?.value;
+      }
+      const target = typeof value === 'string' ? value.trim() : '';
+      return { target: target || selector };
+    } catch {
+      return { target: selector };
+    }
+  }
+
   /** Cheap before/after view of the page, used to say what an action did. */
   private async probe(t: BrowserTab): Promise<PageProbe | undefined> {
     try {

@@ -133,6 +133,24 @@
     .recipe-row { display: flex; align-items: center; gap: 8px; padding: 5px 12px; }
     .recipe-row .row-x { visibility: visible; }
     .recipe-note { padding: 2px 12px 4px; font-size: 11px; color: hsl(var(--muted-foreground, 217 9% 59%)); }
+    .recipe-edit { padding: 6px 12px 10px; }
+    .re-name-label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: hsl(var(--muted-foreground, 217 9% 59%)); margin-bottom: 6px; }
+    .re-name, .re-target, .re-value, .re-expect {
+      background: transparent; color: inherit; font: inherit; padding: 2px 6px;
+      border: 1px solid hsl(var(--border, 218 14% 20%)); border-radius: 4px; min-width: 0;
+    }
+    .re-name { flex: 1; }
+    .re-steps { display: flex; flex-direction: column; gap: 4px; }
+    .re-step { display: flex; align-items: center; gap: 6px; }
+    .re-kind { width: 44px; flex: none; font-size: 11px; color: hsl(var(--muted-foreground, 217 9% 59%)); }
+    .re-target { flex: 2; }
+    .re-value, .re-expect { flex: 1; }
+    .re-actions { margin-top: 8px; display: flex; gap: 8px; }
+    .re-actions button {
+      padding: 3px 12px; border-radius: 4px; cursor: pointer;
+      border: 1px solid hsl(var(--border, 218 14% 20%)); background: transparent; color: inherit; font: inherit;
+    }
+    .re-actions .re-save { border-color: hsl(var(--ring, 218 100% 65%)); }
     .row-x:hover { background: hsl(var(--border, 218 14% 20%)); color: hsl(var(--foreground, 220 21% 92%)); }
     .empty {
       padding: 16px 12px;
@@ -631,6 +649,7 @@
         recipes: [],     // recorded operations for the CURRENT site
         recipeSite: '',  // registrable domain those recipes belong to
         recipeOrigin: '',
+        editing: null,   // recipe being edited in the dropdown
         active: -1,      // highlighted row across both sections
         tabs: [],        // this conversation's tabs (mirror of the backend)
         activeTabId: '',
@@ -724,6 +743,34 @@
         var rows = [];
         var i;
 
+        // Editing replaces the list: selectors are text, and a text field is
+        // the honest editor for them.
+        if (state.editing) {
+          var ed = state.editing;
+          rows.push('<div class="sec">编辑配方</div>');
+          var stepHtml = '';
+          for (i = 0; i < ed.steps.length; i++) {
+            var st = ed.steps[i];
+            var hasValue = st.kind === 'fill' || st.kind === 'select';
+            stepHtml +=
+              '<div class="re-step" data-kind="' + esc(st.kind) + '">' +
+                '<span class="re-kind">' + esc(st.kind) + '</span>' +
+                '<input class="re-target" value="' + esc(st.target) + '" placeholder="目标: #id / [name=…] / role=… / text=…">' +
+                (hasValue ? '<input class="re-value" value="' + esc(st.value || '') + '" placeholder="值，如 {{1}}">' : '') +
+                '<input class="re-expect" value="' + esc(st.expect || '') + '" placeholder="预期（可空）">' +
+              '</div>';
+          }
+          rows.push(
+            '<div class="recipe-edit" data-id="' + esc(ed.id) + '">' +
+              '<label class="re-name-label">名称<input class="re-name" value="' + esc(ed.name) + '"></label>' +
+              '<div class="re-steps">' + stepHtml + '</div>' +
+              '<div class="re-actions"><button class="re-save">保存</button><button class="re-cancel">取消</button></div>' +
+            '</div>'
+          );
+          list.innerHTML = rows.join('');
+          return;
+        }
+
         if (state.favorites.length) {
           rows.push('<div class="sec">★ 收藏</div>');
           for (i = 0; i < state.favorites.length; i++) {
@@ -748,6 +795,7 @@
                   '<div class="row-title">' + esc(rec.name) + '</div>' +
                   '<div class="row-url">' + host + rec.steps.length + ' 步 · 用过 ' + rec.uses + ' 次' + stale + '</div>' +
                 '</div>' +
+                '<button class="row-x" data-edit="' + esc(rec.id) + '" title="编辑这条配方">✎</button>' +
                 '<button class="row-x" data-recipe="' + esc(rec.id) + '" title="删除这条配方">✕</button>' +
               '</div>'
             );
@@ -821,10 +869,52 @@
 
       // mousedown inside the dropdown must not move focus, or the input's blur
       // would close the list before the click lands (the classic combobox trap).
-      omnibox.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      omnibox.addEventListener('mousedown', function (e) {
+        // The recipe editor holds real inputs — they must be able to focus.
+        if (e.target && e.target.closest && e.target.closest('.recipe-edit')) return;
+        e.preventDefault();
+      });
 
       list.addEventListener('click', function (e) {
         var target = e.target;
+        var eBtn = target.closest ? target.closest('[data-edit]') : null;
+        if (eBtn) {
+          var edId = eBtn.getAttribute('data-edit');
+          state.editing = state.recipes.filter(function (r) { return r.id === edId; })[0] || null;
+          renderList();
+          return;
+        }
+        var saveBtn = target.closest ? target.closest('.re-save') : null;
+        if (saveBtn) {
+          var wrap = list.querySelector('.recipe-edit');
+          var editedSteps = [];
+          if (wrap) {
+            var rows = wrap.querySelectorAll('.re-step');
+            for (var k = 0; k < rows.length; k++) {
+              var row = rows[k];
+              var tgt = row.querySelector('.re-target').value.trim();
+              if (!tgt) continue;
+              var vEl = row.querySelector('.re-value');
+              var eEl = row.querySelector('.re-expect');
+              editedSteps.push({
+                kind: row.getAttribute('data-kind'),
+                target: tgt,
+                value: vEl ? vEl.value : undefined,
+                expect: eEl && eEl.value ? eEl.value : undefined,
+              });
+            }
+            window.piSDK.request('recipes.update', {
+              id: wrap.getAttribute('data-id'),
+              name: wrap.querySelector('.re-name').value,
+              steps: editedSteps,
+            }).then(function (res) {
+              if (res && res.ok) { state.editing = null; refreshList(); }
+            }).catch(function () {});
+          }
+          return;
+        }
+        var cancelBtn = target.closest ? target.closest('.re-cancel') : null;
+        if (cancelBtn) { state.editing = null; refreshList(); return; }
         var rBtn = target.closest ? target.closest('[data-recipe]') : null;
         if (rBtn) {
           act('recipes.delete', { id: rBtn.getAttribute('data-recipe') }).then(refreshList);
