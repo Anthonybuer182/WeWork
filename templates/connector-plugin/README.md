@@ -61,5 +61,5 @@ node ../../scripts/build-market.mjs   # 打包 + 算 sha256 + 写 index.json
 
 ## 参考
 
-- 真实例子:`plugins/com.pi.mail/`——面板 + 工具 + 私有存储 + 出站权限齐全,是仓库里最接近连接器的一个
+- 真实例子:`plugins/com.pi.tasks/`——面板 + 工具 + 私有存储 + 通知权限齐全,是仓库里最接近连接器的一个
 - 框架文档:`docs/plugin-dev-guide.md`

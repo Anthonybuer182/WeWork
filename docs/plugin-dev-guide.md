@@ -62,7 +62,7 @@
 | `filePreview` | 某类文件在文件树里被点开时，路由到你的面板 |
 | `skills` | 附带给 agent 的技能文档 |
 
-想看真实插件长什么样：仓库 `plugins/` 下的五个官方插件就是参照实现。**com.pi.tasks** 最典型（工具 + 面板 + 定时任务）；**com.pi.browser** 演示如何在面板里嵌入宿主的浏览器引擎，以及多标签与会话作用域；**com.pi.files** 演示插件如何自带一整套大型渲染引擎；**com.pi.devdocs**（就是这份文档）是最小的纯 UI 插件：只有 manifest + 一张网页，没有后端、没有构建步骤。
+想看真实插件长什么样：仓库 `plugins/` 下的四个官方插件就是参照实现。**com.pi.tasks** 最典型（工具 + 面板 + 定时任务）；**com.pi.browser** 演示如何在面板里嵌入宿主的浏览器引擎，以及多标签与会话作用域；**com.pi.files** 演示插件如何自带一整套大型渲染引擎；**com.pi.devdocs**（就是这份文档）是最小的纯 UI 插件：只有 manifest + 一张网页，没有后端、没有构建步骤。
 
 ---
 
@@ -574,7 +574,7 @@ await piSDK.request('storage.get', { key: 'x' });
 
 一个插件可以有多块面板，各自在图标列里有一个按钮（`hidden: true` 的除外，它只能被 `panel.open` 打开）。`panelId` 由宿主注入，你只要在 `ctx.send` 时选对收件人。`keepAlive` 决定切走时面板保不保活（`always` / `lru` 默认 / `never`）。左侧栏的面板建议 `keepAlive: "always"`——左右两侧共享一个只保留 2 个的 LRU 池，左侧面板用 `lru` 会被右侧面板挤掉、状态全丢。
 
-`scope` 决定面板的标签跟不跟会话走（`global` 默认 / `session`）。展示"这个会话的产物"的面板（agent 开的网页、正在讨论的文档）声明 `session`：切会话时它的标签连同打开参数一起收进那个会话，切回来原样恢复——并发会话之间不会互相抢"当前文档"。跨会话的工作台面板（待办、邮件）保持默认。注意：`session` 只是标签归属和参数恢复；引擎/文档本身仍是单实例（当前会话可见的那份），多实例是后续版本的事。
+`scope` 决定面板的标签跟不跟会话走（`global` 默认 / `session`）。展示"这个会话的产物"的面板（agent 开的网页、正在讨论的文档）声明 `session`：切会话时它的标签连同打开参数一起收进那个会话，切回来原样恢复——并发会话之间不会互相抢"当前文档"。跨会话的工作台面板（待办）保持默认。注意：`session` 只是标签归属和参数恢复；引擎/文档本身仍是单实例（当前会话可见的那份），多实例是后续版本的事。
 
 ### 主题适配
 
@@ -749,7 +749,7 @@ await import('./dist/main.mjs');               // SDK 在导入时接管
 现成的样板：
 
 - SDK 自己的契约测试（21 项，覆盖每一条报错路径）：先 `pnpm --filter @pi/plugin-sdk build`，再 `node packages/plugin-sdk/tests/smoke.mjs`。测试加载的是 `dist/`，改了 SDK 源码不重建会测到旧代码。
-- 各官方后端的自测：`node plugins/com.pi.tasks/scripts/smoke-backend.mjs`（browser / files / mail 也有同名脚本）。它们加载各自的 `dist/main.mjs`，改过后端要先重新构建该插件。
+- 各官方后端的自测：`node plugins/com.pi.tasks/scripts/smoke-backend.mjs`（browser / files 也有同名脚本）。它们加载各自的 `dist/main.mjs`，改过后端要先重新构建该插件。
 
 ### 常见坑速查
 
@@ -985,12 +985,12 @@ node scripts/build-market.mjs --out ./dist-market
 ### contributes.messageRenderers — 对话内卡片
 
 ```json
-{ "messageRenderers": [{ "type": "mail_create_draft" }] }
+{ "messageRenderers": [{ "type": "item_add" }] }
 ```
 
 `type` 填**工具名**。声明后，工具结果里的 `card`（声明式 UI 树：`Column` / `Row` / `Card` / `Text` / `Badge` / `KeyValue` / `List` / `Button` / `Input` / `Image` / `Separator` / `Spinner` / `EmptyState`）由宿主渲染进对话，工具运行中还会把参数实时渲染成「生成中」卡片（`streaming: false` 可关闭）。卡片里的 Button / Input 是**活的**：用户点击/回车，事件带着节点上声明的 `eventId` 回到后端的 `onCardEvent`。旧版客户端或没实现 `onCardEvent` 的后端，按钮退化成展示——不会坏，只是不动。
 
-**领域惯例：你工具的产出物，就用你自己的卡片展示。** 邮件插件的草稿卡片、文件中心的「文档已更新」卡片（office_edit 保存成功后返回：文件名 + 格式徽章 + 「在查看器中打开」按钮）都是这么做。把上下文（如文件路径）放进按钮的 `props`——点击时它作为 `payload` 回到 `onCardEvent`，这样对话里堆了多少张卡片，每张打开的都还是它自己那份产出物。
+**领域惯例：你工具的产出物，就用你自己的卡片展示。** 事项插件的条目卡片、文件中心的「文档已更新」卡片（office_edit 保存成功后返回：文件名 + 格式徽章 + 「在查看器中打开」按钮）都是这么做。把上下文（如文件路径）放进按钮的 `props`——点击时它作为 `payload` 回到 `onCardEvent`，这样对话里堆了多少张卡片，每张打开的都还是它自己那份产出物。
 
 ### contributes.filePreview — 文件树路由
 
