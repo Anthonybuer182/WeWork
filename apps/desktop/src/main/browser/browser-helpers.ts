@@ -340,6 +340,7 @@ export const BROWSER_HELPERS_JS = `
 
     var lines = [];
     var mainElements = [];
+    var mainOmitted = 0;
     var frameSections = [];
     var floatingSections = [];
     var seenElements = new Set();
@@ -360,7 +361,8 @@ export const BROWSER_HELPERS_JS = `
           if (!piIsVisible(el)) continue;
           if (seenElements.has(el)) continue;
           seenElements.add(el);
-          docElements.push(formatElement(window.piStableRef(el), el));
+          var elLine = formatElement(window.piStableRef(el), el);
+          docElements.push({ line: elLine, below: elLine.indexOf('below-fold') !== -1 });
         }
       }
 
@@ -368,13 +370,21 @@ export const BROWSER_HELPERS_JS = `
       // "添加附件" span that is really a button.
       var clickables = piCollectClickable(doc, seenElements, 40);
       for (var ci = 0; ci < clickables.length; ci++) {
-        docElements.push(formatElement(window.piStableRef(clickables[ci]), clickables[ci], 'clickable'));
+        var cLine = formatElement(window.piStableRef(clickables[ci]), clickables[ci], 'clickable');
+        docElements.push({ line: cLine, below: cLine.indexOf('below-fold') !== -1 });
       }
 
       if (di === 0) {
-        mainElements = docElements;
+        var orderedMain = piOrdered(docElements, 80);
+        mainElements = orderedMain.lines;
+        mainOmitted = orderedMain.omitted;
       } else if (docElements.length > 0) {
-        frameSections.push({ name: piFrameLabel(doc), elements: docElements });
+        var orderedFrame = piOrdered(docElements, 40);
+        frameSections.push({
+          name: piFrameLabel(doc),
+          elements: orderedFrame.lines,
+          omitted: orderedFrame.omitted,
+        });
       }
     }
 
@@ -409,12 +419,18 @@ export const BROWSER_HELPERS_JS = `
     for (var m = 0; m < mainElements.length; m++) {
       lines.push(mainElements[m]);
     }
+    if (mainOmitted > 0) {
+      lines.push('…还有 ' + mainOmitted + ' 个元素未列出（屏幕外或超出上限）——用 browser_find 按文字查找，或滚动后重新查看');
+    }
 
     for (var fs = 0; fs < frameSections.length; fs++) {
       lines.push('');
       lines.push('--- Frame: ' + frameSections[fs].name + ' ---');
       for (var fm = 0; fm < frameSections[fs].elements.length; fm++) {
         lines.push(frameSections[fs].elements[fm]);
+      }
+      if (frameSections[fs].omitted > 0) {
+        lines.push('…还有 ' + frameSections[fs].omitted + ' 个元素未列出');
       }
     }
 
@@ -445,6 +461,17 @@ export const BROWSER_HELPERS_JS = `
 
     return lines.join('\\n');
   };
+
+  // Order a section's elements so the ones on screen come first, then cut at
+  // the cap. Real pages put 90% of their interactive elements below the fold;
+  // listing them first (or letting a byte cap cut wherever it lands) hides
+  // buttons the user can see and spends tokens on ones they cannot.
+  function piOrdered(list, cap) {
+    list.sort(function(a, b) { return (a.below ? 1 : 0) - (b.below ? 1 : 0); });
+    var kept = [];
+    for (var i = 0; i < list.length && i < cap; i++) kept.push(list[i].line);
+    return { lines: kept, omitted: Math.max(0, list.length - kept.length) };
+  }
 
   // Label an iframe's contents in the snapshot by its path, so the agent can
   // tell which section of output belongs to which frame.
