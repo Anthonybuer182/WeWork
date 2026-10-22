@@ -54,6 +54,12 @@ const SNAPSHOT_MAX_CHARS = 8_000;
 const HISTORY_KEY = 'history.entries';
 const FAVORITES_KEY = 'favorites.items';
 const SETTINGS_KEY = 'settings';
+/**
+ * Recipes: a successful multi-step operation on a FAVORITED site, stored so the
+ * next visit can skip the exploration. Existence is the user's signal — nobody
+ * is asked to confirm a save they already asked for by favoriting.
+ */
+const RECIPES_KEY = 'recipes.items';
 
 /**
  * Longest history we keep, newest first.
@@ -141,6 +147,31 @@ interface Favorite {
   url: string;
   title: string;
   addedAt: number;
+}
+
+/**
+ * One step of a recorded operation. Targets stay SEMANTIC (the selector the
+ * model used: a ref, role=, text=), never coordinates; `expect` is the host's
+ * own read-back after the step, which is what makes a re-run verifiable.
+ */
+interface RecipeStep {
+  kind: 'fill' | 'select' | 'click' | 'upload' | 'hover' | 'wait';
+  target: string;
+  /** fill/select value, `{{n}}` when it came from the user this run. */
+  value?: string;
+  expect?: string;
+}
+
+interface Recipe {
+  id: string;
+  origin: string;
+  name: string;
+  params: number;
+  steps: RecipeStep[];
+  uses: number;
+  lastOk: number;
+  /** Consecutive failed re-runs; two marks the recipe stale. */
+  failures: number;
 }
 
 /** A piece of page text the user kept. */
@@ -761,6 +792,7 @@ function pushTabs(ctx: PluginContext): void {
 /** Newest first. Every change is written straight through to storage. */
 let history: HistoryEntry[] = [];
 let favorites: Favorite[] = [];
+let recipes: Recipe[] = [];
 /** Kept page text, newest first. */
 let clips: Clip[] = [];
 /** On, navigations are not recorded. Favorites still work — they are explicit. */
@@ -918,6 +950,163 @@ function isFavorite(url: string): boolean {
   return favorites.some((f) => urlKey(f.url) === key);
 }
 
+// ── Recipes: learned operations on favorited sites ──────────────────────
+
+function originOfUrl(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return '';
+  }
+}
+
+/** Favoriting is the consent: only favorited sites keep recipes. */
+function isFavoriteOrigin(origin: string): boolean {
+  return !!origin && favorites.some((f) => originOfUrl(f.url) === origin);
+}
+
+function recipeSignature(steps: RecipeStep[]): string {
+  return steps.map((s) => `${s.kind}:${s.target}`).join('|');
+}
+
+/** Recipes still worth offering: two consecutive failures retires one. */
+function liveRecipes(origin: string): Recipe[] {
+  return recipes.filter((r) => r.origin === origin && r.failures < 2);
+}
+
+/**
+ * Turn a step's selector into something that still resolves on the NEXT visit.
+ * Refs like [2] are per-document handles — recording one would produce a recipe
+ * that points at whatever happens to be second next time. Prefer an id, then
+ * name/placeholder, then role+name, then visible text.
+ */
+async function stabilizeTarget(ctx: PluginContext, tid: string | undefined, selector: string): Promise<string> {
+  const expr = `(function(){
+    var el = window.piResolveSelector(${JSON.stringify(selector)});
+    if (!el) return '';
+    var tag = el.tagName.toLowerCase();
+    var id = el.getAttribute('id') || '';
+    if (id && !/^(r\\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) return '#' + id;
+    var name = el.getAttribute('name') || '';
+    if (name) return '[name="' + name + '"]';
+    var ph = el.getAttribute('placeholder') || '';
+    if (ph) return 'input[placeholder="' + ph + '"]';
+    var label = el.getAttribute('aria-label') || '';
+    var text = (el.textContent || '').trim().replace(/\\s+/g, ' ');
+    if (label) return tag === 'button' ? 'role=button[name="' + label + '"]' : 'text="' + label + '"';
+    if (tag === 'button' && text && text.length <= 24) return 'role=button[name="' + text + '"]';
+    if (text && text.length <= 24) return 'text="' + text + '"';
+    return ${JSON.stringify(selector)};
+  })()`;
+  try {
+    const r = await ctx.call<{ result?: unknown }>('browser.evaluate', {
+      expression: expr,
+      ...(tid ? { tabId: tid } : {}),
+    });
+    const value = String(r?.result ?? '');
+    return value || selector;
+  } catch {
+    return selector;
+  }
+}
+
+/**
+ * Turn a successful browser_act into a recipe when the site is favorited.
+ * Typed values become {{n}} placeholders — the next run usually wants
+ * different input, and a recording of one search term is not an operation.
+ */
+async function recordRecipe(
+  ctx: PluginContext,
+  rawSteps: Array<Record<string, unknown>>,
+  effects: string[],
+  url: string | undefined,
+  name: string | undefined,
+  title: string | undefined,
+  tid: string | undefined,
+): Promise<Recipe | null> {
+  const origin = originOfUrl(url ?? '');
+  if (!origin || !isFavoriteOrigin(origin)) return null;
+
+  const steps: RecipeStep[] = [];
+  // Recorded values, so expectations can be made parameter-agnostic: an
+  // expectation that says "当前值张三" would fail the moment the next run
+  // types a different name.
+  const valueMap: Array<{ token: string; value: string }> = [];
+  let params = 0;
+  for (let i = 0; i < rawSteps.length; i++) {
+    const step = rawSteps[i] ?? {};
+    const expect = effects[i]
+      ? effects[i].split(' · ').slice(1).join(' · ') || undefined
+      : undefined;
+    if (typeof step.click === 'string') {
+      steps.push({ kind: 'click', target: await stabilizeTarget(ctx, tid, step.click), expect });
+    } else if (step.fill && typeof step.fill === 'object') {
+      params += 1;
+      const typed = String((step.fill as { value?: unknown }).value ?? '');
+      if (typed) valueMap.push({ token: `{{${params}}}`, value: typed });
+      steps.push({
+        kind: 'fill',
+        target: await stabilizeTarget(ctx, tid, String((step.fill as { selector?: unknown }).selector ?? '')),
+        value: `{{${params}}}`,
+        expect,
+      });
+    } else if (step.select && typeof step.select === 'object') {
+      params += 1;
+      const picked = String((step.select as { value?: unknown }).value ?? '');
+      if (picked) valueMap.push({ token: `{{${params}}}`, value: picked });
+      steps.push({
+        kind: 'select',
+        target: await stabilizeTarget(ctx, tid, String((step.select as { selector?: unknown }).selector ?? '')),
+        value: `{{${params}}}`,
+        expect,
+      });
+    } else if (step.upload && typeof step.upload === 'object') {
+      steps.push({
+        kind: 'upload',
+        target: await stabilizeTarget(ctx, tid, String((step.upload as { selector?: unknown }).selector ?? '')),
+        expect,
+      });
+    } else if (typeof step.hover === 'string') {
+      steps.push({ kind: 'hover', target: await stabilizeTarget(ctx, tid, step.hover), expect });
+    } else if (typeof step.wait === 'number') {
+      steps.push({ kind: 'wait', target: String(step.wait), expect });
+    }
+  }
+  if (steps.length === 0) return null;
+
+  // Swap recorded values for their placeholders inside every expectation.
+  for (const st of steps) {
+    if (!st.expect) continue;
+    for (const v of valueMap) st.expect = st.expect.split(v.value).join(v.token);
+  }
+
+  const signature = recipeSignature(steps);
+  const existing = recipes.find((r) => recipeSignature(r.steps) === signature);
+  if (existing) {
+    existing.steps = steps;
+    existing.uses += 1;
+    existing.lastOk = Date.now();
+    existing.failures = 0;
+    if (name) existing.name = name;
+    await save(ctx, RECIPES_KEY, recipes, 'recipes');
+    return existing;
+  }
+
+  const recipe: Recipe = {
+    id: `r${Date.now().toString(36)}`,
+    origin,
+    name: (name ?? '').trim() || `${(title ?? '此站操作').slice(0, 24)}（${steps.length} 步）`,
+    params,
+    steps,
+    uses: 1,
+    lastOk: Date.now(),
+    failures: 0,
+  };
+  recipes = [recipe, ...recipes].slice(0, 60);
+  await save(ctx, RECIPES_KEY, recipes, 'recipes');
+  return recipe;
+}
+
 /** `今天 14:23` — relative while it is still "recent", absolute once it is not. */
 function formatWhen(ts: number): string {
   const d = new Date(ts);
@@ -977,14 +1166,16 @@ async function save(ctx: PluginContext, key: string, value: unknown, what: strin
 }
 
 async function loadState(ctx: PluginContext): Promise<void> {
-  const [h, f, c, s] = await Promise.all([
+  const [h, f, c, s, r] = await Promise.all([
     readKey(ctx, HISTORY_KEY),
     readKey(ctx, FAVORITES_KEY),
     readKey(ctx, CLIPS_KEY),
     readKey(ctx, SETTINGS_KEY),
+    readKey(ctx, RECIPES_KEY),
   ]);
   if (Array.isArray(h)) history = h as HistoryEntry[];
   if (Array.isArray(f)) favorites = f as Favorite[];
+  if (Array.isArray(r)) recipes = r as Recipe[];
   if (Array.isArray(c)) clips = c as Clip[];
   const settings = s as { private?: boolean; selPopup?: boolean } | undefined;
   privateMode = Boolean(settings?.private);
@@ -1592,6 +1783,18 @@ plugin({
         const found = searchOmnibox(String(params.query ?? '').trim());
         return { favorites: found.favorites, history: found.history };
       }
+      case 'recipes.list': {
+        return { recipes };
+      }
+      case 'recipes.delete': {
+        const id = String(params.id ?? '');
+        const before = recipes.length;
+        recipes = recipes.filter((r) => r.id !== id);
+        if (recipes.length === before) return { ok: false };
+        await save(ctx, RECIPES_KEY, recipes, 'recipes');
+        broadcast(ctx, 'ui.recipesChanged', { recipes });
+        return { ok: true };
+      }
       case 'favorites.toggle': {
         // No url = the star in the toolbar, which means "the page I am on".
         const url = urlKey(String(params.url ?? lastUrl ?? '').trim());
@@ -1753,7 +1956,11 @@ plugin({
         if (result?.page?.authKind === 'login') {
           return `${head}\n\n⚠️ 这是一个登录页。登录必须由用户完成（账号密码、短信验证码、扫码都不是 agent 该做的）。请在右侧面板里由用户登录，完成后再继续。`;
         }
-        return head;
+        const site = liveRecipes(originOfUrl(finalUrl));
+        if (site.length === 0) return head;
+        return `${head}\n\n本站有 ${site.length} 个已记录的快捷操作：${site
+          .map((r) => `${r.name}（${r.steps.length} 步）`)
+          .join('、')}。用 browser_recipes 查看步骤，再按 browser_act 执行；某一步的预期对不上就停下自己操作。`;
       }
 
       case 'browser_tab_list': {
@@ -1847,11 +2054,14 @@ plugin({
         if (rawSteps.length === 0) throw new Error('steps 不能为空');
         const steps = rawSteps.slice(0, 12) as Array<Record<string, unknown>>;
         const log: string[] = [];
+        const effects: string[] = [];
         let failedAt = -1;
         for (let i = 0; i < steps.length; i++) {
           const step = steps[i] && typeof steps[i] === 'object' ? steps[i] : {};
           try {
-            log.push(`${i + 1}. ${await runActStep(step, ctx, tid, sessionKey)}`);
+            const line = await runActStep(step, ctx, tid, sessionKey);
+            effects.push(line);
+            log.push(`${i + 1}. ${line}`);
           } catch (err) {
             failedAt = i;
             log.push(`${i + 1}. 失败：${err instanceof Error ? err.message : String(err)}`);
@@ -1863,6 +2073,37 @@ plugin({
           'browser.getState',
           tid ? { tabId: tid } : {},
         );
+        // When the model says it is running a saved recipe, that recipe's
+        // health is updated: a success refreshes it, a failure counts toward
+        // retirement (two consecutive failures hide it from the navigate hint).
+        const recipeName = params.recipe ? String(params.recipe).trim() : '';
+        if (recipeName) {
+          const known = recipes.find((r) => r.name === recipeName);
+          if (known) {
+            if (failedAt < 0) {
+              known.uses += 1;
+              known.lastOk = Date.now();
+              known.failures = 0;
+            } else {
+              known.failures += 1;
+            }
+            await save(ctx, RECIPES_KEY, recipes, 'recipes');
+          }
+        }
+
+        // A fully successful batch on a favorited site becomes a recipe; the
+        // user asked for that by favoriting, so nobody confirms it.
+        if (failedAt < 0) {
+          await recordRecipe(
+            ctx,
+            steps,
+            effects,
+            state?.url,
+            params.name ? String(params.name) : undefined,
+            state?.title,
+            tid,
+          );
+        }
         const head =
           failedAt < 0
             ? `已完成 ${steps.length} 步`
@@ -2013,6 +2254,43 @@ plugin({
               `${i + 1}. ${e.title || '(无标题)'}\n   ${e.url} · ${formatWhen(e.lastVisitedAt)} · 访问 ${e.visits} 次`,
           )
           .join('\n');
+      }
+
+      case 'browser_recipes': {
+        const origin = params.origin ? originOfUrl(normalizeUrl(String(params.origin))) : '';
+        const site = origin ? recipes.filter((r) => r.origin === origin) : recipes;
+        if (site.length === 0) {
+          return '还没有记录任何快捷操作。收藏一个站点并在上面成功执行一次 browser_act 后会自动记录。';
+        }
+        return (
+          site
+            .map((r) => {
+              const stale = r.failures >= 2 ? ' [已失效]' : '';
+              return [
+                `${r.name}（${r.origin}，${r.steps.length} 步，用过 ${r.uses} 次，上次成功 ${formatWhen(r.lastOk)}）${stale}`,
+                ...r.steps.map(
+                  (st, i) =>
+                    `  ${i + 1}. ${st.kind} ${st.target}${st.value ? ` = ${st.value}` : ''}${
+                      st.expect ? ` ｜预期：${st.expect}` : ''
+                    }`,
+                ),
+              ].join('\n');
+            })
+            .join('\n\n') +
+          '\n\n按 browser_act 的格式执行，把 {{n}} 换成这次的实际值；某一步的预期对不上就立刻停下、自己重新操作。'
+        );
+      }
+
+      case 'browser_recipe_delete': {
+        const name = String(params.name ?? '').trim();
+        const id = String(params.id ?? '').trim();
+        if (!name && !id) throw new Error('需要 name 或 id');
+        const target = recipes.find((r) => (id && r.id === id) || (name && r.name === name));
+        if (!target) throw new Error(`没有找到配方：${id || name}`);
+        recipes = recipes.filter((r) => r !== target);
+        await save(ctx, RECIPES_KEY, recipes, 'recipes');
+        broadcast(ctx, 'ui.recipesChanged', { recipes });
+        return `已删除配方「${target.name}」（${target.origin}）`;
       }
 
       case 'browser_favorites_list': {

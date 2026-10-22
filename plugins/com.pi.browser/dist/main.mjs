@@ -313,6 +313,7 @@ var SNAPSHOT_MAX_CHARS = 8e3;
 var HISTORY_KEY = "history.entries";
 var FAVORITES_KEY = "favorites.items";
 var SETTINGS_KEY = "settings";
+var RECIPES_KEY = "recipes.items";
 var HISTORY_MAX = 500;
 var OMNIBOX_RECENT = 8;
 var OMNIBOX_LIMIT = 30;
@@ -814,6 +815,7 @@ function pushTabs(ctx) {
 __name(pushTabs, "pushTabs");
 var history = [];
 var favorites = [];
+var recipes = [];
 var clips = [];
 var privateMode = false;
 var selPopup = true;
@@ -919,6 +921,130 @@ function isFavorite(url) {
   return favorites.some((f) => urlKey(f.url) === key);
 }
 __name(isFavorite, "isFavorite");
+function originOfUrl(url) {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "";
+  }
+}
+__name(originOfUrl, "originOfUrl");
+function isFavoriteOrigin(origin) {
+  return !!origin && favorites.some((f) => originOfUrl(f.url) === origin);
+}
+__name(isFavoriteOrigin, "isFavoriteOrigin");
+function recipeSignature(steps) {
+  return steps.map((s) => `${s.kind}:${s.target}`).join("|");
+}
+__name(recipeSignature, "recipeSignature");
+function liveRecipes(origin) {
+  return recipes.filter((r) => r.origin === origin && r.failures < 2);
+}
+__name(liveRecipes, "liveRecipes");
+async function stabilizeTarget(ctx, tid, selector) {
+  const expr = `(function(){
+    var el = window.piResolveSelector(${JSON.stringify(selector)});
+    if (!el) return '';
+    var tag = el.tagName.toLowerCase();
+    var id = el.getAttribute('id') || '';
+    if (id && !/^(r\\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) return '#' + id;
+    var name = el.getAttribute('name') || '';
+    if (name) return '[name="' + name + '"]';
+    var ph = el.getAttribute('placeholder') || '';
+    if (ph) return 'input[placeholder="' + ph + '"]';
+    var label = el.getAttribute('aria-label') || '';
+    var text = (el.textContent || '').trim().replace(/\\s+/g, ' ');
+    if (label) return tag === 'button' ? 'role=button[name="' + label + '"]' : 'text="' + label + '"';
+    if (tag === 'button' && text && text.length <= 24) return 'role=button[name="' + text + '"]';
+    if (text && text.length <= 24) return 'text="' + text + '"';
+    return ${JSON.stringify(selector)};
+  })()`;
+  try {
+    const r = await ctx.call("browser.evaluate", {
+      expression: expr,
+      ...tid ? { tabId: tid } : {}
+    });
+    const value = String(r?.result ?? "");
+    return value || selector;
+  } catch {
+    return selector;
+  }
+}
+__name(stabilizeTarget, "stabilizeTarget");
+async function recordRecipe(ctx, rawSteps, effects, url, name, title, tid) {
+  const origin = originOfUrl(url ?? "");
+  if (!origin || !isFavoriteOrigin(origin)) return null;
+  const steps = [];
+  const valueMap = [];
+  let params = 0;
+  for (let i = 0; i < rawSteps.length; i++) {
+    const step = rawSteps[i] ?? {};
+    const expect = effects[i] ? effects[i].split(" \xB7 ").slice(1).join(" \xB7 ") || void 0 : void 0;
+    if (typeof step.click === "string") {
+      steps.push({ kind: "click", target: await stabilizeTarget(ctx, tid, step.click), expect });
+    } else if (step.fill && typeof step.fill === "object") {
+      params += 1;
+      const typed = String(step.fill.value ?? "");
+      if (typed) valueMap.push({ token: `{{${params}}}`, value: typed });
+      steps.push({
+        kind: "fill",
+        target: await stabilizeTarget(ctx, tid, String(step.fill.selector ?? "")),
+        value: `{{${params}}}`,
+        expect
+      });
+    } else if (step.select && typeof step.select === "object") {
+      params += 1;
+      const picked = String(step.select.value ?? "");
+      if (picked) valueMap.push({ token: `{{${params}}}`, value: picked });
+      steps.push({
+        kind: "select",
+        target: await stabilizeTarget(ctx, tid, String(step.select.selector ?? "")),
+        value: `{{${params}}}`,
+        expect
+      });
+    } else if (step.upload && typeof step.upload === "object") {
+      steps.push({
+        kind: "upload",
+        target: await stabilizeTarget(ctx, tid, String(step.upload.selector ?? "")),
+        expect
+      });
+    } else if (typeof step.hover === "string") {
+      steps.push({ kind: "hover", target: await stabilizeTarget(ctx, tid, step.hover), expect });
+    } else if (typeof step.wait === "number") {
+      steps.push({ kind: "wait", target: String(step.wait), expect });
+    }
+  }
+  if (steps.length === 0) return null;
+  for (const st of steps) {
+    if (!st.expect) continue;
+    for (const v of valueMap) st.expect = st.expect.split(v.value).join(v.token);
+  }
+  const signature = recipeSignature(steps);
+  const existing = recipes.find((r) => recipeSignature(r.steps) === signature);
+  if (existing) {
+    existing.steps = steps;
+    existing.uses += 1;
+    existing.lastOk = Date.now();
+    existing.failures = 0;
+    if (name) existing.name = name;
+    await save(ctx, RECIPES_KEY, recipes, "recipes");
+    return existing;
+  }
+  const recipe = {
+    id: `r${Date.now().toString(36)}`,
+    origin,
+    name: (name ?? "").trim() || `${(title ?? "\u6B64\u7AD9\u64CD\u4F5C").slice(0, 24)}\uFF08${steps.length} \u6B65\uFF09`,
+    params,
+    steps,
+    uses: 1,
+    lastOk: Date.now(),
+    failures: 0
+  };
+  recipes = [recipe, ...recipes].slice(0, 60);
+  await save(ctx, RECIPES_KEY, recipes, "recipes");
+  return recipe;
+}
+__name(recordRecipe, "recordRecipe");
 function formatWhen(ts) {
   const d = new Date(ts);
   const now = /* @__PURE__ */ new Date();
@@ -965,14 +1091,16 @@ async function save(ctx, key, value, what) {
 }
 __name(save, "save");
 async function loadState(ctx) {
-  const [h, f, c, s] = await Promise.all([
+  const [h, f, c, s, r] = await Promise.all([
     readKey(ctx, HISTORY_KEY),
     readKey(ctx, FAVORITES_KEY),
     readKey(ctx, CLIPS_KEY),
-    readKey(ctx, SETTINGS_KEY)
+    readKey(ctx, SETTINGS_KEY),
+    readKey(ctx, RECIPES_KEY)
   ]);
   if (Array.isArray(h)) history = h;
   if (Array.isArray(f)) favorites = f;
+  if (Array.isArray(r)) recipes = r;
   if (Array.isArray(c)) clips = c;
   const settings = s;
   privateMode = Boolean(settings?.private);
@@ -1471,6 +1599,18 @@ plugin({
         const found = searchOmnibox(String(params.query ?? "").trim());
         return { favorites: found.favorites, history: found.history };
       }
+      case "recipes.list": {
+        return { recipes };
+      }
+      case "recipes.delete": {
+        const id = String(params.id ?? "");
+        const before = recipes.length;
+        recipes = recipes.filter((r) => r.id !== id);
+        if (recipes.length === before) return { ok: false };
+        await save(ctx, RECIPES_KEY, recipes, "recipes");
+        broadcast(ctx, "ui.recipesChanged", { recipes });
+        return { ok: true };
+      }
       case "favorites.toggle": {
         const url = urlKey(String(params.url ?? lastUrl ?? "").trim());
         if (!url) throw new Error("no page to favorite yet");
@@ -1594,7 +1734,11 @@ plugin({
 
 \u26A0\uFE0F \u8FD9\u662F\u4E00\u4E2A\u767B\u5F55\u9875\u3002\u767B\u5F55\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210\uFF08\u8D26\u53F7\u5BC6\u7801\u3001\u77ED\u4FE1\u9A8C\u8BC1\u7801\u3001\u626B\u7801\u90FD\u4E0D\u662F agent \u8BE5\u505A\u7684\uFF09\u3002\u8BF7\u5728\u53F3\u4FA7\u9762\u677F\u91CC\u7531\u7528\u6237\u767B\u5F55\uFF0C\u5B8C\u6210\u540E\u518D\u7EE7\u7EED\u3002`;
         }
-        return head;
+        const site = liveRecipes(originOfUrl(finalUrl));
+        if (site.length === 0) return head;
+        return `${head}
+
+\u672C\u7AD9\u6709 ${site.length} \u4E2A\u5DF2\u8BB0\u5F55\u7684\u5FEB\u6377\u64CD\u4F5C\uFF1A${site.map((r) => `${r.name}\uFF08${r.steps.length} \u6B65\uFF09`).join("\u3001")}\u3002\u7528 browser_recipes \u67E5\u770B\u6B65\u9AA4\uFF0C\u518D\u6309 browser_act \u6267\u884C\uFF1B\u67D0\u4E00\u6B65\u7684\u9884\u671F\u5BF9\u4E0D\u4E0A\u5C31\u505C\u4E0B\u81EA\u5DF1\u64CD\u4F5C\u3002`;
       }
       case "browser_tab_list": {
         const b = bucketFor(bucketKey(sessionKey));
@@ -1669,11 +1813,14 @@ plugin({
         if (rawSteps.length === 0) throw new Error("steps \u4E0D\u80FD\u4E3A\u7A7A");
         const steps = rawSteps.slice(0, 12);
         const log = [];
+        const effects = [];
         let failedAt = -1;
         for (let i = 0; i < steps.length; i++) {
           const step = steps[i] && typeof steps[i] === "object" ? steps[i] : {};
           try {
-            log.push(`${i + 1}. ${await runActStep(step, ctx, tid, sessionKey)}`);
+            const line = await runActStep(step, ctx, tid, sessionKey);
+            effects.push(line);
+            log.push(`${i + 1}. ${line}`);
           } catch (err) {
             failedAt = i;
             log.push(`${i + 1}. \u5931\u8D25\uFF1A${err instanceof Error ? err.message : String(err)}`);
@@ -1684,6 +1831,31 @@ plugin({
           "browser.getState",
           tid ? { tabId: tid } : {}
         );
+        const recipeName = params.recipe ? String(params.recipe).trim() : "";
+        if (recipeName) {
+          const known = recipes.find((r) => r.name === recipeName);
+          if (known) {
+            if (failedAt < 0) {
+              known.uses += 1;
+              known.lastOk = Date.now();
+              known.failures = 0;
+            } else {
+              known.failures += 1;
+            }
+            await save(ctx, RECIPES_KEY, recipes, "recipes");
+          }
+        }
+        if (failedAt < 0) {
+          await recordRecipe(
+            ctx,
+            steps,
+            effects,
+            state?.url,
+            params.name ? String(params.name) : void 0,
+            state?.title,
+            tid
+          );
+        }
         const head = failedAt < 0 ? `\u5DF2\u5B8C\u6210 ${steps.length} \u6B65` : `\u7B2C ${failedAt + 1} \u6B65\u5931\u8D25\uFF0C\u4E4B\u540E ${steps.length - failedAt - 1} \u6B65\u6CA1\u6709\u6267\u884C`;
         const lines = [
           head,
@@ -1807,6 +1979,33 @@ plugin({
           (e, i) => `${i + 1}. ${e.title || "(\u65E0\u6807\u9898)"}
    ${e.url} \xB7 ${formatWhen(e.lastVisitedAt)} \xB7 \u8BBF\u95EE ${e.visits} \u6B21`
         ).join("\n");
+      }
+      case "browser_recipes": {
+        const origin = params.origin ? originOfUrl(normalizeUrl(String(params.origin))) : "";
+        const site = origin ? recipes.filter((r) => r.origin === origin) : recipes;
+        if (site.length === 0) {
+          return "\u8FD8\u6CA1\u6709\u8BB0\u5F55\u4EFB\u4F55\u5FEB\u6377\u64CD\u4F5C\u3002\u6536\u85CF\u4E00\u4E2A\u7AD9\u70B9\u5E76\u5728\u4E0A\u9762\u6210\u529F\u6267\u884C\u4E00\u6B21 browser_act \u540E\u4F1A\u81EA\u52A8\u8BB0\u5F55\u3002";
+        }
+        return site.map((r) => {
+          const stale = r.failures >= 2 ? " [\u5DF2\u5931\u6548]" : "";
+          return [
+            `${r.name}\uFF08${r.origin}\uFF0C${r.steps.length} \u6B65\uFF0C\u7528\u8FC7 ${r.uses} \u6B21\uFF0C\u4E0A\u6B21\u6210\u529F ${formatWhen(r.lastOk)}\uFF09${stale}`,
+            ...r.steps.map(
+              (st, i) => `  ${i + 1}. ${st.kind} ${st.target}${st.value ? ` = ${st.value}` : ""}${st.expect ? ` \uFF5C\u9884\u671F\uFF1A${st.expect}` : ""}`
+            )
+          ].join("\n");
+        }).join("\n\n") + "\n\n\u6309 browser_act \u7684\u683C\u5F0F\u6267\u884C\uFF0C\u628A {{n}} \u6362\u6210\u8FD9\u6B21\u7684\u5B9E\u9645\u503C\uFF1B\u67D0\u4E00\u6B65\u7684\u9884\u671F\u5BF9\u4E0D\u4E0A\u5C31\u7ACB\u523B\u505C\u4E0B\u3001\u81EA\u5DF1\u91CD\u65B0\u64CD\u4F5C\u3002";
+      }
+      case "browser_recipe_delete": {
+        const name2 = String(params.name ?? "").trim();
+        const id = String(params.id ?? "").trim();
+        if (!name2 && !id) throw new Error("\u9700\u8981 name \u6216 id");
+        const target = recipes.find((r) => id && r.id === id || name2 && r.name === name2);
+        if (!target) throw new Error(`\u6CA1\u6709\u627E\u5230\u914D\u65B9\uFF1A${id || name2}`);
+        recipes = recipes.filter((r) => r !== target);
+        await save(ctx, RECIPES_KEY, recipes, "recipes");
+        broadcast(ctx, "ui.recipesChanged", { recipes });
+        return `\u5DF2\u5220\u9664\u914D\u65B9\u300C${target.name}\u300D\uFF08${target.origin}\uFF09`;
       }
       case "browser_favorites_list": {
         if (favorites.length === 0) {

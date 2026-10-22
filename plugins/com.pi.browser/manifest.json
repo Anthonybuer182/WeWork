@@ -2,7 +2,7 @@
   "id": "com.pi.browser",
   "name": "浏览器自动化",
   "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航;面板地址栏带收藏和历史;网页里划词弹出复合框(引用标签 + 问题输入框,翻译/解释/收藏,回车把问题连同引用发送到对话),翻译与解释由 agent 完成后回显在框内。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
-  "version": "0.9.9",
+  "version": "0.9.14",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -76,6 +76,38 @@
             "limit": {
               "type": "number",
               "description": "Maximum entries to return. Defaults to 20."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_recipes",
+        "description": "List recorded shortcut operations (recipes) for favorited sites: the steps, what each step was expected to do, how often it ran, when it last worked. After navigating to a site that mentions saved operations, read them here and run the steps with browser_act.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "type": "string",
+              "description": "Only show recipes for this site, e.g. https://www.bilibili.com"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_recipe_delete",
+        "description": "Delete a recorded recipe by name or id — when the user asks to remove it, or it is marked stale.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Recipe name as shown by browser_recipes"
+            },
+            "id": {
+              "type": "string",
+              "description": "Recipe id"
             }
           },
           "additionalProperties": false
@@ -232,7 +264,7 @@
       },
       {
         "name": "browser_act",
-        "description": "Run several browser steps in one call: click / fill / select / upload / hover / wait. Steps run in order and stop at the first failure; the result lists what each step did plus the page's CURRENT interactive snapshot — that snapshot is authoritative, so do NOT follow up with browser_get_state or browser_evaluate to confirm. Use it for sequences you can already see on the page (fill every field, then submit). Do NOT batch a step whose target only appears after an earlier one — click that first, look, then batch the rest. A click that raises a confirm() follows the session permission mode (默认 → dismiss, 完全访问 → accept).",
+        "description": "Run several browser steps in one call: click / fill / select / upload / hover / wait. Steps run in order and stop at the first failure; the result lists what each step did plus the page's CURRENT interactive snapshot — that snapshot is authoritative, so do NOT follow up with browser_get_state or browser_evaluate to confirm. Use it for sequences you can already see on the page (fill every field, then submit). Do NOT batch a step whose target only appears after an earlier one — click that first, look, then batch the rest. A click that raises a confirm() follows the session permission mode (默认 → dismiss, 完全访问 → accept). On a favorited site a fully successful batch is saved as a recipe automatically; pass a short name for it. If you are following a saved recipe, pass recipe:\"<name>\" so its health is tracked.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -322,6 +354,14 @@
             "tab": {
               "type": "string",
               "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
+            },
+            "name": {
+              "type": "string",
+              "description": "Short name for the recipe recorded after a successful batch on a favorited site (e.g. \"搜索视频\"). Omit to let it be named after the page."
+            },
+            "recipe": {
+              "type": "string",
+              "description": "When these steps come from a saved recipe, pass its name here: a success refreshes the recipe, a failure counts toward retiring it."
             }
           },
           "required": [

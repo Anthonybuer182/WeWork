@@ -128,6 +128,10 @@
       visibility: hidden;
     }
     .row:hover .row-x, .row.active .row-x { visibility: visible; }
+    /* Recipes are a list, not navigation targets: their own class keeps them
+       out of the keyboard-highlight indexing (.row → flatItems). */
+    .recipe-row { display: flex; align-items: center; gap: 8px; padding: 5px 12px; }
+    .recipe-row .row-x { visibility: visible; }
     .row-x:hover { background: hsl(var(--border, 218 14% 20%)); color: hsl(var(--foreground, 220 21% 92%)); }
     .empty {
       padding: 16px 12px;
@@ -623,6 +627,7 @@
         selPopup: true,
         favorites: [],   // last omnibox.search answer
         history: [],
+        recipes: [],     // recorded operations for the CURRENT site
         active: -1,      // highlighted row across both sections
         tabs: [],        // this conversation's tabs (mirror of the backend)
         activeTabId: '',
@@ -682,7 +687,7 @@
 
       function refreshList() {
         var seq = ++searchSeq;
-        return window.piSDK.request('omnibox.search', { query: queryOf() })
+        var pending = window.piSDK.request('omnibox.search', { query: queryOf() })
           .then(function (res) {
             if (seq !== searchSeq) return;  // a newer keystroke already answered
             state.favorites = (res && res.favorites) || [];
@@ -696,6 +701,18 @@
             setActive(state.active);
           })
           .catch(function () {});
+        // Recipes belong to the site on screen, so they are fetched alongside
+        // and filtered here — the omnibox query itself is about addresses.
+        window.piSDK.request('recipes.list', {})
+          .then(function (rr) {
+            if (seq !== searchSeq) return;
+            var origin = '';
+            try { origin = new URL(state.url).origin; } catch (e) {}
+            state.recipes = ((rr && rr.recipes) || []).filter(function (r) { return r.origin === origin; });
+            renderList();
+          })
+          .catch(function () {});
+        return pending;
       }
 
       function renderList() {
@@ -712,6 +729,22 @@
           rows.push('<div class="sec">最近访问</div>');
           for (i = 0; i < state.history.length; i++) {
             rows.push(rowHtml(state.history[i], state.favorites.length + i, false));
+          }
+        }
+        if (state.recipes.length) {
+          rows.push('<div class="sec">⚡ 本站配方</div>');
+          for (i = 0; i < state.recipes.length; i++) {
+            var rec = state.recipes[i];
+            var stale = rec.failures >= 2 ? ' · 已失效' : '';
+            rows.push(
+              '<div class="recipe-row">' +
+                '<div class="row-main">' +
+                  '<div class="row-title">' + esc(rec.name) + '</div>' +
+                  '<div class="row-url">' + rec.steps.length + ' 步 · 用过 ' + rec.uses + ' 次' + stale + '</div>' +
+                '</div>' +
+                '<button class="row-x" data-recipe="' + esc(rec.id) + '" title="删除这条配方">✕</button>' +
+              '</div>'
+            );
           }
         }
         if (!rows.length) {
@@ -781,6 +814,11 @@
 
       list.addEventListener('click', function (e) {
         var target = e.target;
+        var rBtn = target.closest ? target.closest('[data-recipe]') : null;
+        if (rBtn) {
+          act('recipes.delete', { id: rBtn.getAttribute('data-recipe') }).then(refreshList);
+          return;
+        }
         var xBtn = target.closest ? target.closest('[data-remove]') : null;
         if (xBtn) {
           var idx = Number(xBtn.getAttribute('data-remove'));
