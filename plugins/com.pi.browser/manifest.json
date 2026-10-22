@@ -2,7 +2,7 @@
   "id": "com.pi.browser",
   "name": "浏览器自动化",
   "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航;面板地址栏带收藏和历史;网页里划词弹出复合框(引用标签 + 问题输入框,翻译/解释/收藏,回车把问题连同引用发送到对话),翻译与解释由 agent 完成后回显在框内。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -203,7 +203,7 @@
       },
       {
         "name": "browser_click",
-        "description": "Click an element in the built-in browser. Waits up to 5s for the element, scrolls it into view, then clicks. On failure the result suggests similar elements.",
+        "description": "Click an element in the built-in browser. Waits up to 5s for the element, scrolls it into view, then clicks. The result reports what changed on the page (new text or a URL change), so you do NOT need to re-check with browser_get_state or browser_evaluate. On failure the result suggests similar elements.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -316,7 +316,7 @@
       },
       {
         "name": "browser_upload",
-        "description": "Attach local files to a page's upload control — file pickers, '添加附件', '上传' buttons. Clicking the control lets the browser report which input the page wants, so hidden, dynamically created and iframe-hosted inputs all work. Pass absolute paths. NEVER call browser_fill on a file input: it cannot take a path. After attached=true, confirm the page shows the files.",
+        "description": "Attach local files to a page's upload control — file pickers, '添加附件', '上传' buttons. Clicking the control lets the browser report which input the page wants, so hidden, dynamically created and iframe-hosted inputs all work. Pass absolute paths. NEVER call browser_fill on a file input: it cannot take a path. The result reports what appeared on the page, so do NOT verify with browser_evaluate.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -345,7 +345,7 @@
       },
       {
         "name": "browser_fill",
-        "description": "Fill an input field (replaces existing content; works with React/Vue controlled inputs). Focuses the field first, so component event handlers fire.",
+        "description": "Fill an input field (replaces existing content; works with React/Vue controlled inputs). Focuses the field first and reads it back afterwards: the result reports the field's current value, so do NOT verify it yourself with browser_evaluate.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -392,7 +392,7 @@
       },
       {
         "name": "browser_select",
-        "description": "Select an option in a <select> dropdown by its value or visible text.",
+        "description": "Select an option in a <select> dropdown by value or visible text. The result reports which option ended up selected — no need to read it back.",
         "inputSchema": {
           "type": "object",
           "properties": {

@@ -130,6 +130,35 @@ class BrowserTab {
   }
 }
 
+/** What the page looked like around an action, for the "what happened" line. */
+export interface PageProbe {
+  url: string;
+  text: string;
+}
+
+/**
+ * Turn the before/after probes into one short sentence.
+ *
+ * The agent used to spend a `browser_evaluate` or a screenshot after almost
+ * every action just to answer "did that work?". The host can answer it from
+ * the page itself, for free, and hand back the line the model was looking for.
+ */
+export function describePageChange(before: PageProbe | undefined, after: PageProbe | undefined): string {
+  if (!after) return '';
+  if (!before) return '页面已加载';
+  if (before.url !== after.url) return `页面跳转到 ${after.url}`;
+
+  const seen = new Set(
+    before.text.split('\n').map((s) => s.trim()).filter(Boolean),
+  );
+  for (const line of after.text.split('\n')) {
+    const t = line.trim();
+    if (t && !seen.has(t)) return `页面出现「${t.slice(0, 120)}」`;
+  }
+  if (before.text !== after.text) return '页面内容已变化，但没有新增文字';
+  return '页面没有明显变化';
+}
+
 /**
  * BrowserManager — the tab set of the embedded browser engine.
  *
@@ -1343,7 +1372,21 @@ export class BrowserManager {
   }
 
   /** Click an element by selector. Supports CSS, :has-text(), role=, text=, and [N] ref. */
-  async click(selector: string, tabId?: string): Promise<{ selector: string; clicked: boolean; error?: string }> {
+  /** Cheap before/after view of the page, used to say what an action did. */
+  private async probe(t: BrowserTab): Promise<PageProbe | undefined> {
+    try {
+      const r = await this.sendCommand(t, 'Runtime.evaluate', {
+        expression:
+          '(function(){return {url: location.href, text: (document.body && document.body.innerText || "").slice(0, 4000)};})()',
+        returnByValue: true,
+      });
+      return (r?.result as { value?: PageProbe })?.value;
+    } catch {
+      return undefined;
+    }
+  }
+
+  async click(selector: string, tabId?: string): Promise<{ selector: string; clicked: boolean; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
     // Auto-wait: poll for element up to 5s
     const found = await this.waitForElement(selector, 5000, t);
@@ -1363,6 +1406,7 @@ export class BrowserManager {
       return { selector, clicked: false, error: errorMsg };
     }
 
+    const before = await this.probe(t);
     const expr = this.buildExpression(`(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
       if (!el) return false;
@@ -1375,7 +1419,11 @@ export class BrowserManager {
       returnByValue: true,
     });
     const clicked = (result?.result as { value?: boolean })?.value ?? false;
-    return { selector, clicked };
+    // Give the page a beat to render, then say what changed — that is the
+    // question the model used to answer with an extra evaluate or screenshot.
+    if (clicked) await new Promise((r) => setTimeout(r, 150));
+    const after = clicked ? await this.probe(t) : undefined;
+    return { selector, clicked, effect: describePageChange(before, after) };
   }
 
   /**
@@ -1394,7 +1442,7 @@ export class BrowserManager {
     selector: string,
     files: string[],
     tabId?: string,
-  ): Promise<{ attached: boolean; files: string[]; via?: 'chooser' | 'input'; error?: string }> {
+  ): Promise<{ attached: boolean; files: string[]; via?: 'chooser' | 'input'; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
     if (!files.length) return { attached: false, files, error: 'No files given' };
     const found = await this.waitForElement(selector, 5000, t);
@@ -1423,7 +1471,7 @@ export class BrowserManager {
         const backendNodeId = (described?.result as { node?: { backendNodeId?: number } })?.node?.backendNodeId;
         if (!backendNodeId) return { attached: false, files, error: 'Could not resolve the file input node' };
         await this.sendCommand(t, 'DOM.setFileInputFiles', { files, backendNodeId });
-        return { attached: true, files: names, via: 'input' };
+        return { attached: true, files: names, via: 'input', effect: `已附加 ${names.join('、')}` };
       } catch (err) {
         return { attached: false, files, error: `setFileInputFiles failed: ${(err as Error).message}` };
       }
@@ -1445,6 +1493,7 @@ export class BrowserManager {
     const pt = (rectResult?.result as { value?: { x: number; y: number } })?.value;
     if (!pt) return { attached: false, files, error: `Cannot locate: "${selector}"` };
 
+    const beforeUpload = await this.probe(t);
     const wc = t.wc;
     const captured: { backendNodeId?: number } = {};
     let notify: (() => void) | null = null;
@@ -1480,7 +1529,16 @@ export class BrowserManager {
         files,
         backendNodeId: captured.backendNodeId,
       });
-      return { attached: true, files: names, via: 'chooser' };
+      // The page usually renders an attachment chip; saying so saves the model
+      // a verification round trip.
+      await new Promise((r) => setTimeout(r, 200));
+      const after = await this.probe(t);
+      return {
+        attached: true,
+        files: names,
+        via: 'chooser',
+        effect: `${describePageChange(beforeUpload, after) || '已写入文件框'}（${names.join('、')}）`,
+      };
     } catch (err) {
       return { attached: false, files, error: `Upload failed: ${(err as Error).message}` };
     } finally {
@@ -1492,7 +1550,7 @@ export class BrowserManager {
   }
 
   /** Fill an input by selector. Uses native value setter for React/Vue. Supports all selector formats. */
-  async fill(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; error?: string }> {
+  async fill(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
     const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
@@ -1580,7 +1638,11 @@ export class BrowserManager {
       };
     }
 
-    return { selector, value };
+    return {
+      selector,
+      value,
+      effect: `已写入，当前值「${(verified.actual || '').slice(0, 60)}」`,
+    };
   }
 
   /** Hover over an element by selector. */
@@ -1611,7 +1673,7 @@ export class BrowserManager {
   }
 
   /** Select an option in a <select> element by value or visible text. */
-  async selectOption(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; selected: boolean; error?: string }> {
+  async selectOption(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; selected: boolean; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
     const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
@@ -1620,23 +1682,29 @@ export class BrowserManager {
 
     const expr = this.buildExpression(`(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
-      if (!el || el.tagName.toLowerCase() !== 'select') return false;
+      if (!el || el.tagName.toLowerCase() !== 'select') return { ok: false };
       var opts = Array.from(el.options);
       // Try exact value match, then text match
       var target = opts.find(function(o) { return o.value === ${JSON.stringify(value)}; })
         || opts.find(function(o) { return o.textContent.trim() === ${JSON.stringify(value)}; })
         || opts.find(function(o) { return o.textContent.trim().includes(${JSON.stringify(value)}); });
-      if (!target) return false;
+      if (!target) return { ok: false };
       el.value = target.value;
       el.dispatchEvent(new Event('input', {bubbles: true}));
       el.dispatchEvent(new Event('change', {bubbles: true}));
-      return true;
+      return { ok: true, text: target.textContent.trim() };
     })()`);
     const result = await this.sendCommand(t, 'Runtime.evaluate', {
       expression: expr,
       returnByValue: true,
     });
-    return { selector, value, selected: (result?.result as { value?: boolean })?.value ?? false };
+    const picked = (result?.result as { value?: { ok: boolean; text?: string } })?.value;
+    return {
+      selector,
+      value,
+      selected: picked?.ok === true,
+      effect: picked?.ok ? `已选中「${(picked.text ?? '').slice(0, 60)}」` : '',
+    };
   }
 
   /**

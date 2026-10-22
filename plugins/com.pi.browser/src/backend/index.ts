@@ -802,8 +802,11 @@ function describe(err: unknown): string {
 }
 
 /** The engine reports failures as `{ error }` instead of throwing; surface them. */
-function actionResult(prefix: string, r: { error?: string }, extra = ''): string {
-  return r.error ? `${prefix}失败: ${r.error}` : `${prefix}成功${extra}`;
+function actionResult(prefix: string, r: { error?: string; effect?: string }, extra = ''): string {
+  if (r.error) return `${prefix}失败: ${r.error}`;
+  // `effect` is the host's own read-back ("当前值…", "页面出现…"), which is
+  // what the model used to confirm with an extra evaluate or screenshot.
+  return `${prefix}成功${r.effect ? ` · ${r.effect}` : ''}${extra}`;
 }
 
 /**
@@ -821,35 +824,35 @@ async function runActStep(
 
   if (typeof step.click === 'string') {
     const selector = step.click;
-    const r = await ctx.call<{ clicked: boolean; error?: string }>('browser.click', { selector, ...tabArg });
+    const r = await ctx.call<{ clicked: boolean; effect?: string; error?: string }>('browser.click', { selector, ...tabArg });
     if (r.error || !r.clicked) throw new Error(r.error ?? `点击 "${selector}" 失败`);
-    return `点击 "${selector}"`;
+    return `点击 "${selector}"${r.effect ? ` · ${r.effect}` : ''}`;
   }
 
   if (step.fill && typeof step.fill === 'object') {
     const f = step.fill as { selector?: unknown; value?: unknown };
     const selector = String(f.selector ?? '').trim();
     if (!selector) throw new Error('fill 缺少 selector');
-    const r = await ctx.call<{ error?: string }>('browser.fill', {
+    const r = await ctx.call<{ error?: string; effect?: string }>('browser.fill', {
       selector,
       value: String(f.value ?? ''),
       ...tabArg,
     });
     if (r.error) throw new Error(r.error);
-    return `填写 "${selector}" = ${String(f.value ?? '')}`;
+    return `填写 "${selector}" = ${String(f.value ?? '')}${r.effect ? ` · ${r.effect}` : ''}`;
   }
 
   if (step.select && typeof step.select === 'object') {
     const s = step.select as { selector?: unknown; value?: unknown };
     const selector = String(s.selector ?? '').trim();
     if (!selector) throw new Error('select 缺少 selector');
-    const r = await ctx.call<{ selected: boolean; error?: string }>('browser.select', {
+    const r = await ctx.call<{ selected: boolean; effect?: string; error?: string }>('browser.select', {
       selector,
       value: String(s.value ?? ''),
       ...tabArg,
     });
     if (r.error || !r.selected) throw new Error(r.error ?? `在 "${selector}" 选中失败`);
-    return `在 "${selector}" 选中 "${String(s.value ?? '')}"`;
+    return `在 "${selector}" 选中 "${String(s.value ?? '')}"${r.effect ? ` · ${r.effect}` : ''}`;
   }
 
   if (step.upload && typeof step.upload === 'object') {
@@ -857,12 +860,12 @@ async function runActStep(
     const selector = String(u.selector ?? '').trim();
     const files = Array.isArray(u.files) ? u.files.map(String) : [];
     if (!selector || files.length === 0) throw new Error('upload 需要 selector 和 files');
-    const r = await ctx.call<{ attached: boolean; files: string[]; error?: string }>(
+    const r = await ctx.call<{ attached: boolean; files: string[]; effect?: string; error?: string }>(
       'browser.upload',
       { selector, files, ...tabArg },
     );
     if (!r.attached) throw new Error(r.error ?? '上传失败');
-    return `上传 ${r.files.join('、')} 到 "${selector}"`;
+    return `上传 ${r.files.join('、')} 到 "${selector}"${r.effect ? ` · ${r.effect}` : ''}`;
   }
 
   if (typeof step.hover === 'string') {
@@ -1881,14 +1884,14 @@ plugin({
         if (!selector) throw new Error('missing selector');
         const files = Array.isArray(params.files) ? (params.files as unknown[]).map(String) : [];
         if (!files.length) throw new Error('missing files');
-        const r = await ctx.call<{ attached: boolean; files: string[]; via?: string; error?: string }>(
+        const r = await ctx.call<{ attached: boolean; files: string[]; via?: string; effect?: string; error?: string }>(
           'browser.upload',
           { selector, files, ...(tid ? { tabId: tid } : {}) },
         );
         if (!r.attached) throw new Error(r.error ?? '上传失败');
         return `已把 ${r.files.join('、')} 交给 "${selector}"（${
           r.via === 'input' ? '直接写入文件框' : '拦截文件选择框'
-        }）。请确认页面上出现了这些文件。`;
+        }）${r.effect ? ` · ${r.effect}` : ''}`;
       }
 
       case 'browser_fill': {

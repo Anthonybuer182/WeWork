@@ -829,7 +829,8 @@ function describe2(err) {
 }
 __name(describe2, "describe");
 function actionResult(prefix, r, extra = "") {
-  return r.error ? `${prefix}\u5931\u8D25: ${r.error}` : `${prefix}\u6210\u529F${extra}`;
+  if (r.error) return `${prefix}\u5931\u8D25: ${r.error}`;
+  return `${prefix}\u6210\u529F${r.effect ? ` \xB7 ${r.effect}` : ""}${extra}`;
 }
 __name(actionResult, "actionResult");
 async function runActStep(step, ctx, tid) {
@@ -838,7 +839,7 @@ async function runActStep(step, ctx, tid) {
     const selector = step.click;
     const r = await ctx.call("browser.click", { selector, ...tabArg });
     if (r.error || !r.clicked) throw new Error(r.error ?? `\u70B9\u51FB "${selector}" \u5931\u8D25`);
-    return `\u70B9\u51FB "${selector}"`;
+    return `\u70B9\u51FB "${selector}"${r.effect ? ` \xB7 ${r.effect}` : ""}`;
   }
   if (step.fill && typeof step.fill === "object") {
     const f = step.fill;
@@ -850,7 +851,7 @@ async function runActStep(step, ctx, tid) {
       ...tabArg
     });
     if (r.error) throw new Error(r.error);
-    return `\u586B\u5199 "${selector}" = ${String(f.value ?? "")}`;
+    return `\u586B\u5199 "${selector}" = ${String(f.value ?? "")}${r.effect ? ` \xB7 ${r.effect}` : ""}`;
   }
   if (step.select && typeof step.select === "object") {
     const s = step.select;
@@ -862,7 +863,7 @@ async function runActStep(step, ctx, tid) {
       ...tabArg
     });
     if (r.error || !r.selected) throw new Error(r.error ?? `\u5728 "${selector}" \u9009\u4E2D\u5931\u8D25`);
-    return `\u5728 "${selector}" \u9009\u4E2D "${String(s.value ?? "")}"`;
+    return `\u5728 "${selector}" \u9009\u4E2D "${String(s.value ?? "")}"${r.effect ? ` \xB7 ${r.effect}` : ""}`;
   }
   if (step.upload && typeof step.upload === "object") {
     const u = step.upload;
@@ -874,7 +875,7 @@ async function runActStep(step, ctx, tid) {
       { selector, files, ...tabArg }
     );
     if (!r.attached) throw new Error(r.error ?? "\u4E0A\u4F20\u5931\u8D25");
-    return `\u4E0A\u4F20 ${r.files.join("\u3001")} \u5230 "${selector}"`;
+    return `\u4E0A\u4F20 ${r.files.join("\u3001")} \u5230 "${selector}"${r.effect ? ` \xB7 ${r.effect}` : ""}`;
   }
   if (typeof step.hover === "string") {
     const r = await ctx.call("browser.hover", {
@@ -1703,7 +1704,7 @@ plugin({
           { selector, files, ...tid ? { tabId: tid } : {} }
         );
         if (!r.attached) throw new Error(r.error ?? "\u4E0A\u4F20\u5931\u8D25");
-        return `\u5DF2\u628A ${r.files.join("\u3001")} \u4EA4\u7ED9 "${selector}"\uFF08${r.via === "input" ? "\u76F4\u63A5\u5199\u5165\u6587\u4EF6\u6846" : "\u62E6\u622A\u6587\u4EF6\u9009\u62E9\u6846"}\uFF09\u3002\u8BF7\u786E\u8BA4\u9875\u9762\u4E0A\u51FA\u73B0\u4E86\u8FD9\u4E9B\u6587\u4EF6\u3002`;
+        return `\u5DF2\u628A ${r.files.join("\u3001")} \u4EA4\u7ED9 "${selector}"\uFF08${r.via === "input" ? "\u76F4\u63A5\u5199\u5165\u6587\u4EF6\u6846" : "\u62E6\u622A\u6587\u4EF6\u9009\u62E9\u6846"}\uFF09${r.effect ? ` \xB7 ${r.effect}` : ""}`;
       }
       case "browser_fill": {
         const selector = String(params.selector ?? "").trim();
