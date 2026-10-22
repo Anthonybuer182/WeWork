@@ -404,7 +404,12 @@ export class CapabilityHub {
     });
     this.capabilities.set('browser.click', {
       permission: 'browser',
-      handler: async ({ params }) => (await bm()).click(String(params.selector ?? ''), tabIdOf(params)),
+      handler: async ({ params }) =>
+        (await bm()).click(
+          String(params.selector ?? ''),
+          tabIdOf(params),
+          params.dialog === 'accept' ? 'accept' : 'dismiss',
+        ),
     });
     this.capabilities.set('browser.upload', {
       permission: 'browser',

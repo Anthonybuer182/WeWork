@@ -837,7 +837,8 @@ async function runActStep(step, ctx, tid) {
   const tabArg = tid ? { tabId: tid } : {};
   if (typeof step.click === "string") {
     const selector = step.click;
-    const r = await ctx.call("browser.click", { selector, ...tabArg });
+    const dialog = step.dialog === "accept" ? { dialog: "accept" } : {};
+    const r = await ctx.call("browser.click", { selector, ...dialog, ...tabArg });
     if (r.error || !r.clicked) throw new Error(r.error ?? `\u70B9\u51FB "${selector}" \u5931\u8D25`);
     return `\u70B9\u51FB "${selector}"${r.effect ? ` \xB7 ${r.effect}` : ""}`;
   }
@@ -1690,6 +1691,7 @@ plugin({
         if (!selector) throw new Error("missing selector");
         const r = await ctx.call("browser.click", {
           selector,
+          ...params.dialog === "accept" ? { dialog: "accept" } : {},
           ...tid ? { tabId: tid } : {}
         });
         return actionResult(`\u70B9\u51FB "${selector}"`, r);

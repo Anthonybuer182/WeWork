@@ -1,4 +1,5 @@
 import { WebContentsView, BrowserWindow, session } from 'electron';
+import { readFile } from 'node:fs/promises';
 import { BROWSER_HELPERS_JS } from './browser-helpers';
 import type { VlmAnalyzer } from './vlm-analyzer';
 
@@ -114,6 +115,18 @@ class BrowserTab {
   refreshCompositorTimer: ReturnType<typeof setTimeout> | null = null;
   /** Millis of the last show — the LRU eviction rank. */
   lastShownAt = 0;
+  /** Isolated-world context per child frame — the only way into cross-origin ones. */
+  frameContexts: Map<string, number> | null = null;
+  /** Ref numbers handed to each frame's documents start at this base. */
+  frameRefBase: Map<string, number> | null = null;
+  /** Ref id → frameId, so an action on a frame's ref runs in that frame. */
+  refFrames: Map<string, string> | null = null;
+  /** Monotonic allocator for frame ref bases. */
+  frameSeq = 0;
+  /** Message of the last JS dialog (confirm/alert/beforeunload), cleared per action. */
+  lastDialog: string | null = null;
+  /** How to answer the next JS dialog. Dismiss is the safe default. */
+  dialogPolicy: 'accept' | 'dismiss' = 'dismiss';
 
   constructor(id: string, view: WebContentsView) {
     this.id = id;
@@ -699,7 +712,14 @@ export class BrowserManager {
     // Listen for CDP events
     wc.debugger.on('message', (_event, method: string, params: Record<string, unknown>) => {
       if (method === 'Page.frameNavigated' && params?.frame) {
-        const frame = params.frame as { url?: string };
+        const frame = params.frame as { url?: string; parentId?: string };
+        // A new top document invalidates every frame world and ref mapping.
+        if (!frame.parentId) {
+          t.frameContexts = null;
+          t.frameRefBase = null;
+          t.refFrames = null;
+          t.frameSeq = 0;
+        }
         const url = frame.url || '';
         if (url && !url.startsWith('about:')) {
           this.urlChangedCallbacks.forEach((cb) => cb(t.id, url));
@@ -708,6 +728,18 @@ export class BrowserManager {
           this.injectHelpers(t);
           this.scheduleAutoZoom(t);
         }
+      }
+
+      if (method === 'Page.javascriptDialogOpening') {
+        // A confirm() blocks the renderer until someone answers. Electron's
+        // default is to accept, which silently confirms "删除全部" — the worst
+        // possible default. Dismiss unless the caller asked to accept, and
+        // remember the text so the action can report what was asked.
+        const p = params as { message?: string; type?: string };
+        t.lastDialog = p.message || p.type || '(对话框)';
+        void this.sendCommand(t, 'Page.handleJavaScriptDialog', {
+          accept: t.dialogPolicy === 'accept',
+        }).catch(() => {});
       }
 
       if (method === 'Page.loadEventFired') {
@@ -1163,6 +1195,113 @@ export class BrowserManager {
 
   /** ——— Snapshot / accessibility ——— */
 
+  // ── Frames ──
+  // A cross-origin iframe is a separate document the top page cannot touch:
+  // `contentDocument` is null, so neither the snapshot nor the resolver sees
+  // it. CDP can still reach it through an isolated world per frame — that is
+  // how the agent gets the same fill/click it has on the main document.
+
+  private static originOf(url: string): string {
+    try {
+      return new URL(url).origin;
+    } catch {
+      return '';
+    }
+  }
+
+  private async listFrames(t: BrowserTab): Promise<Array<{ frameId: string; url: string; parentId?: string }>> {
+    const out: Array<{ frameId: string; url: string; parentId?: string }> = [];
+    try {
+      type Node = { frame: { id: string; url: string; parentId?: string }; childFrames?: Node[] };
+      const tree = await this.sendCommand(t, 'Page.getFrameTree');
+      const walk = (n: Node) => {
+        out.push({ frameId: n.frame.id, url: n.frame.url, parentId: n.frame.parentId });
+        for (const c of n.childFrames ?? []) walk(c);
+      };
+      const root = (tree as { frameTree?: Node })?.frameTree;
+      if (root) walk(root);
+    } catch {}
+    return out;
+  }
+
+  /** An isolated world in `frameId` with the helpers loaded, created once. */
+  private async frameContext(t: BrowserTab, frameId: string): Promise<number | null> {
+    if (!t.frameContexts) t.frameContexts = new Map();
+    if (!t.frameRefBase) t.frameRefBase = new Map();
+    const cached = t.frameContexts.get(frameId);
+    if (cached) return cached;
+    try {
+      const world = await this.sendCommand(t, 'Page.createIsolatedWorld', { frameId, worldName: 'pi-helpers' });
+      const ctx = (world as { executionContextId?: number })?.executionContextId;
+      if (!ctx) return null;
+      await this.sendCommand(t, 'Runtime.evaluate', {
+        expression: BROWSER_HELPERS_JS,
+        contextId: ctx,
+      });
+      // Refs from different documents must not collide — the model passes a
+      // bare [N] and the host routes it by number. Give every frame its own
+      // thousand-number band.
+      const base = 1000 * ++t.frameSeq;
+      await this.sendCommand(t, 'Runtime.evaluate', {
+        expression: `window.__piRefSeq = ${base};`,
+        contextId: ctx,
+      });
+      t.frameContexts.set(frameId, ctx);
+      t.frameRefBase.set(frameId, base);
+      return ctx;
+    } catch {
+      return null;
+    }
+  }
+
+  private async evaluateInFrame(t: BrowserTab, frameId: string, expression: string): Promise<unknown> {
+    const ctx = await this.frameContext(t, frameId);
+    if (!ctx) return undefined;
+    try {
+      const r = await this.sendCommand(t, 'Runtime.evaluate', {
+        expression,
+        contextId: ctx,
+        returnByValue: true,
+        awaitPromise: true,
+      });
+      return (r as { result?: { value?: unknown } })?.result?.value;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** The frame a ref belongs to, when it belongs to a child frame. */
+  private frameForSelector(t: BrowserTab, selector: string): string | null {
+    const m = /^\[(\d+)\]$/.exec(selector) || /^ref:(\d+)$/.exec(selector);
+    if (!m || !t.refFrames) return null;
+    return t.refFrames.get(m[1]) ?? null;
+  }
+
+  /** Snapshot of every cross-origin child frame, appended to the main one. */
+  private async crossOriginSnapshot(t: BrowserTab, topOrigin: string): Promise<string> {
+    const frames = await this.listFrames(t);
+    if (frames.length <= 1) return '';
+    if (!t.refFrames) t.refFrames = new Map();
+    const parts: string[] = [];
+    for (const f of frames) {
+      if (!f.parentId) continue;
+      // Same-origin frames are already walked by piSnapshot via contentDocument.
+      if (f.url && BrowserManager.originOf(f.url) === topOrigin) continue;
+      const text = await this.evaluateInFrame(t, f.frameId, 'window.piSnapshot ? window.piSnapshot() : ""');
+      if (typeof text !== 'string' || !text.trim()) continue;
+      const refs = await this.evaluateInFrame(
+        t,
+        f.frameId,
+        'JSON.stringify(Array.prototype.map.call(document.querySelectorAll("[data-pi-ref]"), function(e){return e.getAttribute("data-pi-ref");}))',
+      );
+      try {
+        for (const ref of JSON.parse(String(refs ?? '[]')) as string[]) t.refFrames.set(ref, f.frameId);
+      } catch {}
+      parts.push(`\n--- Frame (跨域 ${f.url.slice(0, 90)}) ---\n${text}`);
+    }
+    return parts.join('\n');
+  }
+
   /** Take a snapshot of interactive elements with ref IDs for easy targeting. */
   async getSnapshot(tabId?: string): Promise<string> {
     const t = this.requireTab(tabId);
@@ -1176,7 +1315,17 @@ export class BrowserManager {
         expression: 'window.piSnapshot ? window.piSnapshot() : "(helpers not loaded)"',
         returnByValue: true,
       });
-      return (result?.result as { value?: string })?.value ?? '(empty page)';
+      const value = (result?.result as { value?: string })?.value ?? '(empty page)';
+      // Cross-origin frames are invisible to the page's own JS; ask CDP.
+      let topOrigin = '';
+      try {
+        const u = await this.sendCommand(t, 'Runtime.evaluate', { expression: 'location.href', returnByValue: true });
+        topOrigin = BrowserManager.originOf(
+          String((u as { result?: { value?: string } })?.result?.value ?? ''),
+        );
+      } catch {}
+      const extra = await this.crossOriginSnapshot(t, topOrigin);
+      return extra ? `${value}\n${extra}` : value;
     } catch {
       return '(snapshot unavailable)';
     }
@@ -1386,8 +1535,50 @@ export class BrowserManager {
     }
   }
 
-  async click(selector: string, tabId?: string): Promise<{ selector: string; clicked: boolean; effect?: string; error?: string }> {
+  /**
+   * Type like a person: one trusted key event per character.
+   *
+   * `Input.insertText` inserts the whole string at once and fires `input`
+   * without any `keydown`, which fields that gate on real keystrokes (masks,
+   * amount inputs, components that ignore programmatic writes) reject. Long
+   * values switch to a single keydown + insert so a paragraph does not turn
+   * into hundreds of round trips.
+   */
+  private async typeText(t: BrowserTab, value: string): Promise<void> {
+    const chars = Array.from(value);
+    if (chars.length > 120) {
+      await this.sendCommand(t, 'Input.dispatchKeyEvent', { type: 'keyDown', key: 'Unidentified' });
+      await this.sendCommand(t, 'Input.insertText', { text: value });
+      return;
+    }
+    for (const ch of chars) {
+      try {
+        await this.sendCommand(t, 'Input.dispatchKeyEvent', {
+          type: 'keyDown',
+          text: ch,
+          unmodifiedText: ch,
+          key: ch,
+        });
+        await this.sendCommand(t, 'Input.dispatchKeyEvent', { type: 'keyUp', key: ch });
+      } catch {
+        // Fall back to a bulk insert for the rest — a failed single key must
+        // not lose the value.
+        await this.sendCommand(t, 'Input.insertText', { text: value });
+        return;
+      }
+    }
+  }
+
+  async click(
+    selector: string,
+    tabId?: string,
+    dialog?: 'accept' | 'dismiss',
+  ): Promise<{ selector: string; clicked: boolean; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
+    t.lastDialog = null;
+    t.dialogPolicy = dialog === 'accept' ? 'accept' : 'dismiss';
+    const frameId = this.frameForSelector(t, selector);
+    if (frameId) return this.clickInFrame(t, selector, frameId);
     // Auto-wait: poll for element up to 5s
     const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
@@ -1423,7 +1614,214 @@ export class BrowserManager {
     // question the model used to answer with an extra evaluate or screenshot.
     if (clicked) await new Promise((r) => setTimeout(r, 150));
     const after = clicked ? await this.probe(t) : undefined;
-    return { selector, clicked, effect: describePageChange(before, after) };
+    return {
+      selector,
+      clicked,
+      effect: [describePageChange(before, after), this.takeDialogNote(t)].filter(Boolean).join('；'),
+    };
+  }
+
+  /** What the page asked in a confirm() during the last action, if anything. */
+  private takeDialogNote(t: BrowserTab): string {
+    if (!t.lastDialog) return '';
+    const note = `页面弹出确认框「${t.lastDialog.slice(0, 80)}」，${
+      t.dialogPolicy === 'accept' ? '已确认' : '已取消'
+    }`;
+    t.lastDialog = null;
+    return note;
+  }
+
+  /** Click inside a child frame (cross-origin included). */
+  private async clickInFrame(
+    t: BrowserTab,
+    selector: string,
+    frameId: string,
+  ): Promise<{ selector: string; clicked: boolean; effect?: string; error?: string }> {
+    const ctx = await this.frameContext(t, frameId);
+    if (!ctx) return { selector, clicked: false, error: '无法进入该 iframe' };
+    const before = String(
+      (await this.evaluateInFrame(t, frameId, '(document.body && document.body.innerText || "")')) ?? '',
+    );
+    let clicked = false;
+    try {
+      const r = await this.sendCommand(t, 'Runtime.evaluate', {
+        expression: `(function(){var el=window.piResolveSelector(${JSON.stringify(selector)});if(!el)return false;el.scrollIntoView({block:'center'});el.click();return true;})()`,
+        contextId: ctx,
+        returnByValue: true,
+      });
+      clicked = (r as { result?: { value?: boolean } })?.result?.value === true;
+    } catch {}
+    if (!clicked) return { selector, clicked: false, error: `Element not found: "${selector}"` };
+    await new Promise((r) => setTimeout(r, 150));
+    const after = String(
+      (await this.evaluateInFrame(t, frameId, '(document.body && document.body.innerText || "")')) ?? '',
+    );
+    return {
+      selector,
+      clicked,
+      effect: [describePageChange({ url: '', text: before }, { url: '', text: after }), this.takeDialogNote(t)]
+        .filter(Boolean)
+        .join('；'),
+    };
+  }
+
+  /** Fill inside a child frame (cross-origin included). */
+  private async fillInFrame(
+    t: BrowserTab,
+    selector: string,
+    value: string,
+    frameId: string,
+  ): Promise<{ selector: string; value: string; effect?: string; error?: string }> {
+    const ctx = await this.frameContext(t, frameId);
+    if (!ctx) return { selector, value, error: '无法进入该 iframe' };
+    const focusExpr = `(function(){
+      var el=window.piResolveSelector(${JSON.stringify(selector)});
+      if(!el) return null;
+      el.scrollIntoView({block:'center'});
+      try{el.focus();}catch(e){}
+      var doc=el.ownerDocument;
+      var editable=el.isContentEditable||el.getAttribute('contenteditable')==='true'||el.getAttribute('contenteditable')==='';
+      if(editable){var rg=doc.createRange();rg.selectNodeContents(el);rg.collapse(false);var s=doc.defaultView.getSelection();s.removeAllRanges();s.addRange(rg);}
+      else if(el.select){try{el.select();}catch(e){}}
+      return {focused: doc.activeElement===el};
+    })()`;
+    let focused = false;
+    try {
+      const r = await this.sendCommand(t, 'Runtime.evaluate', { expression: focusExpr, contextId: ctx, returnByValue: true });
+      focused = ((r as { result?: { value?: { focused?: boolean } } })?.result?.value?.focused) === true;
+    } catch {}
+    if (focused) {
+      try {
+        await this.typeText(t, value);
+      } catch {}
+    }
+    // Same rule as the main-document path: read the field back, repair if the
+    // value did not stick, and report what is actually there.
+    const verify = `(function(){
+      var el=window.piResolveSelector(${JSON.stringify(selector)});
+      if(!el) return {ok:false, actual:''};
+      var want=${JSON.stringify(value)};
+      var editable=el.isContentEditable||el.getAttribute('contenteditable')==='true'||el.getAttribute('contenteditable')==='';
+      var read=function(){return editable?(el.textContent||''):(el.value!=null?String(el.value):'');};
+      var actual=read();
+      if(actual.indexOf(want)!==-1) return {ok:true,actual:actual.slice(0,80)};
+      try{
+        el.focus();
+        if(editable){el.textContent=want;el.dispatchEvent(new Event('input',{bubbles:true}));}
+        else if(el.value!=null){var proto=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;var setter=Object.getOwnPropertyDescriptor(proto,'value').set;setter.call(el,want);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}
+        actual=read();
+      }catch(e){}
+      return {ok:actual.indexOf(want)!==-1,actual:actual.slice(0,80)};
+    })()`;
+    const verified = (await this.evaluateInFrame(t, frameId, verify)) as
+      | { ok?: boolean; actual?: string }
+      | undefined;
+    if (!verified?.ok) {
+      return {
+        selector,
+        value,
+        error: `Value did not stick on "${selector}" (field contains "${verified?.actual ?? ''}")`,
+      };
+    }
+    return { selector, value, effect: `已写入，当前值「${(verified.actual || '').slice(0, 60)}」` };
+  }
+
+  /** Select inside a child frame (cross-origin included). */
+  private async selectInFrame(
+    t: BrowserTab,
+    selector: string,
+    value: string,
+    frameId: string,
+  ): Promise<{ selector: string; value: string; selected: boolean; effect?: string; error?: string }> {
+    const ctx = await this.frameContext(t, frameId);
+    if (!ctx) return { selector, value, selected: false, error: '无法进入该 iframe' };
+    const expr = `(function(){
+      var el=window.piResolveSelector(${JSON.stringify(selector)});
+      if(!el||el.tagName.toLowerCase()!=='select') return {ok:false};
+      var opts=Array.from(el.options);
+      var target=opts.find(function(o){return o.value===${JSON.stringify(value)};})
+        ||opts.find(function(o){return o.textContent.trim()===${JSON.stringify(value)};})
+        ||opts.find(function(o){return o.textContent.trim().indexOf(${JSON.stringify(value)})!==-1;});
+      if(!target) return {ok:false};
+      el.value=target.value;
+      el.dispatchEvent(new Event('input',{bubbles:true}));
+      el.dispatchEvent(new Event('change',{bubbles:true}));
+      return {ok:true,text:target.textContent.trim()};
+    })()`;
+    let picked: { ok?: boolean; text?: string } | undefined;
+    try {
+      const r = await this.sendCommand(t, 'Runtime.evaluate', { expression: expr, contextId: ctx, returnByValue: true });
+      picked = (r as { result?: { value?: { ok?: boolean; text?: string } } })?.result?.value;
+    } catch {}
+    return {
+      selector,
+      value,
+      selected: picked?.ok === true,
+      effect: picked?.ok ? `已选中「${(picked.text ?? '').slice(0, 60)}」` : '',
+    };
+  }
+
+  /**
+   * Attach files by synthesising a drop.
+   *
+   * Some upload widgets have no input[type=file] at all — a drag-and-drop
+   * zone is the only way in — and a control inside a cross-origin frame
+   * cannot be clicked with a trusted event from the top viewport. Both land
+   * here: the host reads the bytes, the page receives a real DataTransfer.
+   */
+  private async uploadByDrop(
+    t: BrowserTab,
+    selector: string,
+    files: string[],
+    frameId: string | null,
+  ): Promise<{ attached: boolean; files: string[]; via?: 'drop'; effect?: string; error?: string }> {
+    const names = files.map((f) => f.split(/[\\/]/).pop() || f);
+    let total = 0;
+    const payload: Array<{ name: string; b64: string }> = [];
+    try {
+      for (const f of files) {
+        const data = await readFile(f);
+        total += data.byteLength;
+        if (total > 10 * 1024 * 1024) {
+          return { attached: false, files: names, error: '拖拽模式单次最多 10MB' };
+        }
+        payload.push({ name: f.split(/[\\/]/).pop() || f, b64: data.toString('base64') });
+      }
+    } catch (err) {
+      return { attached: false, files: names, error: `读取文件失败: ${(err as Error).message}` };
+    }
+
+    const expr = `(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return {ok:false, error:'element not found'};
+      var files = ${JSON.stringify(payload)}.map(function(p){
+        var bin = atob(p.b64);
+        var arr = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        return new File([arr], p.name);
+      });
+      var dt = new DataTransfer();
+      files.forEach(function(f){ dt.items.add(f); });
+      ['dragenter','dragover','drop'].forEach(function(type){
+        el.dispatchEvent(new DragEvent(type, {bubbles:true, cancelable:true, dataTransfer:dt}));
+      });
+      return {ok:true};
+    })()`;
+
+    let res: { ok?: boolean; error?: string } | undefined;
+    try {
+      if (frameId) {
+        res = (await this.evaluateInFrame(t, frameId, expr)) as typeof res;
+      } else {
+        const r = await this.sendCommand(t, 'Runtime.evaluate', { expression: expr, returnByValue: true });
+        res = (r as { result?: { value?: { ok?: boolean; error?: string } } })?.result?.value;
+      }
+    } catch (err) {
+      return { attached: false, files: names, error: `拖拽派发失败: ${(err as Error).message}` };
+    }
+    if (!res?.ok) return { attached: false, files: names, error: res?.error ?? '拖拽失败' };
+    await new Promise((r) => setTimeout(r, 200));
+    return { attached: true, files: names, via: 'drop', effect: `已拖入 ${names.join('、')}` };
   }
 
   /**
@@ -1442,9 +1840,13 @@ export class BrowserManager {
     selector: string,
     files: string[],
     tabId?: string,
-  ): Promise<{ attached: boolean; files: string[]; via?: 'chooser' | 'input'; effect?: string; error?: string }> {
+  ): Promise<{ attached: boolean; files: string[]; via?: 'chooser' | 'input' | 'drop'; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
     if (!files.length) return { attached: false, files, error: 'No files given' };
+    const frameId = this.frameForSelector(t, selector);
+    // A trusted click inside a cross-origin frame needs coordinates in the
+    // top viewport; a synthesised drop needs only the frame's own context.
+    if (frameId) return this.uploadByDrop(t, selector, files, frameId);
     const found = await this.waitForElement(selector, 5000, t);
     if (!found) return { attached: false, files, error: `Element not found: "${selector}"` };
 
@@ -1463,12 +1865,12 @@ export class BrowserManager {
         expression: this.buildExpression(`window.piResolveSelector(${JSON.stringify(selector)})`),
         returnByValue: false,
       });
-      const objectId = (handle?.result as { result?: { objectId?: string } })?.result?.objectId;
+      const objectId = (handle as { result?: { objectId?: string } })?.result?.objectId;
       if (!objectId) return { attached: false, files, error: 'Could not grab the file input' };
       try {
         await this.sendCommand(t, 'DOM.enable');
         const described = await this.sendCommand(t, 'DOM.describeNode', { objectId });
-        const backendNodeId = (described?.result as { node?: { backendNodeId?: number } })?.node?.backendNodeId;
+        const backendNodeId = (described as { node?: { backendNodeId?: number } })?.node?.backendNodeId;
         if (!backendNodeId) return { attached: false, files, error: 'Could not resolve the file input node' };
         await this.sendCommand(t, 'DOM.setFileInputFiles', { files, backendNodeId });
         return { attached: true, files: names, via: 'input', effect: `已附加 ${names.join('、')}` };
@@ -1518,10 +1920,16 @@ export class BrowserManager {
         new Promise<boolean>((r) => setTimeout(() => r(true), 3000)),
       ]);
       if (timedOut || !captured.backendNodeId) {
+        // No chooser: this is probably a drag-and-drop zone. Try a real drop
+        // before giving up — that is the only way into such widgets.
+        const dropped = await this.uploadByDrop(t, selector, files, null);
+        if (dropped.attached) return dropped;
         return {
           attached: false,
           files,
-          error: 'The click did not open a file chooser. Point at the control that opens it, or at the file input itself.',
+          error:
+            dropped.error ??
+            'The click opened no file chooser and the drop did not register. Point at the upload control itself.',
         };
       }
       await this.sendCommand(t, 'DOM.enable');
@@ -1552,6 +1960,8 @@ export class BrowserManager {
   /** Fill an input by selector. Uses native value setter for React/Vue. Supports all selector formats. */
   async fill(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
+    const frameId = this.frameForSelector(t, selector);
+    if (frameId) return this.fillInFrame(t, selector, value, frameId);
     const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
       return { selector, value, error: `Element not found: "${selector}"` };
@@ -1591,7 +2001,7 @@ export class BrowserManager {
     // Step 2: type into the focused field. Input.insertText goes through the
     // browser's input pipeline, which is what makes React/Vue see the change.
     if (focus?.focused) {
-      await this.sendCommand(t, 'Input.insertText', { text: value });
+      await this.typeText(t, value);
     }
 
     // Step 3: read the target back and repair it if the text did not land
@@ -1645,7 +2055,14 @@ export class BrowserManager {
     };
   }
 
-  /** Hover over an element by selector. */
+  /**
+   * Hover an element with a real pointer move.
+   *
+   * Dispatching mouseover/mouseenter never triggers CSS :hover, so a menu
+   * that only appears on hover used to stay closed and the model clicked a
+   * hidden item (which JS .click() happily fires). A CDP mouse move produces
+   * the genuine hover state every stylesheet and menu expects.
+   */
   async hover(selector: string, tabId?: string): Promise<{ selector: string; hovered: boolean; error?: string }> {
     const t = this.requireTab(tabId);
     const found = await this.waitForElement(selector, 5000, t);
@@ -1653,28 +2070,30 @@ export class BrowserManager {
       return { selector, hovered: false, error: `Element not found: "${selector}"` };
     }
 
-    const expr = this.buildExpression(`(function(){
+    const rectExpr = this.buildExpression(`(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
-      if (!el) return false;
+      if (!el) return null;
       el.scrollIntoView({block:'center', behavior:'instant'});
-      var rect = el.getBoundingClientRect();
-      var x = rect.left + rect.width / 2;
-      var y = rect.top + rect.height / 2;
-      ['pointerover','pointerenter','mouseover','mouseenter','pointermove','mousemove','pointerout','pointerleave','mouseout','mouseleave'].forEach(function(evt) {
-        el.dispatchEvent(new MouseEvent(evt, {bubbles: true, cancelable: true, clientX: x, clientY: y}));
-      });
-      return true;
+      var r = window.piAbsoluteRect(el);
+      return {x: r.left + r.width/2, y: r.top + r.height/2};
     })()`);
-    const result = await this.sendCommand(t, 'Runtime.evaluate', {
-      expression: expr,
+    const rectResult = await this.sendCommand(t, 'Runtime.evaluate', {
+      expression: rectExpr,
       returnByValue: true,
     });
-    return { selector, hovered: (result?.result as { value?: boolean })?.value ?? false };
+    const pt = (rectResult?.result as { value?: { x: number; y: number } })?.value;
+    if (!pt) return { selector, hovered: false, error: `Cannot locate: "${selector}"` };
+
+    await this.sendCommand(t, 'Input.dispatchMouseEvent', { type: 'mouseMoved', x: pt.x, y: pt.y });
+    await new Promise((r) => setTimeout(r, 150));
+    return { selector, hovered: true };
   }
 
   /** Select an option in a <select> element by value or visible text. */
   async selectOption(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; selected: boolean; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
+    const frameId = this.frameForSelector(t, selector);
+    if (frameId) return this.selectInFrame(t, selector, value, frameId);
     const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
       return { selector, value, selected: false, error: `Element not found: "${selector}"` };
@@ -1782,8 +2201,8 @@ export class BrowserManager {
       }
     }
 
-    // 2. Type the text using CDP insertText
-    await this.sendCommand(t, 'Input.insertText', { text });
+    // 2. Type the text with real key events (autocomplete listens for them)
+    await this.typeText(t, text);
 
     // Dispatch DOM input/change events so React/Vue/vanilla JS listeners fire (e.g., autocomplete dropdowns)
     await this.sendCommand(t, 'Runtime.evaluate', {

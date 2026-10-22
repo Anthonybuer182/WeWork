@@ -146,11 +146,20 @@ export const BROWSER_HELPERS_JS = `
   window.piStableRef = function(el) {
     var existing = el.getAttribute('data-pi-ref');
     if (existing) return existing;
-    var topWin = window;
-    try { topWin = window.top || window; } catch (e) { topWin = window; }
-    var seq = topWin.__piRefSeq || 0;
-    seq += 1;
-    topWin.__piRefSeq = seq;
+    // The counter lives on the top window so same-origin frames share it. A
+    // cross-origin top window THROWS on both read and write, so the whole
+    // exchange has to be guarded — a half-guarded version broke the entire
+    // snapshot of a cross-origin frame.
+    var seq = 0;
+    try {
+      var topWin = window.top || window;
+      seq = topWin.__piRefSeq || 0;
+      seq += 1;
+      topWin.__piRefSeq = seq;
+    } catch (e) {
+      seq = (window.__piRefSeq || 0) + 1;
+      window.__piRefSeq = seq;
+    }
     el.setAttribute('data-pi-ref', String(seq));
     return String(seq);
   };

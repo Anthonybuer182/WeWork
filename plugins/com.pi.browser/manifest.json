@@ -2,7 +2,7 @@
   "id": "com.pi.browser",
   "name": "浏览器自动化",
   "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航;面板地址栏带收藏和历史;网页里划词弹出复合框(引用标签 + 问题输入框,翻译/解释/收藏,回车把问题连同引用发送到对话),翻译与解释由 agent 完成后回显在框内。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
-  "version": "0.9.2",
+  "version": "0.9.5",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -203,7 +203,7 @@
       },
       {
         "name": "browser_click",
-        "description": "Click an element in the built-in browser. Waits up to 5s for the element, scrolls it into view, then clicks. The result reports what changed on the page (new text or a URL change), so you do NOT need to re-check with browser_get_state or browser_evaluate. On failure the result suggests similar elements.",
+        "description": "Click an element in the built-in browser. Waits up to 5s for the element, scrolls it into view, then clicks. The result reports what changed on the page (new text or a URL change), so you do NOT need to re-check with browser_get_state or browser_evaluate. On failure the result suggests similar elements. If the click opens a confirm(), the dialog is DISMISSED by default and the result says what was asked; pass dialog:\"accept\" ONLY when the user explicitly asked you to confirm — never on your own judgment.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -214,6 +214,14 @@
             "tab": {
               "type": "string",
               "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
+            },
+            "dialog": {
+              "type": "string",
+              "enum": [
+                "accept",
+                "dismiss"
+              ],
+              "description": "How to answer a confirm()/alert() that this click triggers. Default dismiss. Pass accept ONLY when the user explicitly asked to confirm this action."
             }
           },
           "required": [
@@ -224,7 +232,7 @@
       },
       {
         "name": "browser_act",
-        "description": "Run several browser steps in one call: click / fill / select / upload / hover / wait. Steps run in order and stop at the first failure; the result lists what each step did plus the page's CURRENT interactive snapshot — that snapshot is authoritative, so do NOT follow up with browser_get_state or browser_evaluate to confirm. Use it for sequences you can already see on the page (fill every field, then submit). Do NOT batch a step whose target only appears after an earlier one — click that first, look, then batch the rest.",
+        "description": "Run several browser steps in one call: click / fill / select / upload / hover / wait. Steps run in order and stop at the first failure; the result lists what each step did plus the page's CURRENT interactive snapshot — that snapshot is authoritative, so do NOT follow up with browser_get_state or browser_evaluate to confirm. Use it for sequences you can already see on the page (fill every field, then submit). Do NOT batch a step whose target only appears after an earlier one — click that first, look, then batch the rest. A click that raises a confirm() is dismissed unless the step sets dialog:\"accept\".",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -298,6 +306,14 @@
                   "wait": {
                     "type": "number",
                     "description": "Milliseconds to pause (max 5000)"
+                  },
+                  "dialog": {
+                    "type": "string",
+                    "enum": [
+                      "accept",
+                      "dismiss"
+                    ],
+                    "description": "Answer a confirm()/alert() raised by this step. Default dismiss; accept only when the user explicitly asked to confirm."
                   }
                 },
                 "additionalProperties": false
@@ -316,7 +332,7 @@
       },
       {
         "name": "browser_upload",
-        "description": "Attach local files to a page's upload control — file pickers, '添加附件', '上传' buttons. Clicking the control lets the browser report which input the page wants, so hidden, dynamically created and iframe-hosted inputs all work. Pass absolute paths. NEVER call browser_fill on a file input: it cannot take a path. The result reports what appeared on the page, so do NOT verify with browser_evaluate.",
+        "description": "Attach local files to a page's upload control — file pickers, '添加附件', '上传' buttons, and drag-and-drop-only zones (pages with no file input at all: the host synthesises a real drop). Clicking the control lets the browser report which input the page wants, so hidden, dynamically created and iframe-hosted (same-origin or cross-origin) inputs all work. Pass absolute paths. NEVER call browser_fill on a file input, and do NOT read file bytes yourself — this tool already does. The result reports what appeared on the page, so do NOT verify with browser_evaluate.",
         "inputSchema": {
           "type": "object",
           "properties": {

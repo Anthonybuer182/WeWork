@@ -824,7 +824,8 @@ async function runActStep(
 
   if (typeof step.click === 'string') {
     const selector = step.click;
-    const r = await ctx.call<{ clicked: boolean; effect?: string; error?: string }>('browser.click', { selector, ...tabArg });
+    const dialog = step.dialog === 'accept' ? { dialog: 'accept' } : {};
+    const r = await ctx.call<{ clicked: boolean; effect?: string; error?: string }>('browser.click', { selector, ...dialog, ...tabArg });
     if (r.error || !r.clicked) throw new Error(r.error ?? `点击 "${selector}" 失败`);
     return `点击 "${selector}"${r.effect ? ` · ${r.effect}` : ''}`;
   }
@@ -1872,8 +1873,9 @@ plugin({
       case 'browser_click': {
         const selector = String(params.selector ?? '').trim();
         if (!selector) throw new Error('missing selector');
-        const r = await ctx.call<{ clicked: boolean; error?: string }>('browser.click', {
+        const r = await ctx.call<{ clicked: boolean; effect?: string; error?: string }>('browser.click', {
           selector,
+          ...(params.dialog === 'accept' ? { dialog: 'accept' } : {}),
           ...(tid ? { tabId: tid } : {}),
         });
         return actionResult(`点击 "${selector}"`, r);
