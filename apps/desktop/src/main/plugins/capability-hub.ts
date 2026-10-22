@@ -406,6 +406,15 @@ export class CapabilityHub {
       permission: 'browser',
       handler: async ({ params }) => (await bm()).click(String(params.selector ?? ''), tabIdOf(params)),
     });
+    this.capabilities.set('browser.upload', {
+      permission: 'browser',
+      handler: async ({ params }) =>
+        (await bm()).upload(
+          String(params.selector ?? ''),
+          Array.isArray(params.files) ? (params.files as unknown[]).map(String) : [],
+          tabIdOf(params),
+        ),
+    });
     this.capabilities.set('browser.getText', {
       permission: 'browser',
       handler: async ({ params }) =>

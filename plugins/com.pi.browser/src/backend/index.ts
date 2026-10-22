@@ -806,6 +806,83 @@ function actionResult(prefix: string, r: { error?: string }, extra = ''): string
   return r.error ? `${prefix}失败: ${r.error}` : `${prefix}成功${extra}`;
 }
 
+/**
+ * One step of browser_act. Every step is exactly the call its dedicated tool
+ * would make — batching saves round trips, it never changes semantics. That is
+ * also why a failure stops the batch: the later steps were chosen against a
+ * page that no longer matches.
+ */
+async function runActStep(
+  step: Record<string, unknown>,
+  ctx: PluginContext,
+  tid?: string,
+): Promise<string> {
+  const tabArg = tid ? { tabId: tid } : {};
+
+  if (typeof step.click === 'string') {
+    const selector = step.click;
+    const r = await ctx.call<{ clicked: boolean; error?: string }>('browser.click', { selector, ...tabArg });
+    if (r.error || !r.clicked) throw new Error(r.error ?? `点击 "${selector}" 失败`);
+    return `点击 "${selector}"`;
+  }
+
+  if (step.fill && typeof step.fill === 'object') {
+    const f = step.fill as { selector?: unknown; value?: unknown };
+    const selector = String(f.selector ?? '').trim();
+    if (!selector) throw new Error('fill 缺少 selector');
+    const r = await ctx.call<{ error?: string }>('browser.fill', {
+      selector,
+      value: String(f.value ?? ''),
+      ...tabArg,
+    });
+    if (r.error) throw new Error(r.error);
+    return `填写 "${selector}" = ${String(f.value ?? '')}`;
+  }
+
+  if (step.select && typeof step.select === 'object') {
+    const s = step.select as { selector?: unknown; value?: unknown };
+    const selector = String(s.selector ?? '').trim();
+    if (!selector) throw new Error('select 缺少 selector');
+    const r = await ctx.call<{ selected: boolean; error?: string }>('browser.select', {
+      selector,
+      value: String(s.value ?? ''),
+      ...tabArg,
+    });
+    if (r.error || !r.selected) throw new Error(r.error ?? `在 "${selector}" 选中失败`);
+    return `在 "${selector}" 选中 "${String(s.value ?? '')}"`;
+  }
+
+  if (step.upload && typeof step.upload === 'object') {
+    const u = step.upload as { selector?: unknown; files?: unknown };
+    const selector = String(u.selector ?? '').trim();
+    const files = Array.isArray(u.files) ? u.files.map(String) : [];
+    if (!selector || files.length === 0) throw new Error('upload 需要 selector 和 files');
+    const r = await ctx.call<{ attached: boolean; files: string[]; error?: string }>(
+      'browser.upload',
+      { selector, files, ...tabArg },
+    );
+    if (!r.attached) throw new Error(r.error ?? '上传失败');
+    return `上传 ${r.files.join('、')} 到 "${selector}"`;
+  }
+
+  if (typeof step.hover === 'string') {
+    const r = await ctx.call<{ hovered: boolean; error?: string }>('browser.hover', {
+      selector: step.hover,
+      ...tabArg,
+    });
+    if (r.error || !r.hovered) throw new Error(r.error ?? `悬停 "${step.hover}" 失败`);
+    return `悬停 "${step.hover}"`;
+  }
+
+  if (typeof step.wait === 'number') {
+    const ms = Math.min(Math.max(step.wait, 0), 5000);
+    await new Promise((resolve) => setTimeout(resolve, ms));
+    return `等待 ${ms}ms`;
+  }
+
+  throw new Error('未知步骤：支持 click / fill / select / upload / hover / wait');
+}
+
 function normalizeUrl(input: unknown): string {
   const raw = String(input ?? '').trim();
   if (!raw) throw new Error('missing url');
@@ -1748,6 +1825,47 @@ plugin({
           .join('\n');
       }
 
+      case 'browser_act': {
+        const rawSteps = Array.isArray(params.steps) ? (params.steps as unknown[]) : [];
+        if (rawSteps.length === 0) throw new Error('steps 不能为空');
+        const steps = rawSteps.slice(0, 12) as Array<Record<string, unknown>>;
+        const log: string[] = [];
+        let failedAt = -1;
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i] && typeof steps[i] === 'object' ? steps[i] : {};
+          try {
+            log.push(`${i + 1}. ${await runActStep(step, ctx, tid)}`);
+          } catch (err) {
+            failedAt = i;
+            log.push(`${i + 1}. 失败：${err instanceof Error ? err.message : String(err)}`);
+            break;
+          }
+        }
+
+        const state = await ctx.call<{ url?: string; title?: string; snapshot?: string }>(
+          'browser.getState',
+          tid ? { tabId: tid } : {},
+        );
+        const head =
+          failedAt < 0
+            ? `已完成 ${steps.length} 步`
+            : `第 ${failedAt + 1} 步失败，之后 ${steps.length - failedAt - 1} 步没有执行`;
+        const lines = [
+          head,
+          ...log,
+          '',
+          `当前页面: ${state?.url ?? '(about:blank)'}${state?.title ? ` — ${state.title}` : ''}`,
+        ];
+        if (state?.snapshot) {
+          const snap =
+            state.snapshot.length > SNAPSHOT_MAX_CHARS
+              ? `${state.snapshot.slice(0, SNAPSHOT_MAX_CHARS)}\n…(快照已截断,要找具体元素用 browser_find)`
+              : state.snapshot;
+          lines.push('', '可交互元素:', snap);
+        }
+        return lines.join('\n');
+      }
+
       case 'browser_click': {
         const selector = String(params.selector ?? '').trim();
         if (!selector) throw new Error('missing selector');
@@ -1756,6 +1874,21 @@ plugin({
           ...(tid ? { tabId: tid } : {}),
         });
         return actionResult(`点击 "${selector}"`, r);
+      }
+
+      case 'browser_upload': {
+        const selector = String(params.selector ?? '').trim();
+        if (!selector) throw new Error('missing selector');
+        const files = Array.isArray(params.files) ? (params.files as unknown[]).map(String) : [];
+        if (!files.length) throw new Error('missing files');
+        const r = await ctx.call<{ attached: boolean; files: string[]; via?: string; error?: string }>(
+          'browser.upload',
+          { selector, files, ...(tid ? { tabId: tid } : {}) },
+        );
+        if (!r.attached) throw new Error(r.error ?? '上传失败');
+        return `已把 ${r.files.join('、')} 交给 "${selector}"（${
+          r.via === 'input' ? '直接写入文件框' : '拦截文件选择框'
+        }）。请确认页面上出现了这些文件。`;
       }
 
       case 'browser_fill': {

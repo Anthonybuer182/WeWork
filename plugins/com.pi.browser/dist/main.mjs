@@ -832,6 +832,66 @@ function actionResult(prefix, r, extra = "") {
   return r.error ? `${prefix}\u5931\u8D25: ${r.error}` : `${prefix}\u6210\u529F${extra}`;
 }
 __name(actionResult, "actionResult");
+async function runActStep(step, ctx, tid) {
+  const tabArg = tid ? { tabId: tid } : {};
+  if (typeof step.click === "string") {
+    const selector = step.click;
+    const r = await ctx.call("browser.click", { selector, ...tabArg });
+    if (r.error || !r.clicked) throw new Error(r.error ?? `\u70B9\u51FB "${selector}" \u5931\u8D25`);
+    return `\u70B9\u51FB "${selector}"`;
+  }
+  if (step.fill && typeof step.fill === "object") {
+    const f = step.fill;
+    const selector = String(f.selector ?? "").trim();
+    if (!selector) throw new Error("fill \u7F3A\u5C11 selector");
+    const r = await ctx.call("browser.fill", {
+      selector,
+      value: String(f.value ?? ""),
+      ...tabArg
+    });
+    if (r.error) throw new Error(r.error);
+    return `\u586B\u5199 "${selector}" = ${String(f.value ?? "")}`;
+  }
+  if (step.select && typeof step.select === "object") {
+    const s = step.select;
+    const selector = String(s.selector ?? "").trim();
+    if (!selector) throw new Error("select \u7F3A\u5C11 selector");
+    const r = await ctx.call("browser.select", {
+      selector,
+      value: String(s.value ?? ""),
+      ...tabArg
+    });
+    if (r.error || !r.selected) throw new Error(r.error ?? `\u5728 "${selector}" \u9009\u4E2D\u5931\u8D25`);
+    return `\u5728 "${selector}" \u9009\u4E2D "${String(s.value ?? "")}"`;
+  }
+  if (step.upload && typeof step.upload === "object") {
+    const u = step.upload;
+    const selector = String(u.selector ?? "").trim();
+    const files = Array.isArray(u.files) ? u.files.map(String) : [];
+    if (!selector || files.length === 0) throw new Error("upload \u9700\u8981 selector \u548C files");
+    const r = await ctx.call(
+      "browser.upload",
+      { selector, files, ...tabArg }
+    );
+    if (!r.attached) throw new Error(r.error ?? "\u4E0A\u4F20\u5931\u8D25");
+    return `\u4E0A\u4F20 ${r.files.join("\u3001")} \u5230 "${selector}"`;
+  }
+  if (typeof step.hover === "string") {
+    const r = await ctx.call("browser.hover", {
+      selector: step.hover,
+      ...tabArg
+    });
+    if (r.error || !r.hovered) throw new Error(r.error ?? `\u60AC\u505C "${step.hover}" \u5931\u8D25`);
+    return `\u60AC\u505C "${step.hover}"`;
+  }
+  if (typeof step.wait === "number") {
+    const ms = Math.min(Math.max(step.wait, 0), 5e3);
+    await new Promise((resolve) => setTimeout(resolve, ms));
+    return `\u7B49\u5F85 ${ms}ms`;
+  }
+  throw new Error("\u672A\u77E5\u6B65\u9AA4\uFF1A\u652F\u6301 click / fill / select / upload / hover / wait");
+}
+__name(runActStep, "runActStep");
 function normalizeUrl(input) {
   const raw = String(input ?? "").trim();
   if (!raw) throw new Error("missing url");
@@ -1590,6 +1650,40 @@ plugin({
         if (matches.length === 0) return `\u9875\u9762\u4E0A\u6CA1\u6709\u5339\u914D "${query}" \u7684\u5143\u7D20`;
         return matches.map((m) => `[${m.role}] "${m.text}" (${m.section}, \u5339\u914D\u5EA6 ${m.score})`).join("\n");
       }
+      case "browser_act": {
+        const rawSteps = Array.isArray(params.steps) ? params.steps : [];
+        if (rawSteps.length === 0) throw new Error("steps \u4E0D\u80FD\u4E3A\u7A7A");
+        const steps = rawSteps.slice(0, 12);
+        const log = [];
+        let failedAt = -1;
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i] && typeof steps[i] === "object" ? steps[i] : {};
+          try {
+            log.push(`${i + 1}. ${await runActStep(step, ctx, tid)}`);
+          } catch (err) {
+            failedAt = i;
+            log.push(`${i + 1}. \u5931\u8D25\uFF1A${err instanceof Error ? err.message : String(err)}`);
+            break;
+          }
+        }
+        const state = await ctx.call(
+          "browser.getState",
+          tid ? { tabId: tid } : {}
+        );
+        const head = failedAt < 0 ? `\u5DF2\u5B8C\u6210 ${steps.length} \u6B65` : `\u7B2C ${failedAt + 1} \u6B65\u5931\u8D25\uFF0C\u4E4B\u540E ${steps.length - failedAt - 1} \u6B65\u6CA1\u6709\u6267\u884C`;
+        const lines = [
+          head,
+          ...log,
+          "",
+          `\u5F53\u524D\u9875\u9762: ${state?.url ?? "(about:blank)"}${state?.title ? ` \u2014 ${state.title}` : ""}`
+        ];
+        if (state?.snapshot) {
+          const snap = state.snapshot.length > SNAPSHOT_MAX_CHARS ? `${state.snapshot.slice(0, SNAPSHOT_MAX_CHARS)}
+\u2026(\u5FEB\u7167\u5DF2\u622A\u65AD,\u8981\u627E\u5177\u4F53\u5143\u7D20\u7528 browser_find)` : state.snapshot;
+          lines.push("", "\u53EF\u4EA4\u4E92\u5143\u7D20:", snap);
+        }
+        return lines.join("\n");
+      }
       case "browser_click": {
         const selector = String(params.selector ?? "").trim();
         if (!selector) throw new Error("missing selector");
@@ -1598,6 +1692,18 @@ plugin({
           ...tid ? { tabId: tid } : {}
         });
         return actionResult(`\u70B9\u51FB "${selector}"`, r);
+      }
+      case "browser_upload": {
+        const selector = String(params.selector ?? "").trim();
+        if (!selector) throw new Error("missing selector");
+        const files = Array.isArray(params.files) ? params.files.map(String) : [];
+        if (!files.length) throw new Error("missing files");
+        const r = await ctx.call(
+          "browser.upload",
+          { selector, files, ...tid ? { tabId: tid } : {} }
+        );
+        if (!r.attached) throw new Error(r.error ?? "\u4E0A\u4F20\u5931\u8D25");
+        return `\u5DF2\u628A ${r.files.join("\u3001")} \u4EA4\u7ED9 "${selector}"\uFF08${r.via === "input" ? "\u76F4\u63A5\u5199\u5165\u6587\u4EF6\u6846" : "\u62E6\u622A\u6587\u4EF6\u9009\u62E9\u6846"}\uFF09\u3002\u8BF7\u786E\u8BA4\u9875\u9762\u4E0A\u51FA\u73B0\u4E86\u8FD9\u4E9B\u6587\u4EF6\u3002`;
       }
       case "browser_fill": {
         const selector = String(params.selector ?? "").trim();

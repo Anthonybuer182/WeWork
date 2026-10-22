@@ -57,13 +57,103 @@ export const BROWSER_HELPERS_JS = `
   // ── Check if element is visible ──
   function piIsVisible(el) {
     if (!el || !el.isConnected) return false;
-    var cs = window.getComputedStyle(el);
+    // Elements inside an iframe must be measured by THEIR window, not the
+    // top one: a hidden frame's content is not visible to the user either.
+    var win = (el.ownerDocument && el.ownerDocument.defaultView) || window;
+    var cs = win.getComputedStyle(el);
     if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return false;
     var rect = el.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) return false;
     return true;
   }
   window.piIsVisible = piIsVisible;
+
+  // ── Cross-frame + shadow-root traversal ──
+  // A page is not one document: same-origin iframes and open shadow roots hold
+  // their own elements. A snapshot that ignores them leaves the agent blind to
+  // fields the user can plainly see, and it falls back to writing DOM scripts.
+  window.piAllDocs = function() {
+    var out = [document];
+    for (var i = 0; i < out.length; i++) {
+      var frames;
+      try { frames = out[i].querySelectorAll('iframe, frame'); } catch (e) { continue; }
+      for (var f = 0; f < frames.length; f++) {
+        try {
+          var d = frames[f].contentDocument;
+          if (d && out.indexOf(d) === -1) out.push(d);
+        } catch (e) {}
+      }
+    }
+    return out;
+  };
+
+  function piRootsIn(doc) {
+    var roots = [doc];
+    try {
+      var hosts = doc.querySelectorAll('*');
+      for (var i = 0; i < hosts.length && i < 20000; i++) {
+        if (hosts[i].shadowRoot) roots.push(hosts[i].shadowRoot);
+      }
+    } catch (e) {}
+    return roots;
+  }
+
+  function piAllRoots() {
+    var docs = window.piAllDocs(), roots = [];
+    for (var i = 0; i < docs.length; i++) {
+      var r = piRootsIn(docs[i]);
+      for (var j = 0; j < r.length; j++) roots.push(r[j]);
+    }
+    return roots;
+  }
+
+  // Shadow roots alone, for callers that have already searched the documents.
+  // Walking every element is the expensive half, so it only runs when a plain
+  // document lookup came up empty.
+  window.piShadowRoots = function() {
+    var docs = window.piAllDocs(), roots = [];
+    for (var i = 0; i < docs.length; i++) {
+      var r = piRootsIn(docs[i]);
+      for (var j = 1; j < r.length; j++) roots.push(r[j]);
+    }
+    return roots;
+  };
+
+  // Frame offsets accumulate up the parent chain, so mouse events land on the
+  // right spot even when the field lives inside (nested) iframes.
+  window.piAbsoluteRect = function(el) {
+    var r = el.getBoundingClientRect();
+    var out = {left: r.left, top: r.top, width: r.width, height: r.height};
+    try {
+      var w = el.ownerDocument && el.ownerDocument.defaultView;
+      while (w && w !== w.top) {
+        var fe = w.frameElement;
+        if (!fe) break;
+        var fr = fe.getBoundingClientRect();
+        out.left += fr.left + fe.clientLeft;
+        out.top += fr.top + fe.clientTop;
+        w = w.parent;
+      }
+    } catch (e) {}
+    return out;
+  };
+
+  // A ref that survives re-snapshots: an element keeps the number it was first
+  // given for as long as it stays in the DOM. Renumbering on every snapshot is
+  // what makes a model's [7] hit a different control one turn later. The
+  // counter lives on the top window so same-origin frames share it and numbers
+  // stay unique across the whole page.
+  window.piStableRef = function(el) {
+    var existing = el.getAttribute('data-pi-ref');
+    if (existing) return existing;
+    var topWin = window;
+    try { topWin = window.top || window; } catch (e) { topWin = window; }
+    var seq = topWin.__piRefSeq || 0;
+    seq += 1;
+    topWin.__piRefSeq = seq;
+    el.setAttribute('data-pi-ref', String(seq));
+    return String(seq);
+  };
 
   // ── Selector resolver ──
   window.piResolveSelector = function(selector) {
@@ -73,7 +163,19 @@ export const BROWSER_HELPERS_JS = `
     var refMatch = selector.match(/^(?:\\[(\\d+)\\]|ref:(\\d+))$/);
     if (refMatch) {
       var refNum = refMatch[1] || refMatch[2];
-      return document.querySelector('[data-pi-ref="' + refNum + '"]');
+      // Refs are handed out across the whole page, so the element may live in
+      // a frame or a shadow root rather than the top document.
+      var refDocs = window.piAllDocs();
+      for (var rd = 0; rd < refDocs.length; rd++) {
+        var refEl = refDocs[rd].querySelector('[data-pi-ref="' + refNum + '"]');
+        if (refEl) return refEl;
+      }
+      var refShadow = window.piShadowRoots();
+      for (var rs = 0; rs < refShadow.length; rs++) {
+        var shadowEl = refShadow[rs].querySelector('[data-pi-ref="' + refNum + '"]');
+        if (shadowEl) return shadowEl;
+      }
+      return null;
     }
 
     // 2. role= selector: role=button or role=button[name="Submit"]
@@ -103,7 +205,21 @@ export const BROWSER_HELPERS_JS = `
         switch: '[role="switch"]',
       };
       var query = nativeMap[role] || '[role="' + role + '"]';
-      var candidates = Array.from(document.querySelectorAll(query));
+      var candidates = [];
+      var roleDocs = window.piAllDocs();
+      for (var rq = 0; rq < roleDocs.length; rq++) {
+        var roleEls;
+        try { roleEls = roleDocs[rq].querySelectorAll(query); } catch (e) { continue; }
+        for (var re = 0; re < roleEls.length; re++) candidates.push(roleEls[re]);
+      }
+      if (candidates.length === 0) {
+        var roleShadow = window.piShadowRoots();
+        for (var rs2 = 0; rs2 < roleShadow.length; rs2++) {
+          var shadowRoleEls;
+          try { shadowRoleEls = roleShadow[rs2].querySelectorAll(query); } catch (e) { continue; }
+          for (var se = 0; se < shadowRoleEls.length; se++) candidates.push(shadowRoleEls[se]);
+        }
+      }
       // Filter to visible
       candidates = candidates.filter(function(el) { return piIsVisible(el); });
       if (!wantName) return candidates[0] || null;
@@ -118,7 +234,21 @@ export const BROWSER_HELPERS_JS = `
     if (selector.startsWith('text=')) {
       var text = selector.slice(5).replace(/^["']|["']$/g, '');
       var interactive = 'a, button, input, select, textarea, label, summary, [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"], [onclick], div, span, p, li, td, h1, h2, h3, h4, h5, h6';
-      var allEls = Array.from(document.querySelectorAll(interactive));
+      var allEls = [];
+      var textDocs = window.piAllDocs();
+      for (var td = 0; td < textDocs.length; td++) {
+        var textEls;
+        try { textEls = textDocs[td].querySelectorAll(interactive); } catch (e) { continue; }
+        for (var tx = 0; tx < textEls.length; tx++) allEls.push(textEls[tx]);
+      }
+      if (allEls.length === 0) {
+        var textShadow = window.piShadowRoots();
+        for (var ts = 0; ts < textShadow.length; ts++) {
+          var shadowTextEls;
+          try { shadowTextEls = textShadow[ts].querySelectorAll(interactive); } catch (e) { continue; }
+          for (var sx = 0; sx < shadowTextEls.length; sx++) allEls.push(shadowTextEls[sx]);
+        }
+      }
       // Exact match first
       for (var i = 0; i < allEls.length; i++) {
         if (!piIsVisible(allEls[i])) continue;
@@ -138,7 +268,21 @@ export const BROWSER_HELPERS_JS = `
       var cssPart = hasTextMatch[1];
       var textPart = hasTextMatch[2];
       try {
-        var els = Array.from(document.querySelectorAll(cssPart));
+        var els = [];
+        var htDocs = window.piAllDocs();
+        for (var ht = 0; ht < htDocs.length; ht++) {
+          var htEls;
+          try { htEls = htDocs[ht].querySelectorAll(cssPart); } catch (e) { continue; }
+          for (var hx = 0; hx < htEls.length; hx++) els.push(htEls[hx]);
+        }
+        if (els.length === 0) {
+          var htShadow = window.piShadowRoots();
+          for (var hs = 0; hs < htShadow.length; hs++) {
+            var shadowHtEls;
+            try { shadowHtEls = htShadow[hs].querySelectorAll(cssPart); } catch (e) { continue; }
+            for (var hz = 0; hz < shadowHtEls.length; hz++) els.push(shadowHtEls[hz]);
+          }
+        }
         for (var i = 0; i < els.length; i++) {
           if (!piIsVisible(els[i])) continue;
           if ((els[i].textContent || '').trim().includes(textPart)) return els[i];
@@ -150,20 +294,31 @@ export const BROWSER_HELPERS_JS = `
     // 5. Standard CSS selector
     try {
       var el = document.querySelector(selector);
-      return el;
-    } catch(e) {
-      return null;
+      if (el) return el;
+    } catch(e) {}
+    var cssDocs = window.piAllDocs();
+    for (var cd = 1; cd < cssDocs.length; cd++) {
+      try {
+        var cssEl = cssDocs[cd].querySelector(selector);
+        if (cssEl) return cssEl;
+      } catch (e) {}
     }
+    var cssShadow = window.piShadowRoots();
+    for (var cs = 0; cs < cssShadow.length; cs++) {
+      try {
+        var shadowCssEl = cssShadow[cs].querySelector(selector);
+        if (shadowCssEl) return shadowCssEl;
+      } catch (e) {}
+    }
+    return null;
   };
 
   // ── Snapshot: list interactive elements with refs ──
+  // Refs are stable across snapshots (see piStableRef), and the walk covers
+  // same-origin frames and open shadow roots — the agent should see ONE page,
+  // not one document, otherwise it writes DOM scripts to reach a field the
+  // user can plainly see.
   window.piSnapshot = function() {
-    // Clear old refs so re-snapshotting after interactions gives fresh ref IDs
-    var oldRefs = document.querySelectorAll('[data-pi-ref]');
-    for (var r = 0; r < oldRefs.length; r++) {
-      oldRefs[r].removeAttribute('data-pi-ref');
-    }
-
     var interactiveSelectors = [
       'a[href]', 'button', 'input:not([type="hidden"])', 'select', 'textarea',
       'label', 'summary',
@@ -174,23 +329,44 @@ export const BROWSER_HELPERS_JS = `
       'details > summary'
     ].join(', ');
 
-    var els = document.querySelectorAll(interactiveSelectors);
     var lines = [];
-    var ref = 0;
-
-    // --- Phase 1: Main page elements ---
     var mainElements = [];
+    var frameSections = [];
+    var floatingSections = [];
     var seenElements = new Set();
+    var docs = window.piAllDocs();
 
-    for (var i = 0; i < els.length; i++) {
-      var el = els[i];
-      if (!piIsVisible(el)) continue;
-      if (seenElements.has(el)) continue;
-      seenElements.add(el);
+    // --- Phase 1: every document (top page + same-origin frames), each with
+    // its open shadow roots ---
+    for (var di = 0; di < docs.length; di++) {
+      var doc = docs[di];
+      var roots = piRootsIn(doc);
+      var docElements = [];
 
-      ref++;
-      el.setAttribute('data-pi-ref', String(ref));
-      mainElements.push(formatElement(ref, el));
+      for (var ri = 0; ri < roots.length; ri++) {
+        var els;
+        try { els = roots[ri].querySelectorAll(interactiveSelectors); } catch (e) { continue; }
+        for (var i = 0; i < els.length; i++) {
+          var el = els[i];
+          if (!piIsVisible(el)) continue;
+          if (seenElements.has(el)) continue;
+          seenElements.add(el);
+          docElements.push(formatElement(window.piStableRef(el), el));
+        }
+      }
+
+      // Second pass: things that are clickable but carry no role — the
+      // "添加附件" span that is really a button.
+      var clickables = piCollectClickable(doc, seenElements, 40);
+      for (var ci = 0; ci < clickables.length; ci++) {
+        docElements.push(formatElement(window.piStableRef(clickables[ci]), clickables[ci], 'clickable'));
+      }
+
+      if (di === 0) {
+        mainElements = docElements;
+      } else if (docElements.length > 0) {
+        frameSections.push({ name: piFrameLabel(doc), elements: docElements });
+      }
     }
 
     // --- Phase 2: Floating layer detection (dropdowns, modals, tooltips) ---
@@ -206,31 +382,39 @@ export const BROWSER_HELPERS_JS = `
         if (!piIsVisible(fel)) continue;
         if (seenElements.has(fel)) continue;
         seenElements.add(fel);
-
-        ref++;
-        fel.setAttribute('data-pi-ref', String(ref));
-        layerElements.push(formatElement(ref, fel));
+        layerElements.push(formatElement(window.piStableRef(fel), fel));
       }
 
       if (layerElements.length > 0) {
-        // Add section header
         var layerName = container.className
           ? container.className.toString().split(' ').slice(0, 2).join(' ')
           : container.tagName.toLowerCase();
         if (container.getAttribute('role')) {
           layerName = container.getAttribute('role') + ' ("' + layerName.slice(0, 30) + '")';
         }
-        lines.push('');
-        lines.push('--- Floating Layer: ' + layerName + ' ---');
-        for (var k = 0; k < layerElements.length; k++) {
-          lines.push(layerElements[k]);
-        }
+        floatingSections.push({ name: layerName, elements: layerElements });
       }
     }
 
-    // --- Assemble output: main page elements first, then floating layers ---
+    // --- Assemble output: main page, frames, floating layers, alerts ---
     for (var m = 0; m < mainElements.length; m++) {
       lines.push(mainElements[m]);
+    }
+
+    for (var fs = 0; fs < frameSections.length; fs++) {
+      lines.push('');
+      lines.push('--- Frame: ' + frameSections[fs].name + ' ---');
+      for (var fm = 0; fm < frameSections[fs].elements.length; fm++) {
+        lines.push(frameSections[fs].elements[fm]);
+      }
+    }
+
+    for (var fl = 0; fl < floatingSections.length; fl++) {
+      lines.push('');
+      lines.push('--- Floating Layer: ' + floatingSections[fl].name + ' ---');
+      for (var fe2 = 0; fe2 < floatingSections[fl].elements.length; fe2++) {
+        lines.push(floatingSections[fl].elements[fe2]);
+      }
     }
 
     // --- Add alerts / toasts / notifications that are visible ---
@@ -252,6 +436,62 @@ export const BROWSER_HELPERS_JS = `
 
     return lines.join('\\n');
   };
+
+  // Label an iframe's contents in the snapshot by its path, so the agent can
+  // tell which section of output belongs to which frame.
+  function piFrameLabel(doc) {
+    try {
+      var u = doc.location;
+      var label = (u.pathname || '') + (u.search || '');
+      if (!label || label === '/') label = doc.title || '(iframe)';
+      return label.slice(0, 80);
+    } catch (e) {
+      return '(iframe)';
+    }
+  }
+
+  // ── Clickable elements with no semantic identity ──
+  // Modern UIs hang click handlers on <span>/<div> and style them as buttons.
+  // None of those match the interactive selector list, so the agent cannot
+  // see a control the user obviously can, and falls back to DOM scripts.
+  // cursor:pointer is the one signal every framework leaves behind; the
+  // rest of the filters keep containers and decorative children out.
+  function piCollectClickable(doc, seen, limit) {
+    var out = [];
+    var candidates;
+    try {
+      candidates = doc.querySelectorAll('span, div, li, td, i, b, strong, p, section, article, header, footer, h1, h2, h3, h4, h5, h6');
+    } catch (e) { return out; }
+
+    var scanned = 0;
+    for (var i = 0; i < candidates.length && out.length < limit && scanned < 4000; i++) {
+      var el = candidates[i];
+      scanned++;
+      if (seen.has(el)) continue;
+      // Already inside something the snapshot lists, or inside a clickable
+      // ancestor collected a moment ago: listing it again is noise.
+      if (el.parentElement && seen.has(el.parentElement)) continue;
+      if (el.closest('a[href], button, label, summary, input, select, textarea, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="option"], [contenteditable="true"], [contenteditable=""]')) continue;
+      if (!piIsVisible(el)) continue;
+      // Own text only — a wrapper whose text comes from child elements is a
+      // container, not a control.
+      var text = '';
+      for (var c = 0; c < el.childNodes.length; c++) {
+        if (el.childNodes[c].nodeType === 3) text += el.childNodes[c].textContent;
+      }
+      text = text.replace(/\\s+/g, ' ').trim();
+      if (!text || text.length > 60) continue;
+      // A clickable wrapper around real form controls is already covered by them.
+      if (el.querySelector('a[href], button, input, select, textarea')) continue;
+      var win = (el.ownerDocument && el.ownerDocument.defaultView) || window;
+      var cs = win.getComputedStyle(el);
+      if (cs.cursor !== 'pointer') continue;
+      if (cs.pointerEvents === 'none') continue;
+      seen.add(el);
+      out.push(el);
+    }
+    return out;
+  }
 
   // ── Find visible alerts, toasts, notifications, and validation messages ──
   function findAlerts() {
@@ -297,8 +537,8 @@ export const BROWSER_HELPERS_JS = `
   }
 
   // ── Format a single element line for snapshot output ──
-  function formatElement(ref, el) {
-    var role = piImplicitRole(el);
+  function formatElement(ref, el, roleOverride) {
+    var role = roleOverride || piImplicitRole(el);
     var name = piAccessibleName(el);
     var tag = el.tagName.toLowerCase();
     var type = el.getAttribute('type') || '';
@@ -315,6 +555,9 @@ export const BROWSER_HELPERS_JS = `
     }
 
     var attrs = [];
+    // A role override means the element has no semantic identity; its tag is
+    // the only structural hint left for the model.
+    if (roleOverride) attrs.push('tag=' + tag);
     if (type && tag === 'input') attrs.push('type=' + type);
     if (placeholder) attrs.push('placeholder="' + placeholder + '"');
     if (nameAttr) attrs.push('name=' + nameAttr);
@@ -347,7 +590,7 @@ export const BROWSER_HELPERS_JS = `
     }
 
     // Position hint: above or below fold
-    var rect = el.getBoundingClientRect();
+    var rect = window.piAbsoluteRect(el);
     var foldY = window.innerHeight * 0.9;
     if (rect.top > foldY) {
       attrs.push('below-fold');
@@ -646,12 +889,6 @@ export const BROWSER_HELPERS_JS = `
   // ── Enrich snapshot with section grouping ──
   // Formats the snapshot output grouped by page region (sidebar, header, main, footer).
   window.piSnapshotStructured = function() {
-    // Clear old refs
-    var oldRefs = document.querySelectorAll('[data-pi-ref]');
-    for (var r = 0; r < oldRefs.length; r++) {
-      oldRefs[r].removeAttribute('data-pi-ref');
-    }
-
     var interactiveSelectors = [
       'a[href]', 'button', 'input:not([type="hidden"])', 'select', 'textarea',
       'label', 'summary',
@@ -667,7 +904,6 @@ export const BROWSER_HELPERS_JS = `
     var seenElements = new Set();
     var sectionElements = { header: [], sidebar: [], main: [], footer: [] };
     var floatingElements = [];
-    var ref = 0;
 
     // Phase 1: classify elements by section
     for (var i = 0; i < els.length; i++) {
@@ -676,9 +912,7 @@ export const BROWSER_HELPERS_JS = `
       if (seenElements.has(el)) continue;
       seenElements.add(el);
 
-      ref++;
-      el.setAttribute('data-pi-ref', String(ref));
-      var line = formatElement(ref, el);
+      var line = formatElement(window.piStableRef(el), el);
 
       // Determine which section
       var placed = false;
@@ -708,9 +942,7 @@ export const BROWSER_HELPERS_JS = `
         if (seenElements.has(fel)) continue;
         seenElements.add(fel);
 
-        ref++;
-        fel.setAttribute('data-pi-ref', String(ref));
-        layerElements.push(formatElement(ref, fel));
+        layerElements.push(formatElement(window.piStableRef(fel), fel));
       }
 
       if (layerElements.length > 0) {

@@ -27,6 +27,8 @@ browser_navigate → browser_get_state → browser_click / browser_fill → brow
 | `browser_find({ query })` | 按文字模糊找元素（带匹配度和分区），快照被截断或要精确定位时用 |
 | `browser_click({ selector })` | 点击。等元素出现（最多 5s）、滚到可见再点；失败时会给出相似元素建议 |
 | `browser_fill({ selector, value })` | 填输入框（替换现有内容），对 React/Vue 受控组件有效 |
+| `browser_upload({ selector, files })` | 给上传控件塞本地文件：点「添加附件 / 上传 / 选择文件」，浏览器会报出页面真正要的那个文件框（隐藏的、临时创建的、在 iframe 里的都行）。`files` 传绝对路径。**不要用 `browser_fill` 填文件框**，它塞不进路径 |
+| `browser_act({ steps })` | 一次做几步，按顺序执行：`click` / `fill` / `select` / `upload` / `hover` / `wait`。某步失败就停，返回每步结果 + 执行完的页面快照。适合**已经看得见**的连续动作（填完表单再提交）；下一步的落点要等上一步才出现时（比如点了「回复」才弹出的输入框），先单独点、看清了再批量 |
 | `browser_hover({ selector })` | 悬停——只展开 hover 菜单 / 气泡提示用 |
 | `browser_select({ selector, value })` | 下拉框按 value 或可见文本选中 |
 | `browser_scroll({ direction?, amount? })` | 上下滚动，默认向下 500px |

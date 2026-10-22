@@ -1378,6 +1378,119 @@ export class BrowserManager {
     return { selector, clicked };
   }
 
+  /**
+   * Attach local files to a page's upload control.
+   *
+   * The page itself says which input it wants: clicking the control makes
+   * Chromium open a file chooser, and with interception on we learn the exact
+   * node (backendNodeId) instead of guessing a selector. Hidden, dynamically
+   * created and iframe-hosted inputs all work the same way, on any site —
+   * no per-site adapter needed.
+   *
+   * `selector` may also point straight at an <input type=file>, in which case
+   * no click happens at all.
+   */
+  async upload(
+    selector: string,
+    files: string[],
+    tabId?: string,
+  ): Promise<{ attached: boolean; files: string[]; via?: 'chooser' | 'input'; error?: string }> {
+    const t = this.requireTab(tabId);
+    if (!files.length) return { attached: false, files, error: 'No files given' };
+    const found = await this.waitForElement(selector, 5000, t);
+    if (!found) return { attached: false, files, error: `Element not found: "${selector}"` };
+
+    const names = files.map((f) => f.split(/[\\/]/).pop() || f);
+
+    // 1. The target may already BE the file input — set it directly.
+    const direct = await this.sendCommand(t, 'Runtime.evaluate', {
+      expression: this.buildExpression(`(function(){
+        var el = window.piResolveSelector(${JSON.stringify(selector)});
+        return !!(el && el.tagName === 'INPUT' && String(el.type).toLowerCase() === 'file');
+      })()`),
+      returnByValue: true,
+    });
+    if ((direct?.result as { value?: boolean })?.value) {
+      const handle = await this.sendCommand(t, 'Runtime.evaluate', {
+        expression: this.buildExpression(`window.piResolveSelector(${JSON.stringify(selector)})`),
+        returnByValue: false,
+      });
+      const objectId = (handle?.result as { result?: { objectId?: string } })?.result?.objectId;
+      if (!objectId) return { attached: false, files, error: 'Could not grab the file input' };
+      try {
+        await this.sendCommand(t, 'DOM.enable');
+        const described = await this.sendCommand(t, 'DOM.describeNode', { objectId });
+        const backendNodeId = (described?.result as { node?: { backendNodeId?: number } })?.node?.backendNodeId;
+        if (!backendNodeId) return { attached: false, files, error: 'Could not resolve the file input node' };
+        await this.sendCommand(t, 'DOM.setFileInputFiles', { files, backendNodeId });
+        return { attached: true, files: names, via: 'input' };
+      } catch (err) {
+        return { attached: false, files, error: `setFileInputFiles failed: ${(err as Error).message}` };
+      }
+    }
+
+    // 2. Otherwise click the control with a TRUSTED event (a JS .click() is
+    //    not a user gesture, so Chromium refuses to open a chooser for it)
+    //    and take the node Chromium reports.
+    const rectResult = await this.sendCommand(t, 'Runtime.evaluate', {
+      expression: this.buildExpression(`(function(){
+        var el = window.piResolveSelector(${JSON.stringify(selector)});
+        if (!el) return null;
+        el.scrollIntoView({block:'center', behavior:'instant'});
+        var r = window.piAbsoluteRect(el);
+        return {x: r.left + r.width/2, y: r.top + r.height/2};
+      })()`),
+      returnByValue: true,
+    });
+    const pt = (rectResult?.result as { value?: { x: number; y: number } })?.value;
+    if (!pt) return { attached: false, files, error: `Cannot locate: "${selector}"` };
+
+    const wc = t.wc;
+    const captured: { backendNodeId?: number } = {};
+    let notify: (() => void) | null = null;
+    const opened = new Promise<void>((resolve) => { notify = resolve; });
+    const onMessage = (_e: unknown, method: string, params: Record<string, unknown>) => {
+      if (method === 'Page.fileChooserOpened') {
+        captured.backendNodeId = (params as { backendNodeId?: number }).backendNodeId;
+        notify?.();
+      }
+    };
+    wc.debugger.on('message', onMessage);
+    try {
+      await this.sendCommand(t, 'Page.setInterceptFileChooserDialog', { enabled: true });
+      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
+        type: 'mousePressed', x: pt.x, y: pt.y, button: 'left', clickCount: 1,
+      });
+      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
+        type: 'mouseReleased', x: pt.x, y: pt.y, button: 'left', clickCount: 1,
+      });
+      const timedOut = await Promise.race([
+        opened.then(() => false),
+        new Promise<boolean>((r) => setTimeout(() => r(true), 3000)),
+      ]);
+      if (timedOut || !captured.backendNodeId) {
+        return {
+          attached: false,
+          files,
+          error: 'The click did not open a file chooser. Point at the control that opens it, or at the file input itself.',
+        };
+      }
+      await this.sendCommand(t, 'DOM.enable');
+      await this.sendCommand(t, 'DOM.setFileInputFiles', {
+        files,
+        backendNodeId: captured.backendNodeId,
+      });
+      return { attached: true, files: names, via: 'chooser' };
+    } catch (err) {
+      return { attached: false, files, error: `Upload failed: ${(err as Error).message}` };
+    } finally {
+      wc.debugger.removeListener('message', onMessage);
+      try {
+        await this.sendCommand(t, 'Page.setInterceptFileChooserDialog', { enabled: false });
+      } catch {}
+    }
+  }
+
   /** Fill an input by selector. Uses native value setter for React/Vue. Supports all selector formats. */
   async fill(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; error?: string }> {
     const t = this.requireTab(tabId);
@@ -1386,43 +1499,86 @@ export class BrowserManager {
       return { selector, value, error: `Element not found: "${selector}"` };
     }
 
-    // Step 1: Get element rect and click to focus (native mouse click triggers React focus handlers)
-    const rectExpr = this.buildExpression(`(function(){
+    // Step 1: focus the field and select what is already there. This used to
+    // be a triple-click at the element's centre; when the page had shifted (or
+    // the frame offset was wrong) the click landed on the PREVIOUS field and
+    // the text went there — the classic "张三 ended up in the memo box".
+    // Programmatic focus fires the same focus/blur handlers, so coordinates
+    // are only a fallback for components that refuse focus without a click.
+    const focusExpr = this.buildExpression(`(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
       if (!el) return null;
       el.scrollIntoView({block:'center', behavior:'instant'});
-      var r = el.getBoundingClientRect();
-      return {x: r.left + r.width/2, y: r.top + r.height/2, width: r.width, height: r.height};
+      try { el.focus(); } catch (e) {}
+      var doc = el.ownerDocument;
+      var editable = el.isContentEditable || el.getAttribute('contenteditable') === 'true' || el.getAttribute('contenteditable') === '';
+      if (editable) {
+        var range = doc.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        var sel = doc.defaultView.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else if (el.select) {
+        try { el.select(); } catch (e) {}
+      }
+      return { focused: doc.activeElement === el, editable: editable };
     })()`);
-    const rectResult = await this.sendCommand(t, 'Runtime.evaluate', {
-      expression: rectExpr,
+    const focusResult = await this.sendCommand(t, 'Runtime.evaluate', {
+      expression: focusExpr,
       returnByValue: true,
     });
-    const rect = (rectResult?.result as { value?: { x: number; y: number; width: number; height: number } })?.value;
-    if (!rect) {
-      return { selector, value, error: `Cannot get rect for: "${selector}"` };
+    const focus = (focusResult?.result as { value?: { focused: boolean; editable: boolean } })?.value;
+
+    // Step 2: type into the focused field. Input.insertText goes through the
+    // browser's input pipeline, which is what makes React/Vue see the change.
+    if (focus?.focused) {
+      await this.sendCommand(t, 'Input.insertText', { text: value });
     }
 
-    // Click 3 times to select all text (triple-click)
-    for (let i = 0; i < 3; i++) {
-      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
-        type: 'mousePressed',
-        x: rect.x,
-        y: rect.y,
-        button: 'left',
-        clickCount: i + 1,
-      });
-      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
-        type: 'mouseReleased',
-        x: rect.x,
-        y: rect.y,
-        button: 'left',
-        clickCount: i + 1,
-      });
+    // Step 3: read the target back and repair it if the text did not land
+    // here. A focus that silently failed used to send the whole value into
+    // whatever field still held focus ("张三" ending up in the memo box).
+    // Direct assignment is deterministic and still notifies frameworks,
+    // through the native value setter plus input/change events.
+    const verifyExpr = this.buildExpression(`(function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el) return { ok: false, actual: '' };
+      var want = ${JSON.stringify(value)};
+      var editable = el.isContentEditable || el.getAttribute('contenteditable') === 'true' || el.getAttribute('contenteditable') === '';
+      var read = function() {
+        return editable ? (el.textContent || '') : (el.value != null ? String(el.value) : '');
+      };
+      var actual = read();
+      if (actual.indexOf(want) !== -1) return { ok: true, actual: actual.slice(0, 80) };
+      try {
+        el.focus();
+        if (editable) {
+          el.textContent = want;
+          el.dispatchEvent(new Event('input', {bubbles: true}));
+        } else if (el.value != null) {
+          var proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+          var setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+          setter.call(el, want);
+          el.dispatchEvent(new Event('input', {bubbles: true}));
+          el.dispatchEvent(new Event('change', {bubbles: true}));
+        }
+        actual = read();
+      } catch (e) {}
+      return { ok: actual.indexOf(want) !== -1, actual: actual.slice(0, 80) };
+    })()`);
+    const verifyResult = await this.sendCommand(t, 'Runtime.evaluate', {
+      expression: verifyExpr,
+      returnByValue: true,
+    });
+    const verified = (verifyResult?.result as { value?: { ok: boolean; actual: string } })?.value;
+    if (!verified?.ok) {
+      return {
+        selector,
+        value,
+        error: `Value did not stick on "${selector}" (field contains "${verified?.actual ?? ''}")`,
+      };
     }
-
-    // Step 2: Type the new value via Input.insertText (triggers React onChange via browser input pipeline)
-    await this.sendCommand(t, 'Input.insertText', { text: value });
 
     return { selector, value };
   }
@@ -1506,31 +1662,56 @@ export class BrowserManager {
       return { selector, typed: text, matched: null, selected: false, error: `Input element not found: "${selector}"` };
     }
 
-    // Get element rect for CDP mouse events (same approach as fill())
-    const rectExpr = this.buildExpression(`(function(){
+    // Focus + select first, mouse clicks only as a fallback (see fill()).
+    const focusExpr = this.buildExpression(`(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
       if (!el) return null;
       el.scrollIntoView({block:'center', behavior:'instant'});
-      var r = el.getBoundingClientRect();
-      return {x: r.left + r.width/2, y: r.top + r.height/2, width: r.width, height: r.height};
+      try { el.focus(); } catch (e) {}
+      var doc = el.ownerDocument;
+      var editable = el.isContentEditable || el.getAttribute('contenteditable') === 'true' || el.getAttribute('contenteditable') === '';
+      if (editable) {
+        var range = doc.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        var sel = doc.defaultView.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else if (el.select) {
+        try { el.select(); } catch (e) {}
+      }
+      return { focused: doc.activeElement === el };
     })()`);
-    const rectResult = await this.sendCommand(t, 'Runtime.evaluate', {
-      expression: rectExpr,
+    const focusResult = await this.sendCommand(t, 'Runtime.evaluate', {
+      expression: focusExpr,
       returnByValue: true,
     });
-    const rect = (rectResult?.result as { value?: { x: number; y: number; width: number; height: number } })?.value;
-    if (!rect) {
-      return { selector, typed: text, matched: null, selected: false, error: `Cannot get rect for: "${selector}"` };
-    }
+    const focus = (focusResult?.result as { value?: { focused: boolean } })?.value;
 
-    // Triple-click to select all existing text (same as fill())
-    for (let i = 0; i < 3; i++) {
-      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
-        type: 'mousePressed', x: rect.x, y: rect.y, button: 'left', clickCount: i + 1,
+    if (!focus?.focused) {
+      const rectExpr = this.buildExpression(`(function(){
+        var el = window.piResolveSelector(${JSON.stringify(selector)});
+        if (!el) return null;
+        el.scrollIntoView({block:'center', behavior:'instant'});
+        var r = window.piAbsoluteRect(el);
+        return {x: r.left + r.width/2, y: r.top + r.height/2, width: r.width, height: r.height};
+      })()`);
+      const rectResult = await this.sendCommand(t, 'Runtime.evaluate', {
+        expression: rectExpr,
+        returnByValue: true,
       });
-      await this.sendCommand(t, 'Input.dispatchMouseEvent', {
-        type: 'mouseReleased', x: rect.x, y: rect.y, button: 'left', clickCount: i + 1,
-      });
+      const rect = (rectResult?.result as { value?: { x: number; y: number; width: number; height: number } })?.value;
+      if (!rect) {
+        return { selector, typed: text, matched: null, selected: false, error: `Cannot get rect for: "${selector}"` };
+      }
+      for (let i = 0; i < 3; i++) {
+        await this.sendCommand(t, 'Input.dispatchMouseEvent', {
+          type: 'mousePressed', x: rect.x, y: rect.y, button: 'left', clickCount: i + 1,
+        });
+        await this.sendCommand(t, 'Input.dispatchMouseEvent', {
+          type: 'mouseReleased', x: rect.x, y: rect.y, button: 'left', clickCount: i + 1,
+        });
+      }
     }
 
     // 2. Type the text using CDP insertText

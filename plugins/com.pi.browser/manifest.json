@@ -2,7 +2,7 @@
   "id": "com.pi.browser",
   "name": "浏览器自动化",
   "description": "给 agent 的浏览器工具:打开网页、读页面结构、点击、填表、滚动、截图、按目标自动导航;面板地址栏带收藏和历史;网页里划词弹出复合框(引用标签 + 问题输入框,翻译/解释/收藏,回车把问题连同引用发送到对话),翻译与解释由 agent 完成后回显在框内。面板内嵌宿主浏览器引擎视图(地址栏归插件,引擎与登录态归宿主)。",
-  "version": "0.7.1",
+  "version": "0.9.1",
   "apiVersion": 3,
   "engines": {
     "pi-desktop": ">=0.1.0"
@@ -168,7 +168,7 @@
       },
       {
         "name": "browser_get_state",
-        "description": "Get the current URL, page title, and a snapshot of the page's interactive elements (buttons, links, inputs — each with a ref you can pass to browser_click / browser_fill). Call this FIRST when you need to see what is on the page and act on it; use browser_screenshot only when you need the visual layout.",
+        "description": "Get the current URL, page title, and a snapshot of the page's interactive elements (buttons, links, inputs — each with a ref you can pass to browser_click / browser_fill). Call this FIRST after navigating to see what is on the page. Do NOT call it again just to confirm an action: every action (and browser_act) already returns a fresh snapshot. Use browser_screenshot only for visual layout.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -218,6 +218,127 @@
           },
           "required": [
             "selector"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_act",
+        "description": "Run several browser steps in one call: click / fill / select / upload / hover / wait. Steps run in order and stop at the first failure; the result lists what each step did plus the page's CURRENT interactive snapshot — that snapshot is authoritative, so do NOT follow up with browser_get_state or browser_evaluate to confirm. Use it for sequences you can already see on the page (fill every field, then submit). Do NOT batch a step whose target only appears after an earlier one — click that first, look, then batch the rest.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "steps": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 12,
+              "description": "Ordered steps; each step uses exactly one key.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "click": {
+                    "type": "string",
+                    "description": "Selector to click — a ref like \"[3]\" is preferred"
+                  },
+                  "fill": {
+                    "type": "object",
+                    "properties": {
+                      "selector": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "selector",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "select": {
+                    "type": "object",
+                    "properties": {
+                      "selector": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "selector",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "upload": {
+                    "type": "object",
+                    "properties": {
+                      "selector": {
+                        "type": "string"
+                      },
+                      "files": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "selector",
+                      "files"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "hover": {
+                    "type": "string",
+                    "description": "Selector to hover"
+                  },
+                  "wait": {
+                    "type": "number",
+                    "description": "Milliseconds to pause (max 5000)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
+            }
+          },
+          "required": [
+            "steps"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "browser_upload",
+        "description": "Attach local files to a page's upload control — file pickers, '添加附件', '上传' buttons. Clicking the control lets the browser report which input the page wants, so hidden, dynamically created and iframe-hosted inputs all work. Pass absolute paths. NEVER call browser_fill on a file input: it cannot take a path. After attached=true, confirm the page shows the files.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "The control that opens the file picker — a ref like \"[12]\" is preferred — or the file input itself."
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Absolute paths of the files to attach."
+            },
+            "tab": {
+              "type": "string",
+              "description": "Act on this tab id (from browser_tab_list) instead of the conversation's focused tab."
+            }
+          },
+          "required": [
+            "selector",
+            "files"
           ],
           "additionalProperties": false
         }
@@ -365,7 +486,7 @@
       },
       {
         "name": "browser_screenshot",
-        "description": "Take a screenshot of the current page in the built-in browser. Returns a base64 PNG image you can see directly — use for visual layout, design, charts, or CAPTCHA-style content the element snapshot cannot express.",
+        "description": "Take a screenshot of the current page in the built-in browser. Returns a base64 PNG image you can see directly. Use it for visual layout, design, charts, or CAPTCHA-style content the element snapshot cannot express — NOT to confirm form values, text, or whether a click worked; the snapshot returned by the action already answers those.",
         "inputSchema": {
           "type": "object",
           "properties": {

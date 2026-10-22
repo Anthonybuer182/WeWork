@@ -144,16 +144,20 @@ export function createRealChatService(
    *  When multiple models share the same ID, prefers models with configured
    *  auth (from models.json or env vars) over built-in ones without auth. */
   function findModelById(modelId: string) {
+    const available = registry.getAvailable();
+    // An aggregator provider may name its model "deepseek/deepseek-flash", so
+    // the id itself can contain a slash. Splitting first would read "deepseek"
+    // as a provider and look up an id that does not exist. An exact id match
+    // must win; the "provider/modelId" split stays as the fallback for the
+    // case it was actually written for (disambiguating a bare id).
+    const exact = available.find((m) => m.id === modelId);
+    if (exact) return exact;
+
     const slashIdx = modelId.lastIndexOf('/');
     if (slashIdx > 0) {
       const provider = modelId.substring(0, slashIdx);
       const id = modelId.substring(slashIdx + 1);
-      return registry.getAvailable().find((m) => m.id === id && m.provider === provider);
-    }
-    // Only return models that have configured auth (API key or OAuth)
-    const available = registry.getAvailable();
-    for (let i = available.length - 1; i >= 0; i--) {
-      if (available[i].id === modelId) return available[i];
+      return available.find((m) => m.id === id && m.provider === provider);
     }
     return undefined;
   }
