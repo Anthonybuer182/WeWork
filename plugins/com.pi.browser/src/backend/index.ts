@@ -1053,6 +1053,9 @@ async function recordRecipe(
   name: string | undefined,
   title: string | undefined,
   tid: string | undefined,
+  /** A recipe already credited for THIS run (the model named it); do not
+   *  count the same execution twice. */
+  creditedId?: string | null,
 ): Promise<Recipe | null> {
   const origin = originOfUrl(url ?? '');
   if (!origin || !isFavoriteOrigin(origin)) return null;
@@ -1127,7 +1130,7 @@ async function recordRecipe(
   const path = pathOf(url ?? '');
   if (existing) {
     existing.steps = steps;
-    existing.uses += 1;
+    if (existing.id !== creditedId) existing.uses += 1;
     existing.lastOk = Date.now();
     existing.failures = 0;
     existing.paths = [path, ...existing.paths.filter((p) => p !== path)].slice(0, 3);
@@ -1948,7 +1951,7 @@ plugin({
           `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, ` +
             `state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, ` +
             `settings.setPrivate, settings.setSelPopup, tabs.new, tabs.activate, tabs.close, ` +
-            `tabs.reorder, split.set)`,
+            `tabs.reorder, split.set, recipes.list, recipes.update, recipes.delete)`,
         );
     }
   },
@@ -2179,6 +2182,7 @@ plugin({
         // health is updated: a success refreshes it, a failure counts toward
         // retirement (two consecutive failures hide it from the navigate hint).
         const recipeName = params.recipe ? String(params.recipe).trim() : '';
+        let creditedId: string | null = null;
         if (recipeName) {
           const currentOrigin = originOfUrl(state?.url ?? '');
           const known = recipes.find(
@@ -2208,6 +2212,7 @@ plugin({
               known.uses += 1;
               known.lastOk = Date.now();
               known.failures = 0;
+              creditedId = known.id;
             } else {
               known.failures += 1;
             }
@@ -2226,6 +2231,7 @@ plugin({
             params.name ? String(params.name) : undefined,
             state?.title,
             tid,
+            creditedId,
           );
         }
         const head =

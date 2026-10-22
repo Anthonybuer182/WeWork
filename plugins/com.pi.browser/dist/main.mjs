@@ -1825,7 +1825,7 @@ async function stabilizeTarget(ctx, tid, selector) {
   }
 }
 __name(stabilizeTarget, "stabilizeTarget");
-async function recordRecipe(ctx, rawSteps, effects, url, name, title, tid) {
+async function recordRecipe(ctx, rawSteps, effects, url, name, title, tid, creditedId) {
   const origin = originOfUrl(url ?? "");
   if (!origin || !isFavoriteOrigin(origin)) return null;
   const steps = [];
@@ -1885,7 +1885,7 @@ async function recordRecipe(ctx, rawSteps, effects, url, name, title, tid) {
   const path = pathOf(url ?? "");
   if (existing) {
     existing.steps = steps;
-    existing.uses += 1;
+    if (existing.id !== creditedId) existing.uses += 1;
     existing.lastOk = Date.now();
     existing.failures = 0;
     existing.paths = [path, ...existing.paths.filter((p) => p !== path)].slice(0, 3);
@@ -2569,7 +2569,7 @@ plugin({
       }
       default:
         throw new Error(
-          `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, settings.setPrivate, settings.setSelPopup, tabs.new, tabs.activate, tabs.close, tabs.reorder, split.set)`
+          `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, settings.setPrivate, settings.setSelPopup, tabs.new, tabs.activate, tabs.close, tabs.reorder, split.set, recipes.list, recipes.update, recipes.delete)`
         );
     }
   },
@@ -2742,6 +2742,7 @@ plugin({
           tid ? { tabId: tid } : {}
         );
         const recipeName = params.recipe ? String(params.recipe).trim() : "";
+        let creditedId = null;
         if (recipeName) {
           const currentOrigin = originOfUrl(state?.url ?? "");
           const known = recipes.find(
@@ -2754,6 +2755,7 @@ plugin({
               known.uses += 1;
               known.lastOk = Date.now();
               known.failures = 0;
+              creditedId = known.id;
             } else {
               known.failures += 1;
             }
@@ -2768,7 +2770,8 @@ plugin({
             state?.url,
             params.name ? String(params.name) : void 0,
             state?.title,
-            tid
+            tid,
+            creditedId
           );
         }
         const head = failedAt < 0 ? `\u5DF2\u5B8C\u6210 ${steps.length} \u6B65` : `\u7B2C ${failedAt + 1} \u6B65\u5931\u8D25\uFF0C\u4E4B\u540E ${steps.length - failedAt - 1} \u6B65\u6CA1\u6709\u6267\u884C`;
