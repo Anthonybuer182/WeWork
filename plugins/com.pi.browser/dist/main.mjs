@@ -1779,10 +1779,11 @@ plugin({
         });
         if (!shot?.base64) throw new Error("screenshot failed: the host returned no image data");
         const kb = Math.round(shot.base64.length * 3 / 4 / 1024);
+        const mimeType = shot.mimeType ?? "image/png";
         return {
           content: [
-            { type: "text", text: `\u622A\u56FE\u5B8C\u6210 (${kb} KB PNG)` },
-            { type: "image", data: shot.base64, mimeType: "image/png" }
+            { type: "text", text: `\u622A\u56FE\u5B8C\u6210 (${kb} KB ${mimeType === "image/jpeg" ? "JPEG" : "PNG"})` },
+            { type: "image", data: shot.base64, mimeType }
           ]
         };
       }

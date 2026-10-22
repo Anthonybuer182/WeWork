@@ -1974,16 +1974,17 @@ plugin({
       }
 
       case 'browser_screenshot': {
-        const shot = await ctx.call<{ base64?: string }>('browser.screenshot', {
+        const shot = await ctx.call<{ base64?: string; mimeType?: string }>('browser.screenshot', {
           fullPage: params.fullPage === true,
           ...(tid ? { tabId: tid } : {}),
         });
         if (!shot?.base64) throw new Error('screenshot failed: the host returned no image data');
         const kb = Math.round((shot.base64.length * 3) / 4 / 1024);
+        const mimeType = shot.mimeType ?? 'image/png';
         return {
           content: [
-            { type: 'text', text: `截图完成 (${kb} KB PNG)` },
-            { type: 'image', data: shot.base64, mimeType: 'image/png' },
+            { type: 'text', text: `截图完成 (${kb} KB ${mimeType === 'image/jpeg' ? 'JPEG' : 'PNG'})` },
+            { type: 'image', data: shot.base64, mimeType },
           ],
         };
       }

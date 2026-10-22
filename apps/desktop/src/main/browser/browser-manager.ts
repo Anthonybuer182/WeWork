@@ -1,4 +1,4 @@
-import { WebContentsView, BrowserWindow, session } from 'electron';
+import { WebContentsView, BrowserWindow, session, nativeImage } from 'electron';
 import { readFile } from 'node:fs/promises';
 import { BROWSER_HELPERS_JS } from './browser-helpers';
 import type { VlmAnalyzer } from './vlm-analyzer';
@@ -2635,7 +2635,10 @@ export class BrowserManager {
    *  Default: viewport only. Pass fullPage: true for full page (scrolls to trigger lazy load first).
    *  A hidden tab borrows the visible surface for a viewport capture (restored
    *  after); full-page capture works on DOM metrics alone and needs no surface. */
-  async screenshot(options?: { fullPage?: boolean }, tabId?: string): Promise<{ base64: string }> {
+  async screenshot(
+    options?: { fullPage?: boolean },
+    tabId?: string,
+  ): Promise<{ base64: string; mimeType: string }> {
     const t = this.requireTab(tabId);
     const savedZoom = t.currentZoom;
 
@@ -2715,11 +2718,47 @@ export class BrowserManager {
       }
     };
 
-    if (options?.fullPage) {
-      // DOM-metrics capture works without a painted surface.
-      return capture();
+    const shot = options?.fullPage
+      ? // DOM-metrics capture works without a painted surface.
+        await capture()
+      : await this.withTabSurface(t, capture);
+    return this.compressScreenshot(shot.base64);
+  }
+
+  /**
+   * Keep a screenshot small enough for a model request.
+   *
+   * A full-page PNG of a long page is several megabytes; the next request then
+   * fails outright (observed on v.qq.com: a 6.3 MB capture killed the turn).
+   * Downscale to a sane width/height, then pick whichever encoding is smaller.
+   */
+  private compressScreenshot(base64: string): { base64: string; mimeType: string } {
+    try {
+      const raw = Buffer.from(base64, 'base64');
+      const img = nativeImage.createFromBuffer(raw);
+      if (img.isEmpty()) return { base64, mimeType: 'image/png' };
+      const { width, height } = img.getSize();
+      const MAX_W = 1400;
+      const MAX_H = 4000;
+      const scale = Math.min(1, MAX_W / width, MAX_H / height);
+      const out =
+        scale < 1
+          ? img.resize({
+              width: Math.max(1, Math.round(width * scale)),
+              height: Math.max(1, Math.round(height * scale)),
+              quality: 'good',
+            })
+          : img;
+      const png = out.toPNG();
+      if (png.length <= raw.length && png.length < 1_500_000) {
+        return { base64: png.toString('base64'), mimeType: 'image/png' };
+      }
+      const jpeg = out.toJPEG(80);
+      if (jpeg.length < png.length) return { base64: jpeg.toString('base64'), mimeType: 'image/jpeg' };
+      return { base64: png.toString('base64'), mimeType: 'image/png' };
+    } catch {
+      return { base64, mimeType: 'image/png' };
     }
-    return this.withTabSurface(t, capture);
   }
 
   /** Scroll through the page to trigger lazy-loaded content.
