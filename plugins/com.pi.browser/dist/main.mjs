@@ -1813,6 +1813,20 @@ function prettyTarget(target) {
   return `${parts[0]}\uFF08\u5907\u9009 ${parts.slice(1).join(" / ")}\uFF09`;
 }
 __name(prettyTarget, "prettyTarget");
+function stepTarget(step) {
+  if (typeof step.click === "string") return step.click;
+  if (typeof step.hover === "string") return step.hover;
+  for (const key of ["fill", "select", "upload"]) {
+    const inner = step[key];
+    if (inner && typeof inner === "object") return String(inner.selector ?? "");
+  }
+  return "";
+}
+__name(stepTarget, "stepTarget");
+function prettyStepLine(line, target) {
+  return target ? line.split(target).join(prettyTarget(target)) : line;
+}
+__name(prettyStepLine, "prettyStepLine");
 function recipeSignature(steps) {
   return steps.map((s) => `${s.kind}:${s.target}`).join("|");
 }
@@ -1821,6 +1835,25 @@ function liveRecipes(origin) {
   return recipes.filter((r) => r.origin === origin && r.failures < 2);
 }
 __name(liveRecipes, "liveRecipes");
+function expectationGap(expect, actual, page) {
+  if (!expect) return null;
+  const wantUrl = /页面跳转到\s*(\S+)/.exec(expect);
+  if (wantUrl) {
+    if (page?.url.startsWith(wantUrl[1])) return null;
+    const gotUrl = /页面跳转到\s*(\S+)/.exec(actual);
+    if (gotUrl && gotUrl[1].startsWith(wantUrl[1])) return null;
+    return `\u9884\u671F\u8DF3\u8F6C\u5230 ${wantUrl[1]}\uFF0C\u5B9E\u9645${page?.url ? `\u5728 ${page.url}` : "\u6CA1\u6709\u8DF3\u8F6C"}`;
+  }
+  const wantText = /页面出现「([^」]*)」/.exec(expect);
+  if (wantText) {
+    const want = wantText[1].slice(0, 40);
+    if (page?.text.includes(want)) return null;
+    if (actual.includes(want)) return null;
+    return `\u9884\u671F\u51FA\u73B0\u300C${want}\u300D\uFF0C\u73B0\u5728\u9875\u9762\u548C\u8FD9\u6B21\u7684\u53D8\u5316\u91CC\u90FD\u6CA1\u6709`;
+  }
+  return null;
+}
+__name(expectationGap, "expectationGap");
 async function stabilizeTarget(ctx, tid, selector) {
   try {
     const r = await ctx.call("browser.describe", {
@@ -1898,6 +1931,7 @@ async function recordRecipe(ctx, rawSteps, effects, url, name, title, tid, credi
     if (existing.id !== creditedId) existing.uses += 1;
     existing.lastOk = Date.now();
     existing.failures = 0;
+    delete existing.lastError;
     existing.paths = [path, ...existing.paths.filter((p) => p !== path)].slice(0, 3);
     if (name) existing.name = name;
     await save(ctx, RECIPES_KEY, recipes, "recipes");
@@ -1920,6 +1954,28 @@ async function recordRecipe(ctx, rawSteps, effects, url, name, title, tid, credi
   return recipe;
 }
 __name(recordRecipe, "recordRecipe");
+function zhError(message) {
+  const msg = message.trim();
+  const rules = [
+    [/^Element not found: "([\s\S]*?)"(?:\.[\s\S]*)?$/, (m) => `\u627E\u4E0D\u5230\u5143\u7D20 "${m[1]}"`],
+    [/^Input element not found: "([\s\S]*?)"$/, (m) => `\u627E\u4E0D\u5230\u8F93\u5165\u6846 "${m[1]}"`],
+    [/^Cannot locate: "([\s\S]*?)"$/, (m) => `\u5B9A\u4F4D\u4E0D\u5230 "${m[1]}"`],
+    [
+      /^Value did not stick on "([\s\S]*?)" \(field contains "([\s\S]*)"\)$/,
+      (m) => `"${m[1]}" \u7684\u503C\u6CA1\u5199\u8FDB\u53BB\uFF08\u6846\u91CC\u662F "${m[2]}"\uFF09`
+    ],
+    [/^No option matching "([\s\S]*?)" found in dropdown[\s\S]*$/, (m) => `\u4E0B\u62C9\u6846\u91CC\u6CA1\u6709 "${m[1]}"`],
+    [/^Page load timed out$/, () => "\u9875\u9762\u52A0\u8F7D\u8D85\u65F6"],
+    [/^setFileInputFiles failed: ([\s\S]*)$/, (m) => `\u5199\u5165\u6587\u4EF6\u6846\u5931\u8D25\uFF1A${m[1]}`],
+    [/^Upload failed: ([\s\S]*)$/, (m) => `\u4E0A\u4F20\u5931\u8D25\uFF1A${m[1]}`]
+  ];
+  for (const [re, say] of rules) {
+    const hit = re.exec(msg);
+    if (hit) return say(hit);
+  }
+  return msg;
+}
+__name(zhError, "zhError");
 function formatWhen(ts) {
   const d = new Date(ts);
   const now = /* @__PURE__ */ new Date();
@@ -2505,20 +2561,113 @@ plugin({
           const cleaned = [];
           for (const raw of params.steps) {
             const kind = String(raw?.kind ?? "");
-            const stepTarget = String(raw?.target ?? "").trim();
-            if (!allowed.has(kind) || !stepTarget) continue;
+            const tgt = String(raw?.target ?? "").trim();
+            if (!allowed.has(kind) || !tgt) continue;
             const value = raw?.value == null ? void 0 : String(raw.value);
             const expect = raw?.expect == null ? void 0 : String(raw.expect).trim() || void 0;
-            cleaned.push({ kind, target: stepTarget, ...value ? { value } : {}, ...expect ? { expect } : {} });
+            cleaned.push({ kind, target: tgt, ...value ? { value } : {}, ...expect ? { expect } : {} });
           }
           if (cleaned.length === 0) return { ok: false, error: "empty steps" };
           target.steps = cleaned;
           target.params = cleaned.filter((x) => x.kind === "fill" || x.kind === "select").length;
         }
         target.failures = 0;
+        delete target.lastError;
         await save(ctx, RECIPES_KEY, recipes, "recipes");
         broadcast(ctx, "ui.recipesChanged", { recipes });
         return { ok: true };
+      }
+      // Running a recipe from the panel: the same steps the agent would run,
+      // executed by the user's hand instead. Its result is real page state,
+      // not a model's opinion — so it also updates the recipe's health.
+      case "recipes.run": {
+        const rec = recipes.find((r) => r.id === String(params.id ?? ""));
+        if (!rec) return { ok: false, error: "\u8FD9\u6761\u914D\u65B9\u5DF2\u7ECF\u4E0D\u5728\u4E86" };
+        const tabId = targetTabId(key);
+        if (!tabId) return { ok: false, error: "\u8FD9\u4E2A\u4F1A\u8BDD\u8FD8\u6CA1\u6709\u6253\u5F00\u7F51\u9875" };
+        const here = await ctx.call("browser.getUrl", { tabId });
+        const where = originOfUrl(here?.url ?? "");
+        if (where !== rec.origin) {
+          return {
+            ok: false,
+            error: `\u8FD9\u6761\u914D\u65B9\u662F\u7ED9 ${rec.site} \u7528\u7684\uFF0C\u5F53\u524D\u9875\u9762\u4E0D\u5728\u90A3\u4E2A\u7F51\u7AD9\u4E0A`,
+            origin: rec.origin
+          };
+        }
+        const raw = params.values && typeof params.values === "object" ? params.values : {};
+        const values = {};
+        for (const k of Object.keys(raw)) values[k] = String(raw[k] ?? "");
+        const tokens = /* @__PURE__ */ new Set();
+        for (const st of rec.steps) {
+          for (const m of String(st.value ?? "").match(/\{\{\d+\}\}/g) ?? []) tokens.add(m);
+        }
+        const missing = [...tokens].filter((tk) => !values[tk]?.trim());
+        if (missing.length) return { ok: false, error: "\u7F3A\u5C11\u53C2\u6570", missing };
+        const needFiles = rec.steps.map((st, i) => st.kind === "upload" && !values[`file:${i}`]?.trim() ? i + 1 : 0).filter(Boolean);
+        if (needFiles.length) {
+          return { ok: false, error: `\u7B2C ${needFiles.join("\u3001")} \u6B65\u8981\u4E0A\u4F20\u6587\u4EF6\uFF0C\u5148\u586B\u597D\u672C\u5730\u6587\u4EF6\u8DEF\u5F84`, needFiles };
+        }
+        const steps = rec.steps.map((st, i) => {
+          const value = String(st.value ?? "").replace(/\{\{\d+\}\}/g, (m) => values[m] ?? "");
+          if (st.kind === "click") return { click: st.target };
+          if (st.kind === "hover") return { hover: st.target };
+          if (st.kind === "wait") return { wait: Number(st.target) || 500 };
+          if (st.kind === "upload") {
+            const files = String(values[`file:${i}`] ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+            return { upload: { selector: st.target, files } };
+          }
+          return { [st.kind]: { selector: st.target, value } };
+        });
+        const expects = rec.steps.map(
+          (st) => st.expect ? String(st.expect).replace(/\{\{\d+\}\}/g, (m) => values[m] ?? "") : void 0
+        );
+        const log = [];
+        const gaps = [];
+        let failedAt = -1;
+        let failMsg = "";
+        for (let i = 0; i < steps.length; i++) {
+          try {
+            const raw2 = await runActStep(steps[i], ctx, tabId, key);
+            const line = prettyStepLine(raw2, rec.steps[i].target);
+            log.push(`${i + 1}. ${line}`);
+            if (expects[i] && /页面跳转|页面出现/.test(expects[i])) {
+              const [u, t] = await Promise.all([
+                ctx.call("browser.getUrl", { tabId }).catch(() => null),
+                ctx.call("browser.getText", { tabId }).catch(() => null)
+              ]);
+              const gap = expectationGap(expects[i], line, {
+                url: u?.url ?? "",
+                text: t?.text ?? ""
+              });
+              if (gap) gaps.push(`\u7B2C ${i + 1} \u6B65\uFF1A${gap}`);
+            }
+          } catch (err) {
+            failedAt = i;
+            failMsg = prettyStepLine(zhError(err instanceof Error ? err.message : String(err)), rec.steps[i].target);
+            log.push(`${i + 1}. \u5931\u8D25\uFF1A${failMsg}`);
+            break;
+          }
+        }
+        if (failedAt < 0) {
+          rec.uses += 1;
+          rec.lastOk = Date.now();
+          rec.failures = 0;
+          delete rec.lastError;
+        } else {
+          rec.failures += 1;
+          rec.lastError = { step: failedAt + 1, message: failMsg.slice(0, 300), at: Date.now() };
+        }
+        await save(ctx, RECIPES_KEY, recipes, "recipes");
+        broadcast(ctx, "ui.recipesChanged", { recipes });
+        const after = await ctx.call("browser.getUrl", { tabId }).catch(() => null);
+        return {
+          ok: failedAt < 0,
+          log,
+          gaps,
+          failedStep: failedAt < 0 ? 0 : failedAt + 1,
+          error: failMsg,
+          url: after?.url ?? ""
+        };
       }
       case "recipes.delete": {
         const id = String(params.id ?? "");
@@ -2579,7 +2728,7 @@ plugin({
       }
       default:
         throw new Error(
-          `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, settings.setPrivate, settings.setSelPopup, tabs.new, tabs.activate, tabs.close, tabs.reorder, split.set, recipes.list, recipes.update, recipes.delete)`
+          `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, settings.setPrivate, settings.setSelPopup, tabs.new, tabs.activate, tabs.close, tabs.reorder, split.set, recipes.list, recipes.update, recipes.delete, recipes.run)`
         );
     }
   },
@@ -2735,6 +2884,7 @@ plugin({
         const log = [];
         const effects = [];
         let failedAt = -1;
+        let failMsg = "";
         const namedForTargets = params.recipe ? String(params.recipe).trim() : "";
         if (namedForTargets) {
           const rec = recipes.find((r) => r.name === namedForTargets);
@@ -2758,7 +2908,8 @@ plugin({
             log.push(`${i + 1}. ${line}`);
           } catch (err) {
             failedAt = i;
-            log.push(`${i + 1}. \u5931\u8D25\uFF1A${err instanceof Error ? err.message : String(err)}`);
+            failMsg = prettyStepLine(zhError(err instanceof Error ? err.message : String(err)), stepTarget(step));
+            log.push(`${i + 1}. \u5931\u8D25\uFF1A${failMsg}`);
             break;
           }
         }
@@ -2780,9 +2931,11 @@ plugin({
               known.uses += 1;
               known.lastOk = Date.now();
               known.failures = 0;
+              delete known.lastError;
               creditedId = known.id;
             } else {
               known.failures += 1;
+              known.lastError = { step: failedAt + 1, message: failMsg.slice(0, 300), at: Date.now() };
             }
             await save(ctx, RECIPES_KEY, recipes, "recipes");
           }
@@ -2940,12 +3093,16 @@ plugin({
         }
         return site.map((r) => {
           const stale = r.failures >= 2 ? " [\u5DF2\u5931\u6548]" : "";
+          const broke = r.lastError ? `
+  \u4E0A\u6B21\u5931\u8D25\u5728\u7B2C ${r.lastError.step} \u6B65\uFF1A${r.lastError.message}\uFF08${formatWhen(
+            r.lastError.at
+          )}\uFF09\uFF1B\u90A3\u4E00\u6B65\u591A\u534A\u5DF2\u7ECF\u53D8\u4E86\uFF0C\u53EF\u4EE5\u8DF3\u8FC7\u5B83\u81EA\u5DF1\u64CD\u4F5C\uFF0C\u6216\u8BA9\u7528\u6237\u4FEE\u8FD9\u6761\u914D\u65B9` : "";
           return [
             `${r.name}\uFF08${r.site || r.origin}\uFF0C${r.paths && r.paths.length ? r.paths.join("\u3001") + " \xB7 " : ""}${r.steps.length} \u6B65\uFF0C\u7528\u8FC7 ${r.uses} \u6B21\uFF0C\u4E0A\u6B21\u6210\u529F ${formatWhen(r.lastOk)}\uFF09${stale}`,
             ...r.steps.map(
               (st, i) => `  ${i + 1}. ${st.kind} ${prettyTarget(st.target)}${st.value ? ` = ${st.value}` : ""}${st.expect ? ` \uFF5C\u9884\u671F\uFF1A${st.expect}` : ""}`
             )
-          ].join("\n");
+          ].join("\n") + broke;
         }).join("\n\n") + "\n\n\u6309 browser_act \u7684\u683C\u5F0F\u6267\u884C\uFF0C\u628A {{n}} \u6362\u6210\u8FD9\u6B21\u7684\u5B9E\u9645\u503C\uFF1B\u67D0\u4E00\u6B65\u7684\u9884\u671F\u5BF9\u4E0D\u4E0A\u5C31\u7ACB\u523B\u505C\u4E0B\u3001\u81EA\u5DF1\u91CD\u65B0\u64CD\u4F5C\u3002";
       }
       case "browser_recipe_delete": {

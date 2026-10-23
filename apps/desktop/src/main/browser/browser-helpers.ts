@@ -210,7 +210,7 @@ export const BROWSER_HELPERS_JS = `
     // 0. Fallback list: alt(#id || [name="x"] || text="登录")
     // A recorded step keeps several ways to find the same element; a page
     // that renames an id should not kill the recipe.
-    var altMatch = selector.match(/^alt\(([\s\S]*)\)$/);
+    var altMatch = selector.match(/^alt\\(([\\s\\S]*)\\)$/);
     if (altMatch) {
       var altParts = altMatch[1].split('||');
       for (var ai = 0; ai < altParts.length; ai++) {
@@ -1282,3 +1282,12 @@ export const BROWSER_HELPERS_JS = `
   }
 })();
 `;
+
+// A JS template literal EATS single backslashes: /\s/ written once above
+// becomes /s/, and the branch silently never matches — which is exactly how
+// the alt() fallback list shipped dead (a recorded recipe's 2nd locator was
+// unreachable). Every regex in the template needs doubled backslashes; this
+// guard makes the mistake loud at startup instead of at the first recipe.
+if (!BROWSER_HELPERS_JS.includes(String.raw`selector.match(/^alt\(([\s\S]*)\)$/)`)) {
+  throw new Error('BROWSER_HELPERS_JS lost a backslash: alt() fallback list would never match');
+}

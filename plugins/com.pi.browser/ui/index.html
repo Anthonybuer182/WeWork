@@ -151,6 +151,33 @@
       border: 1px solid hsl(var(--border, 218 14% 20%)); background: transparent; color: inherit; font: inherit;
     }
     .re-actions .re-save { border-color: hsl(var(--ring, 218 100% 65%)); }
+    /* The step that failed last time, marked in place: the user opens the
+       editor to FIX one thing, and should not have to guess which. */
+    .re-step.bad, .run-step.bad {
+      background: hsl(var(--destructive, 0 70% 50%) / 0.12);
+      border-radius: 4px;
+    }
+    .re-warn {
+      margin: 2px 0 8px; padding: 4px 8px; border-radius: 4px; font-size: 11px;
+      background: hsl(var(--destructive, 0 70% 50%) / 0.12);
+      color: hsl(var(--destructive-foreground, 0 70% 72%));
+    }
+    .recipe-run { padding: 6px 12px 10px; }
+    .run-title { font-size: 12px; margin-bottom: 6px; }
+    .run-steps { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .run-step { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 1px 4px; }
+    .run-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .run-val, .run-file {
+      background: transparent; color: inherit; font: inherit; padding: 2px 6px;
+      border: 1px solid hsl(var(--border, 218 14% 20%)); border-radius: 4px;
+    }
+    .run-file { margin-left: 6px; flex: 1; }
+    .run-val { flex: 1; }
+    .run-tip { font-size: 11px; color: hsl(var(--muted-foreground, 217 9% 59%)); margin-bottom: 6px; }
+    .run-out { margin-top: 8px; font-size: 11px; display: flex; flex-direction: column; gap: 3px; }
+    .run-out .line { color: hsl(var(--muted-foreground, 217 9% 59%)); word-break: break-word; }
+    .run-head { font-size: 12px; margin-bottom: 4px; }
+    .run-head.bad { color: hsl(var(--destructive, 0 70% 62%)); }
     .row-x:hover { background: hsl(var(--border, 218 14% 20%)); color: hsl(var(--foreground, 220 21% 92%)); }
     .empty {
       padding: 16px 12px;
@@ -650,6 +677,7 @@
         recipeSite: '',  // registrable domain those recipes belong to
         recipeOrigin: '',
         editing: null,   // recipe being edited in the dropdown
+        running: null,   // recipe being test-run (executes for real)
         active: -1,      // highlighted row across both sections
         tabs: [],        // this conversation's tabs (mirror of the backend)
         activeTabId: '',
@@ -706,6 +734,11 @@
       function closeOmnibox() {
         omnibox.hidden = true;
         state.active = -1;
+        // A test run is a VIEW inside the dropdown, not a mode: closing the
+        // dropdown ends it. Leaving it behind replaced the list with the old
+        // run report the next time the address bar was clicked — favorites and
+        // history looked "gone". The recipe's health is already saved.
+        state.running = null;
         disarmClear();
       }
 
@@ -739,6 +772,100 @@
         return pending;
       }
 
+      /** alt(a || b || c) → "a …" — the fallbacks are noise in a preview. */
+      function prettyTarget(t) {
+        var m = /^alt\(([\s\S]*)\)$/.exec(String(t || ''));
+        if (!m) return String(t || '');
+        var parts = m[1].split('||').map(function (s) { return s.trim(); }).filter(Boolean);
+        if (parts.length <= 1) return parts[0] || String(t || '');
+        return parts[0] + ' …';
+      }
+
+      /**
+       * The test-run view. It shows the steps BEFORE running them, because
+       * this really executes: a recipe that posts or orders would do exactly
+       * that. Parameters and file paths are the only things the user supplies.
+       */
+      function runHtml() {
+        var rn = state.running;
+        var rec = rn.snapshot || null;
+        var i;
+        for (i = 0; i < state.recipes.length; i++) {
+          if (state.recipes[i].id === rn.id) { rec = state.recipes[i]; break; }
+        }
+        if (!rec) {
+          // Deleted in another panel while this view was open: say so, and
+          // leave a way back to the list.
+          return (
+            '<div class="sec">运行配方</div>' +
+            '<div class="empty">这条配方已经不在了</div>' +
+            '<div class="re-actions"><button class="run-cancel">关闭</button></div>'
+          );
+        }
+
+        var bad = rec.lastError ? rec.lastError.step : 0;
+        var steps = '';
+        var tokens = [];
+        for (i = 0; i < rec.steps.length; i++) {
+          var st = rec.steps[i];
+          var found = String(st.value || '').match(/\{\{\d+\}\}/g) || [];
+          for (var k = 0; k < found.length; k++) {
+            if (tokens.indexOf(found[k]) === -1) tokens.push(found[k]);
+          }
+          steps +=
+            '<div class="run-step' + (bad === i + 1 ? ' bad' : '') + '">' +
+              '<span class="re-kind">' + esc(st.kind) + '</span>' +
+              '<span class="run-t">' + esc(prettyTarget(st.target)) + '</span>' +
+              (st.kind === 'upload'
+                ? '<input class="run-file" data-step="' + i + '" placeholder="本地文件绝对路径" value="' +
+                    esc(rn.values['file:' + i] || '') + '">'
+                : '') +
+            '</div>';
+        }
+
+        var params = '';
+        for (i = 0; i < tokens.length; i++) {
+          params +=
+            '<label class="re-name-label">参数 ' + esc(tokens[i].replace(/[{}]/g, '')) +
+              '<input class="run-val" data-token="' + esc(tokens[i]) + '" value="' +
+                esc(rn.values[tokens[i]] || '') + '">' +
+            '</label>';
+        }
+
+        var out = '';
+        if (rn.busy) {
+          out = '<div class="run-head">正在运行…</div>';
+        } else if (rn.done) {
+          if (rn.failedStep) {
+            out += '<div class="run-head bad">第 ' + rn.failedStep + ' 步失败：' + esc(rn.error || '') + '</div>';
+          } else if (rn.error) {
+            out += '<div class="run-head bad">' + esc(rn.error) + '</div>';
+          } else {
+            out += '<div class="run-head">✓ 跑完了 ' + rn.log.length + ' 步</div>';
+          }
+          for (i = 0; i < rn.log.length; i++) out += '<div class="line">' + esc(rn.log[i]) + '</div>';
+          for (i = 0; i < rn.gaps.length; i++) out += '<div class="line">⚠ ' + esc(rn.gaps[i]) + '</div>';
+          out = '<div class="run-out">' + out + '</div>';
+        }
+
+        return (
+          '<div class="sec">运行配方</div>' +
+          '<div class="recipe-run" data-id="' + esc(rec.id) + '">' +
+            '<div class="run-title">' + esc(rec.name) + ' · ' + rec.steps.length + ' 步</div>' +
+            '<div class="run-tip">会真的执行每一步——发消息、提交表单、下单这类操作会真的发生。</div>' +
+            '<div class="run-steps">' + steps + '</div>' +
+            params +
+            '<div class="re-actions">' +
+              '<button class="re-save run-go"' + (rn.busy ? ' disabled' : '') + '>' +
+                (rn.done ? '再运行' : '运行') +
+              '</button>' +
+              '<button class="run-cancel">' + (rn.done ? '关闭' : '取消') + '</button>' +
+            '</div>' +
+            out +
+          '</div>'
+        );
+      }
+
       function renderList() {
         var rows = [];
         var i;
@@ -748,12 +875,22 @@
         if (state.editing) {
           var ed = state.editing;
           rows.push('<div class="sec">编辑配方</div>');
+          // Say WHY it broke, not just that it did: a red banner naming the
+          // step is the difference between fixing it and guessing.
+          if (ed.lastError) {
+            rows.push(
+              '<div class="re-warn">上次运行在第 ' + ed.lastError.step + ' 步失败：' +
+                esc(ed.lastError.message || '（没有记录原因）') +
+              '</div>'
+            );
+          }
           var stepHtml = '';
           for (i = 0; i < ed.steps.length; i++) {
             var st = ed.steps[i];
             var hasValue = st.kind === 'fill' || st.kind === 'select';
+            var bad = ed.lastError && ed.lastError.step === i + 1;
             stepHtml +=
-              '<div class="re-step" data-kind="' + esc(st.kind) + '">' +
+              '<div class="re-step' + (bad ? ' bad' : '') + '" data-kind="' + esc(st.kind) + '">' +
                 '<span class="re-kind">' + esc(st.kind) + '</span>' +
                 '<input class="re-target" value="' + esc(st.target) + '" placeholder="目标: #id / [name=…] / role=… / text=…">' +
                 (hasValue ? '<input class="re-value" value="' + esc(st.value || '') + '" placeholder="值，如 {{1}}">' : '') +
@@ -767,6 +904,15 @@
               '<div class="re-actions"><button class="re-save">保存</button><button class="re-cancel">取消</button></div>' +
             '</div>'
           );
+          list.innerHTML = rows.join('');
+          return;
+        }
+
+        // A test run is the same steps the agent would run, executed by the
+        // user's hand: it shows the steps before running (they really happen)
+        // and reports each one afterwards.
+        if (state.running) {
+          rows.push(runHtml());
           list.innerHTML = rows.join('');
           return;
         }
@@ -788,13 +934,17 @@
           for (i = 0; i < state.recipes.length; i++) {
             var rec = state.recipes[i];
             var stale = rec.failures >= 2 ? ' · 已失效' : '';
+            // Where it broke last time — a stale row that says "第 2 步失败"
+            // is actionable; "已失效" alone sends the user into the editor blind.
+            var broke = rec.lastError ? ' · 上次第 ' + rec.lastError.step + ' 步失败' : '';
             var host = rec.origin !== state.recipeOrigin ? esc(rec.origin.replace(/^https?:\/\//, '')) + ' · ' : '';
             rows.push(
               '<div class="recipe-row">' +
                 '<div class="row-main">' +
                   '<div class="row-title">' + esc(rec.name) + '</div>' +
-                  '<div class="row-url">' + host + rec.steps.length + ' 步 · 用过 ' + rec.uses + ' 次' + stale + '</div>' +
+                  '<div class="row-url">' + host + rec.steps.length + ' 步 · 用过 ' + rec.uses + ' 次' + broke + stale + '</div>' +
                 '</div>' +
+                '<button class="row-x" data-run="' + esc(rec.id) + '" title="运行这条配方（真的执行每一步）">▶</button>' +
                 '<button class="row-x" data-edit="' + esc(rec.id) + '" title="编辑这条配方">✎</button>' +
                 '<button class="row-x" data-recipe="' + esc(rec.id) + '" title="删除这条配方">✕</button>' +
               '</div>'
@@ -870,9 +1020,69 @@
       // mousedown inside the dropdown must not move focus, or the input's blur
       // would close the list before the click lands (the classic combobox trap).
       omnibox.addEventListener('mousedown', function (e) {
-        // The recipe editor holds real inputs — they must be able to focus.
-        if (e.target && e.target.closest && e.target.closest('.recipe-edit')) return;
+        // The recipe editor and the test runner hold real inputs — they must
+        // be able to take focus.
+        if (e.target && e.target.closest && e.target.closest('.recipe-edit, .recipe-run')) return;
         e.preventDefault();
+      });
+
+      /**
+       * Execute the recipe right here, on the conversation's own tab. The
+       * backend refuses when the page is on another site — a recipe is bound
+       * to the origin it was recorded on, and #name means other things there.
+       */
+      function startRun() {
+        var rn = state.running;
+        if (!rn || rn.busy) return;
+        var wrap = list.querySelector('.recipe-run');
+        if (wrap) {
+          var vals = wrap.querySelectorAll('.run-val');
+          var i;
+          for (i = 0; i < vals.length; i++) rn.values[vals[i].getAttribute('data-token')] = vals[i].value;
+          var files = wrap.querySelectorAll('.run-file');
+          for (i = 0; i < files.length; i++) {
+            rn.values['file:' + files[i].getAttribute('data-step')] = files[i].value;
+          }
+        }
+        rn.busy = true;
+        rn.done = false;
+        rn.log = [];
+        rn.gaps = [];
+        rn.failedStep = 0;
+        rn.error = '';
+        renderList();
+        window.piSDK.request('recipes.run', { id: rn.id, values: rn.values })
+          .then(function (res) {
+            rn.busy = false;
+            rn.done = true;
+            rn.log = (res && res.log) || [];
+            rn.gaps = (res && res.gaps) || [];
+            rn.failedStep = (res && res.failedStep) || 0;
+            rn.error = (res && res.error) || '';
+            if (res && res.missing) {
+              rn.error = '还缺参数：' + res.missing.map(function (m) {
+                return String(m).replace(/[{}]/g, '');
+              }).join('、');
+            }
+            // Re-read the list: the run just changed this recipe's health.
+            refreshList();
+          })
+          .catch(function (err) {
+            rn.busy = false;
+            rn.done = true;
+            rn.error = (err && err.message) || String(err);
+            renderList();
+          });
+      }
+
+      // Typing must survive a re-render (the address bar asks for the list on
+      // every keystroke and each answer repaints it).
+      list.addEventListener('input', function (e) {
+        var rn = state.running;
+        var el = e.target;
+        if (!rn || !el || !el.classList) return;
+        if (el.classList.contains('run-val')) rn.values[el.getAttribute('data-token')] = el.value;
+        else if (el.classList.contains('run-file')) rn.values['file:' + el.getAttribute('data-step')] = el.value;
       });
 
       list.addEventListener('click', function (e) {
@@ -880,10 +1090,35 @@
         var eBtn = target.closest ? target.closest('[data-edit]') : null;
         if (eBtn) {
           var edId = eBtn.getAttribute('data-edit');
+          state.running = null;
           state.editing = state.recipes.filter(function (r) { return r.id === edId; })[0] || null;
           renderList();
           return;
         }
+        // ── Test run ──
+        var runBtn = target.closest ? target.closest('[data-run]') : null;
+        if (runBtn) {
+          var runId = runBtn.getAttribute('data-run');
+          var pick = state.recipes.filter(function (r) { return r.id === runId; })[0] || null;
+          state.editing = null;
+          state.running = {
+            id: runId,
+            snapshot: pick,
+            values: {},
+            log: [],
+            gaps: [],
+            failedStep: 0,
+            error: '',
+            busy: false,
+            done: false,
+          };
+          renderList();
+          return;
+        }
+        var goBtn = target.closest ? target.closest('.run-go') : null;
+        if (goBtn) { startRun(); return; }
+        var stopBtn = target.closest ? target.closest('.run-cancel') : null;
+        if (stopBtn) { state.running = null; refreshList(); return; }
         var saveBtn = target.closest ? target.closest('.re-save') : null;
         if (saveBtn) {
           var wrap = list.querySelector('.recipe-edit');
@@ -1053,6 +1288,9 @@
           state.splitRatio = typeof msg.data.splitRatio === 'number' ? msg.data.splitRatio : 0.5;
           renderTabs();
         } else if (msg.event === 'ui.favoritesChanged' || msg.event === 'ui.historyCleared') {
+          if (!omnibox.hidden) refreshList();
+        } else if (msg.event === 'ui.recipesChanged') {
+          // A recipe's health follows every run — the agent's runs included.
           if (!omnibox.hidden) refreshList();
         } else if (msg.event === 'ui.settingsChanged') {
           state.private = msg.data.private === true;

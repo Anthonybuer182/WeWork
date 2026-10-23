@@ -177,6 +177,11 @@ interface Recipe {
   lastOk: number;
   /** Consecutive failed re-runs; two marks the recipe stale. */
   failures: number;
+  /**
+   * The last failed run, kept so the panel can say WHICH step broke and why.
+   * "已失效" without a reason makes the user open the editor and guess.
+   */
+  lastError?: { step: number; message: string; at: number };
 }
 
 /** A piece of page text the user kept. */
@@ -1020,6 +1025,26 @@ function prettyTarget(target: string): string {
   return `${parts[0]}（备选 ${parts.slice(1).join(' / ')}）`;
 }
 
+/** The selector a step will act on, whatever kind it is. */
+function stepTarget(step: Record<string, unknown>): string {
+  if (typeof step.click === 'string') return step.click;
+  if (typeof step.hover === 'string') return step.hover;
+  for (const key of ['fill', 'select', 'upload']) {
+    const inner = step[key];
+    if (inner && typeof inner === 'object') return String((inner as { selector?: unknown }).selector ?? '');
+  }
+  return '';
+}
+
+/**
+ * Say a step line the way the panel reads it: the recorded target instead of
+ * `alt(a || b || c)`. Replacing the EXACT selector (not a regex over the
+ * sentence) keeps targets that contain parentheses — `text="详情(3)"` — intact.
+ */
+function prettyStepLine(line: string, target: string): string {
+  return target ? line.split(target).join(prettyTarget(target)) : line;
+}
+
 function recipeSignature(steps: RecipeStep[]): string {
   return steps.map((s) => `${s.kind}:${s.target}`).join('|');
 }
@@ -1027,6 +1052,40 @@ function recipeSignature(steps: RecipeStep[]): string {
 /** Recipes still worth offering: two consecutive failures retires one. */
 function liveRecipes(origin: string): Recipe[] {
   return recipes.filter((r) => r.origin === origin && r.failures < 2);
+}
+
+/**
+ * Did the page do what the recording said it would?
+ *
+ * `expect` is a sentence the host itself produced when the step was first
+ * recorded ("页面跳转到 X" / "页面出现「Y」"). Two things are compared, because
+ * one alone lies: the line describing THIS step's change (empty when the page
+ * was already in that state — re-running a search says "没有明显变化") and the
+ * page as it stands now (blind to same-origin iframes). Either one proving the
+ * expectation is enough. "页面没有明显变化" and fill/select (whose value the
+ * host already read back) are advisory and compare as unknown, not failures.
+ */
+function expectationGap(
+  expect: string | undefined,
+  actual: string,
+  page: { url: string; text: string } | null,
+): string | null {
+  if (!expect) return null;
+  const wantUrl = /页面跳转到\s*(\S+)/.exec(expect);
+  if (wantUrl) {
+    if (page?.url.startsWith(wantUrl[1])) return null;
+    const gotUrl = /页面跳转到\s*(\S+)/.exec(actual);
+    if (gotUrl && gotUrl[1].startsWith(wantUrl[1])) return null;
+    return `预期跳转到 ${wantUrl[1]}，实际${page?.url ? `在 ${page.url}` : '没有跳转'}`;
+  }
+  const wantText = /页面出现「([^」]*)」/.exec(expect);
+  if (wantText) {
+    const want = wantText[1].slice(0, 40);
+    if (page?.text.includes(want)) return null;
+    if (actual.includes(want)) return null;
+    return `预期出现「${want}」，现在页面和这次的变化里都没有`;
+  }
+  return null;
 }
 
 /**
@@ -1146,6 +1205,7 @@ async function recordRecipe(
     if (existing.id !== creditedId) existing.uses += 1;
     existing.lastOk = Date.now();
     existing.failures = 0;
+    delete existing.lastError;
     existing.paths = [path, ...existing.paths.filter((p) => p !== path)].slice(0, 3);
     if (name) existing.name = name;
     await save(ctx, RECIPES_KEY, recipes, 'recipes');
@@ -1167,6 +1227,34 @@ async function recordRecipe(
   recipes = [recipe, ...recipes].slice(0, 60);
   await save(ctx, RECIPES_KEY, recipes, 'recipes');
   return recipe;
+}
+
+/**
+ * Host errors become user-visible text in the panel ("上次运行在第 1 步失败：…"),
+ * so the handful a recipe can actually hit are said in the same language as
+ * the rest of the panel. Anything unmapped passes through untouched — better
+ * an English sentence than a wrong translation.
+ */
+function zhError(message: string): string {
+  const msg = message.trim();
+  const rules: Array<[RegExp, (m: RegExpExecArray) => string]> = [
+    [/^Element not found: "([\s\S]*?)"(?:\.[\s\S]*)?$/, (m) => `找不到元素 "${m[1]}"`],
+    [/^Input element not found: "([\s\S]*?)"$/, (m) => `找不到输入框 "${m[1]}"`],
+    [/^Cannot locate: "([\s\S]*?)"$/, (m) => `定位不到 "${m[1]}"`],
+    [
+      /^Value did not stick on "([\s\S]*?)" \(field contains "([\s\S]*)"\)$/,
+      (m) => `"${m[1]}" 的值没写进去（框里是 "${m[2]}"）`,
+    ],
+    [/^No option matching "([\s\S]*?)" found in dropdown[\s\S]*$/, (m) => `下拉框里没有 "${m[1]}"`],
+    [/^Page load timed out$/, () => '页面加载超时'],
+    [/^setFileInputFiles failed: ([\s\S]*)$/, (m) => `写入文件框失败：${m[1]}`],
+    [/^Upload failed: ([\s\S]*)$/, (m) => `上传失败：${m[1]}`],
+  ];
+  for (const [re, say] of rules) {
+    const hit = re.exec(msg);
+    if (hit) return say(hit);
+  }
+  return msg;
 }
 
 /** `今天 14:23` — relative while it is still "recent", absolute once it is not. */
@@ -1882,21 +1970,133 @@ plugin({
           const cleaned: RecipeStep[] = [];
           for (const raw of params.steps as Array<Record<string, unknown>>) {
             const kind = String(raw?.kind ?? '') as RecipeStep['kind'];
-            const stepTarget = String(raw?.target ?? '').trim();
-            if (!allowed.has(kind) || !stepTarget) continue;
+            const tgt = String(raw?.target ?? '').trim();
+            if (!allowed.has(kind) || !tgt) continue;
             const value = raw?.value == null ? undefined : String(raw.value);
             const expect = raw?.expect == null ? undefined : String(raw.expect).trim() || undefined;
-            cleaned.push({ kind, target: stepTarget, ...(value ? { value } : {}), ...(expect ? { expect } : {}) });
+            cleaned.push({ kind, target: tgt, ...(value ? { value } : {}), ...(expect ? { expect } : {}) });
           }
           if (cleaned.length === 0) return { ok: false, error: 'empty steps' };
           target.steps = cleaned;
           target.params = cleaned.filter((x) => x.kind === 'fill' || x.kind === 'select').length;
         }
-        // An edited recipe is a deliberate reset: it has not failed yet.
+        // An edited recipe is a deliberate reset: it has not failed yet, and
+        // the failure it was carrying is about targets that no longer exist.
         target.failures = 0;
+        delete target.lastError;
         await save(ctx, RECIPES_KEY, recipes, 'recipes');
         broadcast(ctx, 'ui.recipesChanged', { recipes });
         return { ok: true };
+      }
+      // Running a recipe from the panel: the same steps the agent would run,
+      // executed by the user's hand instead. Its result is real page state,
+      // not a model's opinion — so it also updates the recipe's health.
+      case 'recipes.run': {
+        const rec = recipes.find((r) => r.id === String(params.id ?? ''));
+        if (!rec) return { ok: false, error: '这条配方已经不在了' };
+        const tabId = targetTabId(key);
+        if (!tabId) return { ok: false, error: '这个会话还没有打开网页' };
+        const here = await ctx.call<{ url?: string }>('browser.getUrl', { tabId });
+        const where = originOfUrl(here?.url ?? '');
+        if (where !== rec.origin) {
+          return {
+            ok: false,
+            error: `这条配方是给 ${rec.site} 用的，当前页面不在那个网站上`,
+            origin: rec.origin,
+          };
+        }
+
+        const raw = (params.values && typeof params.values === 'object' ? params.values : {}) as Record<
+          string,
+          unknown
+        >;
+        const values: Record<string, string> = {};
+        for (const k of Object.keys(raw)) values[k] = String(raw[k] ?? '');
+        // A {{n}} nobody filled would be typed into the page literally.
+        const tokens = new Set<string>();
+        for (const st of rec.steps) {
+          for (const m of String(st.value ?? '').match(/\{\{\d+\}\}/g) ?? []) tokens.add(m);
+        }
+        const missing = [...tokens].filter((tk) => !values[tk]?.trim());
+        if (missing.length) return { ok: false, error: '缺少参数', missing };
+        // An upload step without a file would fail inside runActStep and count
+        // against the recipe — but nothing about the SITE changed, the user
+        // just has not picked a file yet. Ask instead of blaming the recipe.
+        const needFiles = rec.steps
+          .map((st, i) => (st.kind === 'upload' && !values[`file:${i}`]?.trim() ? i + 1 : 0))
+          .filter(Boolean);
+        if (needFiles.length) {
+          return { ok: false, error: `第 ${needFiles.join('、')} 步要上传文件，先填好本地文件路径`, needFiles };
+        }
+
+        const steps = rec.steps.map((st, i) => {
+          const value = String(st.value ?? '').replace(/\{\{\d+\}\}/g, (m) => values[m] ?? '');
+          if (st.kind === 'click') return { click: st.target };
+          if (st.kind === 'hover') return { hover: st.target };
+          if (st.kind === 'wait') return { wait: Number(st.target) || 500 };
+          if (st.kind === 'upload') {
+            const files = String(values[`file:${i}`] ?? '')
+              .split('\n')
+              .map((x) => x.trim())
+              .filter(Boolean);
+            return { upload: { selector: st.target, files } };
+          }
+          return { [st.kind]: { selector: st.target, value } };
+        });
+        // The expectation holds the same tokens the step does; compare against
+        // today's page with THIS run's values, not with the literal "{{1}}".
+        const expects = rec.steps.map((st) =>
+          st.expect ? String(st.expect).replace(/\{\{\d+\}\}/g, (m) => values[m] ?? '') : undefined,
+        );
+
+        const log: string[] = [];
+        const gaps: string[] = [];
+        let failedAt = -1;
+        let failMsg = '';
+        for (let i = 0; i < steps.length; i++) {
+          try {
+            const raw = await runActStep(steps[i] as Record<string, unknown>, ctx, tabId, key);
+            const line = prettyStepLine(raw, rec.steps[i].target);
+            log.push(`${i + 1}. ${line}`);
+            if (expects[i] && /页面跳转|页面出现/.test(expects[i] as string)) {
+              const [u, t] = await Promise.all([
+                ctx.call<{ url?: string }>('browser.getUrl', { tabId }).catch(() => null),
+                ctx.call<{ text?: string }>('browser.getText', { tabId }).catch(() => null),
+              ]);
+              const gap = expectationGap(expects[i], line, {
+                url: u?.url ?? '',
+                text: t?.text ?? '',
+              });
+              if (gap) gaps.push(`第 ${i + 1} 步：${gap}`);
+            }
+          } catch (err) {
+            failedAt = i;
+            failMsg = prettyStepLine(zhError(err instanceof Error ? err.message : String(err)), rec.steps[i].target);
+            log.push(`${i + 1}. 失败：${failMsg}`);
+            break;
+          }
+        }
+
+        if (failedAt < 0) {
+          rec.uses += 1;
+          rec.lastOk = Date.now();
+          rec.failures = 0;
+          delete rec.lastError;
+        } else {
+          rec.failures += 1;
+          rec.lastError = { step: failedAt + 1, message: failMsg.slice(0, 300), at: Date.now() };
+        }
+        await save(ctx, RECIPES_KEY, recipes, 'recipes');
+        broadcast(ctx, 'ui.recipesChanged', { recipes });
+        const after = await ctx.call<{ url?: string }>('browser.getUrl', { tabId }).catch(() => null);
+        return {
+          ok: failedAt < 0,
+          log,
+          gaps,
+          failedStep: failedAt < 0 ? 0 : failedAt + 1,
+          error: failMsg,
+          url: after?.url ?? '',
+        };
       }
       case 'recipes.delete': {
         const id = String(params.id ?? '');
@@ -1964,7 +2164,7 @@ plugin({
           `unknown panel method: ${method} (known: nav.open, nav.back, nav.forward, nav.reload, ` +
             `state.get, omnibox.search, favorites.toggle, favorites.remove, history.clear, ` +
             `settings.setPrivate, settings.setSelPopup, tabs.new, tabs.activate, tabs.close, ` +
-            `tabs.reorder, split.set, recipes.list, recipes.update, recipes.delete)`,
+            `tabs.reorder, split.set, recipes.list, recipes.update, recipes.delete, recipes.run)`,
         );
     }
   },
@@ -2174,6 +2374,8 @@ plugin({
         const log: string[] = [];
         const effects: string[] = [];
         let failedAt = -1;
+        /** Why the failing step failed — kept for the recipe's record. */
+        let failMsg = '';
 
         // Naming a recipe makes ITS targets authoritative: the model supplies
         // the values, but the selectors (and their fallbacks) come from the
@@ -2202,7 +2404,8 @@ plugin({
             log.push(`${i + 1}. ${line}`);
           } catch (err) {
             failedAt = i;
-            log.push(`${i + 1}. 失败：${err instanceof Error ? err.message : String(err)}`);
+            failMsg = prettyStepLine(zhError(err instanceof Error ? err.message : String(err)), stepTarget(step));
+            log.push(`${i + 1}. 失败：${failMsg}`);
             break;
           }
         }
@@ -2245,9 +2448,11 @@ plugin({
               known.uses += 1;
               known.lastOk = Date.now();
               known.failures = 0;
+              delete known.lastError;
               creditedId = known.id;
             } else {
               known.failures += 1;
+              known.lastError = { step: failedAt + 1, message: failMsg.slice(0, 300), at: Date.now() };
             }
             await save(ctx, RECIPES_KEY, recipes, 'recipes');
           }
@@ -2440,6 +2645,12 @@ plugin({
           site
             .map((r) => {
               const stale = r.failures >= 2 ? ' [已失效]' : '';
+              // Which step broke last time: without it a retry is a blind guess.
+              const broke = r.lastError
+                ? `\n  上次失败在第 ${r.lastError.step} 步：${r.lastError.message}（${formatWhen(
+                    r.lastError.at,
+                  )}）；那一步多半已经变了，可以跳过它自己操作，或让用户修这条配方`
+                : '';
               return [
                 `${r.name}（${r.site || r.origin}，${r.paths && r.paths.length ? r.paths.join('、') + ' · ' : ''}${
                   r.steps.length
@@ -2450,7 +2661,7 @@ plugin({
                       st.expect ? ` ｜预期：${st.expect}` : ''
                     }`,
                 ),
-              ].join('\n');
+              ].join('\n') + broke;
             })
             .join('\n\n') +
           '\n\n按 browser_act 的格式执行，把 {{n}} 换成这次的实际值；某一步的预期对不上就立刻停下、自己重新操作。'
