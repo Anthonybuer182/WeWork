@@ -1316,6 +1316,41 @@ export class BrowserManager {
     return t.refFrames.get(m[1]) ?? null;
   }
 
+  /**
+   * Which frame a NON-ref selector lives in.
+   *
+   * Refs carry their frame in the snapshot map, but a saved recipe holds a
+   * stable selector like "#xn" — and a cross-origin frame's document is
+   * invisible to the top page. Without this, every recorded step inside such
+   * a frame resolves in the wrong document and "fails" on replay.
+   *
+   * Same-origin frames are skipped: the top document already reaches them.
+   */
+  private async resolveFrameForSelector(t: BrowserTab, selector: string): Promise<string | null> {
+    const byRef = this.frameForSelector(t, selector);
+    if (byRef !== null) return byRef;
+    if (/^\[(\d+)\]$/.test(selector) || /^ref:\d+$/.test(selector)) return null; // stale ref
+    const frames = await this.listFrames(t);
+    if (frames.length <= 1) return null;
+    let topOrigin = '';
+    try {
+      const u = await this.sendCommand(t, 'Runtime.evaluate', { expression: 'location.origin', returnByValue: true });
+      topOrigin = String((u as { result?: { value?: string } })?.result?.value ?? '');
+    } catch {}
+    const hits: string[] = [];
+    for (const f of frames) {
+      if (!f.parentId) continue;
+      if (f.url && BrowserManager.originOf(f.url) === topOrigin) continue;
+      const found = await this.evaluateInFrame(
+        t,
+        f.frameId,
+        `!!window.piResolveSelector(${JSON.stringify(selector)})`,
+      );
+      if (found === true) hits.push(f.frameId);
+    }
+    return hits.length === 1 ? hits[0] : null;
+  }
+
   /** Snapshot of every cross-origin child frame, appended to the main one. */
   private async crossOriginSnapshot(t: BrowserTab, topOrigin: string): Promise<string> {
     const frames = await this.listFrames(t);
@@ -1612,7 +1647,7 @@ export class BrowserManager {
       return '';
     })()`;
     try {
-      const frameId = this.frameForSelector(t, selector);
+      const frameId = await this.resolveFrameForSelector(t, selector);
       let value: unknown;
       if (frameId) {
         value = await this.evaluateInFrame(t, frameId, expr);
@@ -1686,7 +1721,7 @@ export class BrowserManager {
     const t = this.requireTab(tabId);
     t.lastDialog = null;
     t.dialogPolicy = dialog === 'accept' ? 'accept' : 'dismiss';
-    const frameId = this.frameForSelector(t, selector);
+    const frameId = await this.resolveFrameForSelector(t, selector);
     if (frameId) return this.clickInFrame(t, selector, frameId);
     // Auto-wait: poll for element up to 5s
     const found = await this.waitForElement(selector, 5000, t);
@@ -1953,7 +1988,7 @@ export class BrowserManager {
   ): Promise<{ attached: boolean; files: string[]; via?: 'chooser' | 'input' | 'drop'; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
     if (!files.length) return { attached: false, files, error: 'No files given' };
-    const frameId = this.frameForSelector(t, selector);
+    const frameId = await this.resolveFrameForSelector(t, selector);
     // A trusted click inside a cross-origin frame needs coordinates in the
     // top viewport; a synthesised drop needs only the frame's own context.
     if (frameId) return this.uploadByDrop(t, selector, files, frameId);
@@ -2070,7 +2105,7 @@ export class BrowserManager {
   /** Fill an input by selector. Uses native value setter for React/Vue. Supports all selector formats. */
   async fill(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
-    const frameId = this.frameForSelector(t, selector);
+    const frameId = await this.resolveFrameForSelector(t, selector);
     if (frameId) return this.fillInFrame(t, selector, value, frameId);
     const found = await this.waitForElement(selector, 5000, t);
     if (await this.isPasswordField(t, selector, null)) return PASSWORD_REFUSAL(selector);
@@ -2203,7 +2238,7 @@ export class BrowserManager {
   /** Select an option in a <select> element by value or visible text. */
   async selectOption(selector: string, value: string, tabId?: string): Promise<{ selector: string; value: string; selected: boolean; effect?: string; error?: string }> {
     const t = this.requireTab(tabId);
-    const frameId = this.frameForSelector(t, selector);
+    const frameId = await this.resolveFrameForSelector(t, selector);
     if (frameId) return this.selectInFrame(t, selector, value, frameId);
     const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
