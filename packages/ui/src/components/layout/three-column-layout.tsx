@@ -552,6 +552,9 @@ export function ThreeColumnLayout({
       <div
         className="relative flex h-11 shrink-0 select-none items-stretch bg-background"
         data-testid="header-band"
+        // Marks the band for the drag-region rule in globals.css: interactive
+        // descendants opt out, everything else in here drags the window.
+        data-drag-region=""
         style={draggable ? DRAG : undefined}
       >
         {sidebarOpen && (
@@ -561,7 +564,7 @@ export function ThreeColumnLayout({
               style={{ width: currentLeftWidth, paddingLeft: chrome.insetLeft, transition: widthTransition }}
             >
               {leftHeader != null && (
-                <div className="flex min-w-0 items-center gap-0.5" style={NO_DRAG}>
+                <div className="flex min-w-0 items-center gap-0.5">
                   {leftHeader}
                 </div>
               )}
@@ -582,7 +585,7 @@ export function ThreeColumnLayout({
             }}
           >
             {centerHeader != null && (
-              <div className="flex min-w-0 items-center gap-0.5" style={NO_DRAG}>
+              <div className="flex min-w-0 items-center gap-0.5">
                 {centerHeader}
               </div>
             )}
@@ -622,7 +625,7 @@ export function ThreeColumnLayout({
             }}
           >
             {rightHeader != null && (
-              <div className="flex h-full min-w-0 flex-1 items-stretch" style={NO_DRAG}>
+              <div className="flex h-full min-w-0 flex-1 items-stretch">
                 {rightHeader}
               </div>
             )}
@@ -648,7 +651,6 @@ export function ThreeColumnLayout({
         <div
           ref={trailingRef}
           className="absolute inset-y-0 right-0 z-10 flex shrink-0 items-center gap-1 px-2"
-          style={NO_DRAG}
           data-testid="header-trailing"
         >
           {headerTrailing}

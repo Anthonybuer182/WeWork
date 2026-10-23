@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * The header band is the window's title bar: every empty stretch of it must
+ * drag the window (see `data-drag-region` in three-column-layout.tsx).
+ *
+ * The opt-out is declared here, on the interactive descendants, and NOT as a
+ * `no-drag` wrapper around each header segment. A wrapper kills its whole
+ * rectangle — including the blank space beside the last tab pill or after the
+ * session title — which is exactly the place a hand reaches for. Whoever adds
+ * a clickable widget to the band gets the carve-out for free; anything inert
+ * stays draggable by default, which is the macOS title-bar contract.
+ *
+ * `-webkit-app-region` cannot be a Tailwind utility (the class name would be
+ * purged), but a hand-written rule like this one is fine.
+ */
+[data-drag-region] :is(
+    button,
+    a,
+    input,
+    textarea,
+    select,
+    [role='button'],
+    [role='tab'],
+    [contenteditable='true'],
+    [tabindex]:not([tabindex='-1'])
+  ) {
+  -webkit-app-region: no-drag;
+}
+
 @layer base {
   :root {
     /* Codex-style neutral palette: pure grayscale, no hue tint. Names are
