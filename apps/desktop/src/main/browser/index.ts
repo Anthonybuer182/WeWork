@@ -1,4 +1,4 @@
-export { BrowserManager } from './browser-manager';
+export { BrowserManager, ENGINE_UA } from './browser-manager';
 export type { SnapshotNode } from './browser-manager';
 export { BROWSER_HELPERS_JS } from './browser-helpers';
 export { VlmAnalyzer } from './vlm-analyzer';

@@ -84,10 +84,19 @@ const ENGINE_WEB_PREFS = {
   backgroundThrottling: false,
 } as const;
 
-/** Spoof a standard Chrome UA — zhipin.com and similar CDNs drop Electron's default. */
-const ENGINE_UA =
+/**
+ * Spoof a standard Chrome UA — zhipin.com and similar CDNs drop Electron's
+ * default.
+ *
+ * The version has to come from the Chromium this build actually ships:
+ * `Sec-CH-UA` is not spoofable the same way, so a UA claiming Chrome/130 while
+ * the client hints say Chromium/140 is a fingerprint mismatch Cloudflare can
+ * see — its challenge then spins at "Checking your Browser…" forever.
+ */
+const CHROME_MAJOR = (process.versions.chrome || '130.0.0.0').split('.')[0];
+export const ENGINE_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ' +
-  'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+  `AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROME_MAJOR}.0.0.0 Safari/537.36`;
 
 /**
  * Hard ceiling on live engine views — each tab is a renderer process
@@ -552,6 +561,10 @@ export class BrowserManager {
     // which is common on Chinese sites like zhipin.com.
     if (!this.sessionConfigured) {
       const ses = session.fromPartition('persist:pi-browser');
+      // The session default also covers frames/workers that outlive a tab's
+      // own override — the app-wide fallback is set in main, this keeps the
+      // browser partition self-consistent even if that changes.
+      ses.setUserAgent(ENGINE_UA);
       ses.setPermissionRequestHandler((_wc, _permission, callback) => {
         callback(true);
       });

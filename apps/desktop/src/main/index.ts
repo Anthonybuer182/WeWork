@@ -5,7 +5,7 @@ import { registerNativeIpcHandlers } from '@main/ipc/native';
 import { SettingsManager, ModelRegistry, AuthStorage } from '@earendil-works/pi-coding-agent';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { BrowserManager, VlmAnalyzer } from '@main/browser';
+import { BrowserManager, ENGINE_UA, VlmAnalyzer } from '@main/browser';
 import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
 import { registerPluginIpcHandlers } from '@main/ipc/plugins';
 import { registerLiveSlotIpcHandlers, LiveSlotRegistry } from '@main/plugins/slots';
@@ -52,6 +52,13 @@ app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion,IntensiveWakeUpThrottling');
+
+// Every process needs the browser's UA, not just the tab: cross-site iframes
+// take theirs from this app-wide fallback, so without it Cloudflare's challenge
+// widget saw "@pi/desktop/0.1.0 … Electron/38.8.6" while the top page claimed
+// Chrome — a mismatch that marks the client as automation and leaves the
+// "verify you are human" box spinning forever. Set before any window exists.
+app.userAgentFallback = ENGINE_UA;
 
 const gotLock = app.requestSingleInstanceLock();
 
