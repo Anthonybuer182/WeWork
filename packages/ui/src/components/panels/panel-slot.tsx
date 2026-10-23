@@ -2,7 +2,6 @@ import { useEffect, type ComponentType } from 'react';
 import { Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePanelStore, type PanelEntry } from '@/stores/panel-store';
-import { ProviderSettings } from '@/components/settings';
 import { PluginCenter } from '@/components/plugins/plugin-center';
 import { FileTree } from '@/components/file/file-tree';
 import { SessionList } from '@/components/session/session-list';
@@ -17,7 +16,6 @@ import { RailIcon } from './panel-rail';
  * plugin-owned: no host preview panel.
  */
 const HOST_COMPONENTS: Record<string, ComponentType> = {
-  'host:settings': ProviderSettings,
   'host:plugins': PluginCenter,
   'host:files': FileTree,
   'host:sessions': SessionList,

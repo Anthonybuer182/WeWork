@@ -6,6 +6,9 @@ export interface ConfigService {
   listModels(): Promise<ModelInfo[]>;
   /** List available skills discovered from disk by the SDK */
   listSkills(): Promise<Skill[]>;
+  /** Extra skill search directories (settings.skills), scanned before defaults */
+  getSkillPaths(): Promise<string[]>;
+  setSkillPaths(paths: string[]): Promise<void>;
   /** Read full models.json configuration */
   getModelsConfig(): Promise<ModelsConfig>;
   /** Write full models.json configuration */

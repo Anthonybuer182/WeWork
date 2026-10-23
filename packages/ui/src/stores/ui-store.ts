@@ -25,6 +25,14 @@ interface UIState {
    * sidebar is the platform's left rail and the chat never crosses it.
    */
   chatRightOfPanels: boolean;
+  /**
+   * Settings is a centred dialog, not a column view: its pages need more room
+   * than the 300px sidebar can give, and configuration is an interruption of
+   * the workspace rather than a place to work in. Opening it also silences
+   * every native panel view (see LiveSlot) — those sit above the DOM and would
+   * otherwise cover the dialog and swallow its clicks.
+   */
+  settingsOpen: boolean;
   rightPanelWidth: number;
   leftPanelWidth: number;
   compactMode: boolean;
@@ -45,6 +53,8 @@ interface UIState {
   toggleRightPanel: () => void;
   toggleCenterPanel: () => void;
   toggleChatSide: () => void;
+  openSettings: () => void;
+  setSettingsOpen: (open: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
   setRightPanelOpen: (open: boolean) => void;
   setCenterPanelOpen: (open: boolean) => void;
@@ -65,9 +75,10 @@ export const useUIStore = create<UIState>()(
       rightPanelOpen: false,
       centerPanelOpen: true,
       chatRightOfPanels: false,
+      settingsOpen: false,
       rightPanelWidth: 600,
-      // Wider than the old hardcoded 260 default: the left sidebar hosts
-      // settings as a view, whose forms need the room.
+      // A comfortable width for the session list, file tree and context panel,
+      // and the width the column is dragged from.
       leftPanelWidth: 300,
       compactMode: false,
       selectedSkills: [],
@@ -111,6 +122,8 @@ export const useUIStore = create<UIState>()(
       // while maximized reveals the chat by dropping the maximize.
       toggleCenterPanel: () => set((s) => ({ centerPanelOpen: !s.centerPanelOpen })),
       toggleChatSide: () => set((s) => ({ chatRightOfPanels: !s.chatRightOfPanels })),
+      openSettings: () => set({ settingsOpen: true }),
+      setSettingsOpen: (open) => set({ settingsOpen: open }),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       setCenterPanelOpen: (open) => set({ centerPanelOpen: open }),

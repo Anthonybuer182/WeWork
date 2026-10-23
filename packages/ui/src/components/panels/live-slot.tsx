@@ -47,6 +47,13 @@ export function LiveSlot({
   // would change that reference on every switch. Re-firing on session change
   // is the point: the backend learns the panel now serves the new session.
   const sessionId = useUIStore((s) => s.activeSessionId);
+  // Host overlays that must cover native views. Settings is currently the only
+  // one; a second overlay must be OR-ed in here (or this should become a
+  // suspension counter on the slot registry) or it will be covered by every
+  // native panel and its clicks swallowed — exactly what this flag prevents.
+  const settingsOpen = useUIStore((s) => s.settingsOpen);
+  const occludedRef = useRef(settingsOpen);
+  occludedRef.current = settingsOpen;
 
   useEffect(() => {
     if (!notifyMounted) return;
@@ -77,6 +84,17 @@ export function LiveSlot({
     const reportBounds = () => {
       const el = containerRef.current;
       if (!el) return;
+      // Occluded by the settings dialog → hide this view (0×0 means hide to
+      // the host). Keyed separately so closing the dialog produces a real
+      // report rather than a deduped no-op.
+      if (occludedRef.current) {
+        if (lastBounds === 'occluded') return;
+        lastBounds = 'occluded';
+        api
+          .invoke('pi:liveview:set-bounds', { slotId, x: 0, y: 0, width: 0, height: 0 })
+          .catch(() => {});
+        return;
+      }
       const rect = el.getBoundingClientRect();
       const bounds = {
         slotId,
@@ -140,7 +158,7 @@ export function LiveSlot({
   // committed and the rect is final, but nothing has painted yet.
   useLayoutEffect(() => {
     reportBoundsRef.current();
-  }, [swapped, pluginId, panelId]);
+  }, [swapped, pluginId, panelId, settingsOpen]);
 
   if (error) {
     return (

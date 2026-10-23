@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PanelRail, RailIcon } from './panel-rail';
 import { PanelBody, PaneView } from './panel-slot';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
@@ -40,9 +40,12 @@ const MIN_FRAC = 0.12;
 export function PanelHost({
   region = 'right',
   rail = region === 'left',
+  railFooter,
 }: {
   region?: PanelRegion;
   rail?: boolean;
+  /** Host actions pinned to the bottom of this region's rail. */
+  railFooter?: ReactNode;
 }) {
   const panels = usePanelStore((s) => s.panels);
   const selectedIds = usePanelStore((s) => s.openPanelIds[region]);
@@ -193,7 +196,7 @@ export function PanelHost({
     const focusedEntry = focusedId ? byId.get(focusedId) : undefined;
     return (
       <div className="flex h-full w-full">
-        {rail && <PanelRail region={region} />}
+        {rail && <PanelRail region={region} railFooter={railFooter} />}
         <div className="flex min-w-0 flex-1 flex-col">
           {focusedEntry && (
             <div data-panel-container={focusedEntry.id} className="flex min-h-0 flex-1 flex-col">

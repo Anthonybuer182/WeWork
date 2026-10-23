@@ -16,6 +16,12 @@ export function createProxyConfigService(transport: Transport): ConfigService {
     async listSkills() {
       return transport.request('config.listSkills') as ReturnType<ConfigService['listSkills']>;
     },
+    async getSkillPaths() {
+      return transport.request('config.getSkillPaths') as ReturnType<ConfigService['getSkillPaths']>;
+    },
+    async setSkillPaths(paths: string[]) {
+      return transport.request('config.setSkillPaths', { paths }) as ReturnType<ConfigService['setSkillPaths']>;
+    },
     // models.json CRUD
     async getModelsConfig() {
       return transport.request('config.getModelsConfig') as Promise<ModelsConfig>;

@@ -49,7 +49,7 @@ export { SessionList, SessionItem, SessionCreateButton, SessionHeader } from './
 export { ChatTimeline, MessageBubble, ThinkingBlock, ToolCallDisplay, EmptyChat, StreamingIndicator } from './components/chat';
 export { Composer, ComposerInput, SendButton, SlashCommandMenu, MentionMenu, AttachmentPreviewBar, FileUploadButton } from './components/composer';
 export { ModelSelector, ThinkLevelSelector, CompactToggle, SkillSelector } from './components/model';
-export { ProviderSettings } from './components/settings';
+export { SettingsDialog, SettingsRailButton } from './components/settings';
 export { UsageBar } from './components/usage';
 export { ErrorBoundary, LoadingSpinner, EmptyState, ErrorState, ConfirmDialog } from './components/common';
 export { FileTree, FileTreeNode } from './components/file';

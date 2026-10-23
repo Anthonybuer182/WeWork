@@ -286,6 +286,8 @@ async function handleRequest(server: ViteDevServer, method: string, params: any)
         case 'update': return configService.update(params.data);
         case 'listModels': return configService.listModels();
         case 'listSkills': return configService.listSkills();
+        case 'getSkillPaths': return configService.getSkillPaths();
+        case 'setSkillPaths': return configService.setSkillPaths(params.paths as string[]);
         case 'getModelsConfig': return configService.getModelsConfig();
         case 'saveModelsConfig': return configService.saveModelsConfig(params.config);
         case 'upsertProvider': return configService.upsertProvider(params.name as string, params.provider as any);

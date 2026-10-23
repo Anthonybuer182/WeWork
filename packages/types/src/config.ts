@@ -11,6 +11,8 @@ export interface Config {
   fontSize: number;
   codeFontSize: number;
   enableStreaming: boolean;
+  /** Compact long conversations automatically when the context fills up. */
+  compactionEnabled: boolean;
 }
 
 // models.json configuration types

@@ -1,4 +1,4 @@
-import { useEffect, useState, type DragEvent as ReactDragEvent } from 'react';
+import { useEffect, useState, type DragEvent as ReactDragEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
 import { useUIStore } from '@/stores/ui-store';
@@ -145,7 +145,18 @@ function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion 
  * "+" picker opens everything else — a 48px rail of icons beside the slots
  * duplicated the strip one row over.
  */
-export function PanelRail({ region = 'right' }: { region?: PanelRegion }) {
+export function PanelRail({
+  region = 'right',
+  railFooter,
+}: {
+  region?: PanelRegion;
+  /**
+   * Host actions pinned below the bottom group. Settings lives here rather than
+   * in a panel entry: it opens a dialog, so it must not participate in panel
+   * selection, persistence or layout.
+   */
+  railFooter?: ReactNode;
+}) {
   const panels = usePanelStore((s) => s.panels);
   const panelOrder = usePanelStore((s) => s.panelOrder[region]);
   const setPanelOrder = usePanelStore((s) => s.setPanelOrder);
@@ -225,10 +236,11 @@ export function PanelRail({ region = 'right' }: { region?: PanelRegion }) {
       data-panel-rail-region={region}
     >
       {topGroup.map(railButton)}
-      {bottomGroup.length > 0 && (
+      {(bottomGroup.length > 0 || railFooter) && (
         <>
           <div className="flex-1" />
           {bottomGroup.map(railButton)}
+          {railFooter}
         </>
       )}
     </div>

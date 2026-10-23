@@ -21,6 +21,7 @@ import { ThreeColumnLayout } from '@pi/ui';
 import { LeftSidebar } from '@pi/ui';
 import { CenterPanel } from '@pi/ui';
 import { PanelHost } from '@pi/ui';
+import { SettingsDialog, SettingsRailButton } from '@pi/ui';
 import { WorkspaceDropdown } from '@pi/ui';
 import { WorkspaceCreateButton } from '@pi/ui';
 import { SessionHeader } from '@pi/ui';
@@ -50,10 +51,9 @@ const HOST_PANELS: PanelEntry[] = [
   // The browser is a plugin panel now (com.pi.browser): its page embeds the
   // host's engine view via piSDK.liveSlot. The engine and its session stay
   // host-owned — the plugin only positions and drives it.
-  // Settings is a left-sidebar view pinned to the rail's bottom — the VS Code
-  // gear position. It reads as configuration rather than navigation.
-  // keepAlive 'always' so in-progress form edits survive switching views.
-  { id: 'host:settings', title: '设置', icon: 'settings', source: 'host', keepAlive: 'always', region: 'left', anchor: 'bottom', order: 100 },
+  // Settings is NOT a panel: it opens as a centred dialog (SettingsRailButton
+  // at the bottom of the left rail). A dialog has room for the side menu and
+  // the provider forms, and keeps configuration out of the column layout.
   ...HOST_LEFT_PANELS,
 ];
 
@@ -305,7 +305,7 @@ function AppContent() {
           rightPanel={<PanelHost rail={false} />}
           leftSidebar={
             <LeftSidebar>
-              <PanelHost region="left" />
+              <PanelHost region="left" railFooter={<SettingsRailButton />} />
             </LeftSidebar>
           }
           centerPanel={
@@ -316,6 +316,7 @@ function AppContent() {
             </CenterPanel>
           }
         />
+        <SettingsDialog />
       </AppShell>
     </TooltipProvider>
   );

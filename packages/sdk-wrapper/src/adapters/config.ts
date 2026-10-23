@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, parse, resolve } from 'path';
 import { homedir } from 'os';
 import type { ConfigService } from '../services/config.js';
 import { SettingsManager, AuthStorage, ModelRegistry, getAgentDir, loadSkills } from '@earendil-works/pi-coding-agent';
@@ -283,6 +283,7 @@ export function createRealConfigService(cwd: string, agentDir?: string, modelReg
         fontSize: 14,
         codeFontSize: 13,
         enableStreaming: true,
+        compactionEnabled: settings.getCompactionEnabled(),
       };
     },
 
@@ -295,6 +296,9 @@ export function createRealConfigService(cwd: string, agentDir?: string, modelReg
       }
       if (data.theme) {
         settings.setTheme(data.theme);
+      }
+      if (data.compactionEnabled !== undefined) {
+        settings.setCompactionEnabled(data.compactionEnabled);
       }
       await settings.flush();
       return this.get();
@@ -372,6 +376,30 @@ export function createRealConfigService(cwd: string, agentDir?: string, modelReg
     },
 
     // models.json CRUD
+
+    async getSkillPaths(): Promise<string[]> {
+      // The GLOBAL list, not the merged one: this pair backs an editor that
+      // writes with setSkillPaths (global scope), and a project `skills` array
+      // replaces the global one wholesale. Reading merged would show entries
+      // the editor cannot save, and saving would silently do nothing.
+      return [...(settings.getGlobalSettings().skills ?? [])];
+    },
+
+    async setSkillPaths(paths: string[]): Promise<void> {
+      // Normalise while writing: pickers hand back trailing separators, and a
+      // path list is compared verbatim downstream. Roots ("/", "C:\") keep
+      // their separator — collapsing them would point at nothing.
+      const next: string[] = [];
+      for (const raw of paths) {
+        const trimmed = raw.trim();
+        if (!trimmed) continue;
+        const absolute = resolve(trimmed);
+        const p = absolute === parse(absolute).root ? absolute : absolute.replace(/[\\/]+$/, '');
+        if (!next.includes(p)) next.push(p);
+      }
+      settings.setSkillPaths(next);
+      await settings.flush();
+    },
 
     async getModelsConfig(): Promise<ModelsConfig> {
       // Auto-migrate existing models in case they were configured before this feature

@@ -20,7 +20,7 @@ const SESSIONS_KEPT = 8;
  *   source === <pluginId> → a web page, hosted natively by the host
  */
 export interface PanelEntry {
-  /** 'host:settings' | 'host:plugins' | 'plugin:<pluginId>:<panelId>' */
+  /** 'host:plugins' | 'host:sessions' | 'plugin:<pluginId>:<panelId>' */
   id: string;
   title: string;
   /** Icon key resolved by the rail (see panel-icons.tsx). */
@@ -257,7 +257,12 @@ function reconcile(
     const inRegion = regionPanels(panels, region);
     const selected = prev.openPanelIds[region].filter((id) => {
       if (inRegion.some((p) => p.id === id)) return true;
-      return !prev.pluginPanelsSynced;
+      // Only plugin ids may be temporarily unknown (their registry syncs after
+      // host panels register). A host id that is gone — e.g. `host:settings`,
+      // which became a dialog — must be pruned immediately: waiting for a
+      // plugin sync that never comes (the web build has no plugins) would
+      // leave the column focused on a panel with no body.
+      return !prev.pluginPanelsSynced && id.startsWith('plugin:');
     });
     const current = prev.focusedId[region];
     const focused = current && selected.includes(current) ? current : selected[selected.length - 1] ?? null;
