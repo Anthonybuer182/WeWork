@@ -17,6 +17,14 @@ interface UIState {
    * it while the column is hidden.
    */
   centerPanelOpen: boolean;
+  /**
+   * Put the chat to the RIGHT of the plugin panel in the two-column
+   * workbench (sidebar closed). People who drive the panel — browser, viewer,
+   * a document — read it as the primary surface and want the conversation as
+   * a side column; three columns keep the standard order, because the
+   * sidebar is the platform's left rail and the chat never crosses it.
+   */
+  chatRightOfPanels: boolean;
   rightPanelWidth: number;
   leftPanelWidth: number;
   compactMode: boolean;
@@ -36,6 +44,7 @@ interface UIState {
   toggleSidebar: () => void;
   toggleRightPanel: () => void;
   toggleCenterPanel: () => void;
+  toggleChatSide: () => void;
   setSidebarOpen: (open: boolean) => void;
   setRightPanelOpen: (open: boolean) => void;
   setRightPanelWidth: (width: number) => void;
@@ -54,6 +63,7 @@ export const useUIStore = create<UIState>()(
       sidebarOpen: true,
       rightPanelOpen: false,
       centerPanelOpen: true,
+      chatRightOfPanels: false,
       rightPanelWidth: 600,
       // Wider than the old hardcoded 260 default: the left sidebar hosts
       // settings as a view, whose forms need the room.
@@ -99,6 +109,7 @@ export const useUIStore = create<UIState>()(
       // the toggle's pressed state follows the same definition, so clicking
       // while maximized reveals the chat by dropping the maximize.
       toggleCenterPanel: () => set((s) => ({ centerPanelOpen: !s.centerPanelOpen })),
+      toggleChatSide: () => set((s) => ({ chatRightOfPanels: !s.chatRightOfPanels })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
@@ -124,6 +135,10 @@ export const useUIStore = create<UIState>()(
         // centerPanelOpen likewise: the chat is the app's primary surface —
         // a launch that restores it hidden would read as broken.
         rightPanelWidth: state.rightPanelWidth,
+        // A layout preference like the widths above, not a view state: someone
+        // who reads the panel and keeps the chat on the right wants it back
+        // that way after a restart.
+        chatRightOfPanels: state.chatRightOfPanels,
         leftPanelWidth: state.leftPanelWidth,
         compactMode: state.compactMode,
         selectedSkills: state.selectedSkills,

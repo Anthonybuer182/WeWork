@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MonitorX } from 'lucide-react';
 import { useUIStore } from '@/stores/ui-store';
 
@@ -30,6 +30,18 @@ export function LiveSlot({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  // Latest measure-and-report callback, owned by the attach effect below but
+  // reachable from layout-driven re-measures (a column swap moves this slot
+  // without resizing it).
+  const reportBoundsRef = useRef<() => void>(() => {});
+  // Which side the chat is on. A swap reorders the columns, which moves this
+  // slot's rect without changing its size — ResizeObserver cannot see that,
+  // and the native view would stay behind over the chat.
+  const chatRight = useUIStore((s) => s.chatRightOfPanels);
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  // Same rule the layout applies: the swap only takes effect with the sidebar
+  // closed. Opening the sidebar therefore moves the columns too.
+  const swapped = chatRight && !sidebarOpen;
   // Which conversation is on screen. Sent alongside (never inside) the open
   // params — params is a store reference, and folding the session into it
   // would change that reference on every switch. Re-firing on session change
@@ -112,13 +124,23 @@ export function LiveSlot({
     if (containerRef.current) observer.observe(containerRef.current);
     // Also observe window resizes (layout shifts without element resize).
     window.addEventListener('resize', reportBounds);
+    reportBoundsRef.current = reportBounds;
 
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', reportBounds);
+      reportBoundsRef.current = () => {};
       api.invoke('pi:liveview:detach', { slotId }).catch(() => {});
     };
   }, [pluginId, panelId]);
+
+  // A two-column swap moves this slot sideways without resizing it, so the
+  // ResizeObserver above stays silent and the native view would be left
+  // hovering over the chat. Re-measure in a layout effect: the DOM reorder is
+  // committed and the rect is final, but nothing has painted yet.
+  useLayoutEffect(() => {
+    reportBoundsRef.current();
+  }, [swapped, pluginId, panelId]);
 
   if (error) {
     return (

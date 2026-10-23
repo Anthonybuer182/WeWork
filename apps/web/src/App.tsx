@@ -54,6 +54,8 @@ function AppContent() {
 
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
+  const centerPanelOpen = useUIStore((s) => s.centerPanelOpen);
+  const chatRightOfPanels = useUIStore((s) => s.chatRightOfPanels);
   const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth);
   const leftPanelWidth = useUIStore((s) => s.leftPanelWidth);
@@ -80,6 +82,8 @@ function AppContent() {
         <ThreeColumnLayout
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
+          centerPanelOpen={centerPanelOpen}
+          chatRight={chatRightOfPanels}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
           leftWidth={leftPanelWidth}

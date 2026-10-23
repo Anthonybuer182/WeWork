@@ -64,6 +64,7 @@ function AppContent() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const centerPanelOpen = useUIStore((s) => s.centerPanelOpen);
+  const chatRightOfPanels = useUIStore((s) => s.chatRightOfPanels);
   const rightPanelWidth = useUIStore((s) => s.rightPanelWidth);
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth);
   const leftPanelWidth = useUIStore((s) => s.leftPanelWidth);
@@ -264,6 +265,9 @@ function AppContent() {
           sidebarOpen={sidebarOpen}
           rightPanelOpen={rightPanelOpen}
           centerPanelOpen={centerPanelOpen}
+          // Two columns (chat + panel) can be mirrored: the panel takes the
+          // left edge and the chat reads on the right.
+          chatRight={chatRightOfPanels}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
           leftWidth={leftPanelWidth}

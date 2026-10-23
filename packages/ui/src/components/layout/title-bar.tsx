@@ -1,5 +1,5 @@
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
-import { Columns2, Minus, PanelLeft, PanelRight, Square, X } from 'lucide-react';
+import { Columns2, Minus, PanelLeft, PanelRight, Square, X, ArrowLeftRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
 import { usePanelStore } from '@/stores/panel-store';
@@ -95,12 +95,18 @@ export function LayoutToggles() {
   const toggleRightPanel = useUIStore((s) => s.toggleRightPanel);
   const centerPanelOpen = useUIStore((s) => s.centerPanelOpen);
   const toggleCenterPanel = useUIStore((s) => s.toggleCenterPanel);
+  const chatRightOfPanels = useUIStore((s) => s.chatRightOfPanels);
+  const toggleChatSide = useUIStore((s) => s.toggleChatSide);
   const panels = usePanelStore((s) => s.panels);
   const runtime = usePanelStore((s) => s.runtime);
 
   // Only offer the toggle when its region has something to show. Web registers
   // no right-region panels, so a right toggle there would open an empty column.
   const hasRightPanels = panels.some((p) => p.region === 'right' && !p.hidden);
+
+  // Swapping sides is defined for the two-column workbench only: with the
+  // sidebar open the chat cannot cross it, so the control would be a no-op.
+  const canSwapSides = !sidebarOpen && rightPanelOpen && centerPanelOpen;
 
   // The right rail is only rendered while the sidebar is open, so a badge or
   // unread dot on a panel of a collapsed sidebar would otherwise be invisible.
@@ -145,6 +151,15 @@ export function LayoutToggles() {
           onClick={toggleRightPanel}
         >
           <PanelRight className="h-4 w-4" />
+        </TitleBarButton>
+      )}
+      {hasRightPanels && canSwapSides && (
+        <TitleBarButton
+          label={chatRightOfPanels ? '对话放回左侧' : '对话换到右侧'}
+          active={chatRightOfPanels}
+          onClick={toggleChatSide}
+        >
+          <ArrowLeftRight className="h-4 w-4" />
         </TitleBarButton>
       )}
     </>

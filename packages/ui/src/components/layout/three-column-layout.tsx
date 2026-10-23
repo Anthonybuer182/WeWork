@@ -51,6 +51,13 @@ interface ThreeColumnLayoutProps {
    * reach it.
    */
   centerPanelOpen?: boolean;
+  /**
+   * Mirror the two visible columns: the panel keeps the left edge and the
+   * chat takes the right. Applied only while the sidebar is closed — the chat
+   * cannot cross the sidebar (they share one flex wrapper), and the sidebar
+   * stays the platform's left rail.
+   */
+  chatRight?: boolean;
 }
 
 /** Width of each resize divider (matches the `w-1` handles below). */
@@ -67,12 +74,15 @@ function RightDividerHandle({
   width,
   minWidth,
   maxWidth,
+  order,
   onDragStart,
   onKeyboardResize,
 }: {
   width: number;
   minWidth: number;
   maxWidth: number;
+  /** Flex order — the handle travels with its column when the sides swap. */
+  order?: number;
   onDragStart: () => void;
   onKeyboardResize: (side: 'left' | 'right', delta: number) => void;
 }) {
@@ -89,7 +99,7 @@ function RightDividerHandle({
       // The header band is a window drag region; the handle must opt out or
       // the OS swallows the mousedown and resizing from the title bar never
       // starts.
-      style={NO_DRAG}
+      style={{ ...NO_DRAG, order }}
       onMouseDown={onDragStart}
       onKeyDown={(e) => {
         if (e.key === 'ArrowLeft') onKeyboardResize('right', -10);
@@ -135,6 +145,7 @@ export function ThreeColumnLayout({
   rightPanelOpen = true,
   sidebarOpen = true,
   centerPanelOpen = true,
+  chatRight = false,
 }: ThreeColumnLayoutProps) {
   const [currentLeftWidth, setCurrentLeftWidth] = useState(leftWidth);
   const [currentRightWidth, setCurrentRightWidth] = useState(rightWidth);
@@ -147,6 +158,16 @@ export function ThreeColumnLayout({
 
   const chrome = getHostChrome();
   const draggable = chrome.platform !== 'web';
+
+  // Two visible columns, chat on the right of the panel. Only that state has a
+  // defined other side: with the sidebar open the chat cannot cross it (they
+  // are one flex wrapper), so the preference lies dormant rather than
+  // reordering three columns behind the user's back.
+  //
+  // The columns are moved with CSS `order`, never by changing DOM order: the
+  // centre owns the composer and the right column owns the native views, and
+  // a reorder in the tree would remount both.
+  const swapped = chatRight && !sidebarOpen && rightPanelOpen && centerPanelOpen;
 
   // The trailing zone (layout toggles) is pinned absolutely at the band's
   // top-right — in flow it would eat its 100-odd px out of the flex-1 centre
@@ -230,11 +251,14 @@ export function ThreeColumnLayout({
       if (dragging === 'left') {
         applyLeftWidth(x);
       } else if (dragging === 'right') {
-        applyRightWidth(rect.width - x);
+        // Mirrored while swapped: the panel is then the LEFT column (the
+        // sidebar is closed, so it starts at the container's own edge) and
+        // grows with x instead of shrinking from the right.
+        applyRightWidth(swapped ? x : rect.width - x);
         onRightWidthChangeRef.current?.(rightWidthRef.current);
       }
     },
-    [dragging, applyLeftWidth, applyRightWidth],
+    [dragging, applyLeftWidth, applyRightWidth, swapped],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -312,10 +336,11 @@ export function ThreeColumnLayout({
           <div
             className="flex h-full min-w-0 flex-1 items-center overflow-hidden"
             style={{
-              paddingLeft: sidebarOpen ? 0 : chrome.insetLeft,
-              // Right panel closed → this segment reaches the band's right
-              // edge, where the toggles zone sits on top of it.
-              paddingRight: rightPanelOpen ? 0 : trailingWidth,
+              order: swapped ? 2 : 0,
+              // Leftmost segment carries the traffic-light inset, rightmost
+              // reserves the toggles zone — both follow the swap.
+              paddingLeft: sidebarOpen || swapped ? 0 : chrome.insetLeft,
+              paddingRight: swapped || !rightPanelOpen ? trailingWidth : 0,
             }}
           >
             {centerHeader != null && (
@@ -333,6 +358,7 @@ export function ThreeColumnLayout({
             width={currentRightWidth}
             minWidth={minRightWidth}
             maxWidth={maxRightWidthNow()}
+            order={swapped ? 1 : 0}
             onDragStart={() => setDragging('right')}
             onKeyboardResize={handleKeyboardResize}
           />
@@ -344,10 +370,15 @@ export function ThreeColumnLayout({
               rightTakesCenter ? 'flex-1' : 'shrink-0',
             )}
             style={{
+              order: swapped ? 0 : undefined,
               width: rightTakesCenter ? undefined : currentRightWidth,
-              paddingLeft: rightTakesCenter && !sidebarOpen ? chrome.insetLeft : 0,
-              // The toggles zone sits over this segment's right end.
-              paddingRight: trailingWidth,
+              // Swapped → this segment is the leftmost column and takes the
+              // traffic-light inset; otherwise the chat's segment keeps it.
+              paddingLeft:
+                (rightTakesCenter || swapped) && !sidebarOpen ? chrome.insetLeft : 0,
+              // The toggles zone sits over this segment's right end — unless
+              // the chat has taken that edge.
+              paddingRight: swapped ? 0 : trailingWidth,
             }}
           >
             {rightHeader != null && (
@@ -372,6 +403,7 @@ export function ThreeColumnLayout({
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* ============== Left + Center column ============== */}
         <div
+          style={{ order: swapped ? 2 : 0 }}
           className={cn(
             'flex min-w-0 flex-col overflow-hidden',
             // Centre hidden with the right panel absorbing the space: shrink to
@@ -433,12 +465,16 @@ export function ThreeColumnLayout({
                 width={currentRightWidth}
                 minWidth={minRightWidth}
                 maxWidth={maxRightWidthNow()}
+                order={swapped ? 1 : 0}
                 onDragStart={() => setDragging('right')}
                 onKeyboardResize={handleKeyboardResize}
               />
             ) : null}
             <div
-              style={rightTakesCenter ? undefined : { width: currentRightWidth }}
+              style={{
+                order: swapped ? 0 : undefined,
+                ...(rightTakesCenter ? undefined : { width: currentRightWidth }),
+              }}
               className={cn(
                 'overflow-hidden flex flex-col',
                 rightTakesCenter ? 'min-w-0 flex-1' : 'flex-shrink-0',
