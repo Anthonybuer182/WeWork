@@ -628,6 +628,20 @@ export class BrowserManager {
       this.refreshCompositor(t);
     });
 
+    // A tab whose webContents dies outside closeTab (the page closed itself,
+    // the view was torn down) used to stay in the map: the tab strip kept the
+    // old URL, every getUrl answered "about:blank", and the renderer was gone.
+    // Drop the record so the tab list tells the truth.
+    (wc as unknown as { on(e: 'close', cb: () => void): void }).on('close', () => {
+      console.warn('[BrowserManager] page requested close:', t.id);
+    });
+    wc.on('destroyed', () => {
+      if (this.tabs.has(t.id)) {
+        console.warn('[BrowserManager] tab died outside closeTab:', t.id);
+        this.closeTab(t.id);
+      }
+    });
+
     // Log renderer crashes for diagnosis (GPU/renderer process death causes
     // the embedded view's surface to go permanently white).
     wc.on('render-process-gone', (_event, details) => {
@@ -808,6 +822,17 @@ export class BrowserManager {
     // Inject the helpers immediately
     this.injectHelpers(t);
 
+    // Same guard, but BEFORE any page script runs: an anti-bot script that
+    // calls window.close() during load would otherwise beat the injection
+    // that happens at did-finish-load (zhipin.com does exactly that).
+    try {
+      await this.sendCommand(t, 'Page.addScriptToEvaluateOnNewDocument', {
+        source: 'try { window.close = function () {}; } catch (e) {}',
+      });
+    } catch {
+      /* older engines: the did-finish-load copy still covers most pages */
+    }
+
     console.log('[BrowserManager] Connected to tab', t.id, 'via debugger API');
   }
 
@@ -862,13 +887,21 @@ export class BrowserManager {
         if (!window.__pi_open_override) {
           window.__pi_open_override = true;
           window.open = function(url) {
-            if (url) location.href = url;
+            // about:blank is how a script grabs a window handle; sending THIS
+            // tab there would blank the page (zhipin.com does exactly that
+            // through an anti-bot path). A popup is denied anyway.
+            if (url && !/^about:blank/i.test(String(url))) location.href = url;
             return null;
           };
         }
         document.querySelectorAll('a[target="_blank"]').forEach(function(a) {
           a.target = '_self';
         });
+        // A page may not close a tab it did not open — Chrome ignores
+        // window.close() there, Electron instead DESTROYS the tab's
+        // webContents. zhipin.com calls close() on load, which left a blank
+        // tab that no longer answered anything. Keep the tab, like Chrome.
+        try { window.close = function () {}; } catch (e) {}
       `).catch(() => {});
     } catch {
       // Silently ignore — helpers are best-effort
