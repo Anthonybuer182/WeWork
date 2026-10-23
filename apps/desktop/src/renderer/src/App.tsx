@@ -268,6 +268,11 @@ function AppContent() {
           // Two columns (chat + panel) can be mirrored: the panel takes the
           // left edge and the chat reads on the right.
           chatRight={chatRightOfPanels}
+          // Dragging a divider past a column's minimum closes that column.
+          // The flag stays in the store; the layout animates and then asks.
+          onSidebarCollapse={() => useUIStore.getState().setSidebarOpen(false)}
+          onRightPanelCollapse={() => useUIStore.getState().setRightPanelOpen(false)}
+          onCenterCollapse={() => useUIStore.getState().setCenterPanelOpen(false)}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
           leftWidth={leftPanelWidth}

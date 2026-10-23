@@ -58,10 +58,43 @@ interface ThreeColumnLayoutProps {
    * stays the platform's left rail.
    */
   chatRight?: boolean;
+  /**
+   * Drag a divider past a column's floor and release: the column closes
+   * instead of stopping dead at its minimum. The layout owns the gesture and
+   * the collapse animation; the host owns the open/closed flag, so it answers
+   * through these. Omit one and its column simply rubber-bands back.
+   */
+  onSidebarCollapse?: () => void;
+  onRightPanelCollapse?: () => void;
+  onCenterCollapse?: () => void;
 }
 
 /** Width of each resize divider (matches the `w-1` handles below). */
 const DIVIDER_WIDTH = 4;
+
+/**
+ * Past a column's floor the column still follows the pointer, at this rate.
+ * A hard stop at the minimum reads as "the drag is over"; the elastic tail is
+ * what tells the hand that the column can go further — and how far.
+ */
+const OVERSHOOT = 0.35;
+/**
+ * Release with the pointer inside this fraction of a column's floor and the
+ * column closes. Turning the gesture into a deliberate act (rather than
+ * "whatever width you landed on") is what keeps a drag from accidentally
+ * closing a column while resizing near its minimum.
+ */
+const COLLAPSE_AT = 0.45;
+/** Settle time for the width changes that follow a release (see WIDTH_EASE). */
+const SETTLE_MS = 170;
+/**
+ * The width transition. Off while dragging (the pointer is the clock), on for
+ * the settle: the elastic snap back to the minimum, or the slide to zero that
+ * ends in a collapsed column.
+ */
+const WIDTH_EASE = `width ${SETTLE_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`;
+
+type CollapseTarget = 'sidebar' | 'panel' | 'center';
 
 /**
  * The right divider handle — used by BOTH the header band and the body so the
@@ -75,6 +108,7 @@ function RightDividerHandle({
   minWidth,
   maxWidth,
   order,
+  hot,
   onDragStart,
   onKeyboardResize,
 }: {
@@ -83,6 +117,12 @@ function RightDividerHandle({
   maxWidth: number;
   /** Flex order — the handle travels with its column when the sides swap. */
   order?: number;
+  /**
+   * The drag is far enough past the edge that releasing closes a column.
+   * The line lights up: the gesture has become an act, and the release is the
+   * commit.
+   */
+  hot?: boolean;
   onDragStart: () => void;
   onKeyboardResize: (side: 'left' | 'right', delta: number) => void;
 }) {
@@ -107,7 +147,14 @@ function RightDividerHandle({
       }}
     >
       <div className="absolute inset-y-0 -left-2 -right-2 z-10" />
-      <div className="ml-auto h-full w-px bg-border transition-colors group-hover:bg-muted-foreground/60 group-active:bg-muted-foreground/40" />
+      <div
+        className={cn(
+          'ml-auto h-full transition-colors',
+          hot
+            ? 'w-[2px] bg-primary'
+            : 'w-px bg-border group-hover:bg-muted-foreground/60 group-active:bg-muted-foreground/40',
+        )}
+      />
     </div>
   );
 }
@@ -146,13 +193,30 @@ export function ThreeColumnLayout({
   sidebarOpen = true,
   centerPanelOpen = true,
   chatRight = false,
+  onSidebarCollapse,
+  onRightPanelCollapse,
+  onCenterCollapse,
 }: ThreeColumnLayoutProps) {
   const [currentLeftWidth, setCurrentLeftWidth] = useState(leftWidth);
   const [currentRightWidth, setCurrentRightWidth] = useState(rightWidth);
   const [dragging, setDragging] = useState<'left' | 'right' | null>(null);
+  // Which column this drag would close if the pointer were released now.
+  // Drives the hint pill and the highlighted divider line.
+  const [closing, setClosing] = useState<CollapseTarget | null>(null);
+  // Measured width of the whole row — the centre's share (and therefore the
+  // point at which a leftward drag starts eating into the chat) is derived
+  // from it.
+  const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const leftWidthRef = useRef(currentLeftWidth);
   const rightWidthRef = useRef(currentRightWidth);
+  // The pointer's own width value (un-elastic, un-clamped). Every release
+  // decision is made from it, never from the animated width on screen.
+  const rawWidthRef = useRef(0);
+  // The width the column had when the drag began: a collapse animates to zero
+  // but must not overwrite the remembered preference with zero.
+  const dragStartWidthRef = useRef(0);
+  const settleTimerRef = useRef<number | null>(null);
   const onLeftWidthChangeRef = useRef(onLeftWidthChange);
   const onRightWidthChangeRef = useRef(onRightWidthChange);
 
@@ -230,6 +294,8 @@ export function ThreeColumnLayout({
     const el = containerRef.current;
     if (!el) return;
     const clamp = () => {
+      const width = el.getBoundingClientRect().width;
+      setContainerWidth(width);
       const cap = maxRightWidthNow();
       if (rightWidthRef.current > cap) {
         applyRightWidth(cap);
@@ -242,36 +308,179 @@ export function ThreeColumnLayout({
     return () => observer.disconnect();
   }, [maxRightWidthNow, applyRightWidth]);
 
+  /** Write a width without the floor/ceiling — the drag's elastic tail and the
+   *  collapse animation both live outside the legal range on purpose. */
+  const setLeftWidthRaw = useCallback((next: number) => {
+    leftWidthRef.current = next;
+    setCurrentLeftWidth(next);
+  }, []);
+  const setRightWidthRaw = useCallback((next: number) => {
+    rightWidthRef.current = next;
+    setCurrentRightWidth(next);
+  }, []);
+
+  /**
+   * The width the right panel needs to swallow the whole row. Used only by the
+   * centre's collapse: sliding the panel to this width takes the chat to zero,
+   * so the release that hides the chat has nothing left to jump.
+   */
+  const fullPanelWidth = useCallback(() => {
+    const width = containerRef.current?.getBoundingClientRect().width ?? containerWidth;
+    const leftColumn = sidebarOpen ? currentLeftWidth + DIVIDER_WIDTH : 0;
+    return Math.max(minRightWidth, width - leftColumn - DIVIDER_WIDTH);
+  }, [containerWidth, sidebarOpen, currentLeftWidth, minRightWidth]);
+
+  /** Cancel a pending settle (a new drag started before the last one ended). */
+  const cancelSettle = useCallback(() => {
+    if (settleTimerRef.current !== null) {
+      window.clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
+    }
+  }, []);
+
+  /**
+   * Finish a collapse after the width has animated. The flag flips only once
+   * the column is already zero-width, so closing never pops: what the eye sees
+   * is a column sliding shut, not the layout re-flowing.
+   */
+  const collapse = useCallback(
+    (target: CollapseTarget) => {
+      const restore = dragStartWidthRef.current;
+      if (target === 'sidebar') {
+        setLeftWidthRaw(0);
+      } else if (target === 'panel') {
+        setRightWidthRaw(0);
+      } else {
+        setRightWidthRaw(fullPanelWidth());
+      }
+      cancelSettle();
+      settleTimerRef.current = window.setTimeout(() => {
+        settleTimerRef.current = null;
+        if (target === 'sidebar') {
+          onSidebarCollapse?.();
+          setLeftWidthRaw(restore);
+        } else if (target === 'panel') {
+          onRightPanelCollapse?.();
+          setRightWidthRaw(restore);
+        } else {
+          onCenterCollapse?.();
+          setRightWidthRaw(restore);
+        }
+      }, SETTLE_MS);
+    },
+    [
+      onSidebarCollapse,
+      onRightPanelCollapse,
+      onCenterCollapse,
+      setLeftWidthRaw,
+      setRightWidthRaw,
+      fullPanelWidth,
+      cancelSettle,
+    ],
+  );
+
+  // Never let a pending settle fire after the layout is gone.
+  useEffect(() => () => cancelSettle(), [cancelSettle]);
+
+  /**
+   * Which column a release at this pointer width would close. Computed from
+   * the pointer value, never from rendered state: the pointer can enter a
+   * collapse zone and lift in the same frame, and a stale render must not turn
+   * that into a resize.
+   */
+  const collapseTargetFor = useCallback(
+    (side: 'left' | 'right', raw: number): CollapseTarget | null => {
+      if (side === 'left') {
+        return raw < minLeftWidth * COLLAPSE_AT ? 'sidebar' : null;
+      }
+      if (raw < minRightWidth * COLLAPSE_AT) return 'panel';
+      const cap = maxRightWidthNow();
+      // `cap` is exactly the width that leaves the chat its minimum; pulling
+      // deeper than the last stretch of that minimum closes the chat and hands
+      // the row to the panel.
+      return raw > cap + (1 - COLLAPSE_AT) * minCenterWidth ? 'center' : null;
+    },
+    [minLeftWidth, minRightWidth, minCenterWidth, maxRightWidthNow],
+  );
+
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!dragging || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
+      rawWidthRef.current = dragging === 'left' ? x : swapped ? x : rect.width - x;
+      const raw = rawWidthRef.current;
+      setClosing(collapseTargetFor(dragging, raw));
 
       if (dragging === 'left') {
-        applyLeftWidth(x);
-      } else if (dragging === 'right') {
-        // Mirrored while swapped: the panel is then the LEFT column (the
-        // sidebar is closed, so it starts at the container's own edge) and
-        // grows with x instead of shrinking from the right.
-        applyRightWidth(swapped ? x : rect.width - x);
-        onRightWidthChangeRef.current?.(rightWidthRef.current);
+        // Past the minimum the sidebar keeps following, elastically — the
+        // tail is the "you can keep going" signal.
+        setLeftWidthRaw(
+          raw >= minLeftWidth
+            ? Math.min(maxLeftWidth, raw)
+            : minLeftWidth - (minLeftWidth - raw) * OVERSHOOT,
+        );
+        return;
       }
+
+      // The right divider has a floor on one side (the panel's own minimum)
+      // and a ceiling on the other (the chat's minimum). Both ends elastic;
+      // both ends able to close the column they squeeze.
+      const cap = maxRightWidthNow();
+      setRightWidthRaw(
+        raw < minRightWidth
+          ? minRightWidth - (minRightWidth - raw) * OVERSHOOT
+          : raw > cap
+            ? cap + (raw - cap) * OVERSHOOT
+            : raw,
+      );
     },
-    [dragging, applyLeftWidth, applyRightWidth, swapped],
+    [
+      dragging,
+      swapped,
+      minLeftWidth,
+      maxLeftWidth,
+      minRightWidth,
+      maxRightWidthNow,
+      collapseTargetFor,
+      setLeftWidthRaw,
+      setRightWidthRaw,
+    ],
   );
 
   const handleMouseUp = useCallback(() => {
-    // Persist only the side that was actually dragged. This used to call
-    // onRightWidthChange unconditionally, so releasing a left-handle drag
-    // wrote the right panel's width.
-    if (dragging === 'left') {
-      onLeftWidthChangeRef.current?.(leftWidthRef.current);
-    } else if (dragging === 'right') {
-      onRightWidthChangeRef.current?.(rightWidthRef.current);
-    }
+    const raw = rawWidthRef.current;
+    const target = dragging ? collapseTargetFor(dragging, raw) : null;
     setDragging(null);
-  }, [dragging]);
+    setClosing(null);
+    if (!target) {
+      // Settled inside the legal range: snap back out of the elastic tail (if
+      // any) and persist — only the side that was actually dragged.
+      if (dragging === 'left') {
+        const settled = Math.max(minLeftWidth, Math.min(maxLeftWidth, raw));
+        setLeftWidthRaw(settled);
+        onLeftWidthChangeRef.current?.(settled);
+      } else if (dragging === 'right') {
+        const settled = Math.max(minRightWidth, Math.min(maxRightWidthNow(), raw));
+        setRightWidthRaw(settled);
+        onRightWidthChangeRef.current?.(settled);
+      }
+      return;
+    }
+    // A collapse is not a width the user chose: the remembered width stays
+    // whatever it was before the drag.
+    collapse(target);
+  }, [
+    dragging,
+    collapse,
+    collapseTargetFor,
+    minLeftWidth,
+    maxLeftWidth,
+    minRightWidth,
+    maxRightWidthNow,
+    setLeftWidthRaw,
+    setRightWidthRaw,
+  ]);
 
   const handleKeyboardResize = useCallback(
     (side: 'left' | 'right', delta: number) => {
@@ -290,6 +499,35 @@ export function ThreeColumnLayout({
   // Two flex-1 siblings would split the space 50/50, so the left column must
   // collapse to just the sidebar.
   const rightTakesCenter = !centerPanelOpen && rightPanelOpen;
+
+  const beginDrag = useCallback(
+    (side: 'left' | 'right') => {
+      // A settle left over from the previous gesture must not land in the
+      // middle of this one.
+      cancelSettle();
+      setClosing(null);
+      dragStartWidthRef.current = side === 'left' ? leftWidthRef.current : rightWidthRef.current;
+      rawWidthRef.current = dragStartWidthRef.current;
+      setDragging(side);
+    },
+    [cancelSettle],
+  );
+
+  // Off while dragging: the pointer is the clock. On afterwards, which is what
+  // turns the elastic snap-back and the collapse into one continuous motion.
+  const widthTransition = dragging ? 'none' : WIDTH_EASE;
+
+  // The hint pill is centred on the divider being dragged, derived from the
+  // same width state that positions the columns — it cannot drift from the
+  // line it annotates.
+  const hintX = !closing
+    ? 0
+    : closing === 'sidebar'
+      ? currentLeftWidth + DIVIDER_WIDTH / 2
+      : swapped
+        ? currentRightWidth + DIVIDER_WIDTH / 2
+        : containerWidth - currentRightWidth - DIVIDER_WIDTH / 2;
+  const hintLabel = closing === 'sidebar' ? '左侧栏' : closing === 'panel' ? '面板' : '对话';
 
   useEffect(() => {
     if (dragging) {
@@ -320,7 +558,7 @@ export function ThreeColumnLayout({
           <>
             <div
               className="flex h-full min-w-0 shrink-0 items-center overflow-hidden border-r bg-sidebar"
-              style={{ width: currentLeftWidth, paddingLeft: chrome.insetLeft }}
+              style={{ width: currentLeftWidth, paddingLeft: chrome.insetLeft, transition: widthTransition }}
             >
               {leftHeader != null && (
                 <div className="flex min-w-0 items-center gap-0.5" style={NO_DRAG}>
@@ -359,7 +597,8 @@ export function ThreeColumnLayout({
             minWidth={minRightWidth}
             maxWidth={maxRightWidthNow()}
             order={swapped ? 1 : 0}
-            onDragStart={() => setDragging('right')}
+            hot={closing === 'panel' || closing === 'center'}
+            onDragStart={() => beginDrag('right')}
             onKeyboardResize={handleKeyboardResize}
           />
         )}
@@ -372,6 +611,7 @@ export function ThreeColumnLayout({
             style={{
               order: swapped ? 0 : undefined,
               width: rightTakesCenter ? undefined : currentRightWidth,
+              transition: rightTakesCenter ? undefined : widthTransition,
               // Swapped → this segment is the leftmost column and takes the
               // traffic-light inset; otherwise the chat's segment keeps it.
               paddingLeft:
@@ -386,6 +626,23 @@ export function ThreeColumnLayout({
                 {rightHeader}
               </div>
             )}
+          </div>
+        )}
+        {/* The gesture's commitment point, stated plainly. Lives in the band
+            (no native view can sit above it) and follows the divider. */}
+        {closing && containerWidth > 0 && (
+          <div
+            data-testid="collapse-hint"
+            className="pointer-events-none absolute inset-y-0 z-30 flex items-center"
+            style={{
+              ...NO_DRAG,
+              left: Math.max(72, Math.min(containerWidth - 72, hintX)),
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <span className="whitespace-nowrap rounded-full bg-primary px-2.5 py-1 text-[11px] font-medium leading-none text-primary-foreground shadow-sm">
+              松开收起{hintLabel}
+            </span>
           </div>
         )}
         <div
@@ -421,7 +678,9 @@ export function ThreeColumnLayout({
                 Unmounting here silently defeated that policy. The resize handle
                 is chrome, not state, so it still goes away. */}
             <div
-              style={sidebarOpen ? { width: currentLeftWidth } : undefined}
+              style={
+                sidebarOpen ? { width: currentLeftWidth, transition: widthTransition } : undefined
+              }
               className={cn(
                 'flex-shrink-0 overflow-hidden border-r',
                 !sidebarOpen && 'hidden',
@@ -438,8 +697,11 @@ export function ThreeColumnLayout({
                 aria-valuemin={minLeftWidth}
                 aria-valuemax={maxLeftWidth}
                 aria-orientation="vertical"
-                className="w-1 cursor-col-resize hover:bg-muted-foreground/40 transition-colors"
-                onMouseDown={() => setDragging('left')}
+                className={cn(
+                  'w-1 cursor-col-resize transition-colors',
+                  closing === 'sidebar' ? 'bg-primary' : 'hover:bg-muted-foreground/40',
+                )}
+                onMouseDown={() => beginDrag('left')}
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowLeft') handleKeyboardResize('left', -10);
                   if (e.key === 'ArrowRight') handleKeyboardResize('left', 10);
@@ -466,14 +728,17 @@ export function ThreeColumnLayout({
                 minWidth={minRightWidth}
                 maxWidth={maxRightWidthNow()}
                 order={swapped ? 1 : 0}
-                onDragStart={() => setDragging('right')}
+                hot={closing === 'panel' || closing === 'center'}
+                onDragStart={() => beginDrag('right')}
                 onKeyboardResize={handleKeyboardResize}
               />
             ) : null}
             <div
               style={{
                 order: swapped ? 0 : undefined,
-                ...(rightTakesCenter ? undefined : { width: currentRightWidth }),
+                ...(rightTakesCenter
+                  ? undefined
+                  : { width: currentRightWidth, transition: widthTransition }),
               }}
               className={cn(
                 'overflow-hidden flex flex-col',

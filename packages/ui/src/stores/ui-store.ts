@@ -47,6 +47,7 @@ interface UIState {
   toggleChatSide: () => void;
   setSidebarOpen: (open: boolean) => void;
   setRightPanelOpen: (open: boolean) => void;
+  setCenterPanelOpen: (open: boolean) => void;
   setRightPanelWidth: (width: number) => void;
   setLeftPanelWidth: (width: number) => void;
   setCompactMode: (compact: boolean) => void;
@@ -112,6 +113,7 @@ export const useUIStore = create<UIState>()(
       toggleChatSide: () => set((s) => ({ chatRightOfPanels: !s.chatRightOfPanels })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
+      setCenterPanelOpen: (open) => set({ centerPanelOpen: open }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
       setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),
       setCompactMode: (compact: boolean) => set({ compactMode: compact }),

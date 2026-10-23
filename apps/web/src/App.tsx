@@ -84,6 +84,9 @@ function AppContent() {
           rightPanelOpen={rightPanelOpen}
           centerPanelOpen={centerPanelOpen}
           chatRight={chatRightOfPanels}
+          onSidebarCollapse={() => useUIStore.getState().setSidebarOpen(false)}
+          onRightPanelCollapse={() => useUIStore.getState().setRightPanelOpen(false)}
+          onCenterCollapse={() => useUIStore.getState().setCenterPanelOpen(false)}
           rightWidth={rightPanelWidth}
           onRightWidthChange={setRightPanelWidth}
           leftWidth={leftPanelWidth}
