@@ -1805,6 +1805,14 @@ function isFavoriteOrigin(origin) {
   return !!origin && favorites.some((f) => originOfUrl(f.url) === origin);
 }
 __name(isFavoriteOrigin, "isFavoriteOrigin");
+function prettyTarget(target) {
+  const m = /^alt\(([\s\S]*)\)$/.exec(target);
+  if (!m) return target;
+  const parts = m[1].split("||").map((x) => x.trim()).filter(Boolean);
+  if (parts.length <= 1) return parts[0] ?? target;
+  return `${parts[0]}\uFF08\u5907\u9009 ${parts.slice(1).join(" / ")}\uFF09`;
+}
+__name(prettyTarget, "prettyTarget");
 function recipeSignature(steps) {
   return steps.map((s) => `${s.kind}:${s.target}`).join("|");
 }
@@ -1819,7 +1827,9 @@ async function stabilizeTarget(ctx, tid, selector) {
       selector,
       ...tid ? { tabId: tid } : {}
     });
-    return String(r?.target ?? "") || selector;
+    const list = (r?.targets ?? []).map((x) => String(x)).filter(Boolean);
+    if (list.length > 1) return `alt(${list.join(" || ")})`;
+    return list[0] || String(r?.target ?? "") || selector;
   } catch {
     return selector;
   }
@@ -2725,6 +2735,21 @@ plugin({
         const log = [];
         const effects = [];
         let failedAt = -1;
+        const namedForTargets = params.recipe ? String(params.recipe).trim() : "";
+        if (namedForTargets) {
+          const rec = recipes.find((r) => r.name === namedForTargets);
+          if (rec && rec.steps.length === steps.length) {
+            for (let i = 0; i < steps.length; i++) {
+              const st = steps[i];
+              const target = rec.steps[i].target;
+              if (typeof st.click === "string") st.click = target;
+              else if (st.fill && typeof st.fill === "object") st.fill.selector = target;
+              else if (st.select && typeof st.select === "object") st.select.selector = target;
+              else if (st.upload && typeof st.upload === "object") st.upload.selector = target;
+              else if (typeof st.hover === "string") st.hover = target;
+            }
+          }
+        }
         for (let i = 0; i < steps.length; i++) {
           const step = steps[i] && typeof steps[i] === "object" ? steps[i] : {};
           try {
@@ -2918,7 +2943,7 @@ plugin({
           return [
             `${r.name}\uFF08${r.site || r.origin}\uFF0C${r.paths && r.paths.length ? r.paths.join("\u3001") + " \xB7 " : ""}${r.steps.length} \u6B65\uFF0C\u7528\u8FC7 ${r.uses} \u6B21\uFF0C\u4E0A\u6B21\u6210\u529F ${formatWhen(r.lastOk)}\uFF09${stale}`,
             ...r.steps.map(
-              (st, i) => `  ${i + 1}. ${st.kind} ${st.target}${st.value ? ` = ${st.value}` : ""}${st.expect ? ` \uFF5C\u9884\u671F\uFF1A${st.expect}` : ""}`
+              (st, i) => `  ${i + 1}. ${st.kind} ${prettyTarget(st.target)}${st.value ? ` = ${st.value}` : ""}${st.expect ? ` \uFF5C\u9884\u671F\uFF1A${st.expect}` : ""}`
             )
           ].join("\n");
         }).join("\n\n") + "\n\n\u6309 browser_act \u7684\u683C\u5F0F\u6267\u884C\uFF0C\u628A {{n}} \u6362\u6210\u8FD9\u6B21\u7684\u5B9E\u9645\u503C\uFF1B\u67D0\u4E00\u6B65\u7684\u9884\u671F\u5BF9\u4E0D\u4E0A\u5C31\u7ACB\u523B\u505C\u4E0B\u3001\u81EA\u5DF1\u91CD\u65B0\u64CD\u4F5C\u3002";

@@ -1627,24 +1627,25 @@ export class BrowserManager {
    * is a handle into THIS document. Resolves through frames exactly like the
    * actions do, so a step recorded inside an iframe stays usable.
    */
-  async describe(selector: string, tabId?: string): Promise<{ target: string }> {
+  async describe(selector: string, tabId?: string): Promise<{ target: string; targets: string[] }> {
     const t = this.requireTab(tabId);
     const expr = `(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
-      if (!el) return '';
+      if (!el) return [];
       var tag = el.tagName.toLowerCase();
+      var out = [];
       var id = el.getAttribute('id') || '';
-      if (id && !/^(r\\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) return '#' + id;
+      if (id && !/^(r\\d|vue-|__|react-|aria-|\\d+$|^[a-f0-9]{8}-)/i.test(id)) out.push('#' + id);
       var name = el.getAttribute('name') || '';
-      if (name) return '[name="' + name + '"]';
+      if (name) out.push('[name="' + name + '"]');
       var ph = el.getAttribute('placeholder') || '';
-      if (ph) return 'input[placeholder="' + ph + '"]';
+      if (ph) out.push('input[placeholder="' + ph + '"]');
       var label = el.getAttribute('aria-label') || '';
+      if (label) out.push(tag === 'button' ? 'role=button[name="' + label + '"]' : 'text="' + label + '"');
       var text = (el.textContent || '').trim().replace(/\\s+/g, ' ');
-      if (label) return tag === 'button' ? 'role=button[name="' + label + '"]' : 'text="' + label + '"';
-      if (tag === 'button' && text && text.length <= 24) return 'role=button[name="' + text + '"]';
-      if (text && text.length <= 24) return 'text="' + text + '"';
-      return '';
+      if (tag === 'button' && text && text.length <= 24) out.push('role=button[name="' + text + '"]');
+      if (text && text.length <= 24) out.push('text="' + text + '"');
+      return out;
     })()`;
     try {
       const frameId = await this.resolveFrameForSelector(t, selector);
@@ -1658,11 +1659,63 @@ export class BrowserManager {
         });
         value = (r as { result?: { value?: unknown } })?.result?.value;
       }
-      const target = typeof value === 'string' ? value.trim() : '';
-      return { target: target || selector };
+      const seen = new Set<string>();
+      const targets: string[] = [];
+      if (Array.isArray(value)) {
+        for (const v of value) {
+          const s = String(v ?? '').trim();
+          if (!s || seen.has(s)) continue;
+          seen.add(s);
+          targets.push(s);
+        }
+      }
+      if (targets.length === 0) targets.push(selector);
+      return { target: targets[0], targets };
     } catch {
-      return { target: selector };
+      return { target: selector, targets: [selector] };
     }
+  }
+
+  /**
+   * Wait until an element can actually be acted on: visible, enabled, still,
+   * and (for clicks) the click point belongs to it. Returns the last reason
+   * when it never becomes ready, so the agent learns WHAT is in the way.
+   */
+  private async waitActionable(
+    t: BrowserTab,
+    selector: string,
+    frameId: string | null,
+    needHit: boolean,
+    timeoutMs = 2000,
+  ): Promise<{ ok: boolean; reason?: string }> {
+    const expr = `(async function(){
+      var el = window.piResolveSelector(${JSON.stringify(selector)});
+      if (!el || !window.piActionable) return { ok: true };
+      return await window.piActionable(el, ${needHit});
+    })()`;
+    const started = Date.now();
+    let last: { ok: boolean; reason?: string } = { ok: false, reason: '未知原因' };
+    while (Date.now() - started < timeoutMs) {
+      try {
+        let value: unknown;
+        if (frameId) {
+          value = await this.evaluateInFrame(t, frameId, expr);
+        } else {
+          const r = await this.sendCommand(t, 'Runtime.evaluate', {
+            expression: this.buildExpression(expr),
+            returnByValue: true,
+            awaitPromise: true,
+          });
+          value = (r as { result?: { value?: unknown } })?.result?.value;
+        }
+        if (value && typeof value === 'object') last = value as { ok: boolean; reason?: string };
+        if (last.ok) return last;
+      } catch {
+        /* page busy mid-action; keep polling */
+      }
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    return last;
   }
 
   /** Cheap before/after view of the page, used to say what an action did. */
@@ -1741,6 +1794,11 @@ export class BrowserManager {
       return { selector, clicked: false, error: errorMsg };
     }
 
+    const actionable = await this.waitActionable(t, selector, null, true);
+    if (!actionable.ok) {
+      return { selector, clicked: false, error: `"${selector}" 现在不可操作：${actionable.reason ?? '未知原因'}` };
+    }
+
     const before = await this.probe(t);
     const expr = this.buildExpression(`(function(){
       var el = window.piResolveSelector(${JSON.stringify(selector)});
@@ -1783,6 +1841,10 @@ export class BrowserManager {
   ): Promise<{ selector: string; clicked: boolean; effect?: string; error?: string }> {
     const ctx = await this.frameContext(t, frameId);
     if (!ctx) return { selector, clicked: false, error: '无法进入该 iframe' };
+    const actionableFrame = await this.waitActionable(t, selector, frameId, true);
+    if (!actionableFrame.ok) {
+      return { selector, clicked: false, error: `"${selector}" 现在不可操作：${actionableFrame.reason ?? '未知原因'}` };
+    }
     const before = String(
       (await this.evaluateInFrame(t, frameId, '(document.body && document.body.innerText || "")')) ?? '',
     );
@@ -1819,6 +1881,10 @@ export class BrowserManager {
     const ctx = await this.frameContext(t, frameId);
     if (!ctx) return { selector, value, error: '无法进入该 iframe' };
     if (await this.isPasswordField(t, selector, frameId)) return PASSWORD_REFUSAL(selector);
+    const actionableFillFrame = await this.waitActionable(t, selector, frameId, false);
+    if (!actionableFillFrame.ok) {
+      return { selector, value, error: `"${selector}" 现在不可填写：${actionableFillFrame.reason ?? '未知原因'}` };
+    }
     const focusExpr = `(function(){
       var el=window.piResolveSelector(${JSON.stringify(selector)});
       if(!el) return null;
@@ -1880,6 +1946,10 @@ export class BrowserManager {
   ): Promise<{ selector: string; value: string; selected: boolean; effect?: string; error?: string }> {
     const ctx = await this.frameContext(t, frameId);
     if (!ctx) return { selector, value, selected: false, error: '无法进入该 iframe' };
+    const actionableSelectFrame = await this.waitActionable(t, selector, frameId, false);
+    if (!actionableSelectFrame.ok) {
+      return { selector, value, selected: false, error: `"${selector}" 现在不可选择：${actionableSelectFrame.reason ?? '未知原因'}` };
+    }
     const expr = `(function(){
       var el=window.piResolveSelector(${JSON.stringify(selector)});
       if(!el||el.tagName.toLowerCase()!=='select') return {ok:false};
@@ -2040,6 +2110,14 @@ export class BrowserManager {
     const pt = (rectResult?.result as { value?: { x: number; y: number } })?.value;
     if (!pt) return { attached: false, files, error: `Cannot locate: "${selector}"` };
 
+    const actionableUpload = await this.waitActionable(t, selector, null, true);
+    if (!actionableUpload.ok) {
+      return {
+        attached: false,
+        files,
+        error: `"${selector}" 现在不可操作：${actionableUpload.reason ?? '未知原因'}`,
+      };
+    }
     const beforeUpload = await this.probe(t);
     const wc = t.wc;
     const captured: { backendNodeId?: number } = {};
@@ -2109,6 +2187,10 @@ export class BrowserManager {
     if (frameId) return this.fillInFrame(t, selector, value, frameId);
     const found = await this.waitForElement(selector, 5000, t);
     if (await this.isPasswordField(t, selector, null)) return PASSWORD_REFUSAL(selector);
+    const actionableFill = await this.waitActionable(t, selector, null, false);
+    if (!actionableFill.ok) {
+      return { selector, value, error: `"${selector}" 现在不可填写：${actionableFill.reason ?? '未知原因'}` };
+    }
     if (!found) {
       return { selector, value, error: `Element not found: "${selector}"` };
     }
@@ -2243,6 +2325,10 @@ export class BrowserManager {
     const found = await this.waitForElement(selector, 5000, t);
     if (!found) {
       return { selector, value, selected: false, error: `Element not found: "${selector}"` };
+    }
+    const actionableSelect = await this.waitActionable(t, selector, null, false);
+    if (!actionableSelect.ok) {
+      return { selector, value, selected: false, error: `"${selector}" 现在不可选择：${actionableSelect.reason ?? '未知原因'}` };
     }
 
     const expr = this.buildExpression(`(function(){

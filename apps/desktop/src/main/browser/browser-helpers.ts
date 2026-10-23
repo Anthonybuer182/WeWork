@@ -143,6 +143,45 @@ export const BROWSER_HELPERS_JS = `
   // what makes a model's [7] hit a different control one turn later. The
   // counter lives on the top window so same-origin frames share it and numbers
   // stay unique across the whole page.
+  /**
+   * Can this element be acted on right now? Mirrors what Playwright checks
+   * before an action: visible, enabled, not moving, and (for clicks) the
+   * point we would click actually belongs to it. A click that lands on a
+   * covering overlay is the failure this exists to name instead of hide.
+   */
+  window.piActionable = async function(el, needHit) {
+    if (!el) return { ok: false, reason: '元素不存在' };
+    if (!piIsVisible(el)) return { ok: false, reason: '元素不可见' };
+    if (el.disabled || el.getAttribute('aria-disabled') === 'true') return { ok: false, reason: '元素被禁用' };
+    var r1 = el.getBoundingClientRect();
+    await new Promise(function(res) {
+      if (window.requestAnimationFrame) requestAnimationFrame(function() { requestAnimationFrame(res); });
+      else setTimeout(res, 32);
+    });
+    var r2 = el.getBoundingClientRect();
+    if (Math.abs(r1.left - r2.left) > 1 || Math.abs(r1.top - r2.top) > 1) {
+      return { ok: false, reason: '元素还在移动' };
+    }
+    if (needHit) {
+      // A point inside a shadow tree resolves to its host; that is not a
+      // covering element, so skip the hit test there.
+      var root = el.getRootNode ? el.getRootNode() : null;
+      var inShadow = !!(root && root.host);
+      if (!inShadow) {
+        var doc = el.ownerDocument;
+        var cx = r2.left + r2.width / 2;
+        var cy = r2.top + r2.height / 2;
+        var hit = doc.elementFromPoint(cx, cy);
+        if (!hit) return { ok: false, reason: '点击位置没有元素' };
+        if (!(hit === el || el.contains(hit) || hit.contains(el))) {
+          var tag = hit.tagName ? hit.tagName.toLowerCase() : '其它元素';
+          return { ok: false, reason: '被 ' + tag + ' 遮住了' };
+        }
+      }
+    }
+    return { ok: true };
+  };
+
   window.piStableRef = function(el) {
     var existing = el.getAttribute('data-pi-ref');
     if (existing) return existing;
@@ -167,6 +206,21 @@ export const BROWSER_HELPERS_JS = `
   // ── Selector resolver ──
   window.piResolveSelector = function(selector) {
     if (!selector || typeof selector !== 'string') return null;
+
+    // 0. Fallback list: alt(#id || [name="x"] || text="登录")
+    // A recorded step keeps several ways to find the same element; a page
+    // that renames an id should not kill the recipe.
+    var altMatch = selector.match(/^alt\(([\s\S]*)\)$/);
+    if (altMatch) {
+      var altParts = altMatch[1].split('||');
+      for (var ai = 0; ai < altParts.length; ai++) {
+        var altPart = altParts[ai].trim();
+        if (!altPart) continue;
+        var altHit = window.piResolveSelector(altPart);
+        if (altHit) return altHit;
+      }
+      return null;
+    }
 
     // 1. Ref-based: [N] or ref:N
     var refMatch = selector.match(/^(?:\\[(\\d+)\\]|ref:(\\d+))$/);

@@ -1011,6 +1011,15 @@ function isFavoriteOrigin(origin: string): boolean {
   return !!origin && favorites.some((f) => originOfUrl(f.url) === origin);
 }
 
+/** Human-readable form of a step target: alt(a || b || c) → a（备选 b / c）. */
+function prettyTarget(target: string): string {
+  const m = /^alt\(([\s\S]*)\)$/.exec(target);
+  if (!m) return target;
+  const parts = m[1].split('||').map((x) => x.trim()).filter(Boolean);
+  if (parts.length <= 1) return parts[0] ?? target;
+  return `${parts[0]}（备选 ${parts.slice(1).join(' / ')}）`;
+}
+
 function recipeSignature(steps: RecipeStep[]): string {
   return steps.map((s) => `${s.kind}:${s.target}`).join('|');
 }
@@ -1030,11 +1039,15 @@ async function stabilizeTarget(ctx: PluginContext, tid: string | undefined, sele
   // The HOST resolves frames and runs the descriptor logic; doing it here
   // would only see the top document and record a ref for iframe steps.
   try {
-    const r = await ctx.call<{ target?: string }>('browser.describe', {
+    const r = await ctx.call<{ target?: string; targets?: string[] }>('browser.describe', {
       selector,
       ...(tid ? { tabId: tid } : {}),
     });
-    return String(r?.target ?? '') || selector;
+    const list = (r?.targets ?? []).map((x) => String(x)).filter(Boolean);
+    // Several ways to find the same element: keep them all, so a renamed id
+    // does not kill the recipe. The resolver understands alt(a || b || c).
+    if (list.length > 1) return `alt(${list.join(' || ')})`;
+    return list[0] || String(r?.target ?? '') || selector;
   } catch {
     return selector;
   }
@@ -2161,6 +2174,26 @@ plugin({
         const log: string[] = [];
         const effects: string[] = [];
         let failedAt = -1;
+
+        // Naming a recipe makes ITS targets authoritative: the model supplies
+        // the values, but the selectors (and their fallbacks) come from the
+        // recording. Otherwise a model that "tidies" alt(#a || [name=b]) down
+        // to #a would silently lose the self-healing.
+        const namedForTargets = params.recipe ? String(params.recipe).trim() : '';
+        if (namedForTargets) {
+          const rec = recipes.find((r) => r.name === namedForTargets);
+          if (rec && rec.steps.length === steps.length) {
+            for (let i = 0; i < steps.length; i++) {
+              const st = steps[i] as Record<string, unknown>;
+              const target = rec.steps[i].target;
+              if (typeof st.click === 'string') st.click = target;
+              else if (st.fill && typeof st.fill === 'object') (st.fill as Record<string, unknown>).selector = target;
+              else if (st.select && typeof st.select === 'object') (st.select as Record<string, unknown>).selector = target;
+              else if (st.upload && typeof st.upload === 'object') (st.upload as Record<string, unknown>).selector = target;
+              else if (typeof st.hover === 'string') st.hover = target;
+            }
+          }
+        }
         for (let i = 0; i < steps.length; i++) {
           const step = steps[i] && typeof steps[i] === 'object' ? steps[i] : {};
           try {
@@ -2413,7 +2446,7 @@ plugin({
                 } 步，用过 ${r.uses} 次，上次成功 ${formatWhen(r.lastOk)}）${stale}`,
                 ...r.steps.map(
                   (st, i) =>
-                    `  ${i + 1}. ${st.kind} ${st.target}${st.value ? ` = ${st.value}` : ''}${
+                    `  ${i + 1}. ${st.kind} ${prettyTarget(st.target)}${st.value ? ` = ${st.value}` : ''}${
                       st.expect ? ` ｜预期：${st.expect}` : ''
                     }`,
                 ),
