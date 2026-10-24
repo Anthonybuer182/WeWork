@@ -1,6 +1,7 @@
 import { useRef, useCallback } from 'react';
 import { Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n';
 
 interface FileUploadButtonProps {
   disabled?: boolean;
@@ -8,6 +9,7 @@ interface FileUploadButtonProps {
 }
 
 export function FileUploadButton({ disabled, onFilesSelected }: FileUploadButtonProps) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = useCallback(() => {
@@ -43,7 +45,7 @@ export function FileUploadButton({ disabled, onFilesSelected }: FileUploadButton
         disabled={disabled}
         className="shrink-0"
         onClick={handleClick}
-        aria-label="Attach file"
+        aria-label={t('添加附件')}
       >
         <Paperclip className="h-4 w-4" />
       </Button>

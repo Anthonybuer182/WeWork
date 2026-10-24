@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Image, ImageOff, Maximize2, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useI18n } from '@/i18n';
 import type { ImageBlock } from '@pi/types';
 
 interface ImageBlockDisplayProps {
@@ -10,6 +11,7 @@ interface ImageBlockDisplayProps {
 }
 
 export function ImageBlockDisplay({ block, isStreaming }: ImageBlockDisplayProps) {
+  const { t } = useI18n();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [hasError, setHasError] = useState(false);
   const dataUrl = block.data
@@ -23,7 +25,7 @@ export function ImageBlockDisplay({ block, isStreaming }: ImageBlockDisplayProps
       <div className="my-2 overflow-hidden rounded-lg border bg-muted/30">
         <div className="flex items-center gap-2 px-3 py-4">
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">Loading image...</span>
+          <span className="text-xs text-muted-foreground">{t('图片加载中…')}</span>
         </div>
       </div>
     );
@@ -33,7 +35,7 @@ export function ImageBlockDisplay({ block, isStreaming }: ImageBlockDisplayProps
     return (
       <div className="my-2 flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-4">
         <ImageOff className="h-4 w-4 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">Image unavailable</span>
+        <span className="text-xs text-muted-foreground">{t('图片不可用')}</span>
       </div>
     );
   }
@@ -44,7 +46,7 @@ export function ImageBlockDisplay({ block, isStreaming }: ImageBlockDisplayProps
         <div className="group relative">
           <img
             src={dataUrl}
-            alt={block.content || 'Attached image'}
+            alt={block.content || t('附件图片')}
             onError={() => setHasError(true)}
             className={cn(
               'max-w-full h-auto max-h-80 object-contain cursor-pointer',
@@ -62,7 +64,7 @@ export function ImageBlockDisplay({ block, isStreaming }: ImageBlockDisplayProps
               <button
                 onClick={() => setLightboxOpen(true)}
                 className="rounded-md bg-background/80 p-1.5 hover:bg-background"
-                aria-label="View full size"
+                aria-label={t('查看原图')}
               >
                 <Maximize2 className="h-3.5 w-3.5" />
               </button>
@@ -78,13 +80,13 @@ export function ImageBlockDisplay({ block, isStreaming }: ImageBlockDisplayProps
             <button
               onClick={() => setLightboxOpen(false)}
               className="absolute top-2 right-2 z-10 rounded-full bg-background/60 p-1.5 hover:bg-background/80"
-              aria-label="Close"
+              aria-label={t('关闭')}
             >
               <X className="h-4 w-4" />
             </button>
             <img
               src={dataUrl}
-              alt={block.content || 'Attached image'}
+              alt={block.content || t('附件图片')}
               className="max-w-full max-h-[85vh] object-contain rounded-md"
             />
           </div>

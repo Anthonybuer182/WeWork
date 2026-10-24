@@ -24,6 +24,9 @@ export { Slot } from './components/ui/slot';
 
 export { cn, isTextEditableFile, isPreviewableInRightPanel, openWithSystemApp } from './lib/utils';
 
+export { useI18n, useLanguageSync, useLanguageStore, translate, t } from './i18n';
+export type { Language, MessageKey } from './i18n';
+
 export { useUIStore } from './stores/ui-store';
 export { useThemeStore } from './stores/theme-store';
 export { useComposerStore } from './stores/composer-store';

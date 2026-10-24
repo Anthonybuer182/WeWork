@@ -23,12 +23,14 @@ import { SkillSelector } from '../model/skill-selector';
 import { CompactToggle } from '../model/compact-toggle';
 import { PermissionModeButton } from './permission-mode-button';
 import { usePermissionStore } from '@/stores/permission-store';
-import { useCommandStore, type RegisteredCommand } from '@/stores/command-store';
+import { useI18n, type MessageKey } from '@/i18n';
+import { useCommandStore, commandDescription, type RegisteredCommand } from '@/stores/command-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import type { ContentBlock, Config, Skill } from '@pi/types';
 import type { Attachment } from '@pi/types';
 
 export function Composer() {
+  const { t } = useI18n();
   const sdk = useSDK();
   const queryClient = useQueryClient();
   // Command registry: host commands + plugin-contributed commands.
@@ -42,8 +44,12 @@ export function Composer() {
   );
   const compactMode = useUIStore((s) => s.compactMode);
   const setCompactMode = useUIStore((s) => s.setCompactMode);
-  const selectedSkills = useUIStore((s) => s.selectedSkills);
-  const toggleSkill = useUIStore((s) => s.toggleSkill);
+  const disabledSkills = useUIStore((s) => s.disabledSkills);
+  const sessionSkillKey = activeSessionId ?? 'default';
+  const sessionSkillOverride = useUIStore(
+    (s) => s.skillOverridesBySession[sessionSkillKey],
+  );
+  const setSessionSkills = useUIStore((s) => s.setSessionSkills);
   const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
   const activePreviewFilePath = useUIStore((s) => s.activePreviewFilePath);
   const setActiveSession = useUIStore((s) => s.setActiveSession);
@@ -158,14 +164,43 @@ export function Composer() {
     queryFn: () => sdk.config.listSkills(),
   });
 
-  // Filter stale skill IDs from localStorage against actual available skills
-  const validSelectedSkills = useMemo(
-    () => {
-      if (!availableSkills) return [];
-      const skillIds = new Set(availableSkills.map(s => s.id));
-      return selectedSkills.filter(id => skillIds.has(id));
+  // Skills switched off in Settings → Skills are unavailable here: hide them
+  // from the picker and never send them.
+  const enabledSkills = useMemo(() => {
+    if (!availableSkills) return [];
+    const off = new Set(disabledSkills);
+    return availableSkills.filter((skill) => !off.has(skill.id));
+  }, [availableSkills, disabledSkills]);
+  const enabledSkillIds = useMemo(
+    () => enabledSkills.map((skill) => skill.id),
+    [enabledSkills],
+  );
+
+  // A conversation with no override uses every enabled skill — that is the
+  // default for a new conversation, so Settings switches take effect without
+  // a second step. Touching the composer checkboxes records an override for
+  // this session only; stale or newly disabled IDs are filtered out.
+  const validSelectedSkills = useMemo(() => {
+    if (!availableSkills) return [];
+    if (sessionSkillOverride === undefined) return enabledSkillIds;
+    const enabled = new Set(enabledSkillIds);
+    return sessionSkillOverride.filter((id) => enabled.has(id));
+  }, [availableSkills, enabledSkillIds, sessionSkillOverride]);
+
+  const handleToggleSkill = useCallback(
+    (skillId: string) => {
+      const next = new Set(validSelectedSkills);
+      if (next.has(skillId)) next.delete(skillId);
+      else next.add(skillId);
+      const skillIds = enabledSkillIds.filter((id) => next.has(id));
+      // Selecting everything is the default, not an override: drop the entry
+      // so skills enabled later still apply to this conversation.
+      setSessionSkills(
+        sessionSkillKey,
+        skillIds.length === enabledSkillIds.length ? undefined : skillIds,
+      );
     },
-    [selectedSkills, availableSkills],
+    [validSelectedSkills, enabledSkillIds, sessionSkillKey, setSessionSkills],
   );
 
   const handleFilesSelected = useCallback(
@@ -423,7 +458,7 @@ export function Composer() {
         try {
           await sdk.chat.navigateTree(activeSessionId, editEntryId);
         } catch (err) {
-          setStreamError(err instanceof Error ? err.message : 'Failed to navigate tree');
+          setStreamError(err instanceof Error ? err.message : t('无法在文件树中定位'));
           setIsStreaming(false);
           isActuallyStreaming.current = false;
           throw err;
@@ -550,7 +585,7 @@ export function Composer() {
           } else if (chunk.type === 'queue_update' && chunk.queueState) {
             setQueues(chunk.queueState.steering, chunk.queueState.followUp);
           } else if (chunk.type === 'error') {
-            setStreamError(chunk.error || 'An unknown error occurred');
+            setStreamError(chunk.error || t('发生了未知错误'));
           }
         },
         abortControllerRef.current?.signal,
@@ -667,7 +702,7 @@ export function Composer() {
       // way it went: no message if the send never left, the user's message if it
       // reached the model and the model refused.
       void queryClient.invalidateQueries({ queryKey: ['session', activeSessionId] });
-      setStreamError(error.message || 'Failed to send message');
+      setStreamError(error.message || t('发送失败'));
     },
     onSettled: () => {
       // Clear attachments after mutation completes (success or error),
@@ -699,38 +734,41 @@ export function Composer() {
       if (cmdName === '/help') {
         const helpSections: Array<{ title: string; items: Array<{ name: string; desc: string }> }> = [
           {
-            title: 'Available Commands',
-            items: registeredCommands.map((c: RegisteredCommand) => ({ name: c.name, desc: c.description })),
-          },
-          {
-            title: 'Skills',
-            items: (availableSkills ?? []).map((s) => ({
-              name: s.name,
-              desc: `${s.description} (${validSelectedSkills.includes(s.id) ? 'enabled' : 'disabled'})`,
+            title: t('可用命令'),
+            items: registeredCommands.map((c: RegisteredCommand) => ({
+              name: c.name,
+              desc: commandDescription(c, t),
             })),
           },
           {
-            title: 'Keyboard Shortcuts',
+            title: t('技能'),
+            items: (availableSkills ?? []).map((s) => ({
+              name: s.name,
+              desc: `${s.description} (${validSelectedSkills.includes(s.id) ? t('使用中') : t('未使用')})`,
+            })),
+          },
+          {
+            title: t('键盘快捷键'),
             items: [
-              { name: 'Enter', desc: 'Send message' },
-              { name: 'Shift+Enter', desc: 'New line' },
-              { name: 'Ctrl+Enter', desc: 'Steer agent during streaming' },
-              { name: '/', desc: 'Open command menu for quick actions' },
-              { name: '@', desc: 'Mention files, workspaces, or sessions' },
+              { name: 'Enter', desc: t('发送消息') },
+              { name: 'Shift+Enter', desc: t('换行') },
+              { name: 'Ctrl+Enter', desc: t('流式回复时引导 agent') },
+              { name: '/', desc: t('打开命令菜单，快速操作') },
+              { name: '@', desc: t('提及文件、工作区或会话') },
             ],
           },
           {
-            title: 'Capabilities',
+            title: t('能力'),
             items: [
-              { name: 'Files', desc: 'Read, write, and edit files in your workspace' },
-              { name: 'Shell', desc: 'Execute shell commands via bash tool' },
-              { name: 'Search', desc: 'Search codebases with regex and glob patterns' },
-              { name: 'Office', desc: 'Create and edit Office documents (.docx, .xlsx, .pptx)' },
-              { name: 'Attach', desc: 'Attach images and files for AI analysis' },
+              { name: t('文件'), desc: t('读取、写入和编辑工作区里的文件') },
+              { name: 'Shell', desc: t('用 bash 工具执行 shell 命令') },
+              { name: t('搜索'), desc: t('用正则和 glob 模式搜索代码库') },
+              { name: 'Office', desc: t('创建和编辑 Office 文档（.docx、.xlsx、.pptx）') },
+              { name: t('附件'), desc: t('附加图片和文件供 AI 分析') },
             ],
           },
         ];
-        setCommandDialog({ title: 'Pi Coding Agent', subtitle: 'Your AI coding assistant', sections: helpSections });
+        setCommandDialog({ title: 'Pi Coding Agent', subtitle: t('你的 AI 编程助手'), sections: helpSections });
         return true;
       }
 
@@ -746,43 +784,62 @@ export function Composer() {
       }
 
       if (cmdName === '/config') {
+        const thinkLabel: Record<string, MessageKey> = {
+          off: '不思考',
+          low: '低',
+          medium: '中',
+          high: '高',
+        };
         const skills = (availableSkills ?? [])
           .filter((s) => validSelectedSkills.includes(s.id))
           .map((s) => s.name)
-          .join(', ') || 'none';
+          .join(', ') || t('无');
         const configSections: Array<{ title: string; items: Array<{ name: string; desc: string }> }> = [
           {
-            title: 'Current Configuration',
+            title: t('当前配置'),
             items: [
-              { name: 'Model', desc: config?.defaultModelId ?? 'Not set' },
-              { name: 'Think Level', desc: config?.defaultThinkLevel ?? 'medium' },
-              { name: 'Skills', desc: skills },
-              { name: 'Compact Mode', desc: compactMode ? 'On' : 'Off' },
-              { name: 'Workspace', desc: activeWorkspaceId ?? 'None' },
+              { name: t('模型名称'), desc: config?.defaultModelId ?? t('未设置') },
+              {
+                name: t('思考等级'),
+                desc: config?.defaultThinkLevel
+                  ? t(thinkLabel[config.defaultThinkLevel] ?? '中')
+                  : t('未设置'),
+              },
+              { name: t('技能'), desc: skills },
+              { name: t('紧凑模式'), desc: compactMode ? t('开') : t('关') },
+              { name: t('工作区'), desc: activeWorkspaceId ?? t('无') },
             ],
           },
         ];
-        setCommandDialog({ title: 'Configuration', subtitle: 'Current session settings', sections: configSections });
+        setCommandDialog({
+          title: t('配置'),
+          subtitle: t('当前会话设置'),
+          sections: configSections,
+        });
         return true;
       }
 
       if (cmdName === '/model') {
-        const currentModelId = config?.defaultModelId ?? 'Not set';
+        const currentModelId = config?.defaultModelId ?? t('未设置');
         const modelItems: Array<{ name: string; desc: string }> = [];
         if (availableModels && availableModels.length > 0) {
           for (const m of availableModels) {
-            const marker = m.id === currentModelId ? ' (current)' : '';
-            const status = m.isAvailable ? '' : ' [unavailable]';
+            const marker = m.id === currentModelId ? t('（当前）') : '';
+            const status = m.isAvailable ? '' : t('［不可用］');
             modelItems.push({ name: m.name, desc: `${marker}${status}`.trim() });
           }
         } else {
-          modelItems.push({ name: 'loading', desc: 'loading models...' });
+          modelItems.push({ name: t('正在加载'), desc: t('正在加载模型…') });
         }
         const modelSections: Array<{ title: string; items: Array<{ name: string; desc: string }> }> = [
-          { title: 'Available Models', items: modelItems },
-          { title: 'Current', items: [{ name: currentModelId, desc: '' }] },
+          { title: t('可用模型'), items: modelItems },
+          { title: t('当前'), items: [{ name: currentModelId, desc: '' }] },
         ];
-        setCommandDialog({ title: 'Models', subtitle: 'Available models', sections: modelSections });
+        setCommandDialog({
+          title: t('模型'),
+          subtitle: t('选择会话使用的模型'),
+          sections: modelSections,
+        });
         return true;
       }
 
@@ -796,9 +853,9 @@ export function Composer() {
           status: 'complete' as const,
           modelId: 'system',
           content: [
-            '## Compacting Conversation Context',
+            t('## 正在压缩对话上下文'),
             '',
-            'Summarizing conversation history to reduce token usage while preserving key context...',
+            t('正在总结对话历史以减少 token 用量，同时保留关键上下文…'),
           ].join('\n'),
           blocks: [],
           createdAt: now,
@@ -1160,7 +1217,9 @@ export function Composer() {
           onSlashDismiss={handleSlashDismiss}
           onMentionDismiss={handleMentionDismiss}
           disabled={!activeSessionId}
-          placeholder={isStreaming ? 'Press Enter to follow-up, or click Steer to redirect...' : undefined}
+          placeholder={
+            isStreaming ? t('按 Enter 继续追问，或点「引导」改变方向…') : undefined
+          }
           showMenu={showSlashMenu || showMentionMenu}
           onMenuNavigate={handleMenuNavigate}
           onMenuSelect={handleMenuSelect}
@@ -1177,7 +1236,7 @@ export function Composer() {
           <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/40 z-10 pointer-events-none">
             <div className="flex flex-col items-center gap-1 text-muted-foreground">
               <Upload className="h-6 w-6" />
-              <span className="text-xs font-medium">Drop files to attach</span>
+              <span className="text-xs font-medium">{t('松开即可添加附件')}</span>
             </div>
           </div>
         )}
@@ -1206,9 +1265,9 @@ export function Composer() {
         />
         <div className="h-4 w-px bg-border mx-1 hidden sm:block" />
         <SkillSelector
-          skills={availableSkills ?? []}
+          skills={enabledSkills}
           selectedIds={validSelectedSkills}
-          onToggle={toggleSkill}
+          onToggle={handleToggleSkill}
         />
         <CompactToggle compact={compactMode} onToggle={setCompactMode} />
         {/* Session permission mode — left side of the toolbar because the right
@@ -1224,10 +1283,10 @@ export function Composer() {
               onClick={handleSteerSubmit}
               disabled={!value.trim()}
               className="h-8 gap-1.5 text-xs"
-              aria-label="Steer (Ctrl+Enter)"
+              aria-label={t('引导（Ctrl+Enter）')}
             >
               <CornerDownRight className="h-3.5 w-3.5" />
-              Steer
+              {t('引导')}
               <kbd className="ml-0.5 text-[10px] opacity-60 hidden sm:inline">⌃↵</kbd>
             </Button>
             <Button
@@ -1235,7 +1294,7 @@ export function Composer() {
               variant="destructive"
               onClick={handleStopGeneration}
               className="h-8 w-8 shrink-0"
-              aria-label="Stop generation"
+              aria-label={t('停止生成')}
             >
               <Square className="h-3.5 w-3.5" />
             </Button>

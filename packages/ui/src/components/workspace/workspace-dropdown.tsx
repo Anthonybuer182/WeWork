@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { switchWorkspace } from '@/lib/switch-workspace';
+import { useI18n } from '@/i18n';
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ import {
 import type { Workspace } from '@pi/types';
 
 export function WorkspaceDropdown() {
+  const { t } = useI18n();
   const sdk = useSDK();
   const queryClient = useQueryClient();
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
@@ -88,7 +90,7 @@ export function WorkspaceDropdown() {
           // min-w-0 + [&>span]:min-w-0 let the name ellipsize when the whole
           // group is clamped by the title bar's max-width.
           className="h-8 w-auto min-w-0 max-w-full gap-1.5 border-0 bg-transparent px-2 hover:bg-accent [&>span]:min-w-0"
-          aria-label="Select workspace"
+          aria-label={t('选择工作区')}
           title={activeWorkspaceName}
         >
           <FolderGit2 className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -96,7 +98,7 @@ export function WorkspaceDropdown() {
               selected item's full text (name + session count). The trigger is
               a tight title-bar slot — the count belongs in the list, where it
               helps you pick, not here where it truncates the name. */}
-          <SelectValue placeholder="Select workspace...">{activeWorkspaceName}</SelectValue>
+          <SelectValue placeholder={t('选择工作区…')}>{activeWorkspaceName}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {workspaces?.map((ws) => (
@@ -105,13 +107,13 @@ export function WorkspaceDropdown() {
                 <div className="flex items-center gap-2">
                   <span className="truncate">{ws.name}</span>
                   <span className="text-xs text-muted-foreground shrink-0">
-                    {ws.sessionCount} sessions
+                    {t('{count} 个会话', { count: ws.sessionCount })}
                   </span>
                 </div>
               </SelectItem>
               <button
                 className="shrink-0 p-1 mr-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
-                aria-label={`Delete workspace ${ws.name}`}
+                aria-label={t('删除工作区 {name}', { name: ws.name })}
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -128,24 +130,26 @@ export function WorkspaceDropdown() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Workspace</AlertDialogTitle>
+            <AlertDialogTitle>{t('删除工作区')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete{' '}
-              <span className="font-semibold text-foreground">{deleteTarget?.name}</span>
-              {deleteTarget && deleteTarget.sessionCount > 0
-                ? ` and all ${deleteTarget.sessionCount} sessions within it`
-                : ''}.
-              This action cannot be undone.
+              {deleteTarget
+                ? deleteTarget.sessionCount > 0
+                  ? t('这会永久删除 {name} 及其中的 {count} 个会话。此操作无法撤销。', {
+                      name: deleteTarget.name,
+                      count: deleteTarget.sessionCount,
+                    })
+                  : t('这会永久删除 {name}。此操作无法撤销。', { name: deleteTarget.name })
+                : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('取消')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? t('正在删除…') : t('删除')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -3,6 +3,7 @@ import type { Message, ContentBlock, ThinkingBlock as ThinkingBlockType, ToolCal
 import { cn } from '@/lib/utils';
 import { Clock, Zap, FileText, Copy, Pencil, Check, X } from 'lucide-react';
 import { ThinkingBlock } from './thinking-block';
+import { useI18n } from '@/i18n';
 import { ToolCallDisplay } from './tool-call-display';
 import { MarkdownContent } from './markdown-content';
 import { renderTokenizedText } from '@/lib/token-parser';
@@ -111,6 +112,7 @@ function formatDuration(ms: number): string {
 
 /** Per-message metrics bar shown at bottom of assistant messages */
 function MessageMetrics({ timing, contentLength, isStreaming }: { timing?: MessageTiming; contentLength: number; isStreaming: boolean }) {
+  const { t } = useI18n();
   const estTokens = timing?.estTokens ?? Math.ceil(contentLength / 4);
 
   // Only show real metrics if we have timing data; otherwise just est
@@ -119,27 +121,40 @@ function MessageMetrics({ timing, contentLength, isStreaming }: { timing?: Messa
   return (
     <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground/50 tabular-nums">
       {/* Estimated tokens */}
-      <span className="flex items-center gap-0.5" title="Estimated output tokens (chars / 4)">
+      <span className="flex items-center gap-0.5" title={t('预计输出 tokens（字符数 / 4）')}>
         <FileText className="h-2.5 w-2.5" />
         ~{estTokens.toLocaleString()} t
       </span>
       {/* TPS */}
       {timing && timing.tps > 0 && (
-        <span className="flex items-center gap-0.5" title={`Tokens per second: ${timing.tps.toFixed(1)}`}>
+        <span
+          className="flex items-center gap-0.5"
+          title={t('每秒 tokens：{value}', { value: timing.tps.toFixed(1) })}
+        >
           <Zap className="h-2.5 w-2.5" />
           {timing.tps.toFixed(1)} t/s
         </span>
       )}
       {/* Thinking time */}
       {timing && timing.thinkingTimeMs > 0 && (
-        <span className="flex items-center gap-0.5" title={`Thinking time: ${formatDuration(timing.thinkingTimeMs)}`}>
+        <span
+          className="flex items-center gap-0.5"
+          title={t('思考耗时：{duration}', {
+            duration: formatDuration(timing.thinkingTimeMs),
+          })}
+        >
           <Clock className="h-2.5 w-2.5" />
           {formatDuration(timing.thinkingTimeMs)}
         </span>
       )}
       {/* Generation time */}
       {timing && timing.generationTimeMs > 0 && (
-        <span className="flex items-center gap-0.5" title={`Generation time: ${formatDuration(timing.generationTimeMs)}`}>
+        <span
+          className="flex items-center gap-0.5"
+          title={t('生成耗时：{duration}', {
+            duration: formatDuration(timing.generationTimeMs),
+          })}
+        >
           <span className="text-[8px] leading-none">▸</span>
           {formatDuration(timing.generationTimeMs)}
         </span>
@@ -164,6 +179,7 @@ function MessageBubbleImpl({
   onConfirmEdit,
   onCancelEdit,
 }: MessageBubbleProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isUser = message.role === 'user';
@@ -317,7 +333,7 @@ function MessageBubbleImpl({
                     {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">{copied ? 'Copied!' : 'Copy'}</TooltipContent>
+                <TooltipContent side="bottom">{copied ? t('已复制！') : t('复制')}</TooltipContent>
               </Tooltip>
               {isUser && message.entryId && (
                 <Tooltip>
@@ -331,7 +347,7 @@ function MessageBubbleImpl({
                       <Pencil className="h-3 w-3" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Edit</TooltipContent>
+                  <TooltipContent side="bottom">{t('编辑')}</TooltipContent>
                 </Tooltip>
               )}
             </div>

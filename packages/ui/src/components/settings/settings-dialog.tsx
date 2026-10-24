@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Cpu, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
+import { useI18n, type MessageKey } from '@/i18n';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { GeneralSettingsPage } from './general-settings';
 import { ModelsSettingsPage } from './models-settings';
@@ -9,7 +10,7 @@ import { SkillsSettingsPage } from './skills-settings';
 
 type SectionId = 'general' | 'models' | 'skills';
 
-const SECTIONS: { id: SectionId; label: string; icon: typeof Cpu }[] = [
+const SECTIONS: { id: SectionId; label: MessageKey; icon: typeof Cpu }[] = [
   { id: 'general', label: '通用', icon: SlidersHorizontal },
   { id: 'models', label: '模型', icon: Cpu },
   { id: 'skills', label: '技能', icon: Sparkles },
@@ -33,6 +34,7 @@ const SECTIONS: { id: SectionId; label: string; icon: typeof Cpu }[] = [
 export function SettingsDialog() {
   const open = useUIStore((s) => s.settingsOpen);
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
+  const { t } = useI18n();
   const [section, setSection] = useState<SectionId>('general');
 
   // ⌘, / Ctrl+, — the platform's settings shortcut, active while the shell
@@ -63,16 +65,16 @@ export function SettingsDialog() {
         onInteractOutside={(e) => e.preventDefault()}
         className="h-[min(680px,calc(100vh-96px))] w-[min(940px,calc(100vw-96px))] max-w-none gap-0 overflow-hidden p-0 outline-none sm:rounded-xl"
       >
-        <DialogTitle className="sr-only">设置</DialogTitle>
-        <DialogDescription className="sr-only">配置模型服务商、技能和通用选项</DialogDescription>
+        <DialogTitle className="sr-only">{t('设置')}</DialogTitle>
+        <DialogDescription className="sr-only">{t('配置模型服务商、技能和通用选项')}</DialogDescription>
 
         <div className="flex h-full min-h-0">
           <nav
-            aria-label="设置分类"
+            aria-label={t('设置分类')}
             className="flex w-[180px] shrink-0 flex-col gap-0.5 border-r bg-muted/30 p-3"
           >
             <div className="px-2.5 pb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              设置
+              {t('设置')}
             </div>
             {SECTIONS.map(({ id, label, icon: Icon }) => (
               <button
@@ -90,17 +92,17 @@ export function SettingsDialog() {
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {label}
+                {t(label)}
               </button>
             ))}
             <div className="mt-auto px-2.5 pt-3 text-[10px] leading-relaxed text-muted-foreground/70">
-              改动即时保存，关掉不丢。
+              {t('改动即时保存，关掉不丢。')}
             </div>
           </nav>
 
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex h-12 shrink-0 items-center border-b px-6">
-              <h2 className="text-sm font-semibold">{active.label}</h2>
+              <h2 className="text-sm font-semibold">{t(active.label)}</h2>
             </div>
             <div className="min-h-0 flex-1">
               {section === 'general' && <GeneralSettingsPage />}

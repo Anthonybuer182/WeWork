@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn, isPreviewableInRightPanel, openWithSystemApp } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
+import { useI18n } from '@/i18n';
 import type { FileBlock } from '@pi/types';
 
 interface FileBlockDisplayProps {
@@ -78,10 +79,11 @@ function formatFileSize(bytes?: number): string {
 }
 
 export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
-  const displayName = block.fileName || block.content || 'Unknown file';
+  const displayName = block.fileName || block.content || t('未知文件');
   const Icon = getFileIcon(block.mimeType, block.fileName);
   const showPreview = PRESENTABLE_TEXT_TYPES.has(block.mimeType) && block.data;
   const expandable = isExpandable(block.mimeType);
@@ -98,7 +100,7 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
       }
       previewText = new TextDecoder().decode(bytes);
     } catch {
-      previewText = '[Binary content - cannot preview]';
+      previewText = t('[二进制内容，无法预览]');
     }
   }
 
@@ -151,7 +153,7 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
                 }
               }}
               className="p-1 rounded hover:bg-muted"
-              title="Open with system app"
+              title={t('用系统应用打开')}
             >
               <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
@@ -168,7 +170,7 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
               download={displayName}
               onClick={(e) => e.stopPropagation()}
               className="p-1 rounded hover:bg-muted"
-              title="Download"
+              title={t('下载')}
             >
               <Download className="h-3.5 w-3.5 text-muted-foreground" />
             </a>
@@ -182,7 +184,10 @@ export function FileBlockDisplay({ block }: FileBlockDisplayProps) {
           <pre className="text-[11px] leading-relaxed p-3 max-h-48 overflow-auto bg-muted/20 font-mono whitespace-pre-wrap break-all">
             {previewText.slice(0, 5000)}
             {previewText.length > 5000 && (
-              <span className="text-muted-foreground">\n... (truncated)</span>
+              <span className="text-muted-foreground">
+                {'\n'}
+                {t('…（已截断）')}
+              </span>
             )}
           </pre>
         </div>

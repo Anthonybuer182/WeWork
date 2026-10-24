@@ -223,6 +223,16 @@ async function handleConfig(action: string, params: unknown): Promise<unknown> {
     case 'getModelsConfig': return configService.getModelsConfig();
     case 'saveModelsConfig': return configService.saveModelsConfig(p.config as any);
     case 'upsertProvider': return configService.upsertProvider(p.name as string, p.provider as any);
+    case 'listRemoteModels':
+      return configService.listRemoteModels(
+        p as { baseUrl: string; api: string; apiKey: string },
+      );
+    case 'saveProvider':
+      return configService.saveProvider(
+        (p.originalName as string | null) ?? null,
+        p.name as string,
+        p.provider as any,
+      );
     case 'deleteProvider': return configService.deleteProvider(p.name as string);
     case 'addModel': return configService.addModel(p.providerName as string, p.model as any);
     case 'deleteModel': return configService.deleteModel(p.providerName as string, p.modelId as string);

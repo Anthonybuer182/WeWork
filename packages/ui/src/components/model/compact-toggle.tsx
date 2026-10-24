@@ -1,6 +1,7 @@
 import { Minimize2, Maximize2 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useI18n } from '@/i18n';
 
 interface CompactToggleProps {
   compact: boolean;
@@ -8,6 +9,7 @@ interface CompactToggleProps {
 }
 
 export function CompactToggle({ compact, onToggle }: CompactToggleProps) {
+  const { t } = useI18n();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -15,7 +17,7 @@ export function CompactToggle({ compact, onToggle }: CompactToggleProps) {
           pressed={compact}
           onPressedChange={onToggle}
           size="sm"
-          aria-label="Toggle compact mode"
+          aria-label={t('切换紧凑模式')}
         >
           {compact ? (
             <Maximize2 className="h-4 w-4" />
@@ -25,7 +27,7 @@ export function CompactToggle({ compact, onToggle }: CompactToggleProps) {
         </Toggle>
       </TooltipTrigger>
       <TooltipContent>
-        {compact ? 'Exit compact mode' : 'Compact mode'}
+        {compact ? t('退出紧凑模式') : t('紧凑模式')}
       </TooltipContent>
     </Tooltip>
   );

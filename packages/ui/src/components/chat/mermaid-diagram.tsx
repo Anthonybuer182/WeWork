@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { Copy, Check, Maximize2, Minimize2, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 interface MermaidDiagramProps {
   source: string;
@@ -13,6 +14,7 @@ const svgCache = new Map<string, string>();
 export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const renderIdRef = useRef(0);
@@ -106,7 +108,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
         setError(null);
       } catch (err) {
         if (currentRenderId !== renderIdRef.current) return;
-        const message = err instanceof Error ? err.message : 'Unknown error';
+        const message = err instanceof Error ? err.message : t('未知错误');
         setError(message);
       }
     })();
@@ -135,7 +137,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
             {copied ? (
               <>
                 <Check className="h-3 w-3" />
-                Copied!
+                {t('已复制！')}
               </>
             ) : (
               <>
@@ -161,7 +163,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
             mermaid
             <span className="flex items-center gap-1 text-[10px] font-normal italic normal-case tracking-normal text-red-500">
               <AlertTriangle className="h-3 w-3" />
-              render error
+              {t('渲染失败')}
             </span>
           </span>
           <button
@@ -171,7 +173,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
             {copied ? (
               <>
                 <Check className="h-3 w-3" />
-                Copied!
+                {t('已复制！')}
               </>
             ) : (
               <>
@@ -201,7 +203,7 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
           <button
             onClick={() => setZoomed(!zoomed)}
             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-            aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
+            aria-label={zoomed ? t('缩小') : t('放大')}
           >
             {zoomed ? (
               <Minimize2 className="h-3 w-3" />
@@ -212,12 +214,12 @@ export function MermaidDiagram({ source, isStreaming }: MermaidDiagramProps) {
           <button
             onClick={handleCopy}
             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-            aria-label={copied ? 'Copied' : 'Copy source'}
+            aria-label={copied ? t('已复制') : t('复制源码')}
           >
             {copied ? (
               <>
                 <Check className="h-3 w-3" />
-                Copied!
+                {t('已复制！')}
               </>
             ) : (
               <>

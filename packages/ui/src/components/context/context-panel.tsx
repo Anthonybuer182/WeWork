@@ -10,14 +10,16 @@ import {
   formatTokens,
   promptFileGroups,
   promptFileStatus,
-  promptStatusLabel,
-  PROMPT_KIND_HINT,
-  PROMPT_KIND_LABEL,
-  reloadNote,
-  scopeLabel,
 } from '@pi/sdk-wrapper';
 import type { AgentContextConfig, PromptFileInfo } from '@pi/types';
-import { buildMarkdown, sectionSpecs } from './context-derive';
+import {
+  buildMarkdown,
+  promptKindLabel,
+  promptStatusLabel,
+  scopeLabel,
+  sectionSpecs,
+} from './context-derive';
+import { useI18n, type MessageKey } from '@/i18n';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -70,6 +72,15 @@ interface ConfirmState {
   run: () => void;
 }
 
+const PROMPT_KIND_HINT: Record<PromptFileInfo['kind'], MessageKey> = {
+  system:
+    '整个替换掉 SDK 内置的系统提示词。写它会让 agent 失去内置的工具用法与行为说明，除非你自己把这些写进去。',
+  append: '在内置提示词之后追加你自己的指令，原有的内容都保留。',
+};
+
+/** Grouping key for built-in tools — cannot collide with a plugin name. */
+const BUILTIN_GROUP = '__builtin';
+
 const SECTION_DEFAULTS: Record<string, boolean> = {
   prompt: true,
   base: false,
@@ -80,6 +91,7 @@ const SECTION_DEFAULTS: Record<string, boolean> = {
 };
 
 export function ContextPanel() {
+  const { t } = useI18n();
   const sdk = useSDK();
   const queryClient = useQueryClient();
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
@@ -130,12 +142,28 @@ export function ContextPanel() {
   });
 
   /** Turn a raw host error into something a person can act on. */
-  const describe = (err: unknown, action: string): string => {
+  const describe = (err: unknown, action: MessageKey): string => {
     const raw = err instanceof Error ? err.message : String(err);
     if (/conflict/i.test(raw)) {
-      return `${action}被拒绝：这个文件在你打开之后被外部改过，宿主拒绝写入以免覆盖别人刚做的修改。请先取消、重新打开拿到最新内容。\n（宿主的说明：${raw}）`;
+      return t(
+        '{action}被拒绝：这个文件在你打开之后被外部改过，宿主拒绝写入以免覆盖别人刚做的修改。请先取消、重新打开拿到最新内容。\n（宿主的说明：{error}）',
+        { action: t(action), error: raw },
+      );
     }
     return raw;
+  };
+
+  /** Mirrors `@pi/sdk-wrapper`'s reloadNote, which is Chinese-only. */
+  const reloadNote = (result: { applied: boolean; reason?: string; message?: string }): string => {
+    if (result.applied) return t('已保存并生效，下一条消息就会带上新内容。');
+    if (result.reason === 'busy') return t('已保存；正在生成回复，将在下一个新会话生效。');
+    if (result.reason === 'no-session') return t('已保存；尚未建立会话，将在新会话建立时生效。');
+    if (result.reason === 'error') {
+      return t('文件已保存，但让改动生效时出错了 —— 改动会在新会话建立时生效。\n（{error}）', {
+        error: result.message ?? t('未知错误'),
+      });
+    }
+    return t('已保存，将在下一次建立会话时生效。');
   };
 
   const saveEditor = async () => {
@@ -160,9 +188,12 @@ export function ContextPanel() {
 
   const removeFile = (path: string, mtimeMs: number) => {
     setConfirm({
-      title: '删除这个文件？',
-      description: `${path}\n\n删掉之后，它替换或追加的内容会立即从系统提示词里消失，恢复成没有这个文件时的样子。`,
-      confirmLabel: '删除',
+      title: t('删除这个文件？'),
+      description: t(
+        '{path}\n\n删掉之后，它替换或追加的内容会立即从系统提示词里消失，恢复成没有这个文件时的样子。',
+        { path },
+      ),
+      confirmLabel: t('删除'),
       destructive: true,
       run: () => {
         void (async () => {
@@ -173,7 +204,9 @@ export function ContextPanel() {
             await refresh();
             setNotice({
               kind: 'ok',
-              text: res.deleted.deleted ? `已删除。${reloadNote(res.reload)}` : '文件已不存在。',
+              text: res.deleted.deleted
+                ? t('已删除。{note}', { note: reloadNote(res.reload) })
+                : t('文件已不存在。'),
             });
           } catch (err) {
             setNotice({ kind: 'err', text: describe(err, '删除') });
@@ -189,22 +222,22 @@ export function ContextPanel() {
       content: file.content ?? '',
       mtimeMs: file.mtimeMs,
       isNew: !file.exists,
-      label: `${PROMPT_KIND_LABEL[file.kind]} · ${file.scope === 'global' ? '全局' : '工作区'}`,
+      label: `${promptKindLabel(file.kind)} · ${scopeLabel(file.scope)}`,
     });
 
   const copy = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setNotice({ kind: 'ok', text: `${label}已复制到剪贴板。` });
+      setNotice({ kind: 'ok', text: t('{label}已复制到剪贴板。', { label }) });
     } catch {
-      setNotice({ kind: 'err', text: '复制失败：当前环境不允许访问剪贴板。' });
+      setNotice({ kind: 'err', text: t('复制失败：当前环境不允许访问剪贴板。') });
     }
   };
 
   if (!workspacePath) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
-        先选择一个工作区
+        {t('先选择一个工作区')}
       </div>
     );
   }
@@ -220,8 +253,10 @@ export function ContextPanel() {
   if (contextQuery.error || !contextQuery.data) {
     return (
       <ErrorState
-        title="读取上下文失败"
-        description={contextQuery.error instanceof Error ? contextQuery.error.message : '未知错误'}
+        title={t('读取上下文失败')}
+        description={
+          contextQuery.error instanceof Error ? contextQuery.error.message : t('未知错误')
+        }
         onRetry={() => void contextQuery.refetch()}
       />
     );
@@ -287,7 +322,7 @@ export function ContextPanel() {
                     content: `${text}\n`,
                     mtimeMs: 0,
                     isNew: true,
-                    label: '替换系统提示词 · 全局',
+                    label: t('替换系统提示词 · 全局'),
                   });
                 }}
               />
@@ -305,7 +340,7 @@ export function ContextPanel() {
                 onToggleItem={toggleItem}
                 onEdit={(path, content, mtimeMs) => {
                   setEditorError(null);
-                  setEditor({ path, content, mtimeMs, isNew: false, label: '上下文文件' });
+                  setEditor({ path, content, mtimeMs, isNew: false, label: t('上下文文件') });
                 }}
                 onCancel={() => {
                   setEditor(null);
@@ -316,10 +351,10 @@ export function ContextPanel() {
                 onCreateGlobal={() =>
                   setEditor({
                     path: `${config.agentDir.replace(/\/$/, '')}/AGENTS.md`,
-                    content: '# 全局指令\n\n',
+                    content: t('# 全局指令\n\n'),
                     mtimeMs: 0,
                     isNew: true,
-                    label: '全局上下文文件',
+                    label: t('全局上下文文件'),
                   })
                 }
               />
@@ -356,7 +391,7 @@ export function ContextPanel() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('取消')}</AlertDialogCancel>
             <AlertDialogAction
               className={confirm?.destructive ? 'bg-destructive text-destructive-foreground' : undefined}
               onClick={() => {
@@ -384,17 +419,18 @@ function Header({
   onRefresh: () => void;
   refreshing: boolean;
 }) {
+  const { t } = useI18n();
   const { totals } = config;
   const pct = Math.round((totals.share ?? 0) * 100);
   return (
     <div className="flex-none border-b px-3 py-2.5">
       <div className="flex items-center gap-2">
-        <div className="flex-1 text-[13px] font-semibold">上下文</div>
+        <div className="flex-1 text-[13px] font-semibold">{t('上下文')}</div>
         <Button
           variant="ghost"
           size="icon"
           className="h-6 w-6"
-          title="重新读取"
+          title={t('重新读取')}
           onClick={onRefresh}
           disabled={refreshing}
         >
@@ -402,12 +438,14 @@ function Header({
         </Button>
       </div>
       <div className="mt-1 break-all text-[11px] leading-snug text-muted-foreground">
-        当前工作区：{config.workspace.path}
+        {t('当前工作区：{path}', { path: config.workspace.path })}
       </div>
-      <div className="mt-2 flex items-baseline gap-1.5 text-[11px] text-muted-foreground">
+      <div className="mt-2 flex flex-wrap items-baseline gap-1.5 text-[11px] text-muted-foreground">
         <span className="text-[13px] font-semibold text-foreground">{formatCount(totals.chars)}</span>
-        <span>字符 · 常驻部分</span>
-        <span>· {formatTokens(totals.tokensEst)} tokens（估算）</span>
+        <span>{t('字符 · 常驻部分')}</span>
+        <span>
+          {t('· {tokens} tokens（估算）', { tokens: formatTokens(totals.tokensEst) })}
+        </span>
       </div>
       {totals.windowTokens ? (
         <>
@@ -421,7 +459,10 @@ function Header({
             />
           </div>
           <div className="mt-1 text-[11px] text-muted-foreground">
-            占模型窗口 {pct}% · 窗口 {formatCount(totals.windowTokens)} tokens
+            {t('占模型窗口 {pct}% · 窗口 {tokens} tokens', {
+              pct,
+              tokens: formatCount(totals.windowTokens),
+            })}
           </div>
         </>
       ) : null}
@@ -436,6 +477,7 @@ function Footer({
   config: AgentContextConfig;
   onCopy: (text: string, label: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-none gap-1.5 border-t px-3 py-2">
       <Button
@@ -443,18 +485,18 @@ function Footer({
         size="sm"
         className="h-7 text-[11px]"
         disabled={!config.assembled}
-        title={config.assembled ? undefined : '需要一次对话后才能读取完整提示词'}
-        onClick={() => config.assembled && onCopy(config.assembled.text, '完整系统提示词')}
+        title={config.assembled ? undefined : t('需要一次对话后才能读取完整提示词')}
+        onClick={() => config.assembled && onCopy(config.assembled.text, t('完整系统提示词'))}
       >
-        复制完整系统提示词
+        {t('复制完整系统提示词')}
       </Button>
       <Button
         variant="outline"
         size="sm"
         className="h-7 text-[11px]"
-        onClick={() => onCopy(buildMarkdown(config), 'Markdown 报告')}
+        onClick={() => onCopy(buildMarkdown(config), t('Markdown 报告'))}
       >
-        复制 Markdown 报告
+        {t('复制 Markdown 报告')}
       </Button>
     </div>
   );
@@ -477,6 +519,7 @@ function Section({
   onToggle: () => void;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <div className="border-b">
       <button
@@ -502,7 +545,7 @@ function Section({
               />
             </span>
             <span className="flex-none text-[11px] tabular-nums text-muted-foreground">
-              {chars > 0 ? `${formatChars(chars)} 字符` : '—'}
+              {chars > 0 ? t('{n} 字符', { n: formatChars(chars) }) : '—'}
             </span>
           </>
         ) : (
@@ -510,7 +553,7 @@ function Section({
           // sections below (a SYSTEM.md *is* the base prompt), so showing a
           // number here would count the same text twice.
           <Badge variant="outline" className="flex-none text-[10px] font-normal">
-            可编辑
+            {t('可编辑')}
           </Badge>
         )}
       </button>
@@ -536,6 +579,7 @@ function Editor({
   onCancel: () => void;
   onContentChange: (content: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-1.5 pt-1.5">
       <Textarea
@@ -551,15 +595,15 @@ function Editor({
       )}
       <div className="flex flex-wrap items-center gap-1.5">
         <Button size="sm" className="h-7 text-[11px]" disabled={saving} onClick={onSave}>
-          {saving ? '保存中…' : editor.isNew ? '创建并生效' : '保存'}
+          {saving ? t('保存中…') : editor.isNew ? t('创建并生效') : t('保存')}
         </Button>
         <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={onCancel}>
-          取消
+          {t('取消')}
         </Button>
         <span className="text-[11px] text-muted-foreground">
           {editor.isNew
-            ? '保存之前不会写入任何文件，取消就等于什么都没做。'
-            : '保存后立即生效；正在生成回复时则于下一个新会话生效。'}
+            ? t('保存之前不会写入任何文件，取消就等于什么都没做。')
+            : t('保存后立即生效；正在生成回复时则于下一个新会话生效。')}
         </span>
       </div>
     </div>
@@ -589,22 +633,23 @@ function PromptFilesSection({
   onDelete: (path: string, mtimeMs: number) => void;
   onConfirm: (c: ConfirmState) => void;
 }) {
+  const { t } = useI18n();
   if (config.promptFiles.length === 0) {
-    return <div className="py-2 text-[11px] text-muted-foreground">宿主没有报告任何提示词文件。</div>;
+    return <div className="py-2 text-[11px] text-muted-foreground">{t('宿主没有报告任何提示词文件。')}</div>;
   }
 
   return (
     <div className="space-y-3">
       <p className="text-[11px] leading-relaxed text-muted-foreground">
-        这两个文件就是系统提示词本身。写入后下一条消息生效；删掉就恢复默认。
+        {t('这两个文件就是系统提示词本身。写入后下一条消息生效；删掉就恢复默认。')}
       </p>
       {promptFileGroups(config.promptFiles).map((group) => (
         <div key={group.kind} className="space-y-1.5">
           <div className="text-[11px] font-semibold">
-            {PROMPT_KIND_LABEL[group.kind]} · {group.kind === 'system' ? 'SYSTEM.md' : 'APPEND_SYSTEM.md'}
+            {promptKindLabel(group.kind)} · {group.kind === 'system' ? 'SYSTEM.md' : 'APPEND_SYSTEM.md'}
           </div>
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            {PROMPT_KIND_HINT[group.kind]}
+            {t(PROMPT_KIND_HINT[group.kind])}
           </p>
           {group.files.map((file) => (
             <PromptFileRow
@@ -643,6 +688,7 @@ function PromptFileRow({
   onDelete: (path: string, mtimeMs: number) => void;
   onConfirm: (c: ConfirmState) => void;
 }) {
+  const { t } = useI18n();
   const status = promptFileStatus(file);
   const isEditing = editor?.path === file.path;
   // Creating a SYSTEM.md replaces the whole built-in prompt, so it asks first.
@@ -662,17 +708,17 @@ function PromptFileRow({
           {promptStatusLabel(status)}
         </Badge>
         <Badge variant="outline" className="flex-none text-[10px] font-normal">
-          {file.scope === 'global' ? '全局' : '工作区'}
+          {scopeLabel(file.scope)}
         </Badge>
         <div className="flex-1" />
         <span className="flex-none text-[11px] tabular-nums text-muted-foreground">
-          {file.exists ? `${formatChars(file.chars)} 字符` : '—'}
+          {file.exists ? t('{n} 字符', { n: formatChars(file.chars) }) : '—'}
         </span>
       </div>
       <div className="mt-1 break-all text-[11px] text-muted-foreground">{file.path}</div>
       {status === 'shadowed' && (
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          这个文件在磁盘上存在，但同类的另一个文件优先级更高，所以它当前不起作用。
+          {t('这个文件在磁盘上存在，但同类的另一个文件优先级更高，所以它当前不起作用。')}
         </p>
       )}
 
@@ -695,7 +741,7 @@ function PromptFileRow({
                 className="h-6 px-2 text-[11px]"
                 onClick={() => handlers.onEdit(file)}
               >
-                编辑
+                {t('编辑')}
               </Button>
               <Button
                 variant="outline"
@@ -703,7 +749,7 @@ function PromptFileRow({
                 className="h-6 px-2 text-[11px]"
                 onClick={() => handlers.onDelete(file.path, file.mtimeMs)}
               >
-                删除
+                {t('删除')}
               </Button>
             </>
           ) : (
@@ -715,15 +761,16 @@ function PromptFileRow({
                 const open = () => handlers.onEdit(file);
                 if (!destructive) return open();
                 handlers.onConfirm({
-                  title: '开始替换系统提示词？',
-                  description:
+                  title: t('开始替换系统提示词？'),
+                  description: t(
                     '接下来会打开一个空编辑器。在你点保存之前不会写入任何文件，所以现在取消等于什么都没做；一旦保存，agent 的行为就由这个文件决定。',
-                  confirmLabel: '继续',
+                  ),
+                  confirmLabel: t('继续'),
                   run: open,
                 });
               }}
             >
-              创建
+              {t('创建')}
             </Button>
           )}
         </div>
@@ -745,6 +792,7 @@ function BaseSection({
   onConfirm: (c: ConfirmState) => void;
   onSeedSystem: () => void;
 }) {
+  const { t } = useI18n();
   const base = config.sections.base;
   const target = config.promptFiles.find((f) => f.kind === 'system' && f.scope === 'global');
 
@@ -757,8 +805,8 @@ function BaseSection({
       ) : (
         <div className="border-t pt-1.5 first:border-t-0 first:pt-0">
           <ItemHead
-            name="基础系统提示词"
-            size={`${formatChars(base.chars ?? 0)} 字符`}
+            name={t('基础系统提示词')}
+            size={t('{n} 字符', { n: formatChars(base.chars ?? 0) })}
             open={expanded.base}
             onToggle={() => onToggleItem('base')}
           />
@@ -776,10 +824,13 @@ function BaseSection({
               className="h-6 px-2 text-[11px]"
               onClick={() => onToggleItem('assembled')}
             >
-              {expanded.assembled ? '收起完整提示词' : '查看完整系统提示词'}
+              {expanded.assembled ? t('收起完整提示词') : t('查看完整系统提示词')}
             </Button>
             <span className="text-[11px] text-muted-foreground">
-              {formatChars(config.assembled.chars)} 字符，{formatTokens(config.assembled.tokensEst)} tokens（估算）
+              {t('{chars} 字符，{tokens} tokens（估算）', {
+                chars: formatChars(config.assembled.chars),
+                tokens: formatTokens(config.assembled.tokensEst),
+              })}
             </span>
           </div>
           {expanded.assembled && <Pre>{config.assembled.text}</Pre>}
@@ -799,15 +850,16 @@ function BaseSection({
             className="h-6 px-2 text-[11px]"
             onClick={() =>
               onConfirm({
-                title: '以当前提示词为起点创建 SYSTEM.md？',
-                description:
+                title: t('以当前提示词为起点创建 SYSTEM.md？'),
+                description: t(
                   '会打开一个已经填好当前提示词的编辑器。在你点保存之前不会写入任何文件；保存后写入 ~/.pi/agent/SYSTEM.md，agent 的行为从那一刻起完全由它决定。',
-                confirmLabel: '继续',
+                ),
+                confirmLabel: t('继续'),
                 run: onSeedSystem,
               })
             }
           >
-            以当前提示词为起点创建 SYSTEM.md
+            {t('以当前提示词为起点创建 SYSTEM.md')}
           </Button>
         </div>
       )}
@@ -824,11 +876,12 @@ function AppendedSection({
   expanded: Record<string, boolean>;
   onToggleItem: (key: string) => void;
 }) {
+  const { t } = useI18n();
   const segments = config.sections.appended;
   if (segments.length === 0) {
     return (
       <div className="rounded-md border px-2 py-1.5 text-[11px] text-muted-foreground">
-        宿主没有向系统提示词追加任何内容。
+        {t('宿主没有向系统提示词追加任何内容。')}
       </div>
     );
   }
@@ -842,15 +895,21 @@ function AppendedSection({
           <div key={key} className="border-t pt-1.5 first:border-t-0 first:pt-0">
             <ItemHead
               name={segment.label}
-              badge={segment.source === 'host' ? '宿主' : segment.source === 'plugin-docs' ? '插件' : '你写的'}
-              size={`${formatChars(segment.chars)} 字符`}
+              badge={
+                segment.source === 'host'
+                  ? t('宿主')
+                  : segment.source === 'plugin-docs'
+                    ? t('插件')
+                    : t('你写的')
+              }
+              size={t('{n} 字符', { n: formatChars(segment.chars) })}
               open={expanded[key]}
               onToggle={() => onToggleItem(key)}
             />
             {segment.source === 'plugin-docs' && config.pluginDocs.length > 0 && (
               <div className="mt-1.5 space-y-0.5">
                 <div className="text-[11px] text-muted-foreground">
-                  每个已装插件在这段索引里占的字符数：
+                  {t('每个已装插件在这段索引里占的字符数：')}
                 </div>
                 {[...config.pluginDocs]
                   .sort((a, b) => b.chars - a.chars)
@@ -864,7 +923,7 @@ function AppendedSection({
                         />
                       </span>
                       <span className="flex-none text-[11px] tabular-nums text-muted-foreground">
-                        {formatChars(doc.chars)} 字符
+                        {t('{n} 字符', { n: formatChars(doc.chars) })}
                       </span>
                     </div>
                   ))}
@@ -897,6 +956,7 @@ function ContextFilesSection({
   onContentChange: (content: string) => void;
   onCreateGlobal: () => void;
 }) {
+  const { t } = useI18n();
   const files = config.sections.contextFiles;
   const hasGlobal = files.some((f) => f.scope === 'global');
 
@@ -904,7 +964,7 @@ function ContextFilesSection({
     <div className="space-y-2">
       {files.length === 0 && (
         <div className="rounded-md border px-2 py-1.5 text-[11px] leading-relaxed text-muted-foreground">
-          没有找到 AGENTS.md / CLAUDE.md。放进这些文件的内容会成为 agent 的常驻指令。
+          {t('没有找到 AGENTS.md / CLAUDE.md。放进这些文件的内容会成为 agent 的常驻指令。')}
         </div>
       )}
       {files.map((file) => {
@@ -924,7 +984,7 @@ function ContextFilesSection({
               </Badge>
               <div className="flex-1" />
               <span className="flex-none text-[11px] tabular-nums text-muted-foreground">
-                {formatChars(file.chars)} 字符
+                {t('{n} 字符', { n: formatChars(file.chars) })}
               </span>
             </div>
             <div className="mt-1 break-all text-[11px] text-muted-foreground">{file.path}</div>
@@ -945,7 +1005,7 @@ function ContextFilesSection({
                   className="h-6 px-2 text-[11px]"
                   onClick={() => handlers.onEdit(file.path, file.content, file.mtimeMs)}
                 >
-                  编辑
+                  {t('编辑')}
                 </Button>
                 <Button
                   variant="outline"
@@ -953,7 +1013,7 @@ function ContextFilesSection({
                   className="h-6 px-2 text-[11px]"
                   onClick={() => handlers.onToggleItem(key)}
                 >
-                  {expanded[key] ? '收起内容' : '查看内容'}
+                  {expanded[key] ? t('收起内容') : t('查看内容')}
                 </Button>
               </div>
             )}
@@ -964,10 +1024,10 @@ function ContextFilesSection({
       {!hasGlobal && (
         <div className="flex flex-wrap items-center gap-1.5">
           <Button variant="outline" size="sm" className="h-6 px-2 text-[11px]" onClick={onCreateGlobal}>
-            创建全局 AGENTS.md
+            {t('创建全局 AGENTS.md')}
           </Button>
           <span className="text-[11px] text-muted-foreground">
-            在 agent 目录下创建，对所有工作区生效。保存前不写盘。
+            {t('在 agent 目录下创建，对所有工作区生效。保存前不写盘。')}
           </span>
         </div>
       )}
@@ -984,10 +1044,13 @@ function SkillsSection({
   expanded: Record<string, boolean>;
   onToggleItem: (key: string) => void;
 }) {
+  const { t } = useI18n();
   const { items, rendered } = config.sections.skills;
   if (items.length === 0) {
     return (
-      <div className="rounded-md border px-2 py-1.5 text-[11px] text-muted-foreground">没有发现技能。</div>
+      <div className="rounded-md border px-2 py-1.5 text-[11px] text-muted-foreground">
+        {t('没有发现技能。')}
+      </div>
     );
   }
   return (
@@ -997,7 +1060,7 @@ function SkillsSection({
           <div className="flex items-center gap-1.5">
             <span className="min-w-0 flex-1 truncate text-[11px]">{skill.name}</span>
             <span className="flex-none text-[11px] tabular-nums text-muted-foreground">
-              {formatChars(skill.chars)} 字符
+              {t('{n} 字符', { n: formatChars(skill.chars) })}
             </span>
           </div>
           {skill.description && (
@@ -1014,7 +1077,7 @@ function SkillsSection({
         className="h-6 px-2 text-[11px]"
         onClick={() => onToggleItem('skills:rendered')}
       >
-        {expanded['skills:rendered'] ? '收起提示词片段' : '查看提示词片段'}
+        {expanded['skills:rendered'] ? t('收起提示词片段') : t('查看提示词片段')}
       </Button>
       {expanded['skills:rendered'] && <Pre>{rendered}</Pre>}
     </div>
@@ -1022,10 +1085,13 @@ function SkillsSection({
 }
 
 function ToolsSection({ config }: { config: AgentContextConfig }) {
+  const { t } = useI18n();
   const tools = config.sections.tools;
   if (tools.length === 0) {
     return (
-      <div className="rounded-md border px-2 py-1.5 text-[11px] text-muted-foreground">没有可用的工具信息。</div>
+      <div className="rounded-md border px-2 py-1.5 text-[11px] text-muted-foreground">
+        {t('没有可用的工具信息。')}
+      </div>
     );
   }
   // Grouped by origin: "which plugin costs me how much schema" is the question
@@ -1034,7 +1100,9 @@ function ToolsSection({ config }: { config: AgentContextConfig }) {
   const nameOf = new Map(config.pluginDocs.map((d) => [d.pluginId, d.name]));
   const groups = new Map<string, typeof tools>();
   for (const tool of tools) {
-    const key = tool.source === 'builtin' ? '内置' : (nameOf.get(tool.source) ?? tool.source);
+    // Group by a stable key, not the display label: translating the label must
+    // not merge two different groups.
+    const key = tool.source === 'builtin' ? BUILTIN_GROUP : (nameOf.get(tool.source) ?? tool.source);
     groups.set(key, [...(groups.get(key) ?? []), tool]);
   }
 
@@ -1045,15 +1113,20 @@ function ToolsSection({ config }: { config: AgentContextConfig }) {
         .map(([group, list]) => (
           <div key={group}>
             <div className="text-[11px] font-semibold">
-              {group} · {list.length} 个 ·{' '}
-              {formatChars(list.reduce((n, t) => n + t.schemaBytes, 0))} 字符
+              {t('{group} · {count} 个 · {chars} 字符', {
+                group: group === BUILTIN_GROUP ? t('内置') : group,
+                count: list.length,
+                chars: formatChars(list.reduce((n, tool) => n + tool.schemaBytes, 0)),
+              })}
             </div>
             {list.map((tool) => (
               <div key={tool.name} className="border-t pt-1 first:mt-1 first:border-t-0">
                 <div className="flex items-center gap-1.5">
                   <span className="min-w-0 flex-1 truncate text-[11px]">{tool.name}</span>
                   <span className="flex-none text-[11px] tabular-nums text-muted-foreground">
-                    {tool.schemaBytes > 0 ? `${formatChars(tool.schemaBytes)} 字符` : '—'}
+                    {tool.schemaBytes > 0
+                      ? t('{n} 字符', { n: formatChars(tool.schemaBytes) })
+                      : '—'}
                   </span>
                 </div>
                 {tool.description && (
@@ -1084,6 +1157,7 @@ function ItemHead({
   open?: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="flex items-center gap-1.5">
       <span className="min-w-0 flex-1 truncate text-[11px]">{name}</span>
@@ -1094,7 +1168,7 @@ function ItemHead({
       )}
       <span className="flex-none text-[11px] tabular-nums text-muted-foreground">{size}</span>
       <Button variant="outline" size="sm" className="h-6 flex-none px-2 text-[11px]" onClick={onToggle}>
-        {open ? '收起' : '展开'}
+        {open ? t('收起') : t('展开')}
       </Button>
     </div>
   );

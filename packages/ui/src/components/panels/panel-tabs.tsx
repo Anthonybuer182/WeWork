@@ -3,6 +3,8 @@ import { Maximize2, Minimize2, MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showPopupMenu } from '@/lib/native-menu';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
+import { useI18n } from '@/i18n';
+import { panelTitle } from './panel-title';
 import { RailIcon } from './panel-rail';
 
 /**
@@ -34,6 +36,7 @@ const CONTROLS_RESERVE = 44;
  * focused or carrying badge/pending activity mark the button with a dot.
  */
 export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
+  const { t } = useI18n();
   const panels = usePanelStore((s) => s.panels);
   const panelOrder = usePanelStore((s) => s.panelOrder[region]);
   const selectedIds = usePanelStore((s) => s.openPanelIds[region]);
@@ -145,13 +148,14 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
     // No unsplit item — closing the pane's tabs (their ×) collapses the split,
     // so a menu while the pane is open would only ever offer nothing.
     if (selectedSet.has(pair.companion.id)) return;
-    void showPopupMenu([{ id: 'split-right', label: '向右拆分' }], at).then((picked) => {
+    void showPopupMenu([{ id: 'split-right', label: t('向右拆分') }], at).then((picked) => {
       if (picked === 'split-right') openPanel(pair.companion.id, { focus: true });
     });
   };
 
   const renderItem = (panel: PanelEntry) => {
     const id = panel.id;
+    const title = panelTitle(panel, t);
     const selected = selectedSet.has(id);
     const focused = focusedId === id;
     const zoomed = zoomedId === id;
@@ -172,7 +176,7 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
         data-panel-tab={id}
         data-state={focused ? 'focused' : selected ? 'selected' : 'unselected'}
         draggable
-        title={panel.title}
+        title={title}
         onClick={() => {
           if (selected) setFocused(region, id);
           else openPanel(id, { focus: true });
@@ -246,7 +250,7 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
         )}
       >
         <RailIcon panel={panel} size={16} className="h-4 w-4 shrink-0" />
-        <span className={cn('min-w-0 truncate', focused && 'font-medium')}>{panel.title}</span>
+        <span className={cn('min-w-0 truncate', focused && 'font-medium')}>{title}</span>
         {/* Badge/pending mirror the work area so the entry carries the same
             signal even when its pane is not the one on display. */}
         {badge !== undefined && badge !== null && badge !== '' && (
@@ -268,7 +272,7 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
         {panel.scope === 'session' && (
           <span
             data-panel-tab-scope={id}
-            title="跟会话走的面板（切换会话时随会话切换）"
+            title={t('跟会话走的面板（切换会话时随会话切换）')}
             className={cn('h-1.5 w-1.5 shrink-0 rounded-full', 'bg-primary/70')}
           />
         )}
@@ -278,8 +282,12 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
         {selected && (
           <button
             type="button"
-            aria-label={zoomed ? '还原窗格' : '放大窗格'}
-            title={zoomed ? '还原（其他窗格回到工作区；Esc 同效）' : '放大占满（其他窗格收成侧条）'}
+            aria-label={zoomed ? t('还原窗格') : t('放大窗格')}
+            title={
+              zoomed
+                ? t('还原（其他窗格回到工作区；Esc 同效）')
+                : t('放大占满（其他窗格收成侧条）')
+            }
             data-panel-tab-zoom={id}
             onClick={(e) => {
               e.stopPropagation();
@@ -300,7 +308,7 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
         {selected && (
           <button
             type="button"
-            aria-label={`收起 ${panel.title}`}
+            aria-label={t('收起 {title}', { title })}
             data-panel-tab-close={id}
             onClick={(e) => {
               e.stopPropagation();
@@ -335,15 +343,15 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
       ref={containerRef}
       className="flex h-full w-full min-w-0 select-none items-center gap-1 px-1.5"
       role="toolbar"
-      aria-label="插件列表"
+      aria-label={t('插件列表')}
       data-testid={`panel-tabs-${region}`}
     >
       {sorted.map((p) => renderItem(p))}
       {cut != null && (
         <button
           type="button"
-          aria-label="更多面板"
-          title="更多面板"
+          aria-label={t('更多面板')}
+          title={t('更多面板')}
           data-panel-plus-toggle={region}
           onClick={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
@@ -365,7 +373,7 @@ export function PanelTabs({ region = 'right' }: { region?: PanelRegion }) {
     const items = overflowRef.current
       .map((id) => sorted.find((p) => p.id === id))
       .filter((p): p is PanelEntry => Boolean(p))
-      .map((p) => ({ id: p.id, label: p.title }));
+      .map((p) => ({ id: p.id, label: panelTitle(p, t) }));
     if (items.length === 0) return;
     const picked = await import('@/lib/native-menu').then((m) => m.showPopupMenu(items, at));
     if (picked) openPanel(picked, { focus: true });

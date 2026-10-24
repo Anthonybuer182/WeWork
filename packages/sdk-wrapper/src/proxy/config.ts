@@ -1,6 +1,11 @@
 import type { Transport } from '../transport/base.js';
 import type { ConfigService } from '../services/config.js';
-import type { ModelsConfig, ProviderEntry, ModelEntry } from '@pi/types';
+import type {
+  ModelsConfig,
+  ProviderEntry,
+  ProviderModelListResult,
+  ModelEntry,
+} from '@pi/types';
 
 export function createProxyConfigService(transport: Transport): ConfigService {
   return {
@@ -32,6 +37,18 @@ export function createProxyConfigService(transport: Transport): ConfigService {
     async upsertProvider(name: string, provider: ProviderEntry) {
       return transport.request('config.upsertProvider', { name, provider }) as Promise<void>;
     },
+    async listRemoteModels(input: { baseUrl: string; api: string; apiKey: string }) {
+      return transport.request('config.listRemoteModels', input) as Promise<ProviderModelListResult>;
+    },
+
+    async saveProvider(originalName: string | null, name: string, provider: ProviderEntry) {
+      return transport.request('config.saveProvider', {
+        originalName,
+        name,
+        provider,
+      }) as Promise<void>;
+    },
+
     async deleteProvider(name: string) {
       return transport.request('config.deleteProvider', { name }) as Promise<void>;
     },

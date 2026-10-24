@@ -1,6 +1,8 @@
 import { useEffect, useState, type DragEvent as ReactDragEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
+import { useI18n } from '@/i18n';
+import { panelTitle } from './panel-title';
 import { useUIStore } from '@/stores/ui-store';
 import { panelIcon } from './panel-icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -63,6 +65,8 @@ export function RailIcon({
 }
 
 function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion }) {
+  const { t } = useI18n();
+  const title = panelTitle(panel, t);
   const focusedId = usePanelStore((s) => s.focusedId[region]);
   const openPanel = usePanelStore((s) => s.openPanel);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
@@ -82,7 +86,7 @@ function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion 
       <TooltipTrigger asChild>
         <button
           type="button"
-          aria-label={panel.title}
+          aria-label={title}
           aria-pressed={active}
           data-panel-id={panel.id}
           data-state={active ? 'active' : 'inactive'}
@@ -126,7 +130,7 @@ function RailButton({ panel, region }: { panel: PanelEntry; region: PanelRegion 
           )}
         </button>
       </TooltipTrigger>
-      <TooltipContent side={isLeft ? 'right' : 'left'}>{panel.title}</TooltipContent>
+      <TooltipContent side={isLeft ? 'right' : 'left'}>{title}</TooltipContent>
     </Tooltip>
   );
 }

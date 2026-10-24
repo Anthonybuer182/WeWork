@@ -1,6 +1,7 @@
 import { Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
+import { useI18n } from '@/i18n';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 /**
@@ -13,13 +14,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
  */
 export function SettingsRailButton() {
   const openSettings = useUIStore((s) => s.openSettings);
+  const { t } = useI18n();
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <button
           type="button"
-          aria-label="设置"
+          aria-label={t('设置')}
           data-testid="settings-rail-button"
           onClick={openSettings}
           className={cn(
@@ -30,7 +32,7 @@ export function SettingsRailButton() {
           <Settings className="h-5 w-5" />
         </button>
       </TooltipTrigger>
-      <TooltipContent side="right">设置</TooltipContent>
+      <TooltipContent side="right">{t('设置')}</TooltipContent>
     </Tooltip>
   );
 }

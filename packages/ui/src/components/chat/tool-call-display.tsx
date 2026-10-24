@@ -5,6 +5,7 @@ import type { ToolCallBlock, ToolResultBlock } from '@pi/types';
 import { DeclarativeRenderer } from '@/components/plugins/declarative/declarative-renderer';
 import { usePluginStore } from '@/stores/plugin-store';
 import { usePermissionStore } from '@/stores/permission-store';
+import { useI18n } from '@/i18n';
 import { PermissionRequestCard } from './permission-request-card';
 import './chat-animations.css';
 
@@ -38,6 +39,7 @@ function getToolPreview(block: ToolCallBlock): string {
 }
 
 export function ToolCallDisplay({ block, result, isStreaming, durationMs }: ToolCallDisplayProps) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [userCollapsed, setUserCollapsed] = useState(false);
   const isRunning = isStreaming && !result;
@@ -166,12 +168,12 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
         {/* Running indicator (only when collapsed) */}
         {awaitingApproval && !expanded && (
           <span className="text-amber-600/80 dark:text-amber-400/70 animate-pulse shrink-0 ml-auto">
-            等待批准
+            {t('等待批准')}
           </span>
         )}
         {isRunning && !awaitingApproval && !expanded && (
           <span className="text-muted-foreground/60 animate-pulse shrink-0 ml-auto">
-            running...
+            {t('运行中…')}
           </span>
         )}
 
@@ -210,7 +212,7 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
         >
           <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
             <Loader2 className="h-3 w-3 animate-spin" />
-            {block.toolName} · 生成中
+            {t('{tool} · 生成中', { tool: block.toolName })}
           </div>
           <div className="flex flex-col gap-1">
             {argsEntries.map(([key, value]) => (

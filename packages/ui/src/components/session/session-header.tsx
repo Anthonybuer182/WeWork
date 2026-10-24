@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronDown, Pencil, Plus, X } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -30,6 +31,7 @@ export function SessionHeader() {
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const activeSessionId = useUIStore((s) => s.activeSessionId);
   const setActiveSession = useUIStore((s) => s.setActiveSession);
+  const { t } = useI18n();
 
   const { data: sessions } = useQuery({
     queryKey: ['sessions', activeWorkspaceId],
@@ -110,7 +112,7 @@ export function SessionHeader() {
               if (e.key === 'Escape') cancelRename();
             }}
             maxLength={120}
-            aria-label="会话标题"
+            aria-label={t('会话标题')}
             className="h-7 w-64 rounded-md border border-input bg-background px-2 text-sm outline-none focus:ring-1 focus:ring-foreground/20"
           />
           <Button
@@ -119,7 +121,7 @@ export function SessionHeader() {
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
             onMouseDown={(e) => e.preventDefault()}
             onClick={commitRename}
-            aria-label="确认重命名"
+            aria-label={t('确认重命名')}
           >
             <Check className="h-3.5 w-3.5" />
           </Button>
@@ -129,7 +131,7 @@ export function SessionHeader() {
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
             onMouseDown={(e) => e.preventDefault()}
             onClick={cancelRename}
-            aria-label="取消重命名"
+            aria-label={t('取消重命名')}
           >
             <X className="h-3.5 w-3.5" />
           </Button>
@@ -143,7 +145,7 @@ export function SessionHeader() {
             )}
             title={activeSession?.title}
           >
-            {activeSession?.title ?? (sessionPending ? '新会话' : '未选择会话')}
+            {activeSession?.title ?? (sessionPending ? t('新会话') : t('未选择会话'))}
           </span>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -153,12 +155,12 @@ export function SessionHeader() {
                 className="h-7 w-7 text-muted-foreground/70 hover:text-foreground disabled:opacity-0"
                 disabled={!activeSession}
                 onClick={startRename}
-                aria-label="重命名会话"
+                aria-label={t('重命名会话')}
               >
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">重命名</TooltipContent>
+            <TooltipContent side="bottom">{t('重命名')}</TooltipContent>
           </Tooltip>
           <DropdownMenu>
             <Tooltip>
@@ -168,13 +170,13 @@ export function SessionHeader() {
                     variant="ghost"
                     size="icon-sm"
                     className="h-7 w-7 text-muted-foreground/70 hover:text-foreground"
-                    aria-label="会话列表"
+                    aria-label={t('会话列表')}
                   >
                     <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent side="bottom">会话列表</TooltipContent>
+              <TooltipContent side="bottom">{t('会话列表')}</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="center" className="w-72 max-h-80 overflow-y-auto">
               {(sessions ?? []).map((session) => (
@@ -197,7 +199,7 @@ export function SessionHeader() {
               ))}
               {(sessions ?? []).length === 0 && (
                 <div className="px-2 py-3 text-center text-xs text-muted-foreground">
-                  暂无会话
+                  {t('暂无会话')}
                 </div>
               )}
             </DropdownMenuContent>
@@ -210,12 +212,12 @@ export function SessionHeader() {
                 className="h-7 w-7 text-muted-foreground/70 hover:text-foreground"
                 disabled={!activeWorkspaceId || createMutation.isPending}
                 onClick={() => createMutation.mutate()}
-                aria-label="新建会话"
+                aria-label={t('新建会话')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">新建会话</TooltipContent>
+            <TooltipContent side="bottom">{t('新建会话')}</TooltipContent>
           </Tooltip>
         </div>
       )}

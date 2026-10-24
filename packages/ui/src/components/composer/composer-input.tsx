@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useLayoutEffect, useEffect, KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { useCommandStore } from '@/stores/command-store';
+import { useI18n } from '@/i18n';
 
 interface PendingTokenInsert {
   text: string;
@@ -116,7 +117,7 @@ export function ComposerInput({
   onSlashDismiss,
   onMentionDismiss,
   disabled,
-  placeholder = 'Type a message, / for commands, or @ to mention...',
+  placeholder,
   autoResize = true,
   maxRows = 8,
   showMenu = false,
@@ -129,6 +130,8 @@ export function ComposerInput({
   tokenInsertVersion,
   focusVersion,
 }: ComposerInputProps) {
+  const { t } = useI18n();
+  const resolvedPlaceholder = placeholder ?? t('输入消息，/ 唤起命令，@ 提及…');
   const editorRef = useRef<HTMLDivElement>(null);
   // Track IME composition state to prevent store updates during CJK input.
   const isComposing = useRef(false);
@@ -308,9 +311,9 @@ export function ComposerInput({
       contentEditable={!disabled}
       suppressContentEditableWarning
       role="textbox"
-      aria-label="Message input"
+      aria-label={t('消息输入框')}
       aria-multiline="true"
-      data-placeholder={placeholder}
+      data-placeholder={resolvedPlaceholder}
       onInput={handleInput}
       onPaste={handlePaste}
       onCompositionStart={() => {

@@ -1,6 +1,7 @@
 import { X, File, Image as ImageIcon, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useI18n } from '@/i18n';
 import type { Attachment } from '@pi/types';
 
 interface AttachmentPreviewBarProps {
@@ -10,6 +11,7 @@ interface AttachmentPreviewBarProps {
 }
 
 export function AttachmentPreviewBar({ attachments, onRemove, onPreview }: AttachmentPreviewBarProps) {
+  const { t } = useI18n();
   if (attachments.length === 0) return null;
 
   return (
@@ -45,7 +47,7 @@ export function AttachmentPreviewBar({ attachments, onRemove, onPreview }: Attac
                 <X className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="top">Remove attachment</TooltipContent>
+            <TooltipContent side="top">{t('移除附件')}</TooltipContent>
           </Tooltip>
         </div>
       ))}

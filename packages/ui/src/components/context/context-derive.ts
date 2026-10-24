@@ -3,7 +3,7 @@
  *
  * Kept out of the component file because none of it is React: these are the
  * shapes and documents the panel renders, and they are easier to reason about
- * (and to test) without a render tree around them.
+ * (and to test) without a render tree around it.
  */
 
 import {
@@ -12,11 +12,9 @@ import {
   formatCount,
   formatTokens,
   promptFileStatus,
-  promptStatusLabel,
-  PROMPT_KIND_LABEL,
-  scopeLabel,
 } from '@pi/sdk-wrapper';
-import type { AgentContextConfig } from '@pi/types';
+import type { AgentContextConfig, ContextFileScope, PromptFileInfo } from '@pi/types';
+import { t, type MessageKey } from '@/i18n';
 
 export interface SectionSpec {
   label: string;
@@ -30,25 +28,65 @@ export interface SectionSpec {
   budget: boolean;
 }
 
+/**
+ * `@pi/sdk-wrapper` labels these for the agent-facing audit report, so they
+ * arrive as Chinese strings; map them back to keys here rather than duplicating
+ * the rows. Unknown labels (a future section) fall through unchanged.
+ */
+const BUDGET_LABEL: Record<string, MessageKey> = {
+  基础系统提示词: '基础系统提示词',
+  追加段: '追加段',
+  上下文文件: '上下文文件',
+  技能索引: '技能索引',
+  工具定义: '工具定义',
+};
+
+const PROMPT_KIND_LABEL: Record<PromptFileInfo['kind'], MessageKey> = {
+  system: '替换系统提示词',
+  append: '追加到系统提示词',
+};
+
+const PROMPT_STATUS_LABEL = {
+  active: '生效中',
+  shadowed: '被遮住',
+  missing: '未创建',
+} as const satisfies Record<ReturnType<typeof promptFileStatus>, MessageKey>;
+
+export function promptKindLabel(kind: PromptFileInfo['kind']): string {
+  return t(PROMPT_KIND_LABEL[kind]);
+}
+
+export function promptStatusLabel(status: ReturnType<typeof promptFileStatus>): string {
+  return t(PROMPT_STATUS_LABEL[status]);
+}
+
+export function scopeLabel(scope: ContextFileScope | 'project'): string {
+  if (scope === 'global') return t('全局');
+  // Prompt files call the workspace scope "project"; context files call it
+  // "workspace". Both mean the same place to a person.
+  if (scope === 'workspace' || scope === 'project') return t('工作区');
+  return t('上级目录');
+}
+
 export function sectionSpecs(config: AgentContextConfig): Record<string, SectionSpec> {
   const { sections } = config;
   return {
-    prompt: { label: '全局提示词', chars: 0, budget: false },
-    base: { label: '基础系统提示词', chars: sections.base.chars ?? 0, budget: true },
+    prompt: { label: t('全局提示词'), chars: 0, budget: false },
+    base: { label: t('基础系统提示词'), chars: sections.base.chars ?? 0, budget: true },
     appended: {
-      label: '追加段',
+      label: t('追加段'),
       chars: sections.appended.reduce((n, s) => n + s.chars, 0),
       budget: true,
     },
     contextFiles: {
-      label: '上下文文件',
+      label: t('上下文文件'),
       chars: sections.contextFiles.reduce((n, f) => n + f.chars, 0),
       budget: true,
     },
-    skills: { label: '技能', chars: sections.skills.chars, budget: true },
+    skills: { label: t('技能'), chars: sections.skills.chars, budget: true },
     tools: {
-      label: '工具',
-      chars: sections.tools.reduce((n, t) => n + t.schemaBytes, 0),
+      label: t('工具'),
+      chars: sections.tools.reduce((n, tool) => n + tool.schemaBytes, 0),
       budget: true,
     },
   };
@@ -57,36 +95,44 @@ export function sectionSpecs(config: AgentContextConfig): Record<string, Section
 /** The export a user can paste elsewhere — a report, an issue, a colleague. */
 export function buildMarkdown(config: AgentContextConfig): string {
   const lines: string[] = [];
-  lines.push('# Agent 常驻上下文');
+  lines.push(t('# Agent 常驻上下文'));
   lines.push('');
-  lines.push(`- 工作区：\`${config.workspace.path}\``);
+  lines.push(t('- 工作区：`{path}`', { path: config.workspace.path }));
   lines.push(
-    `- 合计：${formatCount(config.totals.chars)} 字符，${formatTokens(config.totals.tokensEst)} tokens（估算）`,
+    t('- 合计：{chars} 字符，{tokens} tokens（估算）', {
+      chars: formatCount(config.totals.chars),
+      tokens: formatTokens(config.totals.tokensEst),
+    }),
   );
   if (config.totals.windowTokens) {
     lines.push(
-      `- 模型窗口：${formatCount(config.totals.windowTokens)}（约 ${Math.round((config.totals.share ?? 0) * 100)}%）`,
+      t('- 模型窗口：{tokens}（约 {pct}%）', {
+        tokens: formatCount(config.totals.windowTokens),
+        pct: Math.round((config.totals.share ?? 0) * 100),
+      }),
     );
   }
   lines.push('');
 
-  lines.push('## 分段开销');
+  lines.push(t('## 分段开销'));
   lines.push('');
-  lines.push('| 分段 | 字符数 | 占比 |');
+  lines.push(t('| 分段 | 字符数 | 占比 |'));
   lines.push('| --- | ---: | ---: |');
   const total = budgetTotal(config) || 1;
   for (const row of budgetRows(config)) {
-    lines.push(`| ${row.label} | ${formatCount(row.chars)} | ${Math.round((row.chars / total) * 100)}% |`);
+    const key = BUDGET_LABEL[row.label];
+    const label = key ? t(key) : row.label;
+    lines.push(`| ${label} | ${formatCount(row.chars)} | ${Math.round((row.chars / total) * 100)}% |`);
   }
   lines.push('');
 
-  lines.push('## 提示词文件');
+  lines.push(t('## 提示词文件'));
   lines.push('');
-  lines.push('| 文件 | 作用 | 状态 | 字符数 |');
+  lines.push(t('| 文件 | 作用 | 状态 | 字符数 |'));
   lines.push('| --- | --- | --- | ---: |');
   for (const file of config.promptFiles) {
     lines.push(
-      `| \`${file.path}\` | ${PROMPT_KIND_LABEL[file.kind]} | ${promptStatusLabel(promptFileStatus(file))} | ${
+      `| \`${file.path}\` | ${promptKindLabel(file.kind)} | ${promptStatusLabel(promptFileStatus(file))} | ${
         file.exists ? formatCount(file.chars) : '—'
       } |`,
     );
@@ -94,7 +140,7 @@ export function buildMarkdown(config: AgentContextConfig): string {
   lines.push('');
 
   if (config.sections.base.text !== null) {
-    lines.push('## 基础系统提示词');
+    lines.push(t('## 基础系统提示词'));
     lines.push('');
     lines.push('```text');
     lines.push(config.sections.base.text);
@@ -103,7 +149,7 @@ export function buildMarkdown(config: AgentContextConfig): string {
   }
 
   for (const segment of config.sections.appended) {
-    lines.push(`## 追加段 · ${segment.label}`);
+    lines.push(t('## 追加段 · {label}', { label: segment.label }));
     lines.push('');
     lines.push('```text');
     lines.push(segment.text);
@@ -112,7 +158,7 @@ export function buildMarkdown(config: AgentContextConfig): string {
   }
 
   for (const file of config.sections.contextFiles) {
-    lines.push(`## 上下文文件 · ${scopeLabel(file.scope)}`);
+    lines.push(t('## 上下文文件 · {scope}', { scope: scopeLabel(file.scope) }));
     lines.push('');
     lines.push(`\`${file.path}\``);
     lines.push('');
@@ -123,9 +169,9 @@ export function buildMarkdown(config: AgentContextConfig): string {
   }
 
   if (config.pluginDocs.length > 0) {
-    lines.push('## 插件索引开销');
+    lines.push(t('## 插件索引开销'));
     lines.push('');
-    lines.push('| 插件 | 字符数 |');
+    lines.push(t('| 插件 | 字符数 |'));
     lines.push('| --- | ---: |');
     for (const doc of [...config.pluginDocs].sort((a, b) => b.chars - a.chars)) {
       lines.push(`| ${doc.name} (\`${doc.pluginId}\`) | ${formatCount(doc.chars)} |`);
@@ -133,9 +179,9 @@ export function buildMarkdown(config: AgentContextConfig): string {
     lines.push('');
   }
 
-  lines.push('## 工具');
+  lines.push(t('## 工具'));
   lines.push('');
-  lines.push('| 工具 | 来源 | schema 字符数 |');
+  lines.push(t('| 工具 | 来源 | schema 字符数 |'));
   lines.push('| --- | --- | ---: |');
   for (const tool of config.sections.tools) {
     lines.push(`| \`${tool.name}\` | ${tool.source} | ${formatCount(tool.schemaBytes)} |`);

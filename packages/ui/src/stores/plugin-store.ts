@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { InstallPhase, MarketEntry, PluginEvent, PluginInfo, PluginPanelStatus } from '@pi/types';
+import { t } from '@/i18n';
 
 /** Minimal typed view of the preload bridge (no-op on the web build). */
 export interface PluginMarketBridge {
@@ -114,7 +115,7 @@ export const usePluginStore = create<PluginStoreState>()((set, get) => ({
   loadCatalog: async (force = false) => {
     const bridge = getPluginBridge();
     if (!bridge) {
-      set({ catalogError: '当前环境不支持插件市场' });
+      set({ catalogError: t('当前环境不支持插件市场') });
       return;
     }
     set({ catalogLoading: true, catalogError: undefined });
@@ -123,7 +124,7 @@ export const usePluginStore = create<PluginStoreState>()((set, get) => ({
       if (res.ok) {
         set({ catalog: res.plugins ?? [], registryUrl: res.registryUrl, catalogLoading: false });
       } else {
-        set({ catalogError: res.error ?? '加载失败', catalogLoading: false });
+        set({ catalogError: res.error ?? t('加载失败'), catalogLoading: false });
       }
     } catch (err) {
       set({ catalogError: err instanceof Error ? err.message : String(err), catalogLoading: false });

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { PanelRail, RailIcon } from './panel-rail';
 import { PanelBody, PaneView } from './panel-slot';
 import { usePanelStore, type PanelEntry, type PanelRegion } from '@/stores/panel-store';
+import { useI18n } from '@/i18n';
+import { panelTitle } from './panel-title';
 import { cn } from '@/lib/utils';
 
 export { PanelRail };
@@ -47,6 +49,7 @@ export function PanelHost({
   /** Host actions pinned to the bottom of this region's rail. */
   railFooter?: ReactNode;
 }) {
+  const { t } = useI18n();
   const panels = usePanelStore((s) => s.panels);
   const selectedIds = usePanelStore((s) => s.openPanelIds[region]);
   const panelOrder = usePanelStore((s) => s.panelOrder[region]);
@@ -238,7 +241,7 @@ export function PanelHost({
                   <div
                     role="separator"
                     aria-orientation="vertical"
-                    aria-label="拖动调整窗格宽度（双击复位均分）"
+                    aria-label={t('拖动调整窗格宽度（双击复位均分）')}
                     data-pane-sash={p.id}
                     onPointerDown={(e) => startSashDrag(e, tiledIds[i - 1], tiledIds[i])}
                     onDoubleClick={() => {
@@ -300,6 +303,7 @@ function Rail({
   onPromote: (id: string) => void;
   zoomedId: string | null;
 }) {
+  const { t } = useI18n();
   if (items.length === 0) return null;
   return (
     <div
@@ -310,7 +314,11 @@ function Rail({
         <button
           key={p.id}
           type="button"
-          title={`${p.title}${p.id === zoomedId ? '（正在放大显示）' : '（点击升格为窗格）'}`}
+          title={
+            p.id === zoomedId
+              ? t('{title}（正在放大显示）', { title: panelTitle(p, t) })
+              : t('{title}（点击升格为窗格）', { title: panelTitle(p, t) })
+          }
           data-pane-rail-item={p.id}
           onClick={() => onPromote(p.id)}
           className={cn(
@@ -319,7 +327,7 @@ function Rail({
           )}
         >
           <RailIcon panel={p} size={20} className="h-5 w-5" />
-          <span className="w-full truncate text-center text-[9px] leading-3">{p.title}</span>
+          <span className="w-full truncate text-center text-[9px] leading-3">{panelTitle(p, t)}</span>
         </button>
       ))}
     </div>

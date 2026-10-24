@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { useI18n } from '@/i18n';
 import { SessionItem } from './session-item';
 import { SessionCreateButton } from './session-create-button';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
@@ -16,6 +17,7 @@ export function SessionList() {
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const activeSessionId = useUIStore((s) => s.activeSessionId);
   const setActiveSession = useUIStore((s) => s.setActiveSession);
+  const { t } = useI18n();
   // Title filter — client-side over the already-loaded list, instant.
   const [filter, setFilter] = useState('');
 
@@ -42,13 +44,14 @@ export function SessionList() {
   if (!activeWorkspaceId) {
     return (
       <div className="flex flex-1 items-center justify-center p-4 text-sm text-muted-foreground">
-        Select a workspace to view sessions
+        {t('选择工作区后查看会话')}
       </div>
     );
   }
 
-  if (isLoading) return <LoadingSpinner message="Loading sessions..." />;
-  if (error) return <ErrorState description="Failed to load sessions" onRetry={() => refetch()} />;
+  if (isLoading) return <LoadingSpinner message={t('正在加载会话…')} />;
+  if (error)
+    return <ErrorState description={t('加载会话失败')} onRetry={() => refetch()} />;
 
   const items = sessions ?? [];
   const needle = filter.trim().toLowerCase();
@@ -62,8 +65,8 @@ export function SessionList() {
       <div className="flex items-center gap-2 px-3 py-1">
         <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <input
-          aria-label="搜索会话"
-          placeholder="搜索会话..."
+          aria-label={t('搜索会话')}
+          placeholder={t('搜索会话...')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           onKeyDown={(e) => e.key === 'Escape' && setFilter('')}
@@ -71,7 +74,7 @@ export function SessionList() {
         />
       </div>
       {needle && visible.length === 0 && (
-        <p className="px-3 py-2 text-xs text-muted-foreground">未找到匹配会话</p>
+        <p className="px-3 py-2 text-xs text-muted-foreground">{t('未找到匹配会话')}</p>
       )}
       <Virtuoso
         className="flex-1"

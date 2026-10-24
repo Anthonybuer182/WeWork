@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+
 /**
  * Text utilities for message content.
  *
@@ -41,7 +43,7 @@ export function extractAppendedQuotes(content: string): { display: string; quote
         if (!lines.length) continue;
         const header = lines[0] ?? '';
         const loc = /^(?:File|URL): (.+?)(?:\s*\||\s*$)/.exec(header);
-        const filePath = loc?.[1]?.trim() ?? '引用';
+        const filePath = loc?.[1]?.trim() ?? t('引用');
         const body = lines.slice(1).join('\n').replace(/^> ?/gm, '').trim();
         if (body) {
           quotes.push({

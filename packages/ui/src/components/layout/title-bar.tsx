@@ -3,6 +3,7 @@ import { Columns2, Minus, PanelLeft, PanelRight, Square, X, ArrowLeftRight } fro
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
 import { usePanelStore } from '@/stores/panel-store';
+import { useI18n } from '@/i18n';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 /**
@@ -99,6 +100,7 @@ export function LayoutToggles() {
   const toggleChatSide = useUIStore((s) => s.toggleChatSide);
   const panels = usePanelStore((s) => s.panels);
   const runtime = usePanelStore((s) => s.runtime);
+  const { t } = useI18n();
 
   // Only offer the toggle when its region has something to show. Web registers
   // no right-region panels, so a right toggle there would open an empty column.
@@ -130,14 +132,14 @@ export function LayoutToggles() {
   return (
     <>
       <TitleBarButton
-        label={sidebarOpen ? '隐藏左侧栏' : '显示左侧栏'}
+        label={t(sidebarOpen ? '隐藏左侧栏' : '显示左侧栏')}
         active={sidebarOpen}
         onClick={toggleSidebar}
       >
         <PanelLeft className="h-4 w-4" />
       </TitleBarButton>
       <TitleBarButton
-        label={centerPanelOpen ? '隐藏中间栏' : '显示中间栏'}
+        label={t(centerPanelOpen ? '隐藏中间栏' : '显示中间栏')}
         active={centerPanelOpen}
         onClick={toggleCenterPanel}
       >
@@ -145,7 +147,7 @@ export function LayoutToggles() {
       </TitleBarButton>
       {hasRightPanels && (
         <TitleBarButton
-          label={rightPanelOpen ? '隐藏右侧栏' : '显示右侧栏'}
+          label={t(rightPanelOpen ? '隐藏右侧栏' : '显示右侧栏')}
           active={rightPanelOpen}
           dot={rightActivity}
           onClick={toggleRightPanel}
@@ -155,7 +157,7 @@ export function LayoutToggles() {
       )}
       {hasRightPanels && canSwapSides && (
         <TitleBarButton
-          label={chatRightOfPanels ? '对话放回左侧' : '对话换到右侧'}
+          label={t(chatRightOfPanels ? '对话放回左侧' : '对话换到右侧')}
           active={chatRightOfPanels}
           onClick={toggleChatSide}
         >
@@ -169,6 +171,7 @@ export function LayoutToggles() {
 /** Self-drawn caption buttons for frameless platforms (Linux). Rendered by
  *  the layout's header-trailing zone. */
 export function WindowControls() {
+  const { t } = useI18n();
   const invoke = (channel: string) => {
     const api = (window as unknown as {
       electronAPI?: { invoke?: (c: string, ...a: unknown[]) => Promise<unknown> };
@@ -180,7 +183,7 @@ export function WindowControls() {
     <div className="flex h-full items-stretch" style={NO_DRAG}>
       <button
         type="button"
-        aria-label="最小化"
+        aria-label={t('最小化')}
         className="flex w-11 items-center justify-center text-muted-foreground hover:bg-accent"
         onClick={() => invoke('pi:window:minimize')}
       >
@@ -188,7 +191,7 @@ export function WindowControls() {
       </button>
       <button
         type="button"
-        aria-label="最大化"
+        aria-label={t('最大化')}
         className="flex w-11 items-center justify-center text-muted-foreground hover:bg-accent"
         onClick={() => invoke('pi:window:maximize')}
       >
@@ -196,7 +199,7 @@ export function WindowControls() {
       </button>
       <button
         type="button"
-        aria-label="关闭"
+        aria-label={t('关闭')}
         className="flex w-11 items-center justify-center text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
         onClick={() => invoke('pi:window:close')}
       >

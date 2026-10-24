@@ -1,6 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { SlashCommand } from '@pi/types';
+import { useI18n } from '@/i18n';
+import { commandDescription, COMMAND_CATEGORY_LABELS } from '@/stores/command-store';
 
 interface SlashCommandMenuProps {
   commands: SlashCommand[];
@@ -10,6 +12,7 @@ interface SlashCommandMenuProps {
 }
 
 export function SlashCommandMenu({ commands, query, highlightedIndex, onSelect }: SlashCommandMenuProps) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Automatically scroll the highlighted item into view
@@ -49,7 +52,7 @@ export function SlashCommandMenu({ commands, query, highlightedIndex, onSelect }
         {Object.entries(grouped).map(([category, cmds]) => (
           <div key={category}>
             <div className="px-2 py-1.5 text-[10px] font-semibold uppercase text-muted-foreground">
-              {category}
+              {COMMAND_CATEGORY_LABELS[category] ? t(COMMAND_CATEGORY_LABELS[category]) : category}
             </div>
             {cmds.map((cmd) => {
               const idx = flatItems.find((f) => f.cmd.id === cmd.id)!.index;
@@ -65,7 +68,7 @@ export function SlashCommandMenu({ commands, query, highlightedIndex, onSelect }
                 >
                   <span className="font-medium">{cmd.name}</span>
                   <span className="ml-auto text-xs text-muted-foreground truncate max-w-[160px]">
-                    {cmd.description}
+                    {commandDescription(cmd, t)}
                   </span>
                 </div>
               );

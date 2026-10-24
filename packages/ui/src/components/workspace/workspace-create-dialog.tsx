@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { switchWorkspace } from '@/lib/switch-workspace';
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import type { Workspace } from '@pi/types';
 
@@ -11,6 +12,7 @@ function folderBasename(filePath: string): string {
 }
 
 export function WorkspaceCreateButton() {
+  const { t } = useI18n();
   const sdk = useSDK();
   const queryClient = useQueryClient();
   const setActiveWorkspace = useUIStore((s) => s.setActiveWorkspace);
@@ -41,7 +43,7 @@ export function WorkspaceCreateButton() {
     <Button
       variant="ghost"
       size="icon-sm"
-      aria-label="Create workspace"
+      aria-label={t('创建工作区')}
       disabled={createMutation.isPending}
       onClick={() => createMutation.mutate()}
     >

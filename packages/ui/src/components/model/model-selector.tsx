@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useI18n } from '@/i18n';
 
 interface ModelSelectorProps {
   value?: string;
@@ -16,6 +17,7 @@ interface ModelSelectorProps {
 }
 
 export function ModelSelector({ value, onChange }: ModelSelectorProps) {
+  const { t } = useI18n();
   const sdk = useSDK();
 
   const { data: models, isLoading } = useQuery({
@@ -27,9 +29,9 @@ export function ModelSelector({ value, onChange }: ModelSelectorProps) {
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-8 min-w-[120px] w-[140px] sm:w-[180px] max-w-[220px] shrink min-w-0 border-0 bg-transparent hover:bg-accent text-xs" aria-label="Select model">
+      <SelectTrigger className="h-8 min-w-[120px] w-[140px] sm:w-[180px] max-w-[220px] shrink min-w-0 border-0 bg-transparent hover:bg-accent text-xs" aria-label={t('选择模型')}>
         <Cpu className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-        <SelectValue placeholder="Select model" />
+        <SelectValue placeholder={t('选择模型')} />
       </SelectTrigger>
       <SelectContent>
         {models?.map((model) => (
@@ -37,7 +39,7 @@ export function ModelSelector({ value, onChange }: ModelSelectorProps) {
             <div className="flex items-center gap-2">
               <span>{model.name}</span>
               {!model.isAvailable && (
-                <span className="text-[10px] text-muted-foreground">unavailable</span>
+                <span className="text-[10px] text-muted-foreground">{t('不可用')}</span>
               )}
             </div>
           </SelectItem>

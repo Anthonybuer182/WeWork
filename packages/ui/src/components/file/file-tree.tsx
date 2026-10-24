@@ -4,6 +4,7 @@ import { AlertTriangle, FileText, Folder, Loader2, RefreshCw, Search } from 'luc
 import type { FileSearchResult } from '@pi/sdk-wrapper';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { useI18n } from '@/i18n';
 import { FileTreeNode } from './file-tree-node';
 import { Button } from '@/components/ui/button';
 import { isPreviewableInRightPanel, openWithSystemApp } from '@/lib/utils';
@@ -16,6 +17,7 @@ export function FileTree() {
   const queryClient = useQueryClient();
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
+  const { t } = useI18n();
 
   // Filename search over the whole workspace; while a query is active it
   // replaces the tree with a flat result list.
@@ -78,14 +80,14 @@ export function FileTree() {
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground">
         <Folder className="h-3.5 w-3.5" />
-        <span className="flex-1">Files</span>
+        <span className="flex-1">{t('文件')}</span>
         <Button
           variant="ghost"
           size="icon"
           className="h-5 w-5"
           onClick={() => queryClient.invalidateQueries({ queryKey: ['files', activeWorkspaceId] })}
           disabled={isFetching}
-          aria-label="Refresh files"
+          aria-label={t('刷新文件')}
         >
           <RefreshCw className={isFetching ? 'animate-spin' : ''} style={{ width: 12, height: 12 }} />
         </Button>
@@ -94,8 +96,8 @@ export function FileTree() {
       <div className="flex items-center gap-2 px-3 py-1">
         <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <input
-          aria-label="搜索文件"
-          placeholder="搜索文件..."
+          aria-label={t('搜索文件')}
+          placeholder={t('搜索文件...')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
@@ -109,19 +111,19 @@ export function FileTree() {
           {isLoading && (
             <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Loading files...
+              {t('正在加载文件…')}
             </div>
           )}
 
           {error && (
             <div className="px-3 py-2 text-xs text-muted-foreground">
-              Failed to load files
+              {t('加载文件失败')}
             </div>
           )}
 
           {!isLoading && !error && files && files.length === 0 && (
             <div className="px-3 py-2 text-xs text-muted-foreground">
-              No files found
+              {t('没有找到文件')}
             </div>
           )}
         </>
@@ -132,11 +134,11 @@ export function FileTree() {
           {searchError && (
             <div className="flex items-center gap-2 px-3 py-2 text-xs text-destructive/80">
               <AlertTriangle className="h-3 w-3 shrink-0" />
-              搜索失败
+              {t('搜索失败')}
             </div>
           )}
           {!searching && !searchError && (!searchResult || searchResult.entries.length === 0) && (
-            <p className="px-3 py-2 text-xs text-muted-foreground">未找到匹配</p>
+            <p className="px-3 py-2 text-xs text-muted-foreground">{t('未找到匹配')}</p>
           )}
           {searchResult?.entries.map((entry) => (
             <button
@@ -156,12 +158,12 @@ export function FileTree() {
               "capped" and "partly unreadable" are not the same as "no matches". */}
           {!searching && searchResult?.truncated && (
             <p className="px-3 py-2 text-[11px] text-muted-foreground">
-              结果已截断（已扫描 {searchResult.scanned} 个目录）
+              {t('结果已截断（已扫描 {count} 个目录）', { count: searchResult.scanned })}
             </p>
           )}
           {!searching && !!searchResult?.errors?.length && (
             <p className="px-3 py-2 text-[11px] text-amber-600 dark:text-amber-500">
-              {searchResult.errors.length} 个目录无法读取
+              {t('{count} 个目录无法读取', { count: searchResult.errors.length })}
             </p>
           )}
         </div>

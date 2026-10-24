@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Session } from '@pi/types';
+import { useI18n } from '@/i18n';
 
 interface SessionItemProps {
   session: Session;
@@ -17,6 +18,7 @@ interface SessionItemProps {
 }
 
 export function SessionItem({ session, isActive, onClick, onDelete }: SessionItemProps) {
+  const { t } = useI18n();
   return (
     <div
       role="button"
@@ -24,7 +26,7 @@ export function SessionItem({ session, isActive, onClick, onDelete }: SessionIte
       onClick={onClick}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
       aria-current={isActive ? 'page' : undefined}
-      aria-label={`Switch to session: ${session.title}`}
+      aria-label={t('切换到会话：{title}', { title: session.title })}
       className={cn(
         'group flex items-center gap-2 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors',
         isActive
@@ -44,7 +46,7 @@ export function SessionItem({ session, isActive, onClick, onDelete }: SessionIte
             size="icon-sm"
             className="h-6 w-6 opacity-0 group-hover:opacity-100"
             onClick={(e) => e.stopPropagation()}
-            aria-label="More options"
+            aria-label={t('更多选项')}
           >
             <MoreHorizontal className="h-3 w-3" />
           </Button>
@@ -55,7 +57,7 @@ export function SessionItem({ session, isActive, onClick, onDelete }: SessionIte
             onClick={() => onDelete?.()}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t('删除')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

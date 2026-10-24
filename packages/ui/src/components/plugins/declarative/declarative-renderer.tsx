@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { UiNode } from '@pi/types';
+import { t } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -68,7 +69,7 @@ function NodeView({ node, onEvent }: { node: UiNode; onEvent: RendererProps['onE
           data-ui-event={events?.onClick}
           onClick={() => events?.onClick && onEvent('click', { eventId: events.onClick, node }, props)}
         >
-          {String(props.label ?? '按钮')}
+          {String(props.label ?? t('按钮'))}
         </Button>
       );
 
@@ -167,7 +168,7 @@ function NodeView({ node, onEvent }: { node: UiNode; onEvent: RendererProps['onE
     case 'EmptyState':
       return (
         <div className="flex flex-col items-center justify-center gap-1 py-8 text-center">
-          <span className="text-sm font-medium">{String(props.title ?? '暂无内容')}</span>
+          <span className="text-sm font-medium">{String(props.title ?? t('暂无内容'))}</span>
           {props.description ? <span className="text-xs text-muted-foreground">{String(props.description)}</span> : null}
         </div>
       );

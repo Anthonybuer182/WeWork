@@ -15,6 +15,7 @@ import { ErrorState } from '@/components/common/error-state';
 import type { Message, ContentBlock, TokenUsage, ToolCallBlock } from '@pi/types';
 import type { AssistantMessage } from '@pi/types';
 import { usePermissionStore } from '@/stores/permission-store';
+import { useI18n, type MessageKey } from '@/i18n';
 import { PermissionRequestCard } from './permission-request-card';
 
 /** Shared empty map so non-active messages keep a stable prop identity. */
@@ -41,16 +42,20 @@ function isDateSeparator(item: ChatItem): item is DateSeparator {
 // ----------------------------------------------------------------
 
 /** Format a date into Today / Yesterday / locale string */
-function formatDateLabel(dateStr: string): string {
+function formatDateLabel(
+  dateStr: string,
+  t: (key: MessageKey) => string,
+  language: 'zh' | 'en',
+): string {
   const d = new Date(dateStr);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
 
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  return d.toLocaleDateString(undefined, {
+  if (diffDays === 0) return t('今天');
+  if (diffDays === 1) return t('昨天');
+  return d.toLocaleDateString(language === 'en' ? 'en' : 'zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -60,7 +65,11 @@ function formatDateLabel(dateStr: string): string {
 /**
  * Insert date separators between messages that fall on different days.
  */
-function addDateSeparators(messages: Message[]): ChatItem[] {
+function addDateSeparators(
+  messages: Message[],
+  t: (key: MessageKey) => string,
+  language: 'zh' | 'en',
+): ChatItem[] {
   const result: ChatItem[] = [];
   let lastDate = '';
 
@@ -71,7 +80,7 @@ function addDateSeparators(messages: Message[]): ChatItem[] {
       result.push({
         type: 'date_separator',
         id: `date_${msgDate}`,
-        label: formatDateLabel(msg.createdAt),
+        label: formatDateLabel(msg.createdAt, t, language),
       });
     }
     result.push(msg);
@@ -166,6 +175,7 @@ function StreamErrorBanner({ error, onRetry }: { error: string; onRetry: () => v
 }
 
 export function ChatTimeline() {
+  const { t, language } = useI18n();
   const sdk = useSDK();
   const queryClient = useQueryClient();
   const activeSessionId = useUIStore((s) => s.activeSessionId);
@@ -255,7 +265,10 @@ export function ChatTimeline() {
     prevIsStreamingRef.current = isStreaming;
   }, [isStreaming, messages.length]);
 
-  const chatItems = useMemo(() => addDateSeparators(messages), [messages]);
+  const chatItems = useMemo(
+    () => addDateSeparators(messages, t, language),
+    [messages, t, language],
+  );
 
   // Scroll to bottom when a slash command inserts a message via setQueryData
   // or when the composer triggers a manual scroll (e.g. after optimistic update).
@@ -374,9 +387,9 @@ export function ChatTimeline() {
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
           <MessageSquare className="h-8 w-8 text-muted-foreground/60" strokeWidth={1.5} />
           <div className="text-center">
-            <h3 className="text-lg font-medium">Start a conversation</h3>
+            <h3 className="text-lg font-medium">{t('开始一段对话')}</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Send a message below to begin coding with the AI assistant.
+              {t('在下方输入消息，开始与 AI 助手协作。')}
             </p>
           </div>
         </div>
@@ -449,7 +462,7 @@ export function ChatTimeline() {
         <button
           onClick={scrollToBottom}
           className="absolute bottom-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-muted transition-colors"
-          aria-label="Scroll to bottom"
+          aria-label={t('滚动到底部')}
         >
           <ArrowDown className="h-4 w-4" />
         </button>

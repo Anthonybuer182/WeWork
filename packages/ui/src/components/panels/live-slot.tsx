@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MonitorX } from 'lucide-react';
 import { useUIStore } from '@/stores/ui-store';
+import { t as translate } from '@/i18n';
 
 /**
  * Live slot: a native WebContentsView mount point. The component
@@ -74,7 +75,7 @@ export function LiveSlot({
     }).electronAPI;
     if (!api) {
       // Browser build: there is no host to create a native view.
-      setError('原生视图仅在桌面端可用');
+      setError(translate('原生视图仅在桌面端可用'));
       return;
     }
 
@@ -122,7 +123,7 @@ export function LiveSlot({
         // blank box. Surface it instead.
         const r = res as { ok?: boolean; error?: string } | undefined;
         if (r && r.ok === false) {
-          setError(r.error ?? '该面板没有可用的原生视图');
+          setError(r.error ?? translate('该面板没有可用的原生视图'));
           return;
         }
         setError(null);
@@ -168,7 +169,7 @@ export function LiveSlot({
         data-live-slot={`${pluginId}:${panelId}`}
       >
         <MonitorX className="h-6 w-6 text-muted-foreground/60" />
-        <p className="text-sm text-muted-foreground">此面板需要原生视图支持</p>
+        <p className="text-sm text-muted-foreground">{translate('此面板需要原生视图支持')}</p>
         <p className="text-[11px] text-muted-foreground/70 break-all max-w-full">{error}</p>
       </div>
     );

@@ -3,6 +3,7 @@ import { Loader2, RefreshCw, Trash2, CircleAlert, CircleCheck, Settings2, Chevro
 import type { MarketEntry, PluginInfo, PluginSettingInfo } from '@pi/types';
 import { describePermission, MIN_SUPPORTED_API_VERSION, PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { usePluginStore } from '@/stores/plugin-store';
+import { useI18n, type MessageKey } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -12,8 +13,8 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
-const SOURCE_LABEL: Record<string, string> = { dev: '开发', user: '已安装' };
-const STATE_LABEL: Record<string, string> = {
+const SOURCE_LABEL: Record<string, MessageKey> = { dev: '开发', user: '已安装' };
+const STATE_LABEL: Record<string, MessageKey> = {
   active: '运行中', activating: '启动中', registered: '已注册', disabled: '已禁用',
   incompatible: '不兼容', error: '错误', crashed: '已崩溃',
 };
@@ -30,6 +31,7 @@ function matchesQuery(text: string | undefined, q: string): boolean {
 
 /** ── Auto-generated settings form (contributes.settings) ── */
 function PluginSettingsSection({ pluginId, settings }: { pluginId: string; settings: PluginSettingInfo[] }) {
+  const { t } = useI18n();
   const loadPluginSettings = usePluginStore((s) => s.loadPluginSettings);
   const setPluginSetting = usePluginStore((s) => s.setPluginSetting);
   const [values, setValues] = useState<Record<string, unknown> | null>(null);
@@ -53,12 +55,12 @@ function PluginSettingsSection({ pluginId, settings }: { pluginId: string; setti
         onClick={() => setOpen((o) => !o)}
       >
         <Settings2 className="h-3 w-3" />
-        插件设置({settings.length})
+        {t('插件设置({count})', { count: settings.length })}
         <ChevronDown className={cn('ml-auto h-3 w-3 transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
         <div className="mt-2 flex flex-col gap-2.5">
-          {!values && <div className="text-xs text-muted-foreground">加载中…</div>}
+          {!values && <div className="text-xs text-muted-foreground">{t('加载中…')}</div>}
           {values && settings.map((setting) => (
             <div key={setting.key} className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -135,6 +137,7 @@ function PluginBrandIcon({ iconUrl, name }: { iconUrl?: string; name: string }) 
 
 /** ── Installed plugin row ── */
 function InstalledItem({ plugin }: { plugin: PluginInfo }) {
+  const { t, language } = useI18n();
   const setPluginEnabled = usePluginStore((s) => s.setPluginEnabled);
   const uninstallPlugin = usePluginStore((s) => s.uninstallPlugin);
   const installPlugin = usePluginStore((s) => s.installPlugin);
@@ -161,13 +164,17 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
   // their version tracks the checkout, not the market.
   const updatable = manageable && marketEntry != null && marketEntry.version !== plugin.version;
 
+  const sourceLabel = (source: string) =>
+    SOURCE_LABEL[source] ? t(SOURCE_LABEL[source]) : source;
+  const stateLabel = (state: string) => (STATE_LABEL[state] ? t(STATE_LABEL[state]) : state);
+
   const stateBadge = () => {
-    if (plugin.state === 'disabled') return <Badge variant="secondary">已禁用</Badge>;
+    if (plugin.state === 'disabled') return <Badge variant="secondary">{t('已禁用')}</Badge>;
     if (plugin.state === 'incompatible' || plugin.state === 'error')
-      return <Badge variant="destructive">{STATE_LABEL[plugin.state] ?? plugin.state}</Badge>;
+      return <Badge variant="destructive">{stateLabel(plugin.state)}</Badge>;
     if (plugin.state === 'active')
-      return <Badge variant="outline" className="gap-1 text-emerald-600"><CircleCheck className="h-3 w-3" />运行中</Badge>;
-    return <Badge variant="outline">{STATE_LABEL[plugin.state] ?? plugin.state}</Badge>;
+      return <Badge variant="outline" className="gap-1 text-emerald-600"><CircleCheck className="h-3 w-3" />{t('运行中')}</Badge>;
+    return <Badge variant="outline">{stateLabel(plugin.state)}</Badge>;
   };
 
   return (
@@ -177,10 +184,15 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">{plugin.name}</span>
           <span className="text-xs text-muted-foreground">v{plugin.version}</span>
-          <Badge variant="secondary">{SOURCE_LABEL[plugin.source] ?? plugin.source}</Badge>
+          <Badge variant="secondary">{sourceLabel(plugin.source)}</Badge>
           {stateBadge()}
           {updatable && marketEntry ? (
-            <Badge variant="secondary">可更新({plugin.version} → {marketEntry.version})</Badge>
+            <Badge variant="secondary">
+              {t('可更新({from} → {to})', {
+                from: plugin.version,
+                to: marketEntry.version,
+              })}
+            </Badge>
           ) : null}
         </div>
         {plugin.description ? <div className="mt-1 text-xs text-muted-foreground">{plugin.description}</div> : null}
@@ -195,15 +207,24 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
           >
             <Info className="mt-0.5 h-3 w-3 shrink-0" />
             <span>
-              {plugin.shadowed.map((s) => `${SOURCE_LABEL[s.source] ?? s.source}副本 v${s.version}`).join('、')}
-              {' 未加载（被当前副本遮蔽）'}
+              {plugin.shadowed
+                .map((s) =>
+                  t('{source}副本 v{version}', {
+                    source: sourceLabel(s.source),
+                    version: s.version,
+                  }),
+                )
+                .join(language === 'en' ? ', ' : '、')}
+              {' '}
+              {t('未加载（被当前副本遮蔽）')}
             </span>
           </div>
         ) : null}
         {plugin.source === 'dev' ? (
           <div className="mt-1 text-[11px] leading-4 text-muted-foreground">
-            当前加载的是仓库开发副本，插件中心不能替换或卸载它。测试客户的安装/更新路径请用
-            <span className="font-mono"> pnpm dev:desktop</span>。
+            {t('当前加载的是仓库开发副本，插件中心不能替换或卸载它。测试客户的安装/更新路径请用')}
+            <span className="font-mono"> pnpm dev:desktop</span>
+            {language === 'en' ? '.' : '。'}
           </div>
         ) : null}
         {plugin.error ? (
@@ -252,7 +273,7 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
                   void installPlugin(plugin.id).finally(() => setBusy(false));
                 }}
               >
-                <RefreshCw className="mr-1 h-3 w-3" />重装
+                <RefreshCw className="mr-1 h-3 w-3" />{t('重装')}
               </Button>
             ) : null}
             {plugin.previousVersion ? (
@@ -266,7 +287,8 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
                   void rollbackPlugin(plugin.id).finally(() => setBusy(false));
                 }}
               >
-                <Undo2 className="mr-1 h-3 w-3" />回到 v{plugin.previousVersion}
+                <Undo2 className="mr-1 h-3 w-3" />
+                {t('回到 v{version}', { version: plugin.previousVersion })}
               </Button>
             ) : null}
           </div>
@@ -281,9 +303,9 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
             setBusy(true);
             setPluginEnabled(plugin.id, checked).finally(() => setBusy(false));
           }}
-          aria-label={`启用/禁用 ${plugin.name}`}
+          aria-label={t('启用/禁用 {name}', { name: plugin.name })}
         />
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmOpen(true)} aria-label={`卸载 ${plugin.name}`}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmOpen(true)} aria-label={t('卸载 {name}', { name: plugin.name })}>
           <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </div>
@@ -299,17 +321,17 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
           {manageable ? (
             <>
               <DialogHeader>
-                <DialogTitle>卸载「{plugin.name}」?</DialogTitle>
+                <DialogTitle>{t('卸载「{name}」?', { name: plugin.name })}</DialogTitle>
                 <DialogDescription>
-                  将删除插件代码目录。插件数据默认保留,重装后可恢复。
+                  {t('将删除插件代码目录。插件数据默认保留,重装后可恢复。')}
                 </DialogDescription>
               </DialogHeader>
               <label className="flex items-center gap-2 text-sm">
-                <Switch checked={keepData} onCheckedChange={setKeepData} aria-label="保留插件数据" />
-                保留插件数据(plugins-data/{plugin.id})
+                <Switch checked={keepData} onCheckedChange={setKeepData} aria-label={t('保留插件数据')} />
+                {t('保留插件数据(plugins-data/{id})', { id: plugin.id })}
               </label>
               <DialogFooter>
-                <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>取消</Button>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>{t('取消')}</Button>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -320,22 +342,20 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
                     setBusy(false);
                   }}
                 >
-                  卸载
+                  {t('卸载')}
                 </Button>
               </DialogFooter>
             </>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>「{plugin.name}」是开发副本</DialogTitle>
+                <DialogTitle>{t('「{name}」是开发副本', { name: plugin.name })}</DialogTitle>
                 <DialogDescription>
-                  它直接运行自仓库源码目录,不是安装副本,因此没有"卸载"可言。
-                  要移除:从仓库 plugins/ 删除对应目录,或把它从 dev 根里拿走;
-                  只想停用的话,用左侧的开关就够了。
+                  {t('它直接运行自仓库源码目录,不是安装副本,因此没有"卸载"可言。要移除:从仓库 plugins/ 删除对应目录,或把它从 dev 根里拿走;只想停用的话,用左侧的开关就够了。')}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="secondary" size="sm" onClick={() => setConfirmOpen(false)}>知道了</Button>
+                <Button variant="secondary" size="sm" onClick={() => setConfirmOpen(false)}>{t('知道了')}</Button>
               </DialogFooter>
             </>
           )}
@@ -354,6 +374,7 @@ function InstalledItem({ plugin }: { plugin: PluginInfo }) {
  * section above.
  */
 function CatalogItem({ entry }: { entry: MarketEntry }) {
+  const { t } = useI18n();
   const installPhases = usePluginStore((s) => s.installPhases);
   const marketErrors = usePluginStore((s) => s.marketErrors);
   const installPlugin = usePluginStore((s) => s.installPlugin);
@@ -372,8 +393,16 @@ function CatalogItem({ entry }: { entry: MarketEntry }) {
     entry.apiVersion === undefined
       ? null
       : entry.apiVersion < MIN_SUPPORTED_API_VERSION
-        ? `插件协议过旧(${entry.apiVersion},本机支持 ${MIN_SUPPORTED_API_VERSION}–${PLUGIN_PROTOCOL_VERSION}),请找作者更新`
-        : `插件比客户端新(${entry.apiVersion},本机支持 ${MIN_SUPPORTED_API_VERSION}–${PLUGIN_PROTOCOL_VERSION}),请升级客户端`;
+        ? t('插件协议过旧({version},本机支持 {min}–{max}),请找作者更新', {
+            version: entry.apiVersion,
+            min: MIN_SUPPORTED_API_VERSION,
+            max: PLUGIN_PROTOCOL_VERSION,
+          })
+        : t('插件比客户端新({version},本机支持 {min}–{max}),请升级客户端', {
+            version: entry.apiVersion,
+            min: MIN_SUPPORTED_API_VERSION,
+            max: PLUGIN_PROTOCOL_VERSION,
+          });
 
   return (
     <div data-catalog-plugin={entry.id} className="flex items-start gap-3 rounded-lg border p-3">
@@ -414,13 +443,20 @@ function InstallButton({
   updatable: boolean;
   onInstall: () => void;
 }) {
+  const { t } = useI18n();
   const [consentOpen, setConsentOpen] = useState(false);
 
   if (phase) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        {phase === 'downloading' ? '下载中' : phase === 'verifying' ? '校验中' : phase === 'installing' ? '安装中' : '启动中'}
+        {phase === 'downloading'
+          ? t('下载中')
+          : phase === 'verifying'
+            ? t('校验中')
+            : phase === 'installing'
+              ? t('安装中')
+              : t('启动中')}
       </div>
     );
   }
@@ -433,16 +469,16 @@ function InstallButton({
         onClick={() => setConsentOpen(true)}
         data-install-trigger={entry.id}
       >
-        {installed ? (updatable ? '更新' : '重装') : '安装'}
+        {installed ? (updatable ? t('更新') : t('重装')) : t('安装')}
       </Button>
 
       {/* Permission consent dialog */}
       <Dialog open={consentOpen} onOpenChange={setConsentOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>安装「{entry.name}」</DialogTitle>
+            <DialogTitle>{t('安装「{name}」', { name: entry.name })}</DialogTitle>
             <DialogDescription>
-              该插件声明以下权限,安装后即可使用:
+              {t('该插件声明以下权限,安装后即可使用:')}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2 py-1">
@@ -457,10 +493,10 @@ function InstallButton({
                 </div>
               );
             })}
-            {!entry.permissions?.length && <div className="text-xs text-muted-foreground">该插件未声明任何权限。</div>}
+            {!entry.permissions?.length && <div className="text-xs text-muted-foreground">{t('该插件未声明任何权限。')}</div>}
           </div>
           <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setConsentOpen(false)}>取消</Button>
+            <Button variant="ghost" size="sm" onClick={() => setConsentOpen(false)}>{t('取消')}</Button>
             <Button
               size="sm"
               onClick={() => {
@@ -468,7 +504,7 @@ function InstallButton({
                 onInstall();
               }}
             >
-              确认安装
+              {t('确认安装')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -488,6 +524,7 @@ function InstallButton({
  * market instead of an empty list behind a search box.
  */
 export function PluginCenter() {
+  const { t } = useI18n();
   const installed = usePluginStore((s) => s.installed);
   const catalog = usePluginStore((s) => s.catalog);
   const catalogLoading = usePluginStore((s) => s.catalogLoading);
@@ -512,7 +549,7 @@ export function PluginCenter() {
   const visibleInstalled = useMemo(
     () =>
       searching
-        ? sortedInstalled.filter((p) => [p.name, p.id, p.description].some((t) => matchesQuery(t, q)))
+        ? sortedInstalled.filter((p) => [p.name, p.id, p.description].some((text) => matchesQuery(text, q)))
         : sortedInstalled,
     [searching, sortedInstalled, q],
   );
@@ -524,15 +561,15 @@ export function PluginCenter() {
     return catalog.filter(
       (e) =>
         !installedIds.has(e.id) &&
-        (!searching || [e.name, e.id, e.description].some((t) => matchesQuery(t, q))),
+        (!searching || [e.name, e.id, e.description].some((text) => matchesQuery(text, q))),
     );
   }, [catalog, installed, searching, q]);
 
   return (
     <div className="h-full overflow-auto p-3" data-panel-kind="plugin-center">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">插件中心</h3>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => loadCatalog(true)} aria-label="刷新市场">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('插件中心')}</h3>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => loadCatalog(true)} aria-label={t('刷新市场')}>
           <RefreshCw className={cn('h-3.5 w-3.5', catalogLoading && 'animate-spin')} />
         </Button>
       </div>
@@ -541,7 +578,7 @@ export function PluginCenter() {
           exactly how "更新" silently does nothing useful. */}
       {registryUrl ? (
         <div className="-mt-1 mb-2 truncate text-[10px] text-muted-foreground" title={registryUrl} data-market-registry>
-          市场: {registryUrl}
+          {t('市场: {url}', { url: registryUrl })}
         </div>
       ) : null}
 
@@ -550,9 +587,9 @@ export function PluginCenter() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="搜索插件…"
+          placeholder={t('搜索插件…')}
           className="h-8 pl-7 text-xs"
-          aria-label="搜索插件"
+          aria-label={t('搜索插件')}
           data-market-search
         />
       </div>
@@ -560,7 +597,7 @@ export function PluginCenter() {
       {visibleInstalled.length > 0 && (
         <section className="mb-3">
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            已安装({visibleInstalled.length})
+            {t('已安装({count})', { count: visibleInstalled.length })}
           </h3>
           <div className="flex flex-col gap-2">
             {visibleInstalled.map((plugin) => (
@@ -574,15 +611,17 @@ export function PluginCenter() {
           error must not take the installed list down with it. */}
       <section>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {searching ? `市场结果(${visibleMarket.length})` : `市场可用(${visibleMarket.length})`}
+          {searching
+            ? t('市场结果({count})', { count: visibleMarket.length })
+            : t('市场可用({count})', { count: visibleMarket.length })}
         </h3>
         {catalogError ? (
           <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-            市场加载失败:{catalogError}
+            {t('市场加载失败:{error}', { error: catalogError })}
           </div>
         ) : catalogLoading ? (
           <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-            市场加载中…
+            {t('市场加载中…')}
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -591,12 +630,12 @@ export function PluginCenter() {
             ))}
             {!searching && visibleMarket.length === 0 && (
               <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-                市场目录为空
+                {t('市场目录为空')}
               </div>
             )}
             {searching && visibleInstalled.length === 0 && visibleMarket.length === 0 && (
               <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-                没有匹配「{query.trim()}」的插件
+                {t('没有匹配「{query}」的插件', { query: query.trim() })}
               </div>
             )}
           </div>
@@ -605,7 +644,7 @@ export function PluginCenter() {
 
       {Object.keys(installPhases).length > 0 && (
         <div className="mt-3 text-center text-[10px] text-muted-foreground">
-          安装进行中:{Object.keys(installPhases).join(', ')}
+          {t('安装进行中:{names}', { names: Object.keys(installPhases).join(', ') })}
         </div>
       )}
     </div>

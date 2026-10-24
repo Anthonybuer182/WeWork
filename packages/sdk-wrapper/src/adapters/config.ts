@@ -429,6 +429,48 @@ export function createRealConfigService(cwd: string, agentDir?: string, modelReg
       configuredProviders = refreshConfiguredProviders(registry);
     },
 
+    async listRemoteModels(input: { baseUrl: string; api: string; apiKey: string }) {
+      // Loaded lazily: node-based tests import this adapter straight from src
+      // for the migration helpers, and they have no bundler to resolve the
+      // `.js → .ts` specifier. Production bundles resolve it normally.
+      const { fetchRemoteModels } = await import('../utils/remote-models.js');
+      return fetchRemoteModels(input);
+    },
+
+    async saveProvider(
+      originalName: string | null,
+      name: string,
+      provider: ProviderEntry,
+    ): Promise<void> {
+      const current = readModelsConfig();
+      const nextName = name.trim();
+      if (!nextName) throw new Error('Provider name cannot be empty');
+      if (provider.models) {
+        provider.models = provider.models.map(normalizeModelInput);
+      }
+
+      if (originalName && originalName !== nextName) {
+        if (!current.providers[originalName]) {
+          throw new Error(`Provider "${originalName}" does not exist`);
+        }
+        if (current.providers[nextName]) {
+          throw new Error(`Provider "${nextName}" already exists`);
+        }
+        // Rebuild in place so the provider keeps its position in the list.
+        const providers: ModelsConfig['providers'] = {};
+        for (const [key, value] of Object.entries(current.providers)) {
+          providers[key === originalName ? nextName : key] =
+            key === originalName ? provider : value;
+        }
+        current.providers = providers;
+      } else {
+        current.providers[nextName] = provider;
+      }
+
+      writeModelsConfig(current);
+      configuredProviders = refreshConfiguredProviders(registry);
+    },
+
     async deleteProvider(name: string): Promise<void> {
       const current = readModelsConfig();
       delete current.providers[name];

@@ -44,3 +44,31 @@ export interface ProviderEntry {
 export interface ModelsConfig {
   providers: Record<string, ProviderEntry>;
 }
+
+/** A model advertised by a provider's own listing endpoint (`GET …/models`). */
+export interface ProviderModelInfo {
+  id: string;
+  name?: string;
+  contextWindow?: number;
+  maxTokens?: number;
+  input?: ('text' | 'image')[];
+}
+
+export type ProviderModelListErrorCode =
+  | 'unsupported'
+  | 'unauthorized'
+  | 'network'
+  | 'http'
+  | 'invalid';
+
+/**
+ * Result of asking a provider what it serves. Failure is a value, not a throw:
+ * discovery is optional, and a provider that will not list its models must not
+ * stop the user from typing one in.
+ */
+export interface ProviderModelListResult {
+  ok: boolean;
+  models?: ProviderModelInfo[];
+  code?: ProviderModelListErrorCode;
+  error?: string;
+}

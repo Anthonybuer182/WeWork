@@ -6,6 +6,7 @@ import 'highlight.js/styles/github.css';
 import './hljs-theme.css';
 import { Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 import { MermaidDiagram } from './mermaid-diagram';
 import { renderTokenizedText } from '@/lib/token-parser';
 import './chat-animations.css';
@@ -16,6 +17,7 @@ interface MarkdownContentProps {
 }
 
 function CodeBlock({ children, className }: { children?: React.ReactNode; className?: string }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -50,12 +52,12 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
         <button
           onClick={handleCopy}
           className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
-          aria-label={copied ? 'Copied' : 'Copy code'}
+          aria-label={copied ? t('已复制') : t('复制代码')}
         >
           {copied ? (
             <>
               <Check className="h-3 w-3" />
-              Copied!
+              {t('已复制！')}
             </>
           ) : (
             <>

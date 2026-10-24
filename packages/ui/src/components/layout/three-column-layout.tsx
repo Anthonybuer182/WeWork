@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 import { getHostChrome, DRAG, NO_DRAG, WindowControls } from './title-bar';
 
 interface ThreeColumnLayoutProps {
@@ -126,11 +127,12 @@ function RightDividerHandle({
   onDragStart: () => void;
   onKeyboardResize: (side: 'left' | 'right', delta: number) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div
       role="separator"
       tabIndex={0}
-      aria-label="Resize preview panel"
+      aria-label={t('拖动调整预览面板宽度')}
       aria-valuenow={width}
       aria-valuemin={minWidth}
       aria-valuemax={maxWidth}
@@ -197,6 +199,7 @@ export function ThreeColumnLayout({
   onRightPanelCollapse,
   onCenterCollapse,
 }: ThreeColumnLayoutProps) {
+  const { t } = useI18n();
   const [currentLeftWidth, setCurrentLeftWidth] = useState(leftWidth);
   const [currentRightWidth, setCurrentRightWidth] = useState(rightWidth);
   const [dragging, setDragging] = useState<'left' | 'right' | null>(null);
@@ -527,7 +530,8 @@ export function ThreeColumnLayout({
       : swapped
         ? currentRightWidth + DIVIDER_WIDTH / 2
         : containerWidth - currentRightWidth - DIVIDER_WIDTH / 2;
-  const hintLabel = closing === 'sidebar' ? '左侧栏' : closing === 'panel' ? '面板' : '对话';
+  const hintLabel =
+    closing === 'sidebar' ? t('左侧栏') : closing === 'panel' ? t('面板') : t('对话');
 
   useEffect(() => {
     if (dragging) {
@@ -644,7 +648,7 @@ export function ThreeColumnLayout({
             }}
           >
             <span className="whitespace-nowrap rounded-full bg-primary px-2.5 py-1 text-[11px] font-medium leading-none text-primary-foreground shadow-sm">
-              松开收起{hintLabel}
+              {t('松开收起{label}', { label: hintLabel })}
             </span>
           </div>
         )}
@@ -694,7 +698,7 @@ export function ThreeColumnLayout({
               <div
                 role="separator"
                 tabIndex={0}
-                aria-label="Resize sidebar"
+                aria-label={t('拖动调整侧栏宽度')}
                 aria-valuenow={currentLeftWidth}
                 aria-valuemin={minLeftWidth}
                 aria-valuemax={maxLeftWidth}

@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +15,7 @@ export function SessionCreateButton({ className }: SessionCreateButtonProps) {
   const queryClient = useQueryClient();
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const setActiveSession = useUIStore((s) => s.setActiveSession);
+  const { t } = useI18n();
 
   const createMutation = useMutation({
     mutationFn: () => {
@@ -36,7 +38,7 @@ export function SessionCreateButton({ className }: SessionCreateButtonProps) {
       disabled={!activeWorkspaceId || createMutation.isPending}
     >
       <Plus className="mr-2 h-4 w-4" />
-      New Session
+      {t('新建会话')}
     </Button>
   );
 }

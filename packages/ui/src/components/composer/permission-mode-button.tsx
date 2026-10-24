@@ -8,8 +8,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUIStore } from '@/stores/ui-store';
 import { usePermissionStore, type PermissionMode } from '@/stores/permission-store';
+import { useI18n, type MessageKey } from '@/i18n';
 
-const MODE_LABELS: Record<PermissionMode, { title: string; hint: string }> = {
+const MODE_LABELS: Record<PermissionMode, { title: MessageKey; hint: MessageKey }> = {
   default: { title: '默认', hint: '高危操作逐条批准' },
   full: { title: '完全访问', hint: '不拦截，仅记录审计日志' },
 };
@@ -31,6 +32,7 @@ export function PermissionModeButton() {
     (s) => s.modeBySession[activeSessionId ?? 'default'] ?? 'default',
   );
   const setMode = usePermissionStore((s) => s.setMode);
+  const { t } = useI18n();
 
   // Web build: no electronAPI → nothing enforces the gate → hide the control.
   if (
@@ -59,8 +61,8 @@ export function PermissionModeButton() {
           }
           title={
             !activeSessionId
-              ? '会话创建后可设置权限模式'
-              : '权限模式（新会话沿用上次选择，重启后恢复默认）'
+              ? t('会话创建后可设置权限模式')
+              : t('权限模式（新会话沿用上次选择，重启后恢复默认）')
           }
         >
           {isFull ? (
@@ -68,7 +70,7 @@ export function PermissionModeButton() {
           ) : (
             <Shield className="h-3.5 w-3.5" />
           )}
-          {isFull && MODE_LABELS[mode].title}
+          {isFull && t(MODE_LABELS[mode].title)}
           <ChevronDown className="h-3 w-3 opacity-60" />
         </Button>
       </DropdownMenuTrigger>
@@ -84,11 +86,13 @@ export function PermissionModeButton() {
                 key === 'full' ? 'text-red-600 dark:text-red-400 font-medium' : 'font-medium'
               }
             >
-              {MODE_LABELS[key].title}
-              {mode === key && <span className="ml-1.5 text-[10px] opacity-60">当前</span>}
+              {t(MODE_LABELS[key].title)}
+              {mode === key && (
+                <span className="ml-1.5 text-[10px] opacity-60">{t('当前')}</span>
+              )}
             </span>
             <span className="text-[10px] text-muted-foreground font-normal">
-              {MODE_LABELS[key].hint}
+              {t(MODE_LABELS[key].hint)}
             </span>
           </DropdownMenuItem>
         ))}

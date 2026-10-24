@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import type { ThinkingBlock as ThinkingBlockType } from '@pi/types';
+import { useI18n } from '@/i18n';
 import './chat-animations.css';
 
 interface ThinkingBlockProps {
@@ -14,6 +15,7 @@ function formatElapsed(ms: number): string {
 }
 
 export function ThinkingBlock({ block, isStreaming }: ThinkingBlockProps) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [userCollapsed, setUserCollapsed] = useState(false);
   const [elapsed, setElapsed] = useState<number | null>(null);
@@ -81,7 +83,7 @@ export function ThinkingBlock({ block, isStreaming }: ThinkingBlockProps) {
         >
           <polyline points="2 3.5 5 6.5 8 3.5" />
         </svg>
-        <span className="font-medium">Thinking</span>
+        <span className="font-medium">{t('思考过程')}</span>
         {showDuration && (
           <span className="ml-auto text-muted-foreground/60 tabular-nums">
             {showDuration}

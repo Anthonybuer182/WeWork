@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Eye, EyeOff, AlertCircle, Loader2, EyeIcon, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, AlertCircle, Loader2, EyeIcon, FileText, RefreshCw } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
+import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ErrorState } from '@/components/common/error-state';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -17,7 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { ProviderEntry, ModelEntry } from '@pi/types';
+import type {
+  ProviderEntry,
+  ProviderModelInfo,
+  ProviderModelListErrorCode,
+  ModelEntry,
+} from '@pi/types';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +52,25 @@ const DEFAULT_PROVIDER: ProviderEntry = {
   models: [],
 };
 
+/**
+ * The API families `@earendil-works/pi-ai` registers — its `KnownApi` union.
+ * A typo here only shows up as a failed request, so the common cases are a
+ * list, not a text field. `Api` is deliberately open (`KnownApi | string`),
+ * hence the Custom escape hatch for extension-provided protocols.
+ */
+const API_TYPES: { value: string; label: string }[] = [
+  { value: 'openai-completions', label: 'OpenAI Chat Completions' },
+  { value: 'openai-responses', label: 'OpenAI Responses' },
+  { value: 'azure-openai-responses', label: 'Azure OpenAI Responses' },
+  { value: 'openai-codex-responses', label: 'OpenAI Codex Responses' },
+  { value: 'anthropic-messages', label: 'Anthropic Messages' },
+  { value: 'google-generative-ai', label: 'Google Generative AI' },
+  { value: 'google-vertex', label: 'Google Vertex AI' },
+  { value: 'mistral-conversations', label: 'Mistral Conversations' },
+  { value: 'bedrock-converse-stream', label: 'Amazon Bedrock Converse' },
+];
+const CUSTOM_API = '__custom__';
+
 const DEFAULT_MODEL: ModelEntry = {
   id: '',
   name: '',
@@ -67,6 +93,7 @@ function getModelInputType(model: ModelEntry): 'text' | 'multimodal' {
 export function ModelsSettingsPage() {
   const sdk = useSDK();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
 
@@ -78,9 +105,21 @@ export function ModelsSettingsPage() {
   const [providerDialog, setProviderDialog] = useState<{
     open: boolean;
     editMode: boolean;
+    /** The map key being edited; null-equivalent '' when adding. */
+    originalName: string;
     name: string;
     data: ProviderEntry;
-  }>({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } });
+  }>({ open: false, editMode: false, originalName: '', name: '', data: { ...DEFAULT_PROVIDER } });
+
+  // Provider-advertised models for the add/edit-model dialog. `models: null`
+  // means "not fetched (yet)", which is distinct from a successful empty list.
+  const [remote, setRemote] = useState<{
+    loading: boolean;
+    models: ProviderModelInfo[] | null;
+    error: { code?: ProviderModelListErrorCode; message: string } | null;
+  }>({ loading: false, models: null, error: null });
+  const [remoteQuery, setRemoteQuery] = useState('');
+  const remoteRequestRef = useRef(0);
 
   // Add/Edit model dialog
   const [modelDialog, setModelDialog] = useState<{
@@ -102,6 +141,41 @@ export function ModelsSettingsPage() {
   });
 
   const providers = config?.providers ?? {};
+  const apiIsKnown = API_TYPES.some((opt) => opt.value === providerDialog.data.api);
+
+  const loadRemoteModels = useCallback(
+    async (providerName: string) => {
+      const provider = providers[providerName];
+      const requestId = ++remoteRequestRef.current;
+      setRemoteQuery('');
+      if (!provider || !provider.baseUrl.trim() || !provider.apiKey.trim()) {
+        setRemote({
+          loading: false,
+          models: null,
+          error: { code: 'invalid', message: '' },
+        });
+        return;
+      }
+      setRemote({ loading: true, models: null, error: null });
+      const result = await sdk.config.listRemoteModels({
+        baseUrl: provider.baseUrl,
+        api: provider.api,
+        apiKey: provider.apiKey,
+      });
+      // A newer dialog (or provider) won while this request was in flight.
+      if (requestId !== remoteRequestRef.current) return;
+      setRemote(
+        result.ok
+          ? { loading: false, models: result.models ?? [], error: null }
+          : {
+              loading: false,
+              models: null,
+              error: { code: result.code, message: result.error ?? '' },
+            },
+      );
+    },
+    [providers, sdk],
+  );
 
   const toggleKeyVisibility = useCallback((name: string) => {
     setVisibleKeys((prev) => {
@@ -115,15 +189,24 @@ export function ModelsSettingsPage() {
   // --- Provider operations ---
 
   const handleAddProvider = useCallback(() => {
-    setProviderDialog({ open: true, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } });
+    setError(null);
+    setProviderDialog({
+      open: true,
+      editMode: false,
+      originalName: '',
+      name: '',
+      data: { ...DEFAULT_PROVIDER },
+    });
   }, []);
 
   const handleEditProvider = useCallback((name: string) => {
     const p = providers[name];
     if (!p) return;
+    setError(null);
     setProviderDialog({
       open: true,
       editMode: true,
+      originalName: name,
       name,
       data: { ...p, models: [...p.models], compat: { ...p.compat } },
     });
@@ -132,20 +215,28 @@ export function ModelsSettingsPage() {
   const handleSaveProvider = useCallback(async () => {
     try {
       setError(null);
-      const { name, data } = providerDialog;
-      if (!name.trim() || !data.baseUrl.trim() || !data.apiKey.trim()) {
-        setError('请填写名称、Base URL 和 API Key');
+      const { editMode, originalName, name, data } = providerDialog;
+      const nextName = name.trim();
+      if (!nextName || !data.baseUrl.trim() || !data.api.trim() || !data.apiKey.trim()) {
+        setError(t('请填写名称、Base URL、接口类型和 API Key'));
         return;
       }
-      await sdk.config.upsertProvider(name.trim(), data);
-      setProviderDialog({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } });
+      const renaming = editMode && nextName !== originalName;
+      // Catch the collision here so the message is translated and actionable;
+      // the backend validates it again for callers that skip this dialog.
+      if ((renaming || !editMode) && providers[nextName]) {
+        setError(t('已存在同名服务商'));
+        return;
+      }
+      await sdk.config.saveProvider(editMode ? originalName : null, nextName, data);
+      setProviderDialog({ open: false, editMode: false, originalName: '', name: '', data: { ...DEFAULT_PROVIDER } });
       queryClient.invalidateQueries({ queryKey: ['modelsConfig'] });
       queryClient.invalidateQueries({ queryKey: ['models'] });
       queryClient.invalidateQueries({ queryKey: ['config'] });
     } catch (e) {
-      setError(e instanceof Error ? e.message : '保存失败');
+      setError(e instanceof Error ? e.message : t('保存失败'));
     }
-  }, [providerDialog, sdk, queryClient]);
+  }, [providerDialog, providers, sdk, queryClient, t]);
 
   const handleConfirmDeleteProvider = useCallback(async () => {
     if (!deleteProvider) return;
@@ -156,13 +247,14 @@ export function ModelsSettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['models'] });
       queryClient.invalidateQueries({ queryKey: ['config'] });
     } catch (e) {
-      setError(e instanceof Error ? e.message : '删除失败');
+      setError(e instanceof Error ? e.message : t('删除失败'));
     }
-  }, [deleteProvider, sdk, queryClient]);
+  }, [deleteProvider, sdk, queryClient, t]);
 
   // --- Model operations ---
 
   const handleAddModel = useCallback((providerName: string) => {
+    setError(null);
     setModelDialog({
       open: true,
       providerName,
@@ -170,9 +262,11 @@ export function ModelsSettingsPage() {
       originalId: '',
       data: { ...DEFAULT_MODEL },
     });
-  }, []);
+    void loadRemoteModels(providerName);
+  }, [loadRemoteModels]);
 
   const handleEditModel = useCallback((providerName: string, model: ModelEntry) => {
+    setError(null);
     setModelDialog({
       open: true,
       providerName,
@@ -180,14 +274,15 @@ export function ModelsSettingsPage() {
       originalId: model.id,
       data: { ...model },
     });
-  }, []);
+    void loadRemoteModels(providerName);
+  }, [loadRemoteModels]);
 
   const handleSaveModel = useCallback(async () => {
     try {
       setError(null);
       const { providerName, editMode, originalId, data } = modelDialog;
       if (!data.id.trim() || !data.name.trim()) {
-        setError('请填写模型 ID 和名称');
+        setError(t('请填写模型 ID 和名称'));
         return;
       }
       if (editMode) {
@@ -200,9 +295,9 @@ export function ModelsSettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['models'] });
       queryClient.invalidateQueries({ queryKey: ['config'] });
     } catch (e) {
-      setError(e instanceof Error ? e.message : '保存失败');
+      setError(e instanceof Error ? e.message : t('保存失败'));
     }
-  }, [modelDialog, sdk, queryClient]);
+  }, [modelDialog, sdk, queryClient, t]);
 
   const handleConfirmDeleteModel = useCallback(async () => {
     if (!deleteModel) return;
@@ -213,9 +308,9 @@ export function ModelsSettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['models'] });
       queryClient.invalidateQueries({ queryKey: ['config'] });
     } catch (e) {
-      setError(e instanceof Error ? e.message : '删除失败');
+      setError(e instanceof Error ? e.message : t('删除失败'));
     }
-  }, [deleteModel, sdk, queryClient]);
+  }, [deleteModel, sdk, queryClient, t]);
 
   const maskApiKey = (key: string) => {
     if (key.length <= 8) return '****';
@@ -234,13 +329,56 @@ export function ModelsSettingsPage() {
     return (
       <div className="flex h-full items-center justify-center">
         <ErrorState
-          title="读取模型配置失败"
-          description={loadError instanceof Error ? loadError.message : '未知错误'}
+          title={t('读取模型配置失败')}
+          description={loadError instanceof Error ? loadError.message : t('未知错误')}
           onRetry={() => void refetch()}
         />
       </div>
     );
   }
+
+  const remoteProvider = providers[modelDialog.providerName];
+  const remoteModels = remote.models ?? [];
+  const remoteNeedle = remoteQuery.trim().toLowerCase();
+  const remoteVisible = remoteNeedle
+    ? remoteModels.filter(
+        (m) =>
+          m.id.toLowerCase().includes(remoteNeedle) ||
+          (m.name ?? '').toLowerCase().includes(remoteNeedle),
+      )
+    : remoteModels;
+  const remoteErrorText = (() => {
+    const failure = remote.error;
+    if (!failure) return null;
+    switch (failure.code) {
+      case 'unsupported':
+        return t('该接口类型不支持自动获取模型列表。');
+      case 'unauthorized':
+        return t('API Key 无效或无权限（401/403）。');
+      case 'invalid':
+        return t('请先填写 Base URL 和 API Key 后再获取模型列表。');
+      case 'network':
+        return t('无法连接服务商：{message}', { message: failure.message });
+      case 'http':
+        return t('服务商返回错误：{message}', { message: failure.message });
+      default:
+        return failure.message;
+    }
+  })();
+  const pickRemoteModel = (model: ProviderModelInfo) => {
+    setModelDialog((d) => ({
+      ...d,
+      data: {
+        ...d.data,
+        id: model.id,
+        name: model.name && model.name !== model.id ? model.name : model.id,
+        ...(model.contextWindow ? { contextWindow: model.contextWindow } : {}),
+        ...(model.maxTokens ? { maxTokens: model.maxTokens } : {}),
+        ...(model.input?.length ? { input: model.input } : {}),
+      },
+    }));
+    setRemoteQuery('');
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -251,11 +389,11 @@ export function ModelsSettingsPage() {
           className="min-w-0 truncate text-xs text-muted-foreground"
           title="~/.pi/agent/models.json"
         >
-          服务商与模型 · ~/.pi/agent/models.json
+          {t('服务商与模型 · ~/.pi/agent/models.json')}
         </p>
         <Button size="sm" className="shrink-0" onClick={handleAddProvider}>
           <Plus className="mr-1 h-4 w-4" />
-          添加服务商
+          {t('添加服务商')}
         </Button>
       </div>
 
@@ -281,8 +419,8 @@ export function ModelsSettingsPage() {
         <div className="space-y-4">
           {Object.keys(providers).length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <p className="text-sm">还没有配置服务商</p>
-              <p className="mt-1 text-xs">点右上角「添加服务商」开始配置</p>
+              <p className="text-sm">{t('还没有配置服务商')}</p>
+              <p className="mt-1 text-xs">{t('点右上角「添加服务商」开始配置')}</p>
             </div>
           )}
           {Object.entries(providers).map(([name, provider]) => (
@@ -335,14 +473,14 @@ export function ModelsSettingsPage() {
                 <Separator className="mb-2" />
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="text-xs font-medium text-muted-foreground truncate">
-                    模型（{provider.models.length}）
+                    {t('模型（{count}）', { count: provider.models.length })}
                   </span>
                   <Button variant="outline" size="sm" className="h-7 text-xs shrink-0" onClick={() => handleAddModel(name)}>
-                    <Plus className="h-3 w-3 mr-1" />添加模型
+                    <Plus className="h-3 w-3 mr-1" />{t('添加模型')}
                   </Button>
                 </div>
                 {provider.models.length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-2">还没有模型</p>
+                  <p className="text-xs text-muted-foreground py-2">{t('还没有模型')}</p>
                 ) : (
                   <div className="space-y-1">
                     {provider.models.map((model) => {
@@ -361,12 +499,12 @@ export function ModelsSettingsPage() {
                           {inputType === 'multimodal' ? (
                             <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 shrink-0">
                               <EyeIcon className="h-2.5 w-2.5 mr-0.5" />
-                              视觉
+                              {t('视觉')}
                             </Badge>
                           ) : (
                             <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 text-muted-foreground shrink-0">
                               <FileText className="h-2.5 w-2.5 mr-0.5" />
-                              文本
+                              {t('文本')}
                             </Badge>
                           )}
                         </div>
@@ -390,26 +528,39 @@ export function ModelsSettingsPage() {
       </ScrollArea>
 
       {/* Provider dialog */}
-      <Dialog open={providerDialog.open} onOpenChange={(open) => !open && setProviderDialog({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } })}>
+      <Dialog open={providerDialog.open} onOpenChange={(open) => !open && setProviderDialog({ open: false, editMode: false, originalName: '', name: '', data: { ...DEFAULT_PROVIDER } })}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{providerDialog.editMode ? '编辑服务商' : '添加服务商'}</DialogTitle>
+            <DialogTitle>{providerDialog.editMode ? t('编辑服务商') : t('添加服务商')}</DialogTitle>
             <DialogDescription>
-              {providerDialog.editMode ? `修改 ${providerDialog.name} 的配置` : '添加一个新的模型服务商'}
+              {providerDialog.editMode
+                ? t('修改 {name} 的配置', {
+                    name: providerDialog.name.trim() || providerDialog.originalName,
+                  })
+                : t('添加一个新的模型服务商')}
             </DialogDescription>
           </DialogHeader>
+          {error && (
+            <div className="flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 break-words">{error}</span>
+            </div>
+          )}
           <div className="space-y-3 py-2">
-            {!providerDialog.editMode && (
-              <div>
-                <Label htmlFor="providerName">名称 *</Label>
-                <Input
-                  id="providerName"
-                  placeholder="e.g. minimax, openai, dashscope"
-                  value={providerDialog.name}
-                  onChange={(e) => setProviderDialog((d) => ({ ...d, name: e.target.value }))}
-                />
-              </div>
-            )}
+            <div>
+              <Label htmlFor="providerName">{t('名称 *')}</Label>
+              <Input
+                id="providerName"
+                placeholder="e.g. minimax, openai, dashscope"
+                value={providerDialog.name}
+                onChange={(e) => setProviderDialog((d) => ({ ...d, name: e.target.value }))}
+              />
+              {providerDialog.editMode && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {t('改名会一并移动该服务商下的所有模型配置。')}
+                </p>
+              )}
+            </div>
             <div>
               <Label htmlFor="providerBaseUrl">Base URL *</Label>
               <Input
@@ -420,13 +571,52 @@ export function ModelsSettingsPage() {
               />
             </div>
             <div>
-              <Label htmlFor="providerApi">接口类型 *</Label>
-              <Input
-                id="providerApi"
-                placeholder="openai-completions"
-                value={providerDialog.data.api}
-                onChange={(e) => setProviderDialog((d) => ({ ...d, data: { ...d.data, api: e.target.value } }))}
-              />
+              <Label htmlFor="providerApi">{t('接口类型 *')}</Label>
+              <Select
+                value={apiIsKnown ? providerDialog.data.api : CUSTOM_API}
+                onValueChange={(value: string) =>
+                  setProviderDialog((d) => ({
+                    ...d,
+                    data: { ...d.data, api: value === CUSTOM_API ? '' : value },
+                  }))
+                }
+              >
+                <SelectTrigger id="providerApi">
+                  <SelectValue>
+                    {apiIsKnown ? (
+                      <span className="font-mono text-xs">{providerDialog.data.api}</span>
+                    ) : (
+                      t('自定义…')
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {API_TYPES.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      <span className="flex items-center gap-2">
+                        <span>{opt.label}</span>
+                        <span className="text-[10px] text-muted-foreground">{opt.value}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                  <SelectItem value={CUSTOM_API}>{t('自定义…')}</SelectItem>
+                </SelectContent>
+              </Select>
+              {!apiIsKnown && (
+                <Input
+                  id="providerApiCustom"
+                  className="mt-2"
+                  aria-label={t('接口类型')}
+                  placeholder={t('例如 openai-completions')}
+                  value={providerDialog.data.api}
+                  onChange={(e) =>
+                    setProviderDialog((d) => ({ ...d, data: { ...d.data, api: e.target.value } }))
+                  }
+                />
+              )}
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                {t('选列表里的标准接口；第三方扩展可选「自定义…」直接填。')}
+              </p>
             </div>
             <div>
               <Label htmlFor="providerApiKey">API Key *</Label>
@@ -440,26 +630,126 @@ export function ModelsSettingsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setProviderDialog({ open: false, editMode: false, name: '', data: { ...DEFAULT_PROVIDER } })}>
-              取消
+            <Button variant="outline" onClick={() => setProviderDialog({ open: false, editMode: false, originalName: '', name: '', data: { ...DEFAULT_PROVIDER } })}>
+              {t('取消')}
             </Button>
-            <Button onClick={handleSaveProvider}>保存</Button>
+            <Button onClick={handleSaveProvider}>{t('保存')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Model dialog */}
       <Dialog open={modelDialog.open} onOpenChange={(open) => !open && setModelDialog({ open: false, providerName: '', editMode: false, originalId: '', data: { ...DEFAULT_MODEL } })}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{modelDialog.editMode ? '编辑模型' : '添加模型'}</DialogTitle>
+            <DialogTitle>{modelDialog.editMode ? t('编辑模型') : t('添加模型')}</DialogTitle>
             <DialogDescription>
-              服务商：{modelDialog.providerName}
+              {t('服务商：{name}', { name: modelDialog.providerName })}
             </DialogDescription>
           </DialogHeader>
+          {error && (
+            <div className="flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 break-words">{error}</span>
+            </div>
+          )}
+
+          {/* What the provider says it serves. Fetched on open, refreshable;
+              a failure leaves the manual fields below fully usable. */}
+          <div className="rounded-md border bg-muted/20 p-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-xs font-medium">{t('可用模型')}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {t('从服务商拉取；点击填入下方字段。')}
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 shrink-0 text-xs"
+                disabled={remote.loading}
+                onClick={() => void loadRemoteModels(modelDialog.providerName)}
+              >
+                {remote.loading ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-1 h-3 w-3" />
+                )}
+                {remote.loading ? t('获取中…') : t('刷新')}
+              </Button>
+            </div>
+
+            {remoteErrorText && (
+              <p className="mt-2 text-[11px] leading-relaxed text-destructive">{remoteErrorText}</p>
+            )}
+
+            {!remote.loading && remote.models && remote.models.length === 0 && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {t('没有从服务商获取到模型。')}
+              </p>
+            )}
+
+            {remoteModels.length > 0 && (
+              <>
+                <Input
+                  value={remoteQuery}
+                  onChange={(e) => setRemoteQuery(e.target.value)}
+                  placeholder={t('筛选模型…')}
+                  aria-label={t('筛选模型')}
+                  className="mt-2 h-7 text-xs"
+                />
+                <div className="mt-1.5 max-h-40 overflow-y-auto rounded-md border bg-background">
+                  {remoteVisible.map((model) => {
+                    const isCurrent =
+                      modelDialog.editMode && model.id === modelDialog.originalId;
+                    const isAdded =
+                      !isCurrent && (remoteProvider?.models ?? []).some((m) => m.id === model.id);
+                    return (
+                      <button
+                        key={model.id}
+                        type="button"
+                        disabled={isAdded}
+                        onClick={() => pickRemoteModel(model)}
+                        className={cn(
+                          'flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors',
+                          isAdded ? 'cursor-default opacity-60' : 'hover:bg-accent',
+                        )}
+                      >
+                        <span className="min-w-0 flex-1 truncate text-xs">
+                          {model.name ?? model.id}
+                        </span>
+                        {model.name && model.name !== model.id && (
+                          <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                            {model.id}
+                          </span>
+                        )}
+                        {isCurrent ? (
+                          <Badge variant="outline" className="shrink-0 text-[9px]">
+                            {t('当前')}
+                          </Badge>
+                        ) : isAdded ? (
+                          <Badge variant="secondary" className="shrink-0 text-[9px]">
+                            {t('已添加')}
+                          </Badge>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                  {remoteVisible.length === 0 && (
+                    <div className="px-2 py-2 text-center text-[11px] text-muted-foreground">
+                      {t('没有匹配的模型')}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
           <div className="space-y-3 py-2">
             <div>
-              <Label htmlFor="modelId">模型 ID *</Label>
+              <Label htmlFor="modelId">{t('模型 ID *')}</Label>
               <Input
                 id="modelId"
                 placeholder="MiniMax-M2.7-highspeed"
@@ -468,12 +758,12 @@ export function ModelsSettingsPage() {
               />
               {modelDialog.editMode && (
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  改 ID 等于重命名模型：默认模型的选择会跟着改，历史会话保留当时使用的 ID。
+                  {t('改 ID 等于重命名模型：默认模型的选择会跟着改，历史会话保留当时使用的 ID。')}
                 </p>
               )}
             </div>
             <div>
-              <Label htmlFor="modelName">模型名称 *</Label>
+              <Label htmlFor="modelName">{t('模型名称 *')}</Label>
               <Input
                 id="modelName"
                 placeholder="MiniMax-M2.7-highspeed"
@@ -482,7 +772,7 @@ export function ModelsSettingsPage() {
               />
             </div>
             <div>
-              <Label htmlFor="modelInput">模型类型</Label>
+              <Label htmlFor="modelInput">{t('模型类型')}</Label>
               <Select
                 value={getModelInputType(modelDialog.data) === 'multimodal' ? 'multimodal' : 'text'}
                 onValueChange={(value: string) =>
@@ -499,27 +789,27 @@ export function ModelsSettingsPage() {
                   <SelectItem value="text">
                     <div className="flex items-center gap-2">
                       <FileText className="h-3.5 w-3.5" />
-                      <span>纯文本语言模型</span>
+                      <span>{t('纯文本语言模型')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="multimodal">
                     <div className="flex items-center gap-2">
                       <EyeIcon className="h-3.5 w-3.5" />
-                      <span>多模态视觉模型</span>
+                      <span>{t('多模态视觉模型')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-[10px] text-muted-foreground mt-1">
-                视觉模型可以接收图片；语言模型只接收文本
+                {t('视觉模型可以接收图片；语言模型只接收文本')}
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModelDialog({ open: false, providerName: '', editMode: false, originalId: '', data: { ...DEFAULT_MODEL } })}>
-              取消
+              {t('取消')}
             </Button>
-            <Button onClick={handleSaveModel}>保存</Button>
+            <Button onClick={handleSaveModel}>{t('保存')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -528,15 +818,17 @@ export function ModelsSettingsPage() {
       <AlertDialog open={!!deleteProvider} onOpenChange={(open: boolean) => !open && setDeleteProvider(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除服务商？</AlertDialogTitle>
+            <AlertDialogTitle>{t('删除服务商？')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定删除服务商「{deleteProvider}」吗？它下面的所有模型配置也会一起删除。
+              {t('确定删除服务商「{name}」吗？它下面的所有模型配置也会一起删除。', {
+                name: deleteProvider ?? '',
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('取消')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDeleteProvider} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              删除
+              {t('删除')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -546,15 +838,15 @@ export function ModelsSettingsPage() {
       <AlertDialog open={!!deleteModel} onOpenChange={(open: boolean) => !open && setDeleteModel(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除模型？</AlertDialogTitle>
+            <AlertDialogTitle>{t('删除模型？')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定删除模型「{deleteModel?.modelId}」吗？
+              {t('确定删除模型「{id}」吗？', { id: deleteModel?.modelId ?? '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('取消')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDeleteModel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              删除
+              {t('删除')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

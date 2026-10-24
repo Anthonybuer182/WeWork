@@ -291,6 +291,16 @@ async function handleRequest(server: ViteDevServer, method: string, params: any)
         case 'getModelsConfig': return configService.getModelsConfig();
         case 'saveModelsConfig': return configService.saveModelsConfig(params.config);
         case 'upsertProvider': return configService.upsertProvider(params.name as string, params.provider as any);
+        case 'listRemoteModels':
+          return configService.listRemoteModels(
+            params as { baseUrl: string; api: string; apiKey: string },
+          );
+        case 'saveProvider':
+          return configService.saveProvider(
+            (params.originalName as string | null) ?? null,
+            params.name as string,
+            params.provider as any,
+          );
         case 'deleteProvider': return configService.deleteProvider(params.name as string);
         case 'addModel': return configService.addModel(params.providerName as string, params.model as any);
         case 'deleteModel': return configService.deleteModel(params.providerName as string, params.modelId as string);

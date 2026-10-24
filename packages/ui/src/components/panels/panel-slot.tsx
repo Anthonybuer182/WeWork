@@ -2,12 +2,14 @@ import { useEffect, type ComponentType } from 'react';
 import { Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePanelStore, type PanelEntry } from '@/stores/panel-store';
+import { useI18n } from '@/i18n';
 import { PluginCenter } from '@/components/plugins/plugin-center';
 import { FileTree } from '@/components/file/file-tree';
 import { SessionList } from '@/components/session/session-list';
 import { ContextPanel } from '@/components/context/context-panel';
 import { ensureRelayInstalled } from '@/components/plugins/panel-relay';
 import { LiveSlot } from './live-slot';
+import { panelTitle } from './panel-title';
 import { RailIcon } from './panel-rail';
 
 /**
@@ -56,6 +58,7 @@ function PluginWebViewPanel({ pluginId, panelId }: { pluginId: string; panelId: 
 }
 
 export function PanelBody({ panel }: { panel: PanelEntry }) {
+  const { t } = useI18n();
   // Host panel: a React component the shell owns.
   if (panel.source === 'host') {
     const Host = HOST_COMPONENTS[panel.id];
@@ -68,7 +71,7 @@ export function PanelBody({ panel }: { panel: PanelEntry }) {
       // empty rectangle that looks like a plugin that failed to load.
       return (
         <div className="flex h-full items-center justify-center p-4 text-center text-xs text-muted-foreground">
-          插件面板需要桌面端
+          {t('插件面板需要桌面端')}
         </div>
       );
     }
@@ -108,9 +111,11 @@ export function PaneView({
   /** Flex-basis width when laid out (px). Undefined → flex:1. */
   width?: number;
 }) {
+  const { t } = useI18n();
   const setFocused = usePanelStore((s) => s.setFocused);
   const toggleZoom = usePanelStore((s) => s.toggleZoom);
   const region = panel.region;
+  const title = panelTitle(panel, t);
 
   return (
     <div
@@ -141,12 +146,12 @@ export function PaneView({
           )}
         >
           <RailIcon panel={panel} size={14} className="h-3.5 w-3.5 shrink-0" />
-          <span className="min-w-0 flex-1 truncate">{panel.title}</span>
+          <span className="min-w-0 flex-1 truncate">{title}</span>
           {zoomable && (
             <button
               type="button"
-              aria-label="还原窗格"
-              title="还原（其他窗格回到工作区；Esc 同效）"
+              aria-label={t('还原窗格')}
+              title={t('还原（其他窗格回到工作区；Esc 同效）')}
               data-pane-zoom={panel.id}
               onClick={(e) => {
                 e.stopPropagation();
