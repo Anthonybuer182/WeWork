@@ -56,8 +56,8 @@ export function PermissionModeButton() {
           disabled={!activeSessionId}
           className={
             isFull
-              ? 'h-8 gap-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400'
-              : 'h-8 gap-1.5 text-xs text-muted-foreground'
+              ? 'h-7 gap-1.5 px-2 text-xs text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400'
+              : 'h-7 gap-1.5 px-2 text-xs text-muted-foreground'
           }
           title={
             !activeSessionId
@@ -74,7 +74,7 @@ export function PermissionModeButton() {
           <ChevronDown className="h-3 w-3 opacity-60" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent align="end" className="w-56">
         {(Object.keys(MODE_LABELS) as PermissionMode[]).map((key) => (
           <DropdownMenuItem
             key={key}

@@ -97,6 +97,15 @@ export interface AskResolution {
 export const MAX_ASK_QUESTIONS = 20;
 export const MAX_ASK_QUESTION_CHARS = 300;
 
+/**
+ * Marker the composer appends to a message that references skills from `/`.
+ *
+ * The block is model-only: the UI strips it from the bubble and from session
+ * titles, which is why the marker lives here — three places match on it and
+ * must not drift.
+ */
+export const SKILL_REFERENCE_MARKER = '[本条消息请使用这些技能]';
+
 // ── tool catalog (Settings → 工具 and the composer picker) ─────────────
 
 export type ToolSource = 'builtin' | 'host' | 'plugin';

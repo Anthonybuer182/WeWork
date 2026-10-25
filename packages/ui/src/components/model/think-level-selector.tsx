@@ -28,8 +28,12 @@ export function ThinkLevelSelector({ value, onChange, supportedLevels }: ThinkLe
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-8 min-w-[72px] w-[84px] sm:w-[100px] shrink min-w-0 border-0 bg-transparent hover:bg-accent text-xs" aria-label={t('思考等级')}>
-        <Brain className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+      <SelectTrigger
+        className="h-7 w-auto shrink-0 gap-1 border-0 bg-transparent px-2 text-xs hover:bg-accent"
+        aria-label={t('思考等级')}
+        title={t('思考等级')}
+      >
+        <Brain className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         <SelectValue placeholder={t('思考')} />
       </SelectTrigger>
       <SelectContent>

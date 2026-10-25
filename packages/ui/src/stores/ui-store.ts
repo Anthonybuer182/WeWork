@@ -42,21 +42,6 @@ interface UIState {
    * the composer and never reach a prompt.
    */
   disabledSkills: string[];
-  /**
-   * Per-conversation skill overrides. A missing entry means "use every enabled
-   * skill" — that is how a new conversation starts, so switching a skill on in
-   * Settings takes effect without a second step. An entry records the skills
-   * kept for that conversation after the composer's checkboxes were touched;
-   * `[]` means "this conversation uses none", which is not the same as missing.
-   */
-  skillOverridesBySession: Record<string, string[]>;
-  /**
-   * Per-conversation tool keep-list, same semantics as skills: missing = every
-   * globally enabled tool; an entry records what the composer's checkboxes kept
-   * after they were touched. The global on/off switches live in main; a
-   * conversation can only narrow that set, never re-enable a global "off".
-   */
-  toolOverridesBySession: Record<string, string[]>;
   connectionStatus: ConnectionStatus;
 
   setActiveWorkspace: (id: string | null) => void;
@@ -81,11 +66,7 @@ interface UIState {
   setRightPanelWidth: (width: number) => void;
   setLeftPanelWidth: (width: number) => void;
   setCompactMode: (compact: boolean) => void;
-  /** `undefined` clears the override, restoring "all enabled skills". */
-  setSessionSkills: (sessionId: string, skillIds: string[] | undefined) => void;
   toggleSkillEnabled: (skillId: string) => void;
-  /** `undefined` clears the override, restoring "all globally enabled tools". */
-  setSessionTools: (sessionId: string, toolNames: string[] | undefined) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
 }
 
@@ -106,8 +87,6 @@ export const useUIStore = create<UIState>()(
       leftPanelWidth: 300,
       compactMode: false,
       disabledSkills: [],
-      skillOverridesBySession: {},
-      toolOverridesBySession: {},
       connectionStatus: 'connecting',
 
       setActiveWorkspace: (id) => set({ activeWorkspaceId: id, activeSessionId: null }),
@@ -156,26 +135,12 @@ export const useUIStore = create<UIState>()(
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
       setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),
       setCompactMode: (compact: boolean) => set({ compactMode: compact }),
-      setSessionSkills: (sessionId, skillIds) =>
-        set((s) => {
-          const next = { ...s.skillOverridesBySession };
-          if (skillIds === undefined) delete next[sessionId];
-          else next[sessionId] = skillIds;
-          return { skillOverridesBySession: next };
-        }),
       toggleSkillEnabled: (skillId: string) =>
         set((s) => ({
           disabledSkills: s.disabledSkills.includes(skillId)
             ? s.disabledSkills.filter((id) => id !== skillId)
             : [...s.disabledSkills, skillId],
         })),
-      setSessionTools: (sessionId, toolNames) =>
-        set((s) => {
-          const next = { ...s.toolOverridesBySession };
-          if (toolNames === undefined) delete next[sessionId];
-          else next[sessionId] = toolNames;
-          return { toolOverridesBySession: next };
-        }),
       setConnectionStatus: (status) => set({ connectionStatus: status }),
     }),
     {
@@ -197,8 +162,6 @@ export const useUIStore = create<UIState>()(
         leftPanelWidth: state.leftPanelWidth,
         compactMode: state.compactMode,
         disabledSkills: state.disabledSkills,
-        skillOverridesBySession: state.skillOverridesBySession,
-        toolOverridesBySession: state.toolOverridesBySession,
       }),
     },
   ),

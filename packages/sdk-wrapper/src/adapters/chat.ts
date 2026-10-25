@@ -302,7 +302,6 @@ export function createRealChatService(
     sessionId?: string,
     workspaceCwd?: string,
     skills?: string[],
-    disabledTools?: string[],
   ): Promise<AgentSession> {
     const key = sessionId || 'default';
     const workCwd = workspaceCwd || cwd;
@@ -317,12 +316,10 @@ export function createRealChatService(
       staleSessions.delete(key);
     }
 
-    // Global switches are merged here, not in the renderer: a stale composer
-    // must never hand a switched-off tool back to the model.
-    const effectiveDisabled = uniqueNames([
-      ...(disabledTools ?? []),
-      ...(options?.getGlobalDisabledTools?.() ?? []),
-    ]);
+    // Tool availability is a global setting only. Settings → 工具 is the single
+    // source; there is no per-conversation tool list (a stable set also keeps
+    // the prompt cache warm).
+    const effectiveDisabled = uniqueNames(options?.getGlobalDisabledTools?.() ?? []);
 
     // If a cached session exists, return it directly unless the caller provided
     // an explicit workspaceCwd that differs from the session's cwd (e.g. user
@@ -335,12 +332,11 @@ export function createRealChatService(
         : skills && cached.skills
           ? skills.length !== cached.skills.length || !skills.every((s) => cached.skills!.includes(s))
           : false;
-      // Only compare when the caller actually knows the tool set. steer /
-      // followUp / navigateTree pass no list and must reuse the cached session
-      // — otherwise their global-only view would rebuild a session and quietly
-      // re-enable tools the conversation had switched off.
+      // Rebuild when the global tool switches changed — but never under a live
+      // run: a steer/followUp would otherwise construct a second writer on the
+      // same transcript. After the run ends, the next request rebuilds.
       const toolsChanged =
-        disabledTools !== undefined &&
+        !cached.session.isStreaming &&
         !sameNames(cached.disabledTools ?? [], effectiveDisabled);
       if ((!workspaceCwd || cached.cwd === workspaceCwd) && !skillsChanged && !toolsChanged) {
         return cached.session;
@@ -826,7 +822,6 @@ export function createRealChatService(
         params.sessionId,
         params.workspaceCwd,
         params.skills,
-        params.disabledTools,
       );
 
       try {
@@ -897,7 +892,6 @@ export function createRealChatService(
         params.sessionId,
         params.workspaceCwd,
         params.skills,
-        params.disabledTools,
       );
       const sessionKey = params.sessionId || 'default';
       const workspaceCwd = params.workspaceCwd;

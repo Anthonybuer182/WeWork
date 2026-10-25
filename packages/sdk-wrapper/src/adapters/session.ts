@@ -1,4 +1,5 @@
 import type { Session, SessionWithMessages, Message, ContentBlock, AssistantMessage, SessionTreeNode, SessionTreeResult, TreeNodeToolCall, ToolCallBlock, ToolResultBlock } from '@pi/types';
+import { SKILL_REFERENCE_MARKER } from '@pi/types';
 import type { SessionService } from '../services/session.js';
 import {
   SessionManager,
@@ -11,20 +12,36 @@ import * as path from 'path';
 import { extractThinkContent } from '../utils/think-parser.js';
 import { detectWrittenFiles, getMimeType } from '../utils/file-detection.js';
 
+/**
+ * The session list shows a one-line title. Use the first non-empty line of the
+ * user's text, not the first 60 characters of the whole prompt: messages may
+ * carry appended context (skill references, plugin context) that is not part
+ * of what the user wrote.
+ */
+function titleFromText(text: string): string | undefined {
+  const marker = text.lastIndexOf(SKILL_REFERENCE_MARKER);
+  const withoutRefs = marker >= 0 ? text.slice(0, marker) : text;
+  for (const line of withoutRefs.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed) return trimmed.slice(0, 60);
+  }
+  return undefined;
+}
+
 function extractTitleFromMessage(msg: any): string | undefined {
   const content = msg.content;
   if (typeof content === 'string') {
-    return content.slice(0, 60);
+    return titleFromText(content);
   }
   if (Array.isArray(content)) {
     for (const block of content) {
       if (block?.type === 'text' && block.text) {
-        return String(block.text).slice(0, 60);
+        return titleFromText(String(block.text));
       }
     }
   }
   if (content && typeof content === 'object' && (content as any).text) {
-    return String((content as any).text).slice(0, 60);
+    return titleFromText(String((content as any).text));
   }
   return undefined;
 }
@@ -34,7 +51,10 @@ function toSession(info: SessionInfo): Session {
   return {
     id: info.path,
     workspaceId: info.cwd,
-    title: info.name || (info.firstMessage ? info.firstMessage.slice(0, 60) : undefined) || 'Untitled',
+    title:
+      info.name ||
+      (info.firstMessage ? titleFromText(info.firstMessage) : undefined) ||
+      'Untitled',
     status: 'active',
     messageCount: info.messageCount,
     lastMessageAt: info.modified.toISOString(),

@@ -43,7 +43,7 @@ export function FileUploadButton({ disabled, onFilesSelected }: FileUploadButton
         variant="ghost"
         size="icon-sm"
         disabled={disabled}
-        className="shrink-0"
+        className="h-7 w-7 shrink-0"
         onClick={handleClick}
         aria-label={t('添加附件')}
       >

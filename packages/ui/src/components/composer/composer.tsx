@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, useRef, useEffect, DragEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Square, Upload, CornerDownRight } from 'lucide-react';
+import { Square, Upload, CornerDownRight, Sparkles, X } from 'lucide-react';
 import { cn, isPreviewableInRightPanel } from '@/lib/utils';
 import { streamReducer, initialStreamingState } from '@/lib/stream-reducer';
 import { Button } from '@/components/ui/button';
@@ -19,17 +19,13 @@ import { AttachmentPreviewBar } from './attachment-preview-bar';
 import { QueueIndicator } from './queue-indicator';
 import { ModelSelector } from '../model/model-selector';
 import { ThinkLevelSelector } from '../model/think-level-selector';
-import { SkillSelector } from '../model/skill-selector';
-import { ToolSelector } from '../model/tool-selector';
-import { useToolStore } from '@/stores/tool-store';
-import { CompactToggle } from '../model/compact-toggle';
 import { PermissionModeButton } from './permission-mode-button';
 import { usePermissionStore } from '@/stores/permission-store';
 import { useI18n, type MessageKey } from '@/i18n';
 import { useCommandStore, commandDescription, type RegisteredCommand } from '@/stores/command-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import type { ContentBlock, Config, Skill } from '@pi/types';
-import { ASK_TOOL_NAME, TODO_TOOL_NAME } from '@pi/types';
+import { SKILL_REFERENCE_MARKER } from '@pi/types';
 import type { Attachment } from '@pi/types';
 
 export function Composer() {
@@ -48,17 +44,6 @@ export function Composer() {
   const compactMode = useUIStore((s) => s.compactMode);
   const setCompactMode = useUIStore((s) => s.setCompactMode);
   const disabledSkills = useUIStore((s) => s.disabledSkills);
-  const sessionSkillKey = activeSessionId ?? 'default';
-  const sessionSkillOverride = useUIStore(
-    (s) => s.skillOverridesBySession[sessionSkillKey],
-  );
-  const setSessionSkills = useUIStore((s) => s.setSessionSkills);
-  const sessionToolOverride = useUIStore((s) => s.toolOverridesBySession[sessionSkillKey]);
-  const setSessionTools = useUIStore((s) => s.setSessionTools);
-  const toolCatalog = useToolStore((s) => s.catalog);
-  const globalDisabledTools = useToolStore((s) => s.disabled);
-  const toolsLoaded = useToolStore((s) => s.loaded);
-  const syncTools = useToolStore((s) => s.sync);
   const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
   const activePreviewFilePath = useUIStore((s) => s.activePreviewFilePath);
   const setActiveSession = useUIStore((s) => s.setActiveSession);
@@ -173,8 +158,9 @@ export function Composer() {
     queryFn: () => sdk.config.listSkills(),
   });
 
-  // Skills switched off in Settings → Skills are unavailable here: hide them
-  // from the picker and never send them.
+  // Skills switched off in Settings → Skills are unavailable: hidden from the
+  // `/` menu and never sent. All available skills go to the model every turn;
+  // the model decides which one applies.
   const enabledSkills = useMemo(() => {
     if (!availableSkills) return [];
     const off = new Set(disabledSkills);
@@ -185,93 +171,43 @@ export function Composer() {
     [enabledSkills],
   );
 
-  // A conversation with no override uses every enabled skill — that is the
-  // default for a new conversation, so Settings switches take effect without
-  // a second step. Touching the composer checkboxes records an override for
-  // this session only; stale or newly disabled IDs are filtered out.
-  const validSelectedSkills = useMemo(() => {
-    if (!availableSkills) return [];
-    if (sessionSkillOverride === undefined) return enabledSkillIds;
-    const enabled = new Set(enabledSkillIds);
-    return sessionSkillOverride.filter((id) => enabled.has(id));
-  }, [availableSkills, enabledSkillIds, sessionSkillOverride]);
-
-  const handleToggleSkill = useCallback(
-    (skillId: string) => {
-      const next = new Set(validSelectedSkills);
-      if (next.has(skillId)) next.delete(skillId);
-      else next.add(skillId);
-      const skillIds = enabledSkillIds.filter((id) => next.has(id));
-      // Selecting everything is the default, not an override: drop the entry
-      // so skills enabled later still apply to this conversation.
-      setSessionSkills(
-        sessionSkillKey,
-        skillIds.length === enabledSkillIds.length ? undefined : skillIds,
-      );
-    },
-    [validSelectedSkills, enabledSkillIds, sessionSkillKey, setSessionSkills],
-  );
-
-  // ── Per-conversation tools (same contract as skills) ──
-  // Settings → 工具 is the ceiling: globally disabled tools never appear here.
-  // A conversation with no override uses every globally enabled tool, so
-  // changing the settings applies without a second step.
+  // ── Per-message skill reference ──
+  // Choosing a skill from `/` does NOT change the session: it adds one
+  // instruction to this message and is cleared after sending. The model still
+  // sees every enabled skill in the standing index, so nothing is hidden from
+  // it and the tool/skill set stays stable (prompt cache intact).
+  const [pendingSkills, setPendingSkills] = useState<Skill[]>([]);
+  const pendingSkillsRef = useRef<Skill[]>([]);
   useEffect(() => {
-    void syncTools();
-  }, [syncTools]);
+    pendingSkillsRef.current = pendingSkills;
+  }, [pendingSkills]);
 
-  const enabledTools = useMemo(() => {
-    const off = new Set(globalDisabledTools);
-    return toolCatalog.filter((tool) => !off.has(tool.name));
-  }, [toolCatalog, globalDisabledTools]);
-  const enabledToolNames = useMemo(
-    () => enabledTools.map((tool) => tool.name),
-    [enabledTools],
-  );
-  const selectedToolNames = useMemo(() => {
-    if (sessionToolOverride === undefined) return enabledToolNames;
-    const enabled = new Set(enabledToolNames);
-    return sessionToolOverride.filter((name) => enabled.has(name));
-  }, [enabledToolNames, sessionToolOverride]);
-  // Only the per-conversation narrowing is sent; the adapter merges the
-  // global switches itself so a stale picker cannot re-enable them.
-  const effectiveDisabledTools = useMemo(() => {
-    const selected = new Set(selectedToolNames);
-    return enabledToolNames.filter((name) => !selected.has(name));
-  }, [enabledToolNames, selectedToolNames]);
-
-  const handleToggleTool = useCallback(
-    (toolName: string) => {
-      const next = new Set(selectedToolNames);
-      if (next.has(toolName)) next.delete(toolName);
-      else next.add(toolName);
-      const kept = enabledToolNames.filter((name) => next.has(name));
-      // Selecting everything is the default, not an override.
-      setSessionTools(
-        sessionSkillKey,
-        kept.length === enabledToolNames.length ? undefined : kept,
-      );
-    },
-    [selectedToolNames, enabledToolNames, sessionSkillKey, setSessionTools],
-  );
-
-  // Presets: the two things users actually ask for. "全选" is the default and
-  // clears the override; "只读" is the plan-mode-like profile — it keeps what
-  // cannot change the world and drops bash/edit/write and writer plugins.
-  const handleSelectAllTools = useCallback(() => {
-    setSessionTools(sessionSkillKey, undefined);
-  }, [sessionSkillKey, setSessionTools]);
-
-  const handleReadOnlyTools = useCallback(() => {
-    const alwaysSafe = new Set(['read', ASK_TOOL_NAME, TODO_TOOL_NAME, 'context_audit']);
-    const kept = enabledTools
-      .filter((tool) => alwaysSafe.has(tool.name) || tool.readOnly === true)
-      .map((tool) => tool.name);
-    setSessionTools(
-      sessionSkillKey,
-      kept.length === enabledToolNames.length ? undefined : kept,
+  const addPendingSkill = useCallback((skill: Skill) => {
+    setPendingSkills((prev) =>
+      prev.some((s) => s.id === skill.id) ? prev : [...prev, skill],
     );
-  }, [enabledTools, enabledToolNames, sessionSkillKey, setSessionTools]);
+  }, []);
+
+  // The `/` menu is commands plus the enabled skills. Skill entries carry
+  // `skillId`; selecting one adds a reference chip instead of inserting a
+  // command token.
+  type SlashMenuItem = RegisteredCommand & { skillId?: string };
+  const slashItems = useMemo<SlashMenuItem[]>(
+    () => [
+      // Skills first: `/` is primarily the quick-reference path for them; the
+      // fixed command list is short and still one scroll away.
+      ...enabledSkills.map((skill) => ({
+        id: `skill-${skill.id}`,
+        name: skill.name,
+        description: skill.description,
+        category: 'skill' as const,
+        source: 'skill',
+        skillId: skill.id,
+      })),
+      ...registeredCommands,
+    ],
+    [registeredCommands, enabledSkills],
+  );
 
   const handleFilesSelected = useCallback(
     (files: File[]) => {
@@ -583,6 +519,17 @@ export function Composer() {
         }
       } catch { /* context collection never blocks the send */ }
 
+      // Per-message skill references from the `/` menu. This is an instruction
+      // for THIS message only — the session's skill set is untouched, and the
+      // model still sees every enabled skill in the standing index.
+      const referencedSkills = pendingSkillsRef.current;
+      if (referencedSkills.length > 0) {
+        const list = referencedSkills
+          .map((skill) => `- ${skill.name}：${skill.description}`)
+          .join('\n');
+        promptContent = `${promptContent}\n\n${SKILL_REFERENCE_MARKER}\n${list}\n（技能说明在可用技能列表中，请按该技能的内容执行。）`;
+      }
+
       // Note: the @ prefix on file mentions (e.g. @filename.pptx) is intentionally
       // preserved so that the persisted content keeps the @ and the mention badge
       // renders identically on reload. Workspace/session @mentions already keep @;
@@ -630,15 +577,9 @@ export function Composer() {
           workspaceCwd: activeWorkspaceId ?? undefined,
           modelId: config?.defaultModelId,
           attachments: imageAttachments.length > 0 ? imageAttachments : undefined,
-          skills: validSelectedSkills,
-          // Always send the array once the catalog is known: `undefined` means
-          // "the caller does not know the tool set" (reuse the cached session),
-          // while `[]` means "explicitly nothing disabled" and must rebuild a
-          // session that still carries a previous restriction. Before the
-          // catalog loads, sending `[]` would silently drop the conversation's
-          // stored restriction — send undefined and let the cached session (or
-          // the host's global list) decide.
-          disabledTools: toolsLoaded ? effectiveDisabledTools : undefined,
+          // Every globally enabled skill goes to the model; the model decides
+          // which one applies. Per-message references ride in the content.
+          skills: enabledSkillIds,
         },
         (chunk) => {
           if (chunk.type === 'message_start') {
@@ -670,6 +611,9 @@ export function Composer() {
       );
     },
     onSuccess: () => {
+      // References are per-message: they must not leak into the next send.
+      setPendingSkills([]);
+      pendingSkillsRef.current = [];
       const state = useComposerStore.getState();
 
       // Clear editing state if in edit mode
@@ -820,9 +764,9 @@ export function Composer() {
           },
           {
             title: t('技能'),
-            items: (availableSkills ?? []).map((s) => ({
+            items: enabledSkills.map((s) => ({
               name: s.name,
-              desc: `${s.description} (${validSelectedSkills.includes(s.id) ? t('使用中') : t('未使用')})`,
+              desc: s.description,
             })),
           },
           {
@@ -868,10 +812,7 @@ export function Composer() {
           medium: '中',
           high: '高',
         };
-        const skills = (availableSkills ?? [])
-          .filter((s) => validSelectedSkills.includes(s.id))
-          .map((s) => s.name)
-          .join(', ') || t('无');
+        const skills = enabledSkills.map((s) => s.name).join(', ') || t('无');
         const configSections: Array<{ title: string; items: Array<{ name: string; desc: string }> }> = [
           {
             title: t('当前配置'),
@@ -961,9 +902,8 @@ export function Composer() {
       activeWorkspaceId,
       config,
       availableModels,
-      availableSkills,
+      enabledSkills,
       compactMode,
-      validSelectedSkills,
       queryClient,
       setActiveSession,
       triggerScrollToBottom,
@@ -971,7 +911,13 @@ export function Composer() {
   );
 
   const handleSubmit = useCallback(() => {
-    if ((!value.trim() && pendingAttachments.length === 0) || !activeSessionId || sendMutation.isPending) return;
+    if (
+      (!value.trim() && pendingAttachments.length === 0 && pendingSkills.length === 0) ||
+      !activeSessionId ||
+      sendMutation.isPending
+    ) {
+      return;
+    }
 
     const trimmed = value.trim();
 
@@ -1100,7 +1046,7 @@ export function Composer() {
     (query: string) => {
       // Only show menu when there are actual matches; otherwise Enter key
       // gets intercepted for empty-menu selection and the message won't send.
-      const hasMatch = registeredCommands.some(
+      const hasMatch = slashItems.some(
         (c) => !query || c.name.toLowerCase().includes(query.toLowerCase()),
       );
       if (!hasMatch) {
@@ -1110,7 +1056,7 @@ export function Composer() {
       setHighlightedSlashIndex(0);
       setShowSlashMenu(true, query);
     },
-    [setShowSlashMenu, registeredCommands],
+    [setShowSlashMenu, slashItems],
   );
 
   const handleMentionDetect = useCallback(
@@ -1143,10 +1089,10 @@ export function Composer() {
   // Compute total filtered items for both menus (for index clamping)
   const totalSlashItems = useMemo(() => {
     if (!showSlashMenu) return 0;
-    return registeredCommands.filter(
+    return slashItems.filter(
       (c) => !slashQuery || c.name.toLowerCase().includes(slashQuery.toLowerCase()),
     ).length;
-  }, [showSlashMenu, slashQuery, registeredCommands]);
+  }, [showSlashMenu, slashQuery, slashItems]);
 
   const totalMentionItems = useMemo(() => {
     if (!showMentionMenu) return 0;
@@ -1168,15 +1114,28 @@ export function Composer() {
   );
 
   const handleSlashSelect = useCallback(
-    (cmd?: import('@pi/types').SlashCommand) => {
+    (cmd?: import('@pi/types').SlashCommand & { skillId?: string }) => {
       // If called without args (Enter key), select highlighted item
       if (!cmd) {
-        const filtered = registeredCommands.filter(
+        const filtered = slashItems.filter(
           (c) => !slashQuery || c.name.toLowerCase().includes(slashQuery.toLowerCase()),
         );
         cmd = filtered[highlightedSlashIndex];
         if (!cmd) return;
       }
+
+      // A skill is a per-message reference, not a command token: add a chip
+      // for this message and clear the typed `/query`. Nothing about the
+      // session changes.
+      if (cmd.skillId) {
+        const skill = enabledSkills.find((s) => s.id === cmd!.skillId);
+        if (skill) addPendingSkill(skill);
+        setValue(value.replace(/\/([^\s]*)$/, ''));
+        setShowSlashMenu(false);
+        setHighlightedSlashIndex(0);
+        return;
+      }
+
       // cmd.name already includes the / prefix (e.g. "/help")
       const tokenText = cmd.name;
       const withoutSlash = value.replace(/\/(\w*)$/, '');
@@ -1186,7 +1145,16 @@ export function Composer() {
       setHighlightedSlashIndex(0);
       setTokenInsertVersion((v) => v + 1);
     },
-    [value, setValue, setShowSlashMenu, slashQuery, highlightedSlashIndex, registeredCommands],
+    [
+      value,
+      setValue,
+      setShowSlashMenu,
+      slashQuery,
+      highlightedSlashIndex,
+      slashItems,
+      enabledSkills,
+      addPendingSkill,
+    ],
   );
 
   const handleMentionNavigate = useCallback(
@@ -1260,6 +1228,32 @@ export function Composer() {
         </div>
       )}
 
+      {/* Per-message skill references from the `/` menu. Cleared after send. */}
+      {pendingSkills.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3">
+          {pendingSkills.map((skill) => (
+            <span
+              key={skill.id}
+              title={skill.description}
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 py-0.5 pl-2 pr-1 text-[11px]"
+            >
+              <Sparkles className="h-3 w-3 shrink-0 text-muted-foreground" />
+              <span className="max-w-[180px] truncate">{skill.name}</span>
+              <button
+                type="button"
+                aria-label={t('移除技能引用')}
+                onClick={() =>
+                  setPendingSkills((prev) => prev.filter((s) => s.id !== skill.id))
+                }
+                className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Input area with drag-drop */}
       <div
         className="relative mx-3 mt-3"
@@ -1270,7 +1264,7 @@ export function Composer() {
         {/* Slash Command / Mention Menus */}
         {showSlashMenu && (
           <SlashCommandMenu
-            commands={registeredCommands}
+            commands={slashItems}
             query={slashQuery}
             highlightedIndex={highlightedSlashIndex}
             onSelect={handleSlashSelect}
@@ -1326,13 +1320,16 @@ export function Composer() {
       {/* Divider */}
       <Separator className="mt-3" />
 
-      {/* Bottom tools row */}
-      <div className="flex items-center gap-1 px-3 py-2 min-w-0 flex-wrap">
+      {/* Bottom tools row. One line, three zones: input action · model/effort ·
+          capabilities, then status and the primary action on the right. Every
+          control is 28px tall; the model name is the only thing that shrinks.
+          Voice input slots in immediately before Send. */}
+      <div className="flex min-w-0 items-center gap-1 px-2.5 py-2">
         <FileUploadButton
           disabled={isStreaming}
           onFilesSelected={handleFilesSelected}
         />
-        <div className="h-4 w-px bg-border mx-1 hidden sm:block" />
+        <div className="mx-0.5 h-4 w-px shrink-0 bg-border" />
         <ModelSelector
           value={config?.defaultModelId ?? ''}
           onChange={(modelId) => updateConfigMut.mutate({ defaultModelId: modelId })}
@@ -1341,25 +1338,10 @@ export function Composer() {
           value={config?.defaultThinkLevel ?? 'medium'}
           onChange={(level) => updateConfigMut.mutate({ defaultThinkLevel: level })}
         />
-        <div className="h-4 w-px bg-border mx-1 hidden sm:block" />
-        <SkillSelector
-          skills={enabledSkills}
-          selectedIds={validSelectedSkills}
-          onToggle={handleToggleSkill}
-        />
-        <ToolSelector
-          tools={enabledTools}
-          selectedNames={selectedToolNames}
-          onToggle={handleToggleTool}
-          onSelectAll={handleSelectAllTools}
-          onReadOnly={handleReadOnlyTools}
-        />
-        <CompactToggle compact={compactMode} onToggle={setCompactMode} />
-        {/* Session permission mode — left side of the toolbar because the right
-            side is replaced by Steer/Stop while streaming, and tools run
-            exactly then. */}
-        <PermissionModeButton />
-        <div className="flex items-center gap-1 shrink-0 ml-auto">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          <PermissionModeButton />
+          {/* Voice input button goes here, before Send. */}
+
         {isStreaming ? (
           <>
             <Button
@@ -1387,7 +1369,10 @@ export function Composer() {
         ) : (
           <SendButton
             onClick={handleSubmit}
-            disabled={(!value.trim() && pendingAttachments.length === 0) || !activeSessionId}
+            disabled={
+              (!value.trim() && pendingAttachments.length === 0 && pendingSkills.length === 0) ||
+              !activeSessionId
+            }
             isLoading={sendMutation.isPending}
           />
         )}

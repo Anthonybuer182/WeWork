@@ -54,7 +54,7 @@ export { WorkspaceDropdown, WorkspaceCreateButton } from './components/workspace
 export { SessionList, SessionItem, SessionCreateButton, SessionHeader } from './components/session';
 export { ChatTimeline, MessageBubble, ThinkingBlock, ToolCallDisplay, EmptyChat, StreamingIndicator } from './components/chat';
 export { Composer, ComposerInput, SendButton, SlashCommandMenu, MentionMenu, AttachmentPreviewBar, FileUploadButton } from './components/composer';
-export { ModelSelector, ThinkLevelSelector, CompactToggle, SkillSelector } from './components/model';
+export { ModelSelector, ThinkLevelSelector } from './components/model';
 export { SettingsDialog, SettingsRailButton } from './components/settings';
 export { UsageBar } from './components/usage';
 export { ErrorBoundary, LoadingSpinner, EmptyState, ErrorState, ConfirmDialog } from './components/common';

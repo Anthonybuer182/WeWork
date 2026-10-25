@@ -43,6 +43,7 @@ export function commandDescription(
 
 export const COMMAND_CATEGORY_LABELS: Record<string, MessageKey> = {
   chat: '对话',
+  skill: '技能',
   config: '配置',
   plugin: '插件',
   other: '其他',

@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import type { ThemeMode } from '@pi/types';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { useUIStore } from '@/stores/ui-store';
 import {
   useI18n,
   useLanguageStore,
@@ -49,6 +51,8 @@ export function GeneralSettingsPage() {
   const { theme, setTheme } = useTheme();
   const language = useLanguageStore((s) => s.language);
   const setLanguage = useLanguageStore((s) => s.setLanguage);
+  const compactMode = useUIStore((s) => s.compactMode);
+  const setCompactMode = useUIStore((s) => s.setCompactMode);
 
   return (
     <div className="h-full overflow-y-auto overscroll-contain px-6 py-2">
@@ -90,6 +94,13 @@ export function GeneralSettingsPage() {
           </Select>
         </Row>
 
+        <Row label={t('紧凑模式')} hint={t('收紧消息间距，一屏看更多内容。')}>
+          <Switch
+            checked={compactMode}
+            onCheckedChange={setCompactMode}
+            aria-label={t('紧凑模式')}
+          />
+        </Row>
       </div>
 
       <p className="pb-4 pt-2 text-[11px] text-muted-foreground/70">

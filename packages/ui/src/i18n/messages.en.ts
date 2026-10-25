@@ -497,7 +497,8 @@ export const EN_MESSAGES = {
   本次会话使用的技能: 'Skills for this conversation',
   '没有启用的技能，可在 设置 → 技能 中打开。':
     'No skills are enabled. Turn some on in Settings → Skills.',
-  '技能（已选 {count} 个）': 'Skills ({count} selected)',
+  '技能（已选 {count}/{total} 项）': 'Skills ({count}/{total} selected)',
+  '收紧消息间距，一屏看更多内容。': 'Tighten message spacing to fit more on screen.',
   文档: 'Document',
   文件系统: 'Filesystem',
   代码: 'Code',
@@ -535,12 +536,13 @@ export const EN_MESSAGES = {
   提交: 'Submit',
   下一题: 'Next',
   '回答后 agent 会继续': 'The agent continues once you answer',
+  移除技能引用: 'Remove skill reference',
   交互: 'Interaction',
   全选: 'All',
   只读: 'Read-only',
   '只保留不会改动文件的工具（read / 提问 / 清单等）':
     'Keep only tools that cannot change files (read, questions, checklist…)',
-  '工具（已选 {count} 个）': 'Tools ({count} selected)',
+  '工具（已选 {count}/{total} 项）': 'Tools ({count}/{total} selected)',
   '本次会话使用的工具': 'Tools for this conversation',
   '没有可用的工具，可在 设置 → 工具 中打开。':
     'No tools available. Turn them on in Settings → Tools.',

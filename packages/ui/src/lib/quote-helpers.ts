@@ -1,3 +1,4 @@
+import { SKILL_REFERENCE_MARKER } from '@pi/types';
 import { t } from '@/i18n';
 
 /**
@@ -13,8 +14,18 @@ import { t } from '@/i18n';
  * UI renders them as cards (quote / context blocks), so showing them inline
  * in the user bubble would duplicate the same content twice.
  */
+/**
+ * Drop the per-message skill-reference block (`/` menu). It is an instruction
+ * for the model, not text the user typed. The block is always appended last.
+ */
+function stripSkillReference(content: string): string {
+  const index = content.lastIndexOf(SKILL_REFERENCE_MARKER);
+  if (index < 0) return content;
+  return content.slice(0, index).replace(/\s+$/, '');
+}
+
 export function stripAppendedContext(content: string): string {
-  return content
+  return stripSkillReference(content)
     .replace(/\n*--- Quoted Context ---[\s\S]*?--- End Quoted Context ---\s*/g, '')
     .replace(/\n*---\s*\n\[相关上下文\][\s\S]*?\n---\s*/g, '')
     .replace(/\s+$/, '');
@@ -57,7 +68,7 @@ export function extractAppendedQuotes(content: string): { display: string; quote
       return '';
     },
   );
-  const display = withoutQuotes
+  const display = stripSkillReference(withoutQuotes)
     .replace(/\n*---\n\[相关上下文\][\s\S]*?\n---\s*/g, '')
     .replace(/\s+$/, '');
   return { display, quotes };

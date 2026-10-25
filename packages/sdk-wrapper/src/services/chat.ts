@@ -16,12 +16,6 @@ export interface SendMessageParams {
    * plugin contributes.
    */
   skills?: string[];
-  /**
-   * Tool names that must not be exposed for this conversation (on top of the
-   * host-wide disabled list). Resolved by the renderer from the composer's
-   * per-conversation selection; the adapter merges in the global list.
-   */
-  disabledTools?: string[];
 }
 
 export interface StreamChunk {
