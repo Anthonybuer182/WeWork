@@ -1,12 +1,27 @@
-import { Loader2, ShieldAlert, Sparkles } from 'lucide-react';
+import { Loader2, MessageCircleQuestion, ShieldAlert, Sparkles } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import type { ToolCallBlock, ToolResultBlock } from '@pi/types';
+import {
+  ASK_TOOL_NAME,
+  TODO_TOOL_NAME,
+  TODO_STATUSES,
+  type TodoItem,
+  type TodoPriority,
+  type TodoSnapshot,
+  type TodoStatus,
+  type ToolCallBlock,
+  type ToolResultBlock,
+} from '@pi/types';
 import { DeclarativeRenderer } from '@/components/plugins/declarative/declarative-renderer';
 import { usePluginStore } from '@/stores/plugin-store';
 import { usePermissionStore } from '@/stores/permission-store';
+import { useAskStore } from '@/stores/ask-store';
+import { useTodoStore } from '@/stores/todo-store';
+import { useUIStore } from '@/stores/ui-store';
 import { useI18n } from '@/i18n';
 import { PermissionRequestCard } from './permission-request-card';
+import { AskCard } from './ask-card';
+import { TodoCard } from './todo-card';
 import './chat-animations.css';
 
 interface ToolCallDisplayProps {
@@ -21,11 +36,60 @@ function formatDuration(ms: number): string {
   return `${ms}ms`;
 }
 
+/**
+ * A display-only snapshot built from `todotool`'s arguments, used while the
+ * call is still waiting to execute (e.g. behind an approval in the same batch).
+ * Same normalization the host applies, minus truncation/warnings — those only
+ * matter to the model.
+ */
+function todosFromArgs(args: Record<string, unknown> | undefined): TodoSnapshot | null {
+  const raw = args?.todos;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const todos: TodoItem[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const item = entry as Record<string, unknown>;
+    const content = typeof item.content === 'string' ? item.content.trim() : '';
+    if (!content) continue;
+    const status = TODO_STATUSES.includes(item.status as TodoStatus)
+      ? (item.status as TodoStatus)
+      : 'pending';
+    const priority =
+      item.priority === 'low' || item.priority === 'medium' || item.priority === 'high'
+        ? (item.priority as TodoPriority)
+        : undefined;
+    todos.push({ content, status, ...(priority ? { priority } : {}) });
+  }
+  if (todos.length === 0) return null;
+  return {
+    sessionId: '',
+    todos,
+    revision: Number.MAX_SAFE_INTEGER,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 function getToolPreview(block: ToolCallBlock): string {
   const input = block.args;
   if (!input || typeof input !== 'object') return '';
   const keys = Object.keys(input);
   if (keys.length === 0) return '';
+
+  if (block.toolName === ASK_TOOL_NAME) {
+    const questions = Array.isArray(input.questions) ? input.questions : [];
+    const first = questions[0] as { question?: unknown } | undefined;
+    if (typeof first?.question === 'string') {
+      const more = questions.length > 1 ? ` (+${questions.length - 1})` : '';
+      return `${first.question}${more}`.slice(0, 120);
+    }
+  }
+  if (block.toolName === TODO_TOOL_NAME) {
+    const todos = Array.isArray(input.todos) ? input.todos : [];
+    const running = todos.filter(
+      (todo) => (todo as { status?: unknown })?.status === 'in_progress',
+    ).length;
+    return running > 0 ? `${todos.length} 项 · ${running} 进行中` : `${todos.length} 项`;
+  }
 
   if ('command' in input) return String(input.command).slice(0, 120);
   if ('path' in input) return String(input.path).slice(0, 120);
@@ -47,6 +111,35 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
   // it before execution — show the inline card instead of a running spinner.
   const pendingRequest = usePermissionStore((s) => s.pendingByToolCall[block.toolCallId]);
   const awaitingApproval = isRunning && !!pendingRequest;
+  // A pending asktool request is the other kind of "this call is waiting on a
+  // human" — same inline placement, different card.
+  const askRequestId = useAskStore((s) => s.byToolCall[block.toolCallId]);
+  const askRequest = useAskStore((s) => (askRequestId ? s.requests[askRequestId] : undefined));
+  const activeSessionId = useUIStore((s) => s.activeSessionId);
+  // The composer's streaming blocks are global, so a run started in session A
+  // keeps rendering after the user switches to B. A question is answerable
+  // only in the conversation that asked it.
+  const awaitingAnswer =
+    isRunning && !!askRequest && askRequest.sessionId === (activeSessionId ?? '');
+  // The checklist is rendered from the store (not from this call's args) so a
+  // later todotool call updates the same card in place.
+  // Guard by tool name so every OTHER tool card in the transcript keeps a
+  // stable `null` subscription: a snapshot update must not re-render hundreds
+  // of unrelated cards.
+  const todoSnapshot = useTodoStore((s) =>
+    block.toolName === TODO_TOOL_NAME && activeSessionId
+      ? (s.bySession[activeSessionId] ?? null)
+      : null,
+  );
+  // The snapshot only exists once the tool has EXECUTED. A batch that also
+  // contains a call waiting for approval does not execute anything until the
+  // verdict arrives (the SDK prepares the whole batch first), so the checklist
+  // would stay invisible exactly when the user is looking at an approval card.
+  // Render the arguments instead until then — same list, just early.
+  const provisionalTodo = useMemo(
+    () => (block.toolName === TODO_TOOL_NAME ? todosFromArgs(block.args) : null),
+    [block.toolName, block.args],
+  );
   const hasError = result?.isError;
   const rawResult = result?.result;
   const resultText = rawResult == null
@@ -129,9 +222,11 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
       !isStreaming && 'animate-streaming-in',
       awaitingApproval
         ? 'border-amber-400/60 bg-amber-50/40 dark:bg-amber-950/10'
-        : hasError
-          ? 'border-destructive/30'
-          : 'border-border',
+        : awaitingAnswer
+          ? 'border-sky-400/60 bg-sky-50/40 dark:bg-sky-950/10'
+          : hasError
+            ? 'border-destructive/30'
+            : 'border-border',
     )}>
       {/* ── Header row ── */}
       <button
@@ -139,7 +234,9 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
         onClick={handleToggle}
       >
         {/* Status icon */}
-        {awaitingApproval ? (
+        {awaitingAnswer ? (
+          <MessageCircleQuestion className="h-3 w-3 animate-pulse text-sky-600 dark:text-sky-400 shrink-0" />
+        ) : awaitingApproval ? (
           <ShieldAlert className="h-3 w-3 animate-pulse text-amber-600 dark:text-amber-400 shrink-0" />
         ) : isRunning ? (
           <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />
@@ -166,12 +263,17 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
         )}
 
         {/* Running indicator (only when collapsed) */}
+        {awaitingAnswer && !expanded && (
+          <span className="text-sky-600/80 dark:text-sky-400/70 animate-pulse shrink-0 ml-auto">
+            {t('等待回答')}
+          </span>
+        )}
         {awaitingApproval && !expanded && (
           <span className="text-amber-600/80 dark:text-amber-400/70 animate-pulse shrink-0 ml-auto">
             {t('等待批准')}
           </span>
         )}
-        {isRunning && !awaitingApproval && !expanded && (
+        {isRunning && !awaitingApproval && !awaitingAnswer && !expanded && (
           <span className="text-muted-foreground/60 animate-pulse shrink-0 ml-auto">
             {t('运行中…')}
           </span>
@@ -203,6 +305,24 @@ export function ToolCallDisplay({ block, result, isStreaming, durationMs }: Tool
           <PermissionRequestCard request={pendingRequest} />
         </div>
       )}
+
+      {/* ── Inline question card: the agent is waiting for an answer ── */}
+      {awaitingAnswer && askRequest && (
+        <div data-ask-inline={askRequest.requestId}>
+          <AskCard request={askRequest} />
+        </div>
+      )}
+
+      {/* ── Task checklist: live from the store, but only on the call that
+           produced the current snapshot. Every call replaces the whole list,
+           so rendering it on every historical call would stack near-identical
+           cards; this keeps the list in exactly one place. ── */}
+      {block.toolName === TODO_TOOL_NAME &&
+        (todoSnapshot?.toolCallId === block.toolCallId ? (
+          <TodoCard snapshot={todoSnapshot} />
+        ) : isRunning && provisionalTodo ? (
+          <TodoCard snapshot={provisionalTodo} />
+        ) : null)}
 
       {/* ── Streaming args card (tool running, args arriving live) ── */}
       {hasStreamingCard && (

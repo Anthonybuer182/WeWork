@@ -50,6 +50,13 @@ interface UIState {
    * `[]` means "this conversation uses none", which is not the same as missing.
    */
   skillOverridesBySession: Record<string, string[]>;
+  /**
+   * Per-conversation tool keep-list, same semantics as skills: missing = every
+   * globally enabled tool; an entry records what the composer's checkboxes kept
+   * after they were touched. The global on/off switches live in main; a
+   * conversation can only narrow that set, never re-enable a global "off".
+   */
+  toolOverridesBySession: Record<string, string[]>;
   connectionStatus: ConnectionStatus;
 
   setActiveWorkspace: (id: string | null) => void;
@@ -77,6 +84,8 @@ interface UIState {
   /** `undefined` clears the override, restoring "all enabled skills". */
   setSessionSkills: (sessionId: string, skillIds: string[] | undefined) => void;
   toggleSkillEnabled: (skillId: string) => void;
+  /** `undefined` clears the override, restoring "all globally enabled tools". */
+  setSessionTools: (sessionId: string, toolNames: string[] | undefined) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
 }
 
@@ -98,6 +107,7 @@ export const useUIStore = create<UIState>()(
       compactMode: false,
       disabledSkills: [],
       skillOverridesBySession: {},
+      toolOverridesBySession: {},
       connectionStatus: 'connecting',
 
       setActiveWorkspace: (id) => set({ activeWorkspaceId: id, activeSessionId: null }),
@@ -159,6 +169,13 @@ export const useUIStore = create<UIState>()(
             ? s.disabledSkills.filter((id) => id !== skillId)
             : [...s.disabledSkills, skillId],
         })),
+      setSessionTools: (sessionId, toolNames) =>
+        set((s) => {
+          const next = { ...s.toolOverridesBySession };
+          if (toolNames === undefined) delete next[sessionId];
+          else next[sessionId] = toolNames;
+          return { toolOverridesBySession: next };
+        }),
       setConnectionStatus: (status) => set({ connectionStatus: status }),
     }),
     {
@@ -181,6 +198,7 @@ export const useUIStore = create<UIState>()(
         compactMode: state.compactMode,
         disabledSkills: state.disabledSkills,
         skillOverridesBySession: state.skillOverridesBySession,
+        toolOverridesBySession: state.toolOverridesBySession,
       }),
     },
   ),

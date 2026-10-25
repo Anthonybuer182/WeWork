@@ -2,6 +2,7 @@ import * as path from 'path';
 import { statSync, readFileSync } from 'node:fs';
 import type { ChatService, SendMessageParams, StreamChunk } from '../services/chat.js';
 import type { Message, AssistantMessage, ContentBlock, ToolResultBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming, AgentContextConfig, AgentContextReloadResult, AgentToolInfo, AppendSegmentInfo, ContextFileInfo, ContextFileScope, PromptFileInfo } from '@pi/types';
+import { ASK_TOOL_NAME, TODO_TOOL_NAME } from '@pi/types';
 import { createAgentSession, SessionManager, ModelRegistry, AuthStorage, DefaultResourceLoader, getAgentDir, SettingsManager, formatSkillsForPrompt } from '@earendil-works/pi-coding-agent';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 import { extractThinkContent } from '../utils/think-parser.js';
@@ -79,6 +80,49 @@ export const HOST_VISION_PROMPT =
   'You are equipped with vision capabilities. When users attach images or when the read tool loads image files, analyze the visual content directly. This includes: screenshots of code/errors, UI designs, architecture diagrams, charts, photos, and any other images the user shares. Describe what you see clearly and use it to provide better coding assistance.';
 
 /**
+ * The interaction tools' standing policy.
+ *
+ * Their descriptions already say what they do; this block is the behavioral
+ * half that must not drift with a single tool's wording — and the one thing a
+ * tool description cannot say from inside the tool: the checklist is not the
+ * user's planner. Without that line the model writes "remind me tomorrow" into
+ * a list that dies with the turn, or plans its own work inside the 事项
+ * plugin's persistent store.
+ */
+export function buildInteractionPrompt(toolNames?: ReadonlySet<string>): string {
+  // No set = the caller does not know the tool list (tests, a bare loader);
+  // describe both rather than silently dropping policy.
+  const hasTodo = toolNames ? toolNames.has(TODO_TOOL_NAME) : true;
+  const hasAsk = toolNames ? toolNames.has(ASK_TOOL_NAME) : true;
+
+  // Name the planner tool only when it is actually in the list: telling the
+  // model to call `item_add` on a machine without that plugin invites a
+  // nonexistent tool call.
+  const plannerHint =
+    !toolNames || toolNames.has('item_add')
+      ? 'use the planner plugin (`item_add`) instead'
+      : "use the user's planner/reminder plugin instead, if one is available";
+
+  const parts: string[] = [];
+  if (hasTodo) {
+    parts.push(
+      '`todotool` keeps the working checklist for a task that needs three or more steps or spans multiple files: ' +
+        'write it before the first step, keep exactly one item in_progress, and mark an item completed only after ' +
+        'verifying it. When the task ends, leave no item pending or in_progress. That checklist is your own ' +
+        `working memory for this task — it is NOT the user's planner; when the user asks you to remember, ` +
+        `schedule, or be reminded of something, ${plannerHint}.`,
+    );
+  }
+  if (hasAsk) {
+    parts.push(
+      '`asktool` asks the user questions and waits for the answer: use it only when a decision you cannot make ' +
+        'blocks progress, batch everything you need into one call, and never re-ask a question the user skipped.',
+    );
+  }
+  return parts.join(' ');
+}
+
+/**
  * The host's own contribution to `appendSystemPrompt`, in the order the SDK
  * receives it.
  *
@@ -88,8 +132,34 @@ export const HOST_VISION_PROMPT =
  * `DefaultResourceLoader` returns an empty `getAppendSystemPrompt()`, which is
  * exactly how the reader first reported these segments as costing nothing.
  */
-export function buildHostAppendSystemPrompt(pluginDocs: string): string[] {
-  return [HOST_VISION_PROMPT, ...(pluginDocs ? [pluginDocs] : [])];
+/** The names the model will actually see, for prompt/context decisions. */
+function toolNamesOf(tools: unknown[]): Set<string> {
+  const names = new Set<string>();
+  for (const tool of tools) {
+    const name = (tool as { name?: unknown } | null)?.name;
+    if (typeof name === 'string') names.add(name);
+  }
+  return names;
+}
+
+function uniqueNames(names: string[]): string[] {
+  return [...new Set(names.filter((name) => typeof name === 'string' && name.trim()))];
+}
+
+function sameNames(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const set = new Set(a);
+  return b.every((name) => set.has(name));
+}
+
+export function buildHostAppendSystemPrompt(
+  pluginDocs: string,
+  toolNames?: ReadonlySet<string>,
+): string[] {
+  const interaction = buildInteractionPrompt(toolNames);
+  // A switched-off tool is absent from the tool list AND from this block: the
+  // model should not be told about a capability the user turned off.
+  return [HOST_VISION_PROMPT, ...(interaction ? [interaction] : []), ...(pluginDocs ? [pluginDocs] : [])];
 }
 
 /**
@@ -108,8 +178,9 @@ export function buildHostAppendSystemPrompt(pluginDocs: string): string[] {
  */
 export function buildAppendSystemPromptOverride(
   pluginDocs: string,
+  toolNames?: ReadonlySet<string>,
 ): (discovered: string[]) => string[] {
-  return (discovered) => [...buildHostAppendSystemPrompt(pluginDocs), ...discovered];
+  return (discovered) => [...buildHostAppendSystemPrompt(pluginDocs, toolNames), ...discovered];
 }
 
 export interface RealChatServiceOptions {
@@ -124,6 +195,12 @@ export interface RealChatServiceOptions {
    * ('default' when the caller had no session id yet).
    */
   onSessionCreated?: (session: AgentSession, info: { sessionKey: string; cwd: string }) => void;
+  /**
+   * Settings → 工具 switches. Applied on every session creation, on top of the
+   * per-conversation list, so a globally disabled tool can never be re-enabled
+   * by a stale renderer.
+   */
+  getGlobalDisabledTools?: () => string[];
 }
 
 export function createRealChatService(
@@ -132,7 +209,22 @@ export function createRealChatService(
   settingsManager?: SettingsManager,
   options?: RealChatServiceOptions,
 ): ChatService {
-  const activeSessions = new Map<string, { session: AgentSession; unsubscribe: () => void; cwd: string; skills?: string[] }>();
+  const activeSessions = new Map<
+    string,
+    {
+      session: AgentSession;
+      unsubscribe: () => void;
+      cwd: string;
+      skills?: string[];
+      disabledTools?: string[];
+    }
+  >();
+  /**
+   * Sessions that were invalidated while a run was in progress. They stay
+   * cached (a second AgentSession over the same transcript would race the
+   * first) and are rebuilt the first time the run is idle again.
+   */
+  const staleSessions = new Set<string>();
   // Track last message end time per session for thinking time calculation
   const sessionTimings = new Map<string, number>();
 
@@ -178,14 +270,18 @@ export function createRealChatService(
   // so the streaming adapter and the session loader share one implementation.
   // detectWrittenFiles and getMimeType are imported from ../utils/file-detection.js
 
-  async function createResourceLoader(workCwd: string, selectedSkillIds?: string[]) {
+  async function createResourceLoader(
+    workCwd: string,
+    selectedSkillIds?: string[],
+    toolNames?: ReadonlySet<string>,
+  ) {
     // Read at session creation, not cached: enabling a plugin takes effect on
     // the next conversation instead of needing an app restart.
     const pluginDocs = formatPluginDocsForPrompt(options?.pluginDocsProvider?.() ?? []);
     const resourceLoader = new DefaultResourceLoader({
       cwd: workCwd,
       agentDir: getAgentDir(),
-      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocs),
+      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocs, toolNames),
       skillsOverride: selectedSkillIds
         ? (base) => {
             const enabledNames = new Set(
@@ -206,14 +302,32 @@ export function createRealChatService(
     sessionId?: string,
     workspaceCwd?: string,
     skills?: string[],
+    disabledTools?: string[],
   ): Promise<AgentSession> {
     const key = sessionId || 'default';
     const workCwd = workspaceCwd || cwd;
 
+    // A session invalidated mid-run is rebuilt only once it is idle — and the
+    // rebuild has to happen here, before the "reuse the cache" decision, or a
+    // steer would keep using the stale tool/plugin set forever.
+    const stale = activeSessions.get(key);
+    if (stale && staleSessions.has(key) && !stale.session.isStreaming) {
+      try { stale.unsubscribe(); } catch { /* best-effort */ }
+      activeSessions.delete(key);
+      staleSessions.delete(key);
+    }
+
+    // Global switches are merged here, not in the renderer: a stale composer
+    // must never hand a switched-off tool back to the model.
+    const effectiveDisabled = uniqueNames([
+      ...(disabledTools ?? []),
+      ...(options?.getGlobalDisabledTools?.() ?? []),
+    ]);
+
     // If a cached session exists, return it directly unless the caller provided
     // an explicit workspaceCwd that differs from the session's cwd (e.g. user
-    // switched workspaces) or skills changed. steer/followUp/navigateTree don't
-    // pass workspaceCwd or skills, so they safely reuse the existing session.
+    // switched workspaces), skills changed, or the tool set changed. steer/
+    // followUp/navigateTree don't pass these, so they safely reuse the session.
     const cached = activeSessions.get(key);
     if (cached) {
       const skillsChanged = skills && !cached.skills
@@ -221,10 +335,17 @@ export function createRealChatService(
         : skills && cached.skills
           ? skills.length !== cached.skills.length || !skills.every((s) => cached.skills!.includes(s))
           : false;
-      if ((!workspaceCwd || cached.cwd === workspaceCwd) && !skillsChanged) {
+      // Only compare when the caller actually knows the tool set. steer /
+      // followUp / navigateTree pass no list and must reuse the cached session
+      // — otherwise their global-only view would rebuild a session and quietly
+      // re-enable tools the conversation had switched off.
+      const toolsChanged =
+        disabledTools !== undefined &&
+        !sameNames(cached.disabledTools ?? [], effectiveDisabled);
+      if ((!workspaceCwd || cached.cwd === workspaceCwd) && !skillsChanged && !toolsChanged) {
         return cached.session;
       }
-      // cwd or skills mismatch — tear down the old session and create a new one
+      // cwd / skills / tools mismatch — tear down and create a new session
       cached.unsubscribe();
       activeSessions.delete(key);
     }
@@ -238,13 +359,23 @@ export function createRealChatService(
       sessionManager = SessionManager.create(workCwd);
     }
 
+    // One call, used twice: the tool list and the interaction paragraph that
+    // describes its two host tools must agree even when a switch turned one off.
+    const customTools = options?.customToolsProvider?.() ?? [];
+    const toolNames = toolNamesOf(customTools);
+    for (const name of effectiveDisabled) toolNames.delete(name);
+
     const { session } = await createAgentSession({
       cwd: workCwd,
       sessionManager,
       modelRegistry: registry, // share registry so custom models are visible
-      resourceLoader: await createResourceLoader(workCwd, skills),
+      resourceLoader: await createResourceLoader(workCwd, skills, toolNames),
       settingsManager,         // share settings so shell path is respected
-      customTools: (options?.customToolsProvider?.() ?? []) as never,
+      customTools: customTools as never,
+      // `createAgentSession` calls this denylist `excludeTools` (the lower
+      // AgentSessionConfig names it `excludedToolNames`); it applies to
+      // built-ins and custom tools alike.
+      excludeTools: effectiveDisabled.length > 0 ? effectiveDisabled : undefined,
     });
 
     // Host-level per-session hooks (permission gate, audit, …). Runs before the
@@ -255,7 +386,13 @@ export function createRealChatService(
       // Events are handled at the call site level
     });
 
-    activeSessions.set(key, { session, unsubscribe, cwd: workCwd, skills });
+    activeSessions.set(key, {
+      session,
+      unsubscribe,
+      cwd: workCwd,
+      skills,
+      disabledTools: effectiveDisabled,
+    });
     return session;
   }
 
@@ -383,28 +520,40 @@ export function createRealChatService(
   async function readAgentContextConfig(
     workspacePath: string,
     workspaceId?: string,
+    sessionId?: string,
   ): Promise<AgentContextConfig> {
     const resolvedWorkspace = path.resolve(workspacePath);
     // The appended segments are the host's own list, not an SDK default — a bare
     // loader reports none. Built through the same helper session creation uses,
     // so what this reports is what the model actually receives.
     const pluginDocsBlock = formatPluginDocsForPrompt(options?.pluginDocsProvider?.() ?? []);
-    const hostSegments = buildHostAppendSystemPrompt(pluginDocsBlock);
+    const toolNames = toolNamesOf(options?.customToolsProvider?.() ?? []);
+    // The standing-context reader has no conversation in hand; it can only
+    // subtract the global switches, not a per-conversation choice.
+    for (const name of options?.getGlobalDisabledTools?.() ?? []) toolNames.delete(name);
+    const interactionPrompt = buildInteractionPrompt(toolNames);
+    const hostSegments = buildHostAppendSystemPrompt(pluginDocsBlock, toolNames);
     const loader = new DefaultResourceLoader({
       cwd: resolvedWorkspace,
       agentDir: getAgentDir(),
-      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocsBlock),
+      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocsBlock, toolNames),
     });
     await loader.reload();
 
     // A live session for this workspace is the only source of the assembled
     // prompt: the SDK's buildSystemPrompt is not exported, so the built-in base
-    // prompt cannot be reproduced without one.
-    let live: AgentSession | undefined;
-    for (const cached of activeSessions.values()) {
-      if (path.resolve(cached.cwd) === resolvedWorkspace) {
-        live = cached.session;
-        break;
+    // prompt cannot be reproduced without one. Prefer the exact conversation:
+    // tool sets are per conversation now, so "first session in this workspace"
+    // can report another one's tools.
+    let live: AgentSession | undefined = sessionId
+      ? activeSessions.get(sessionId)?.session
+      : undefined;
+    if (!live) {
+      for (const cached of activeSessions.values()) {
+        if (path.resolve(cached.cwd) === resolvedWorkspace) {
+          live = cached.session;
+          break;
+        }
       }
     }
 
@@ -412,9 +561,18 @@ export function createRealChatService(
     // APPEND_SYSTEM.md, in the order the override builds them) ──
     const promptFiles = collectPromptFiles(resolvedWorkspace);
     const appended: AppendSegmentInfo[] = loader.getAppendSystemPrompt().map((text) => {
-      const hostIndex = hostSegments.indexOf(text);
-      if (hostIndex === 0) return { label: '视觉能力说明', source: 'host' as const, text, chars: text.length };
-      if (hostIndex > 0) return { label: '插件索引', source: 'plugin-docs' as const, text, chars: text.length };
+      // Identify host segments by content, not by position: the interaction
+      // paragraph is absent when both tools are switched off, and an index-based
+      // label would then claim the plugin index was something else.
+      if (text === HOST_VISION_PROMPT) {
+        return { label: '视觉能力说明', source: 'host' as const, text, chars: text.length };
+      }
+      if (interactionPrompt && text === interactionPrompt) {
+        return { label: '交互工具说明', source: 'host' as const, text, chars: text.length };
+      }
+      if (pluginDocsBlock && text === pluginDocsBlock) {
+        return { label: '插件索引', source: 'plugin-docs' as const, text, chars: text.length };
+      }
       return { label: '追加提示词', source: 'user-append' as const, text, chars: text.length };
     });
 
@@ -470,10 +628,17 @@ export function createRealChatService(
         tools.push(toToolInfo(tool as AnyTool, pluginOf.get(name) ?? 'builtin'));
       }
     } else {
+      // No live session: report the standing set, minus the global switches.
+      // (Per-conversation exclusions need a conversation, so they are not
+      // knowable here.)
+      const globalDisabled = new Set(options?.getGlobalDisabledTools?.() ?? []);
       for (const name of DEFAULT_BUILTIN_TOOLS) {
+        if (globalDisabled.has(name)) continue;
         tools.push({ name, source: 'builtin', schemaBytes: 0 });
       }
       for (const tool of pluginTools) {
+        const name = String(tool.name ?? '');
+        if (globalDisabled.has(name)) continue;
         tools.push(toToolInfo(tool, typeof tool.pluginId === 'string' ? tool.pluginId : 'plugin'));
       }
     }
@@ -620,14 +785,25 @@ export function createRealChatService(
     /** Tear down all cached sessions so the next prompt rebuilds them
      *  (used when the plugin tool/skill set changes at runtime). */
     invalidateSessions(): void {
-      for (const cached of activeSessions.values()) {
+      for (const [key, cached] of activeSessions) {
+        // A busy session must survive: dropping it lets the next steer build a
+        // second AgentSession over the same transcript, with two writers.
+        if (cached.session.isStreaming) {
+          staleSessions.add(key);
+          continue;
+        }
         try { cached.unsubscribe(); } catch { /* best-effort */ }
+        activeSessions.delete(key);
+        staleSessions.delete(key);
       }
-      activeSessions.clear();
     },
 
-    getAgentContextConfig(workspacePath: string, workspaceId?: string): Promise<AgentContextConfig> {
-      return readAgentContextConfig(workspacePath, workspaceId);
+    getAgentContextConfig(
+      workspacePath: string,
+      workspaceId?: string,
+      sessionId?: string,
+    ): Promise<AgentContextConfig> {
+      return readAgentContextConfig(workspacePath, workspaceId, sessionId);
     },
 
     reloadAgentContext(workspacePath: string): Promise<AgentContextReloadResult> {
@@ -646,7 +822,12 @@ export function createRealChatService(
     },
 
     async sendMessage(params: SendMessageParams): Promise<Message> {
-      const session = await getOrCreateAgentSession(params.sessionId, params.workspaceCwd, params.skills);
+      const session = await getOrCreateAgentSession(
+        params.sessionId,
+        params.workspaceCwd,
+        params.skills,
+        params.disabledTools,
+      );
 
       try {
         // Auto-migrate and always refresh so the in-memory registry
@@ -712,7 +893,12 @@ export function createRealChatService(
       onChunk: (chunk: StreamChunk) => void,
       signal?: AbortSignal,
     ): Promise<Message> {
-      const session = await getOrCreateAgentSession(params.sessionId, params.workspaceCwd, params.skills);
+      const session = await getOrCreateAgentSession(
+        params.sessionId,
+        params.workspaceCwd,
+        params.skills,
+        params.disabledTools,
+      );
       const sessionKey = params.sessionId || 'default';
       const workspaceCwd = params.workspaceCwd;
 
@@ -1170,6 +1356,7 @@ export function createRealChatService(
           try { await entry.session.abort(); } catch { /* ignore */ }
           entry.unsubscribe();
           activeSessions.delete(sessionId);
+          staleSessions.delete(sessionId);
         }
         return;
       }
@@ -1180,6 +1367,7 @@ export function createRealChatService(
         } catch { /* ignore */ }
       }
       activeSessions.clear();
+      staleSessions.clear();
     },
 
     async steer(sessionId: string, content: string, images?: { name: string; mimeType: string; data: string }[]): Promise<void> {

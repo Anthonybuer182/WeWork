@@ -1,8 +1,10 @@
 import { ipcMain } from 'electron';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 import {
+  ASK_TOOL_NAME,
   isPermissionDecision,
   permissionRuleKey,
+  TODO_TOOL_NAME,
   type PermissionDecision,
   type PermissionMode,
   type PermissionRequest as PermissionRequestPayload,
@@ -40,7 +42,7 @@ export type { PermissionMode, PermissionDecision, PermissionRequestPayload };
  * risk is a game the attacker always wins (`rm -rf` has a thousand spellings),
  * so the line is drawn at "does it touch the world at all".
  */
-const READ_ONLY_TOOLS = new Set(['read', 'ls', 'find', 'grep']);
+const READ_ONLY_TOOLS = new Set(['read', 'ls', 'find', 'grep', TODO_TOOL_NAME, ASK_TOOL_NAME]);
 
 export class PermissionService {
   /** session key → mode. Missing key = the last mode picked this run. */

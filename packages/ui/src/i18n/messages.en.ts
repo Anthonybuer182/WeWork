@@ -523,6 +523,38 @@ export const EN_MESSAGES = {
   '插件 {id} 命令': 'Plugin {id} commands',
   '未选择': 'Not selected',
 
+  // ── Agent interaction (todotool / asktool) ──
+  任务清单: 'Task list',
+  暂无任务: 'No tasks yet',
+  等待回答: 'Waiting for an answer',
+  '第 {current}/{total} 题': 'Question {current} of {total}',
+  '跳到第 {current} 题': 'Go to question {current}',
+  '输入其他答案…': 'Type another answer…',
+  跳过: 'Skip',
+  全部拒绝: 'Decline all',
+  提交: 'Submit',
+  下一题: 'Next',
+  '回答后 agent 会继续': 'The agent continues once you answer',
+  交互: 'Interaction',
+  全选: 'All',
+  只读: 'Read-only',
+  '只保留不会改动文件的工具（read / 提问 / 清单等）':
+    'Keep only tools that cannot change files (read, questions, checklist…)',
+  '工具（已选 {count} 个）': 'Tools ({count} selected)',
+  '本次会话使用的工具': 'Tools for this conversation',
+  '没有可用的工具，可在 设置 → 工具 中打开。':
+    'No tools available. Turn them on in Settings → Tools.',
+  '关闭后模型看不到这个工具，也不会在提示词里提到它。设置保存在本机，下一次发送时生效。':
+    'When off, the model does not see the tool and the standing prompt stops mentioning it. Stored on this machine; applies on the next send.',
+  '还没有可用的工具。': 'No tools yet.',
+  读取文件内容: 'Read file contents',
+  '执行 shell 命令': 'Run shell commands',
+  修改文件: 'Edit files',
+  写入文件: 'Write files',
+  '遇到拿不准的决策时向你提问': 'Ask you when a decision is unclear',
+  '多步任务的实时清单': 'A live checklist for multi-step tasks',
+  '报告当前上下文的占用': 'Report what is filling the context',
+
   // ---- END ----
 } as const;
 

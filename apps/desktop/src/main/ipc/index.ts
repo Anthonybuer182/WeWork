@@ -32,7 +32,13 @@ export interface RegisterIpcHandlersOptions {
   pluginDocsProvider?: () => PluginDoc[];
   /** Per-session host hook (e.g. the permission gate) — see RealChatServiceOptions. */
   onSessionCreated?: RealChatServiceOptions['onSessionCreated'];
+  /** Settings → 工具 switches, merged into every session's tool denylist. */
+  getGlobalDisabledTools?: RealChatServiceOptions['getGlobalDisabledTools'];
+  /** Called after the run is aborted and before the session file is removed. */
+  onSessionDeleted?: (sessionId: string) => void;
 }
+
+let onSessionDeletedHook: ((sessionId: string) => void) | undefined;
 
 export function registerIpcHandlers(
   settingsManager: SettingsManager,
@@ -51,10 +57,12 @@ export function registerIpcHandlers(
   sessionService = createRealSessionService();
   fileService = createRealFileService();
   configService = createRealConfigService(defaultCwd, undefined, sharedModelRegistry, settingsManager);
+  onSessionDeletedHook = options?.onSessionDeleted;
   chatService = createRealChatService(defaultCwd, sharedModelRegistry, settingsManager, {
     customToolsProvider: options?.customToolsProvider,
     pluginDocsProvider: options?.pluginDocsProvider,
     onSessionCreated: options?.onSessionCreated,
+    getGlobalDisabledTools: options?.getGlobalDisabledTools,
   });
 
   // The renderer owns "which workspace is on screen" — a view fact, not a
@@ -160,7 +168,14 @@ async function handleSession(action: string, params: unknown): Promise<unknown> 
     case 'list': return sessionService.list(p.workspaceId as string);
     case 'get': return sessionService.get(p.id as string);
     case 'create': return sessionService.create(p.workspaceId as string, p.title as string | undefined);
-    case 'delete': return sessionService.delete(p.id as string);
+    case 'delete': {
+      const id = p.id as string;
+      // Stop first: the run may be blocked inside asktool (holding a promise
+      // and a card), and deleting the file under a live writer is worse.
+      try { await chatService.stopGeneration(id); } catch { /* best-effort */ }
+      onSessionDeletedHook?.(id);
+      return sessionService.delete(id);
+    }
     case 'updateTitle': return sessionService.updateTitle(p.id as string, p.title as string);
     case 'getTree': return sessionService.getTree(p.id as string);
     default: throw new Error(`Unknown session action: ${action}`);
@@ -186,7 +201,11 @@ async function handleChat(action: string, params: unknown): Promise<unknown> {
       return chatService.compact(p.sessionId as string, p.customInstructions as string | undefined);
     // ── agent context (the host's context panel) ──
     case 'getAgentContextConfig':
-      return chatService.getAgentContextConfig(p.workspacePath as string, p.workspaceId as string | undefined);
+      return chatService.getAgentContextConfig(
+        p.workspacePath as string,
+        p.workspaceId as string | undefined,
+        p.sessionId as string | undefined,
+      );
     case 'reloadAgentContext':
       return chatService.reloadAgentContext(p.workspacePath as string);
     case 'writeContextFile':

@@ -13,6 +13,11 @@ import {
   useCommandStore,
   usePermissionStore,
   initPermissionBridge,
+  useAskStore,
+  initAskBridge,
+  useTodoStore,
+  initTodoBridge,
+  initToolBridge,
   getPluginBridge,
 } from '@pi/ui';
 import { AppShell } from '@pi/ui';
@@ -199,11 +204,19 @@ function AppContent() {
   // were already in flight (covers a renderer reload mid-approval).
   useEffect(() => {
     initPermissionBridge();
+    initAskBridge();
+    initTodoBridge();
+    initToolBridge();
   }, []);
 
   const activeSessionId = useUIStore((s) => s.activeSessionId);
   useEffect(() => {
-    usePermissionStore.getState().sync(activeSessionId ?? 'default');
+    const sessionId = activeSessionId ?? 'default';
+    usePermissionStore.getState().sync(sessionId);
+    // A reload loses the streaming blocks that hosted these cards; main still
+    // holds the pending question / the persisted checklist, so pull both.
+    useAskStore.getState().sync(sessionId);
+    useTodoStore.getState().sync(sessionId);
   }, [activeSessionId]);
 
   // ── Tell main which conversation is on screen ──

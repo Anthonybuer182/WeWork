@@ -95,6 +95,7 @@ export function ContextPanel() {
   const sdk = useSDK();
   const queryClient = useQueryClient();
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
+  const activeSessionId = useUIStore((s) => s.activeSessionId);
   // The plugin index is part of the standing context, so an install/uninstall
   // makes the report stale. Folding the plugin set into the query key is what
   // refreshes it — no event plumbing needed.
@@ -112,8 +113,15 @@ export function ContextPanel() {
   const workspacePath = workspaces?.find((w) => w.id === activeWorkspaceId)?.path ?? null;
 
   const contextQuery = useQuery({
-    queryKey: ['agent-context', workspacePath, pluginSignature],
-    queryFn: () => sdk.chat.getAgentContextConfig(workspacePath as string),
+    // The session is part of the key: its tool set (and therefore the reported
+    // tool list and prompt) can differ from the neighbouring conversation's.
+    queryKey: ['agent-context', workspacePath, activeSessionId, pluginSignature],
+    queryFn: () =>
+      sdk.chat.getAgentContextConfig(
+        workspacePath as string,
+        undefined,
+        activeSessionId ?? undefined,
+      ),
     enabled: !!workspacePath,
   });
 

@@ -12,6 +12,11 @@ import { registerLiveSlotIpcHandlers, LiveSlotRegistry } from '@main/plugins/slo
 import { PluginWebViews } from '@main/plugins/plugin-webview';
 import { createHostAgentTools, type AgentCustomTool } from '@main/agent-tools';
 import { PermissionService, installPermissionGate, registerPermissionIpc } from '@main/permissions';
+import { AskService, registerAskIpc } from '@main/asks';
+import { TodoService, registerTodoIpc } from '@main/todos';
+import { ToolSettingsService, registerToolSettingsIpc } from '@main/preferences/tools';
+import { buildToolCatalog } from '@main/tools/catalog';
+import type { ToolCatalogEntry } from '@pi/types';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -128,6 +133,65 @@ if (!gotLock) {
     // approval card), but the plugin kernel is built first. This indirection
     // lets the browser capability ask for a session's mode at call time.
     let permissionModeFor: (sessionId: string) => 'default' | 'full' = () => 'default';
+
+    /**
+     * Renderer push that survives a closed window.
+     *
+     * On macOS a closed window leaves the app running with a destroyed
+     * BrowserWindow; an unguarded `webContents.send` throws, which would turn
+     * a successful todotool state change into a tool error (and leave a pending
+     * ask entry behind).
+     */
+    const sendToWindow = (channel: string, payload: unknown): void => {
+      if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
+        return;
+      }
+      mainWindow.webContents.send(channel, payload);
+    };
+
+    // Permission modes (默认 / 完全访问). Per-session choices live in main,
+    // keyed by session; the last picked mode seeds every session with no
+    // explicit choice, and a restart resets everything to 'default' — 完全访问
+    // stays a per-run decision. High-risk calls in default mode block the
+    // agent until the renderer's inline approval card answers; 完全访问 lets
+    // everything through but leaves an audit line behind.
+    const permissionService = new PermissionService(
+      (payload) => sendToWindow('pi:permission:request', payload),
+      (payload) => sendToWindow('pi:permission:cancelled', payload),
+    );
+    registerPermissionIpc(permissionService);
+    permissionModeFor = (sessionId) => permissionService.getMode(sessionId);
+
+    // ── Agent interaction tools (todotool / asktool) ──
+    // Both hold state that outlives a single tool call: the checklist survives
+    // a renderer reload, and an unanswered question holds the agent turn open
+    // until the user answers or the turn aborts. Neither can live in a plugin
+    // process (fixed RPC timeout, no cancellation, no abort forwarding).
+    const todoService = new TodoService(
+      join(app.getPath('userData'), 'agent-todos.json'),
+      (snapshot) => sendToWindow('pi:todo:changed', snapshot),
+    );
+    registerTodoIpc(todoService);
+
+    const askService = new AskService({
+      sendRequest: (payload) => sendToWindow('pi:ask:request', payload),
+      sendCancelled: (payload) => sendToWindow('pi:ask:cancelled', payload),
+    });
+    registerAskIpc(askService);
+
+    // Tool availability (Settings → 工具). Main-authoritative and read when a
+    // session is created, so a switched-off tool is filtered before the model
+    // ever sees it. Sessions rebuild lazily on the next send (the adapter
+    // compares the list) rather than being cleared here — clearing the cache
+    // mid-stream would let a steer build a second writer on the same
+    // transcript.
+    let toolCatalog: ToolCatalogEntry[] = [];
+    const toolSettings = new ToolSettingsService(
+      join(app.getPath('userData'), 'tool-settings.json'),
+      join(app.getPath('userData'), 'interaction-settings.json'),
+    );
+    registerToolSettingsIpc(toolSettings, () => toolCatalog);
+
     const pluginSystem = new PluginSystem({
       browserManager,
       vlmAnalyzer,
@@ -169,36 +233,47 @@ if (!gotLock) {
     // filled in below and read through this closure.
     let hostTools: AgentCustomTool[] = [];
 
-    // Permission modes (默认 / 完全访问). Per-session choices live in main,
-    // keyed by session; the last picked mode seeds every session with no
-    // explicit choice, and a restart resets everything to 'default' — 完全访问
-    // stays a per-run decision. High-risk calls in default mode block the
-    // agent until the renderer's inline approval card answers; 完全访问 lets
-    // everything through but leaves an audit line behind.
-    const permissionService = new PermissionService(
-      (payload) => {
-        mainWindow?.webContents.send('pi:permission:request', payload);
-      },
-      (payload) => {
-        mainWindow?.webContents.send('pi:permission:cancelled', payload);
-      },
-    );
-    registerPermissionIpc(permissionService);
-    permissionModeFor = (sessionId) => permissionService.getMode(sessionId);
-
     const { chatService } = registerIpcHandlers(settingsManager, sharedModelRegistry, {
+      // The full set; the per-session allow/deny decision is applied by the
+      // adapter through `excludedToolNames`, which covers built-ins too.
       customToolsProvider: () => [...hostTools, ...pluginSystem.aggregateTools()],
+      getGlobalDisabledTools: () => toolSettings.getDisabled(),
       pluginDocsProvider: () => pluginSystem.listPluginDocs(),
       onSessionCreated: (session, info) =>
         installPermissionGate(session, info.sessionKey, permissionService),
+      // Deleting a conversation must also settle anything it is blocked on;
+      // otherwise the run, the pending promise and the card outlive the file.
+      onSessionDeleted: (sessionId) => {
+        askService.cancelSession(sessionId);
+        todoService.remove(sessionId);
+      },
     });
     hostTools = createHostAgentTools({
       readContextConfig: chatService.getAgentContextConfig.bind(chatService),
+      todoService,
+      askService,
     });
-    // Plugin tool/doc set changed at runtime → rebuild agent sessions, and
-    // pick up panels of plugins that were just installed or enabled.
+
+    const refreshToolCatalog = () => {
+      toolCatalog = buildToolCatalog(
+        hostTools,
+        pluginSystem.aggregateTools(),
+        (pluginId) =>
+          pluginId ? pluginSystem.registry.get(pluginId)?.manifest.name : undefined,
+      );
+    };
+    refreshToolCatalog();
+    // The renderer may have fetched the catalog before plugin boot finished
+    // (the IPC handler is registered early to avoid a "no handler" race), so
+    // announce the now-complete list and let it re-sync.
+    sendToWindow('pi:tools:changed', {});
+
+    // Plugin tool/doc set changed at runtime → rebuild agent sessions and the
+    // tool catalog, and pick up panels of plugins that were just installed.
     pluginSystem.onExtensionsChanged = () => {
       pluginWebViews.sync();
+      refreshToolCatalog();
+      sendToWindow('pi:tools:changed', {});
       chatService.invalidateSessions?.();
     };
 
@@ -216,7 +291,13 @@ if (!gotLock) {
       pluginSystem.pushHostEvent('browser.tabOpened', 'browser', { tabId: t.id, url });
     });
 
-    app.on('will-quit', () => pluginSystem.dispose());
+    app.on('will-quit', () => {
+      // The todo write is debounced; without this, quitting right after the
+      // last todotool call (or a switch flip) loses that update.
+      todoService.flushSync();
+      toolSettings.flushSync();
+      pluginSystem.dispose();
+    });
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {

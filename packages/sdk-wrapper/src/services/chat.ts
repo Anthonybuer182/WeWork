@@ -16,6 +16,12 @@ export interface SendMessageParams {
    * plugin contributes.
    */
   skills?: string[];
+  /**
+   * Tool names that must not be exposed for this conversation (on top of the
+   * host-wide disabled list). Resolved by the renderer from the composer's
+   * per-conversation selection; the adapter merges in the global list.
+   */
+  disabledTools?: string[];
 }
 
 export interface StreamChunk {
@@ -107,7 +113,16 @@ export interface ChatService {
    * the standing instruction block that is sent on every request regardless of
    * the conversation.
    */
-  getAgentContextConfig(workspacePath: string, workspaceId?: string): Promise<AgentContextConfig>;
+  /**
+   * `sessionId` pins the report to one conversation. Without it the reader
+   * falls back to the first live session in the workspace — which, now that
+   * tool sets are per conversation, may be a different conversation's.
+   */
+  getAgentContextConfig(
+    workspacePath: string,
+    workspaceId?: string,
+    sessionId?: string,
+  ): Promise<AgentContextConfig>;
   /**
    * Rebuild the live agent session's system prompt from disk.
    *

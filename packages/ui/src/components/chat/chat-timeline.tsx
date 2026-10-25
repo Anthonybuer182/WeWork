@@ -15,8 +15,10 @@ import { ErrorState } from '@/components/common/error-state';
 import type { Message, ContentBlock, TokenUsage, ToolCallBlock } from '@pi/types';
 import type { AssistantMessage } from '@pi/types';
 import { usePermissionStore } from '@/stores/permission-store';
+import { useAskStore } from '@/stores/ask-store';
 import { useI18n, type MessageKey } from '@/i18n';
 import { PermissionRequestCard } from './permission-request-card';
+import { AskCard } from './ask-card';
 
 /** Shared empty map so non-active messages keep a stable prop identity. */
 const EMPTY_TOOL_TIMINGS = new Map<string, number>();
@@ -137,6 +139,39 @@ function PendingApprovalFallback({ hostedToolCallIds }: { hostedToolCallIds: Set
           className="overflow-hidden rounded-md border border-amber-400/50 shadow-sm"
         >
           <PermissionRequestCard request={req} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The fallback host for `asktool` questions.
+ *
+ * Same reason as the approval fallback: after a reload or a session switch the
+ * streaming tool-call block that owns the card is gone, but main is still
+ * holding the agent turn open. Only requests belonging to the visible
+ * conversation are mounted here — a question from another session must not
+ * take over this one.
+ */
+function PendingAskFallback({ hostedToolCallIds }: { hostedToolCallIds: Set<string> }) {
+  const requests = useAskStore((s) => s.requests);
+  const activeSessionId = useUIStore((s) => s.activeSessionId);
+  const orphaned = Object.values(requests).filter(
+    (req) =>
+      (!activeSessionId || req.sessionId === activeSessionId) &&
+      !hostedToolCallIds.has(req.toolCallId),
+  );
+  if (orphaned.length === 0) return null;
+  return (
+    <div className="mx-4 mb-2 flex flex-col gap-2">
+      {orphaned.map((req) => (
+        <div
+          key={req.requestId}
+          data-ask-fallback={req.requestId}
+          className="overflow-hidden rounded-md border border-sky-400/50 shadow-sm"
+        >
+          <AskCard request={req} />
         </div>
       ))}
     </div>
@@ -456,6 +491,10 @@ export function ChatTimeline() {
       {/* Approvals no visible tool-call block is hosting (e.g. after a reload
           or a session switch mid-approval) — answerable here, not lost. */}
       <PendingApprovalFallback hostedToolCallIds={hostedToolCallIds} />
+
+      {/* Same for questions: main holds the turn open, so the card must be
+          reachable even when its tool block is no longer in the timeline. */}
+      <PendingAskFallback hostedToolCallIds={hostedToolCallIds} />
 
       {/* Floating scroll-to-bottom button */}
       {isStreaming && !isAtBottom && (

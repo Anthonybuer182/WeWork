@@ -20,6 +20,8 @@ import { QueueIndicator } from './queue-indicator';
 import { ModelSelector } from '../model/model-selector';
 import { ThinkLevelSelector } from '../model/think-level-selector';
 import { SkillSelector } from '../model/skill-selector';
+import { ToolSelector } from '../model/tool-selector';
+import { useToolStore } from '@/stores/tool-store';
 import { CompactToggle } from '../model/compact-toggle';
 import { PermissionModeButton } from './permission-mode-button';
 import { usePermissionStore } from '@/stores/permission-store';
@@ -27,6 +29,7 @@ import { useI18n, type MessageKey } from '@/i18n';
 import { useCommandStore, commandDescription, type RegisteredCommand } from '@/stores/command-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import type { ContentBlock, Config, Skill } from '@pi/types';
+import { ASK_TOOL_NAME, TODO_TOOL_NAME } from '@pi/types';
 import type { Attachment } from '@pi/types';
 
 export function Composer() {
@@ -50,6 +53,12 @@ export function Composer() {
     (s) => s.skillOverridesBySession[sessionSkillKey],
   );
   const setSessionSkills = useUIStore((s) => s.setSessionSkills);
+  const sessionToolOverride = useUIStore((s) => s.toolOverridesBySession[sessionSkillKey]);
+  const setSessionTools = useUIStore((s) => s.setSessionTools);
+  const toolCatalog = useToolStore((s) => s.catalog);
+  const globalDisabledTools = useToolStore((s) => s.disabled);
+  const toolsLoaded = useToolStore((s) => s.loaded);
+  const syncTools = useToolStore((s) => s.sync);
   const setActivePreviewFile = useUIStore((s) => s.setActivePreviewFile);
   const activePreviewFilePath = useUIStore((s) => s.activePreviewFilePath);
   const setActiveSession = useUIStore((s) => s.setActiveSession);
@@ -202,6 +211,67 @@ export function Composer() {
     },
     [validSelectedSkills, enabledSkillIds, sessionSkillKey, setSessionSkills],
   );
+
+  // ── Per-conversation tools (same contract as skills) ──
+  // Settings → 工具 is the ceiling: globally disabled tools never appear here.
+  // A conversation with no override uses every globally enabled tool, so
+  // changing the settings applies without a second step.
+  useEffect(() => {
+    void syncTools();
+  }, [syncTools]);
+
+  const enabledTools = useMemo(() => {
+    const off = new Set(globalDisabledTools);
+    return toolCatalog.filter((tool) => !off.has(tool.name));
+  }, [toolCatalog, globalDisabledTools]);
+  const enabledToolNames = useMemo(
+    () => enabledTools.map((tool) => tool.name),
+    [enabledTools],
+  );
+  const selectedToolNames = useMemo(() => {
+    if (sessionToolOverride === undefined) return enabledToolNames;
+    const enabled = new Set(enabledToolNames);
+    return sessionToolOverride.filter((name) => enabled.has(name));
+  }, [enabledToolNames, sessionToolOverride]);
+  // Only the per-conversation narrowing is sent; the adapter merges the
+  // global switches itself so a stale picker cannot re-enable them.
+  const effectiveDisabledTools = useMemo(() => {
+    const selected = new Set(selectedToolNames);
+    return enabledToolNames.filter((name) => !selected.has(name));
+  }, [enabledToolNames, selectedToolNames]);
+
+  const handleToggleTool = useCallback(
+    (toolName: string) => {
+      const next = new Set(selectedToolNames);
+      if (next.has(toolName)) next.delete(toolName);
+      else next.add(toolName);
+      const kept = enabledToolNames.filter((name) => next.has(name));
+      // Selecting everything is the default, not an override.
+      setSessionTools(
+        sessionSkillKey,
+        kept.length === enabledToolNames.length ? undefined : kept,
+      );
+    },
+    [selectedToolNames, enabledToolNames, sessionSkillKey, setSessionTools],
+  );
+
+  // Presets: the two things users actually ask for. "全选" is the default and
+  // clears the override; "只读" is the plan-mode-like profile — it keeps what
+  // cannot change the world and drops bash/edit/write and writer plugins.
+  const handleSelectAllTools = useCallback(() => {
+    setSessionTools(sessionSkillKey, undefined);
+  }, [sessionSkillKey, setSessionTools]);
+
+  const handleReadOnlyTools = useCallback(() => {
+    const alwaysSafe = new Set(['read', ASK_TOOL_NAME, TODO_TOOL_NAME, 'context_audit']);
+    const kept = enabledTools
+      .filter((tool) => alwaysSafe.has(tool.name) || tool.readOnly === true)
+      .map((tool) => tool.name);
+    setSessionTools(
+      sessionSkillKey,
+      kept.length === enabledToolNames.length ? undefined : kept,
+    );
+  }, [enabledTools, enabledToolNames, sessionSkillKey, setSessionTools]);
 
   const handleFilesSelected = useCallback(
     (files: File[]) => {
@@ -561,6 +631,14 @@ export function Composer() {
           modelId: config?.defaultModelId,
           attachments: imageAttachments.length > 0 ? imageAttachments : undefined,
           skills: validSelectedSkills,
+          // Always send the array once the catalog is known: `undefined` means
+          // "the caller does not know the tool set" (reuse the cached session),
+          // while `[]` means "explicitly nothing disabled" and must rebuild a
+          // session that still carries a previous restriction. Before the
+          // catalog loads, sending `[]` would silently drop the conversation's
+          // stored restriction — send undefined and let the cached session (or
+          // the host's global list) decide.
+          disabledTools: toolsLoaded ? effectiveDisabledTools : undefined,
         },
         (chunk) => {
           if (chunk.type === 'message_start') {
@@ -1268,6 +1346,13 @@ export function Composer() {
           skills={enabledSkills}
           selectedIds={validSelectedSkills}
           onToggle={handleToggleSkill}
+        />
+        <ToolSelector
+          tools={enabledTools}
+          selectedNames={selectedToolNames}
+          onToggle={handleToggleTool}
+          onSelectAll={handleSelectAllTools}
+          onReadOnly={handleReadOnlyTools}
         />
         <CompactToggle compact={compactMode} onToggle={setCompactMode} />
         {/* Session permission mode — left side of the toolbar because the right

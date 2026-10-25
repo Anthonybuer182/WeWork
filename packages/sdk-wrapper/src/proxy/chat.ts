@@ -84,10 +84,12 @@ export function createProxyChatService(transport: Transport): ChatService {
     // ── agent context ──
     // The context panel is a host UI, so it reaches these the same way any
     // other host panel reaches its data: over the ordinary request transport.
-    async getAgentContextConfig(workspacePath: string, workspaceId?: string) {
-      return transport.request('chat.getAgentContextConfig', { workspacePath, workspaceId }) as ReturnType<
-        ChatService['getAgentContextConfig']
-      >;
+    async getAgentContextConfig(workspacePath: string, workspaceId?: string, sessionId?: string) {
+      return transport.request('chat.getAgentContextConfig', {
+        workspacePath,
+        workspaceId,
+        sessionId,
+      }) as ReturnType<ChatService['getAgentContextConfig']>;
     },
 
     async reloadAgentContext(workspacePath: string) {

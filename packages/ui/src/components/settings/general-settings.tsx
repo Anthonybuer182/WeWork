@@ -89,6 +89,7 @@ export function GeneralSettingsPage() {
             </SelectContent>
           </Select>
         </Row>
+
       </div>
 
       <p className="pb-4 pt-2 text-[11px] text-muted-foreground/70">

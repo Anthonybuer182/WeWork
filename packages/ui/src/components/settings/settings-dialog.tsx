@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Cpu, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Cpu, Hammer, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
 import { useI18n, type MessageKey } from '@/i18n';
@@ -7,12 +7,14 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { GeneralSettingsPage } from './general-settings';
 import { ModelsSettingsPage } from './models-settings';
 import { SkillsSettingsPage } from './skills-settings';
+import { ToolsSettingsPage } from './tools-settings';
 
-type SectionId = 'general' | 'models' | 'skills';
+type SectionId = 'general' | 'models' | 'tools' | 'skills';
 
 const SECTIONS: { id: SectionId; label: MessageKey; icon: typeof Cpu }[] = [
   { id: 'general', label: '通用', icon: SlidersHorizontal },
   { id: 'models', label: '模型', icon: Cpu },
+  { id: 'tools', label: '工具', icon: Hammer },
   { id: 'skills', label: '技能', icon: Sparkles },
 ];
 
@@ -68,7 +70,10 @@ export function SettingsDialog() {
         <DialogTitle className="sr-only">{t('设置')}</DialogTitle>
         <DialogDescription className="sr-only">{t('配置模型服务商、技能和通用选项')}</DialogDescription>
 
-        <div className="flex h-full min-h-0">
+        {/* `min-w-0` matters: as a grid item the default `min-width: auto`
+            lets a nowrap child (a long tool description) stretch the whole
+            dialog past the viewport instead of truncating. */}
+        <div className="flex h-full min-h-0 w-full min-w-0">
           <nav
             aria-label={t('设置分类')}
             className="flex w-[180px] shrink-0 flex-col gap-0.5 border-r bg-muted/30 p-3"
@@ -107,6 +112,7 @@ export function SettingsDialog() {
             <div className="min-h-0 flex-1">
               {section === 'general' && <GeneralSettingsPage />}
               {section === 'models' && <ModelsSettingsPage />}
+              {section === 'tools' && <ToolsSettingsPage />}
               {section === 'skills' && <SkillsSettingsPage />}
             </div>
           </div>
