@@ -11,6 +11,20 @@ import { detectWrittenFiles } from '../utils/file-detection.js';
 import { migrateModelsConfig } from './config.js';
 
 /**
+ * Built-in tools this app activates.
+ *
+ * The SDK's own default is `read` / `bash` / `edit` / `write`; `grep`, `find`
+ * and `ls` are opt-in. The app opts in because search is a conversation's most
+ * common need: without them the model can only search by running a shell
+ * command, which asks for approval every time. All three are read-only, so the
+ * permission gate auto-allows them.
+ *
+ * Passed explicitly rather than left to the default so the set is reviewable
+ * here; `excludeTools` (the user's global switches) still filters it.
+ */
+export const ACTIVE_BUILTIN_TOOLS = ['read', 'bash', 'edit', 'write', 'grep', 'find', 'ls'];
+
+/**
  * Real chat adapter using createAgentSessionFromServices.
  *
  * Creates interactive AgentSession instances backed by the real SDK.
@@ -367,6 +381,7 @@ export function createRealChatService(
       modelRegistry: registry, // share registry so custom models are visible
       resourceLoader: await createResourceLoader(workCwd, skills, toolNames),
       settingsManager,         // share settings so shell path is respected
+      tools: [...ACTIVE_BUILTIN_TOOLS],
       customTools: customTools as never,
       // `createAgentSession` calls this denylist `excludeTools` (the lower
       // AgentSessionConfig names it `excludedToolNames`); it applies to
@@ -436,11 +451,11 @@ export function createRealChatService(
   }
 
   /**
-   * The SDK's built-in tool names for when no live session is available to ask.
-   * `getAllTools()` is authoritative but needs a session; this is its documented
-   * default set.
+   * The built-in tool names for when no live session is available to ask.
+   * `getAllTools()` is authoritative but needs a session; this is the set the
+   * session is created with, so the two agree.
    */
-  const DEFAULT_BUILTIN_TOOLS = ['read', 'bash', 'edit', 'write'];
+  const DEFAULT_BUILTIN_TOOLS = ACTIVE_BUILTIN_TOOLS;
 
   /**
    * The SDK's prompt-file discovery, mirrored.

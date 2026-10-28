@@ -63,7 +63,7 @@ const WRITE_TOOLS = new Set([
 /** Read-only tools whose results should never be scanned for created files */
 const READ_ONLY_TOOLS = new Set([
   'read', 'Read', 'ls', 'LS', 'glob', 'Glob',
-  'grep', 'Grep', 'SearchCodebase', 'search',
+  'grep', 'Grep', 'find', 'Find', 'SearchCodebase', 'search',
   'stat', 'exists', 'file_info',
 ]);
 
