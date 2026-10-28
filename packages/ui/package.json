@@ -14,7 +14,6 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.7.0",
     "@pi/sdk-wrapper": "workspace:*",
     "@pi/types": "workspace:*",
     "@radix-ui/react-alert-dialog": "^1.1.15",
