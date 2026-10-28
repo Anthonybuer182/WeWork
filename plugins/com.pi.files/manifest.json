@@ -1,7 +1,7 @@
 {
   "id": "com.pi.files",
   "name": "文件中心",
-  "description": "文件中心 — 自包含的 office 引擎（创建/编辑/预览 docx/pptx/xlsx/pdf），基于内置的 GenOffice 引擎（Apache-2.0），无需外部工具或联网安装",
+  "description": "文件查看器 — 在右栏查看 docx/pptx/xlsx/pdf、markdown、html、纯文本（txt/json/log），以及图片、视频、音频；文档由内置的 GenOffice 引擎渲染（Apache-2.0），无需外部工具或联网安装",
   "version": "0.4.0",
   "apiVersion": 5,
   "engines": {
@@ -115,7 +115,7 @@
       },
       {
         "name": "files_search",
-        "description": "Find Office documents (docx/pptx/xlsx) and PDFs in a workspace by what they are about. Use it when the user refers to a document without giving its path (\"the Q3 report\", \"the proposal that mentions the budget\"): it matches file names, folders, extracted titles and a short digest of each document's opening text. Returns absolute paths plus the matched snippet. The index re-checks every file before answering, so edits made outside the app are seen. Plain-text files (md/txt/csv and code) are not indexed — search those with grep.",
+        "description": "Find documents in a workspace by what they are about — Office files (docx/pptx/xlsx), legacy Word/PowerPoint (doc/ppt) and PDFs. Use it when the user refers to a document without giving its path (\"the Q3 report\", \"the proposal that mentions the budget\"): it matches file names, folders, extracted titles and a short digest of each document's opening text. Returns absolute paths plus the matched snippet. The index re-checks every file before answering, so edits made outside the app are seen. Plain-text files (md/txt/csv and code) are not indexed — search those with grep.",
         "readOnly": true,
         "inputSchema": {
           "type": "object",
@@ -214,6 +214,8 @@
           "pptx",
           "pptm",
           "pdf",
+          "doc",
+          "ppt",
           "xls",
           "csv",
           "txt",
@@ -222,7 +224,26 @@
           "json",
           "log",
           "html",
-          "htm"
+          "htm",
+          "png",
+          "jpg",
+          "jpeg",
+          "gif",
+          "webp",
+          "bmp",
+          "ico",
+          "avif",
+          "svg",
+          "mp4",
+          "webm",
+          "mov",
+          "m4v",
+          "mp3",
+          "m4a",
+          "wav",
+          "flac",
+          "ogg",
+          "aac"
         ]
       }
     ]

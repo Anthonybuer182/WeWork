@@ -26,7 +26,7 @@
 import { plugin, type PluginContext, type ToolResult } from '@pi/plugin-sdk';
 import { mkdir, readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve as resolvePath } from 'node:path';
+import { basename, extname, join, resolve as resolvePath } from 'node:path';
 import { createBlankPptx, openPptx, savePptx } from '@genoffice/pptx-engine';
 import { applyXlsxEdits, planXlsxEdits, readXlsxStructure, type CellOp } from './xlsx';
 import { DOCX_OP_GROUPS, docxGuide, planDocxCommands, type DocxOp } from './docx';
@@ -490,10 +490,10 @@ async function toolSearch(p: Record<string, unknown>): Promise<ToolResult> {
   const notes: string[] = [];
   if (rows.length === 0) {
     notes.push(
-      'Nothing matched. The index covers Office documents (docx/docm/pptx/pptm/xlsx/xlsm) and ' +
-        'their opening body text (PDF is title-only). Plain text and code are not indexed — ' +
-        'search those with grep. Try fewer words, a folder name, or an empty query to list the ' +
-        'newest documents.',
+      'Nothing matched. The index covers Office documents (docx/docm/pptx/pptm/xlsx/xlsm), ' +
+        'legacy Word/PowerPoint (doc/ppt) and PDFs, with their opening body text (PDF is ' +
+        'title-only). Plain text and code are not indexed — search those with grep. Try fewer ' +
+        'words, a folder name, or an empty query to list the newest documents.',
     );
   }
   if (index.pending > 0) {
@@ -507,8 +507,8 @@ async function toolSearch(p: Record<string, unknown>): Promise<ToolResult> {
   }
   if (rows.length > 0) {
     notes.push(
-      'Open the chosen file with office_read (docx/pptx/xlsx). ' +
-        'PDFs can be shown in the viewer, but their text cannot be read yet. ' +
+      'Open the chosen file with office_read (docx/pptx/xlsx). doc/ppt preview as extracted ' +
+        'text only. PDFs can be shown in the viewer, but their text cannot be read yet. ' +
         'This index is a cache and the path is the truth.',
     );
   }
@@ -930,6 +930,27 @@ async function onUiRequest(
       const path = String(params.path ?? '');
       const info = await stat(path);
       return { path, size: info.size, mtime: info.mtimeMs };
+    }
+    case 'file.extractText': {
+      // Legacy Office (doc / ppt) has no renderer here, and writing one means
+      // an OLE2 parser. GenOffice already ships the text extractors it uses for
+      // its own chat attachments, so the viewer shows their output and says the
+      // layout is not reproduced. See PLUGIN.md, 覆盖范围.
+      const path = String(params.path ?? '');
+      if (!path) throw new Error('file.extractText: path is required');
+      const ext = extname(path).toLowerCase();
+      const maxChars = typeof params.maxChars === 'number' ? params.maxChars : 200_000;
+      const bytes = await readFile(path);
+      const text =
+        ext === '.doc'
+          ? await (await import('../../vendor/genoffice/packages/file-parse/src/doc')).docToText(bytes)
+          : ext === '.ppt'
+            ? await (await import('../../vendor/genoffice/packages/file-parse/src/ppt')).pptToText(bytes)
+            : null;
+      if (text === null) throw new Error(`file.extractText: unsupported extension "${ext}"`);
+      return text.length > maxChars
+        ? { text: text.slice(0, maxChars), total: text.length, truncated: true }
+        : { text, total: text.length, truncated: false };
     }
     case 'pdf.save': {
       // GenOffice's PDF surgery, run here rather than reimplemented.

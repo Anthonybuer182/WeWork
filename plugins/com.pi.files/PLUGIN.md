@@ -3,9 +3,10 @@ name: files
 description: "查看和编辑 Office 文档（docx / pptx / xlsx / pdf）——用户要打开这类文件，或要求修改演示文稿／Word 文档的文字、表格、排版、增删幻灯片时用它；用户只说得出文档大概是什么（「上次那份季度汇报」）而没给路径时，也用它找。改 pptx / docx / xlsx 都用它的 office_read / office_edit 工具，不要另写 Python 或解压 OOXML 手改；改 docx 前必须先在查看器里打开那个文档。"
 ---
 
-# 文件中心
+# 文件查看器
 
-工作区里 Office 文档的查看器和编辑器。文件树里点开一个可预览文件，就是它在右栏渲染；
+工作区文件的查看器（右栏）和 Office 文档的编辑器。文件树里点开一个文件，就是它在右栏渲染：
+Office / PDF 走内置的 GenOffice 引擎，markdown / html 走 GenOffice 的查看器，txt / json / log 是纯文本视图。
 agent 通过它贡献的工具读写文档。
 
 ## 覆盖范围（先看这张表，别猜）
@@ -19,7 +20,12 @@ agent 通过它贡献的工具读写文档。
 | `pdf` | ✅ | ❌ |
 | `md` `markdown` | ✅ GenOffice 的 markdown 查看器 | — |
 | `html` `htm` | ✅ GenOffice 的 html 查看器（图片暂不支持） | — |
-| `txt` `json` `log` | ✅ GenOffice 的 Markdown 组件 | — |
+| `txt` `json` `log` | ✅ 纯文本视图（等宽；json 美化） | — |
+| `png` `jpg` `gif` `webp` `svg` 等 | ✅ 图片查看器（适应 / 1:1 / 缩放 / 拖动） | — |
+| `mp4` `webm` `mov` `m4v` | ✅ 视频播放（系统内核解码；HEVC 等编码可能放不了） | — |
+| `mp3` `m4a` `wav` `flac` `ogg` `aac` | ✅ 音频播放 | — |
+| `mkv` `avi` 等 | ❌ 交给系统播放器 | — |
+| `doc` `ppt`（97-2003 旧格式） | ✅ 仅文字（提取正文；排版、图片、表格不还原） | ❌ 不支持；要改就先另存为 docx/pptx |
 
 > **`office_read` / `office_edit` 目前认 `pptx`、`docx` 和 `xlsx`。** 其它格式会拿到一句
 > "not wired yet"。那不是报错也不是提示你换参数——是这条路径确实没接，**不要重试**，
@@ -30,7 +36,7 @@ agent 通过它贡献的工具读写文档。
 用户只说得出文档是什么、没给路径时（「上次那份季度汇报」「客户发来的方案」），**先调它**，
 不要用 `ls` 猜，也不要挨个 `office_read`——后者会把每份文档的结构都读进上下文。
 
-**它只管 Office 文档和 PDF。** md / txt / csv 和代码是纯文本，**用 `grep` 搜**（全文、带行号），
+**它只管 Office 文档（含 doc / ppt 旧格式）和 PDF。** md / txt / csv 和代码是纯文本，**用 `grep` 搜**（全文、带行号），
 不要用 `files_search` 找它们，也不要指望它把文本文件列出来。
 
 - `root`：当前工作区目录（绝对路径，通常就是 cwd）
@@ -49,7 +55,7 @@ agent 通过它贡献的工具读写文档。
 - 索引只回答「哪份文件」，**不回答「里面是什么」**。选中之后：Office 文档（docx/pptx/xlsx）
   用 `office_read` 打开，md / txt / csv 用 `read` 工具打开；**PDF 目前只能打开查看器看，正文读不了**，
   不要对 PDF 调 `office_read` 或 `read` 指望拿到内容。
-- 只覆盖 docx/docm/pptx/pptm/xlsx/xlsm 的内容，pdf 只有标题；md/txt/csv 和代码不进来，走 `grep`。
+- 只覆盖 docx/docm/pptx/pptm/xlsx/xlsm、doc/ppt 的内容，pdf 只有标题；md/txt/csv 和代码不进来，走 `grep`。
   搜不到时换个词或去看目录，不要断言文件不存在。
 
 ## 文档工具（office_*）

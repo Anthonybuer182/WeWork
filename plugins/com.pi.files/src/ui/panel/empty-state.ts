@@ -5,11 +5,8 @@
  * file*, so a rail click has nothing to draw — which is the reason this panel
  * used to carry `hidden: true` and reach the rail not at all.
  *
- * Not the legacy shell's empty state: that one lives in `legacy-shell.ts` beside
- * the old text previewers, and it paints its own hardcoded dark palette. Here
- * the panel is the host's front door, so the colors come from the host's theme
- * tokens (`index.html` already themes the body the same way) and the sheet never
- * paints a background of its own.
+ * Colors come from the host's theme tokens (`index.html` already themes the
+ * body the same way) and the sheet never paints a background of its own.
  */
 
 import { PLUGIN_ID } from '../shims/common';

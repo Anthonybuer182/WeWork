@@ -2,7 +2,7 @@
   "name": "com.pi.files",
   "version": "0.4.0",
   "private": true,
-  "description": "文件中心插件 — 自包含的 office 引擎（创建/编辑/预览 docx/pptx/xlsx/pdf），基于 vendor 的 GenOffice 引擎（Apache-2.0）",
+  "description": "文件查看器插件 — 右栏查看 docx/pptx/xlsx/pdf、markdown、html 和纯文本，并提供文档检索与编辑工具；文档由 vendor 的 GenOffice 引擎渲染（Apache-2.0）",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-backend.mjs && node scripts/build-panel.mjs",
@@ -30,6 +30,7 @@
     "@fluentui/react-icons": "^2.0.341",
     "@lezer/highlight": "^1.2.3",
     "@noble/hashes": "^2.4.0",
+    "@pi/plugin-sdk": "file:../../packages/plugin-sdk",
     "@tiptap/core": "3.31.0",
     "@tiptap/extension-bold": "3.31.0",
     "@tiptap/extension-code": "3.31.0",
@@ -77,13 +78,14 @@
     "parse5": "^8.0.1",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.3.289",
+    "ppt-to-text": "^1.0.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-konva": "^19.3.0",
     "utif2": "^4.1.0",
     "wavedrom": "^3.7.0",
+    "word-extractor": "^1.0.4",
     "xlsx": "^0.18.5",
-    "zod": "^4.6.5",
-    "@pi/plugin-sdk": "file:../../packages/plugin-sdk"
+    "zod": "^4.6.5"
   }
 }

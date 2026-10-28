@@ -7,11 +7,11 @@
  * only way to answer would be to open documents one by one, which is exactly
  * what this index avoids.
  *
- * Scope: only the container formats (docx/pptx/xlsx/pdf). Plain text — md, txt,
- * csv, code — is deliberately NOT indexed: the agent has `grep`, which reads
- * the whole file, honours regex, and is never a 1.5k-character excerpt. Keeping
- * text here too would be a weaker second path with a per-workspace cache to
- * invalidate.
+ * Scope: only the container formats (docx/pptx/xlsx/pdf, plus Word/PowerPoint
+ * 97-2003 doc/ppt). Plain text — md, txt, csv, code — is deliberately NOT
+ * indexed: the agent has `grep`, which reads the whole file, honours regex, and
+ * is never a 1.5k-character excerpt. Keeping text here too would be a weaker
+ * second path with a per-workspace cache to invalidate.
  *
  * What it stores: per file, its name, size, mtime, title, and a short DIGEST
  * of the body text (the first ~1.5k characters). The digest is what makes
@@ -44,6 +44,10 @@ const INDEXABLE = new Set([
   'xlsx',
   'xlsm',
   'pdf',
+  // Word/PowerPoint 97-2003: OLE2 containers like the rest — a `.doc` is not
+  // text either. Extracted with the same GenOffice parsers the viewer uses.
+  'doc',
+  'ppt',
 ]);
 
 /**
@@ -406,12 +410,37 @@ async function pdfMeta(bytes: Uint8Array): Promise<Meta> {
 async function extractMeta(path: string, ext: string, size: number): Promise<Meta> {
   const isOffice =
     ext === 'docx' || ext === 'docm' || ext === 'pptx' || ext === 'pptm' || ext === 'xlsx' || ext === 'xlsm';
-  if (size > MAX_TITLE_BYTES && (isOffice || ext === 'pdf')) return { title: null, digest: null };
+  const isLegacy = ext === 'doc' || ext === 'ppt';
+  if (size > MAX_TITLE_BYTES && (isOffice || isLegacy || ext === 'pdf')) return { title: null, digest: null };
   if (ext === 'docx' || ext === 'docm') return docxMeta(new Uint8Array(await readFile(path)));
   if (ext === 'pptx' || ext === 'pptm') return pptxMeta(new Uint8Array(await readFile(path)));
   if (ext === 'xlsx' || ext === 'xlsm') return xlsxMeta(new Uint8Array(await readFile(path)));
+  if (ext === 'doc') return legacyMeta(new Uint8Array(await readFile(path)), 'doc');
+  if (ext === 'ppt') return legacyMeta(new Uint8Array(await readFile(path)), 'ppt');
   if (ext === 'pdf') return pdfMeta(new Uint8Array(await readFile(path)));
   return { title: null, digest: null };
+}
+
+/**
+ * doc / ppt — the extractors the viewer's `file.extractText` uses, so a search
+ * hit and what the panel shows come from one parser, not two.
+ *
+ * `pptToText` marks each slide with `## Slide N`; those markers are structure,
+ * not content, so they are dropped before the title. The first surviving line
+ * is the title, the same rule docx uses when there is no heading style.
+ */
+async function legacyMeta(bytes: Uint8Array, ext: 'doc' | 'ppt'): Promise<Meta> {
+  const text =
+    ext === 'doc'
+      ? await (await import('../../vendor/genoffice/packages/file-parse/src/doc')).docToText(bytes)
+      : await (await import('../../vendor/genoffice/packages/file-parse/src/ppt')).pptToText(bytes);
+  const parts = text
+    .split('\n')
+    .filter((line) => !/^## Slide \d+\s*$/.test(line.trim()))
+    .map((line) => cleanText(line.trim()))
+    .filter(Boolean);
+  if (parts.length === 0) return { title: null, digest: null };
+  return { title: cleanTitle(parts[0]), digest: cleanDigest(parts) };
 }
 
 // ── scan ─────────────────────────────────────────────────────────────

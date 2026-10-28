@@ -102,7 +102,20 @@ const result = await build({
   metafile: true,
   // Left external so esbuild never tries to resolve jsdom's optional native
   // requires. They are absent, not loaded at runtime by this entry.
-  external: ['canvas', 'bufferutil', 'utf-8-validate'],
+  //
+  // `codepage` is the same deal at a much bigger scale: ppt-to-text requires it
+  // behind `require('code'+'page')` (folded to a literal at build time), and the
+  // package's cptable.js alone is ~5 MB of lookup tables. vendor/genoffice's
+  // ppt.ts installs its own `globalThis.cptable` before loading the parser, so
+  // that require never executes — externalising it costs nothing at runtime.
+  external: ['canvas', 'bufferutil', 'utf-8-validate', 'codepage'],
+  // CJS dependencies that call `require('buffer')` / `require('fs')` from
+  // inside functions (word-extractor does) cannot be statically rewritten in an
+  // ESM bundle; esbuild's fallback throws "Dynamic require … is not supported".
+  // A real `require` in scope turns those into ordinary Node requires.
+  banner: {
+    js: "import { createRequire as __piCreateRequire } from 'node:module'; const require = __piCreateRequire(import.meta.url);",
+  },
   plugins: [electronShim, genofficeResolver, rawText],
   logLevel: 'warning',
 });

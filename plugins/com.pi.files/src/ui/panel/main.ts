@@ -5,9 +5,9 @@
  * (`findPreviewHandler` returns `panels[0]`), so per-format entries have to be
  * chosen here rather than in the manifest.
  *
- * `.docx` runs GenOffice's own renderer. The other formats still run the
- * previous hand-written previewers — they get ported one at a time, and each
- * port shrinks this dispatch.
+ * `.docx` runs GenOffice's own renderer, and so do the other document formats;
+ * this dispatch chooses between those apps and the small renderers that have no
+ * app behind them (plain text today, media next).
  *
  * This module also runs again after a RELOAD, which is how a format switch
  * works: a mounted renderer cannot be swapped for another app in place, so the
@@ -23,8 +23,8 @@ import '../ai/strip-genoffice-ai.css';
 import './panel-fit.css';
 
 import { persistPendingPath, readPersistedPath } from '../shims/common';
+import { MEDIA_EXTS } from '../media/exts';
 import { mountEmptyState } from './empty-state';
-import { mountLegacyShell } from './legacy-shell';
 import { mountTabsBar } from './tabs-bar';
 
 /** The last `ui.render` the backend pushed, kept so a late listener can replay it. */
@@ -105,10 +105,9 @@ void (async () => {
   if (path) persistPendingPath(path);
 
   // No file to show — the normal case when the panel is opened from the rail
-  // rather than by clicking a file. This is its own state rather than a fall
-  // through to the legacy previewer below: that one draws its empty state from
-  // `legacy-shell.ts`, whose palette is hardcoded dark, and it would drag the
-  // whole legacy bundle in to draw a screen with nothing on it.
+  // rather than by clicking a file. Its own state rather than a fall-through to
+  // a renderer: the colors come from the host's theme tokens, and nothing else
+  // has to be loaded to draw a screen with nothing on it.
   if (!path) {
     mountEmptyState();
     // The empty state has to keep listening. This dispatcher runs once — the
@@ -162,8 +161,8 @@ void (async () => {
     return;
   }
 
-  // The text formats: GenOffice's own markdown viewer, rather than the
-  // chat-bubble Markdown component they used to go through (see text-preview.tsx).
+  // Markdown gets GenOffice's own viewer — a document renderer (images, links,
+  // blockquotes), not the chat-bubble Markdown component .md used to go through.
   if (ext === 'md' || ext === 'markdown') {
     await import('../markdown/main');
     return;
@@ -174,22 +173,17 @@ void (async () => {
     return;
   }
 
-  // Everything else: the previous viewer, until each format is ported.
-  // It expects the markup the old panel page provided (`#fName`/`#content`),
-  // and its own stylesheet — build both before importing it.
-  mountLegacyShell();
-  await import('../../main');
-  // It listens on `window` for backend frames, which the SDK re-dispatches.
-  //
-  // Replay the frame we consumed — and on the RELOAD path there is none: the
-  // host only pushes `ui.render` when the panel MOUNTS, and a format switch
-  // reloads without unmounting. So synthesise the same envelope from the
-  // persisted path, or the viewer lands on its empty state every time.
-  const envelope = payload ?? (path ? { event: 'ui.render', data: { path } } : null);
-  if (envelope) {
-    window.postMessage(
-      { __piPlugin: true, pluginId: 'com.pi.files', direction: 'backend', payload: envelope },
-      '*',
-    );
+  // Images, video and audio: the engine decodes these itself, so no app to
+  // vendor and no parser to write. The list lives beside that renderer because
+  // it is also the list that decides what a reload keeps vs. hands over.
+  if (MEDIA_EXTS.includes(ext)) {
+    await import('../media/main');
+    return;
   }
+
+  // What is left is plain text (txt / json / log) — no app to vendor, so it is
+  // a small renderer of our own. It reads the path from `__PI_OPEN_PATH__` (set
+  // above) or the persisted pending path, which covers both the mount and the
+  // reload-after-format-switch cases; nothing has to be replayed into it.
+  await import('../text/main');
 })();
