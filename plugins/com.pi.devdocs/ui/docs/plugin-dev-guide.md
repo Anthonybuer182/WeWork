@@ -990,7 +990,7 @@ node scripts/build-market.mjs --out ./dist-market
 
 `type` 填**工具名**。声明后，工具结果里的 `card`（声明式 UI 树：`Column` / `Row` / `Card` / `Text` / `Badge` / `KeyValue` / `List` / `Button` / `Input` / `Image` / `Separator` / `Spinner` / `EmptyState`）由宿主渲染进对话，工具运行中还会把参数实时渲染成「生成中」卡片（`streaming: false` 可关闭）。卡片里的 Button / Input 是**活的**：用户点击/回车，事件带着节点上声明的 `eventId` 回到后端的 `onCardEvent`。旧版客户端或没实现 `onCardEvent` 的后端，按钮退化成展示——不会坏，只是不动。
 
-**领域惯例：你工具的产出物，就用你自己的卡片展示。** 事项插件的条目卡片、文件中心的「文档已更新」卡片（office_edit 保存成功后返回：文件名 + 格式徽章 + 「在查看器中打开」按钮）都是这么做。把上下文（如文件路径）放进按钮的 `props`——点击时它作为 `payload` 回到 `onCardEvent`，这样对话里堆了多少张卡片，每张打开的都还是它自己那份产出物。
+**领域惯例：你工具的产出物，就用你自己的卡片展示。** 事项插件的条目卡片、文件查看器的「文档已更新」卡片（office_edit 保存成功后返回：文件名 + 格式徽章 + 「在查看器中打开」按钮）都是这么做。把上下文（如文件路径）放进按钮的 `props`——点击时它作为 `payload` 回到 `onCardEvent`，这样对话里堆了多少张卡片，每张打开的都还是它自己那份产出物。
 
 ### contributes.filePreview — 文件树路由
 
