@@ -104,7 +104,7 @@ op 的说明书。**写 ops 之前必须调一次。**
 
 **前提：那份文档必须先在查看器里打开。** docx 的 op 驱动的是一个**活着的编辑器**
 （GenOffice 自己的编辑器，它的内置 AI 也是这么工作的）—— 没有无头路径。
-文档没开时 `office_edit` 会直接告诉你，不会静默失败。用 `files_probe_open` 打开。
+文档没开时 `office_edit` 会直接告诉你，不会静默失败。用 `files_open` 打开。
 
 1. `office_guide({ domain: "docx" })` —— 拿 op 形状、target 的写法和 op 列表
 2. `office_read` —— 拿 block 下标（**下标会随任何一次编辑失效，别跨轮复用**）

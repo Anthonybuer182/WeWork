@@ -74387,7 +74387,7 @@ function docxGuide() {
     "TWO THINGS THAT WILL BITE:",
     "  - The document must be OPEN in the file viewer. These ops drive a live editor;",
     "    there is no headless path. If it is not open, office_edit says so \u2014 open it",
-    "    (files_probe_open) and retry.",
+    "    (files_open) and retry.",
     "  - Block indexes come from office_read and go stale the moment anything edits the",
     "    document. Read again rather than reusing an index from earlier in the session."
   ].join("\n");
@@ -79301,23 +79301,12 @@ async function runTool(name, p, call = {}) {
       return await toolRead(p, sessionId);
     case "office_edit":
       return await toolEdit(p, sessionId);
-    // ── legacy P9a probes (kept until the viewer work lands) ──
-    case "files_probe_write": {
-      if (!p.path) throw new Error("missing path");
-      const result = await ctx.call("filesystem.write", {
-        path: String(p.path),
-        content: String(p.content ?? ""),
-        expectedMtime: typeof p.expectedMtime === "number" ? p.expectedMtime : void 0
-      });
-      return text(`\u5DF2\u5199\u5165 ${result?.path} (${result?.size} bytes, mtime ${Math.round(Number(result?.mtime ?? 0))})`, result);
-    }
-    case "files_probe_read": {
-      if (!p.path) throw new Error("missing path");
-      const result = await ctx.call("filesystem.read", { path: String(p.path) });
-      return text(`\u8BFB\u53D6 ${result?.path} (${result?.size} bytes):
-${String(result?.content ?? "").slice(0, 4e3)}`, result);
-    }
-    case "files_probe_open": {
+    // ── opening files in the viewer ──
+    //
+    // `path` is optional: with none, this opens whatever the user already has on
+    // screen, which is the case a docx edit starts from. `panelId` exists so a
+    // hidden panel can be opened without a tool per panel.
+    case "files_open": {
       const panelId = typeof p.panelId === "string" && p.panelId ? String(p.panelId) : "viewer";
       if (panelId !== "viewer") {
         await ctx.call("panel.open", { panelId, focus: true });

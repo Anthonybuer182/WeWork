@@ -747,25 +747,12 @@ async function runTool(name: string, p: Record<string, unknown>, call: { session
     case 'office_edit':
       return await toolEdit(p, sessionId);
 
-    // ── legacy P9a probes (kept until the viewer work lands) ──
-    case 'files_probe_write': {
-      if (!p.path) throw new Error('missing path');
-      const result = (await ctx.call('filesystem.write', {
-        path: String(p.path),
-        content: String(p.content ?? ''),
-        expectedMtime: typeof p.expectedMtime === 'number' ? p.expectedMtime : undefined,
-      })) as { path?: string; size?: number; mtime?: number } | undefined;
-      return text(`已写入 ${result?.path} (${result?.size} bytes, mtime ${Math.round(Number(result?.mtime ?? 0))})`, result);
-    }
-    case 'files_probe_read': {
-      if (!p.path) throw new Error('missing path');
-      const result = (await ctx.call('filesystem.read', { path: String(p.path) })) as { path?: string; size?: number; content?: string } | undefined;
-      return text(`读取 ${result?.path} (${result?.size} bytes):\n${String(result?.content ?? '').slice(0, 4000)}`, result);
-    }
-    case 'files_probe_open': {
-      // `panelId` is optional and defaults to the viewer, so the original P9a
-      // call shape keeps working. It exists so a hidden panel (e.g. the build
-      // spike) can be opened without adding a tool per panel.
+    // ── opening files in the viewer ──
+    //
+    // `path` is optional: with none, this opens whatever the user already has on
+    // screen, which is the case a docx edit starts from. `panelId` exists so a
+    // hidden panel can be opened without a tool per panel.
+    case 'files_open': {
       const panelId = typeof p.panelId === 'string' && p.panelId ? String(p.panelId) : 'viewer';
       if (panelId !== 'viewer') {
         await ctx.call('panel.open', { panelId, focus: true });

@@ -121,7 +121,7 @@ export function docxGuide(): string {
     'TWO THINGS THAT WILL BITE:',
     '  - The document must be OPEN in the file viewer. These ops drive a live editor;',
     '    there is no headless path. If it is not open, office_edit says so — open it',
-    '    (files_probe_open) and retry.',
+    '    (files_open) and retry.',
     '  - Block indexes come from office_read and go stale the moment anything edits the',
     '    document. Read again rather than reusing an index from earlier in the session.',
   ].join('\n');
