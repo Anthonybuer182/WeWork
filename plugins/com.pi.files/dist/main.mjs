@@ -66570,11 +66570,7 @@ var INDEXABLE = /* @__PURE__ */ new Set([
   "pptm",
   "xlsx",
   "xlsm",
-  "pdf",
-  "md",
-  "markdown",
-  "txt",
-  "csv"
+  "pdf"
 ]);
 var SKIP_DIRS = /* @__PURE__ */ new Set([
   "node_modules",
@@ -66781,24 +66777,6 @@ async function pdfMeta(bytes) {
   return { title: cleanTitle(doc.getTitle() ?? ""), digest: null };
 }
 __name(pdfMeta, "pdfMeta");
-function textMeta(content, markdown) {
-  let title = null;
-  if (markdown) {
-    const heading = /^\s{0,3}#{1,6}\s+(.+)$/m.exec(content);
-    if (heading) title = cleanTitle(heading[1]);
-  }
-  if (!title) {
-    for (const line2 of content.split(/\r?\n/)) {
-      const t = cleanTitle(line2);
-      if (t) {
-        title = t;
-        break;
-      }
-    }
-  }
-  return { title, digest: cleanDigest([content]) };
-}
-__name(textMeta, "textMeta");
 async function extractMeta(path, ext, size) {
   const isOffice = ext === "docx" || ext === "docm" || ext === "pptx" || ext === "pptm" || ext === "xlsx" || ext === "xlsm";
   if (size > MAX_TITLE_BYTES && (isOffice || ext === "pdf")) return { title: null, digest: null };
@@ -66806,9 +66784,6 @@ async function extractMeta(path, ext, size) {
   if (ext === "pptx" || ext === "pptm") return pptxMeta(new Uint8Array(await readFile(path)));
   if (ext === "xlsx" || ext === "xlsm") return xlsxMeta(new Uint8Array(await readFile(path)));
   if (ext === "pdf") return pdfMeta(new Uint8Array(await readFile(path)));
-  if (size > 2 * 1024 * 1024) return { title: null, digest: null };
-  if (ext === "md" || ext === "markdown") return textMeta(await readFile(path, "utf-8"), true);
-  if (ext === "txt" || ext === "csv") return textMeta(await readFile(path, "utf-8"), false);
   return { title: null, digest: null };
 }
 __name(extractMeta, "extractMeta");
@@ -71225,7 +71200,7 @@ async function toolSearch(p) {
   const notes = [];
   if (rows.length === 0) {
     notes.push(
-      "Nothing matched. The index covers docx/docm/pptx/pptm/xlsx/xlsm/md/txt/csv, including their opening body text (PDF is title-only). Try fewer words, a folder name, or an empty query to list the newest documents."
+      "Nothing matched. The index covers Office documents (docx/docm/pptx/pptm/xlsx/xlsm) and their opening body text (PDF is title-only). Plain text and code are not indexed \u2014 search those with grep. Try fewer words, a folder name, or an empty query to list the newest documents."
     );
   }
   if (index2.pending > 0) {
@@ -71238,7 +71213,7 @@ async function toolSearch(p) {
   }
   if (rows.length > 0) {
     notes.push(
-      "Open the chosen file with office_read (docx/pptx/xlsx) or the read tool (md/txt/csv). PDFs can be shown in the viewer, but their text cannot be read yet. This index is a cache and the path is the truth."
+      "Open the chosen file with office_read (docx/pptx/xlsx). PDFs can be shown in the viewer, but their text cannot be read yet. This index is a cache and the path is the truth."
     );
   }
   return text(

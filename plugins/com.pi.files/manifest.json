@@ -115,7 +115,7 @@
       },
       {
         "name": "files_search",
-        "description": "Find documents in a workspace by what they are about. Use it when the user refers to a file without giving its path (\"the Q3 report\", \"the proposal that mentions the budget\"): it matches file names, folders, extracted titles and a short digest of each document's opening text. Returns absolute paths plus the matched snippet. The index re-checks every file before answering, so edits made outside the app are seen.",
+        "description": "Find Office documents (docx/pptx/xlsx) and PDFs in a workspace by what they are about. Use it when the user refers to a document without giving its path (\"the Q3 report\", \"the proposal that mentions the budget\"): it matches file names, folders, extracted titles and a short digest of each document's opening text. Returns absolute paths plus the matched snippet. The index re-checks every file before answering, so edits made outside the app are seen. Plain-text files (md/txt/csv and code) are not indexed — search those with grep.",
         "readOnly": true,
         "inputSchema": {
           "type": "object",

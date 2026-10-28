@@ -490,9 +490,10 @@ async function toolSearch(p: Record<string, unknown>): Promise<ToolResult> {
   const notes: string[] = [];
   if (rows.length === 0) {
     notes.push(
-      'Nothing matched. The index covers docx/docm/pptx/pptm/xlsx/xlsm/md/txt/csv, including ' +
-        'their opening body text (PDF is title-only). Try fewer words, a folder name, or an ' +
-        'empty query to list the newest documents.',
+      'Nothing matched. The index covers Office documents (docx/docm/pptx/pptm/xlsx/xlsm) and ' +
+        'their opening body text (PDF is title-only). Plain text and code are not indexed — ' +
+        'search those with grep. Try fewer words, a folder name, or an empty query to list the ' +
+        'newest documents.',
     );
   }
   if (index.pending > 0) {
@@ -506,7 +507,7 @@ async function toolSearch(p: Record<string, unknown>): Promise<ToolResult> {
   }
   if (rows.length > 0) {
     notes.push(
-      'Open the chosen file with office_read (docx/pptx/xlsx) or the read tool (md/txt/csv). ' +
+      'Open the chosen file with office_read (docx/pptx/xlsx). ' +
         'PDFs can be shown in the viewer, but their text cannot be read yet. ' +
         'This index is a cache and the path is the truth.',
     );

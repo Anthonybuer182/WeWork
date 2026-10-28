@@ -1,10 +1,17 @@
 /**
  * Workspace document index for `files_search`.
  *
- * Why this exists: `ls` and `find` see file names, but an office document's
- * content is behind a zip container — the agent cannot grep a docx. So when a
- * user says "the Q3 report" without a path, the only way to answer is to open
- * documents one by one, which is exactly what this index avoids.
+ * Why this exists: an office document's content is behind a zip container —
+ * line-based search (grep) reads the zip bytes, not the words inside, and a PDF
+ * is not text either. So when a user says "the Q3 report" without a path, the
+ * only way to answer would be to open documents one by one, which is exactly
+ * what this index avoids.
+ *
+ * Scope: only the container formats (docx/pptx/xlsx/pdf). Plain text — md, txt,
+ * csv, code — is deliberately NOT indexed: the agent has `grep`, which reads
+ * the whole file, honours regex, and is never a 1.5k-character excerpt. Keeping
+ * text here too would be a weaker second path with a per-workspace cache to
+ * invalidate.
  *
  * What it stores: per file, its name, size, mtime, title, and a short DIGEST
  * of the body text (the first ~1.5k characters). The digest is what makes
@@ -25,7 +32,10 @@ import { basename, dirname, isAbsolute, join, resolve as resolvePath } from 'nod
 import JSZip from 'jszip';
 import { PDFDocument } from 'pdf-lib';
 
-/** Extensions the index covers — the same families the viewer previews. */
+/**
+ * Extensions the index covers: the container formats line-based search cannot
+ * read. Plain text and code belong to `grep` and are intentionally absent.
+ */
 const INDEXABLE = new Set([
   'docx',
   'docm',
@@ -34,10 +44,6 @@ const INDEXABLE = new Set([
   'xlsx',
   'xlsm',
   'pdf',
-  'md',
-  'markdown',
-  'txt',
-  'csv',
 ]);
 
 /**
@@ -397,25 +403,6 @@ async function pdfMeta(bytes: Uint8Array): Promise<Meta> {
   return { title: cleanTitle(doc.getTitle() ?? ''), digest: null };
 }
 
-/** Text formats: the first Markdown heading as title, the opening as digest. */
-function textMeta(content: string, markdown: boolean): Meta {
-  let title: string | null = null;
-  if (markdown) {
-    const heading = /^\s{0,3}#{1,6}\s+(.+)$/m.exec(content);
-    if (heading) title = cleanTitle(heading[1]);
-  }
-  if (!title) {
-    for (const line of content.split(/\r?\n/)) {
-      const t = cleanTitle(line);
-      if (t) {
-        title = t;
-        break;
-      }
-    }
-  }
-  return { title, digest: cleanDigest([content]) };
-}
-
 async function extractMeta(path: string, ext: string, size: number): Promise<Meta> {
   const isOffice =
     ext === 'docx' || ext === 'docm' || ext === 'pptx' || ext === 'pptm' || ext === 'xlsx' || ext === 'xlsm';
@@ -424,11 +411,6 @@ async function extractMeta(path: string, ext: string, size: number): Promise<Met
   if (ext === 'pptx' || ext === 'pptm') return pptxMeta(new Uint8Array(await readFile(path)));
   if (ext === 'xlsx' || ext === 'xlsm') return xlsxMeta(new Uint8Array(await readFile(path)));
   if (ext === 'pdf') return pdfMeta(new Uint8Array(await readFile(path)));
-  // Text files are read whole, so a multi-megabyte log is not worth a digest —
-  // its path still matches, and the agent can `read` it if it needs to.
-  if (size > 2 * 1024 * 1024) return { title: null, digest: null };
-  if (ext === 'md' || ext === 'markdown') return textMeta(await readFile(path, 'utf-8'), true);
-  if (ext === 'txt' || ext === 'csv') return textMeta(await readFile(path, 'utf-8'), false);
   return { title: null, digest: null };
 }
 
