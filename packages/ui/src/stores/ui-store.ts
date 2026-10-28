@@ -111,10 +111,10 @@ export const useUIStore = create<UIState>()(
               set({ rightPanelOpen: true });
               usePanelStore.getState().openPanel(panelId, { focus: true, params: { file: path } });
             } else {
-              // No preview plugin claims this extension. `isPreviewableInRightPanel`
-              // also covers images, video, html and plain code files, which no
-              // plugin handles — that combination used to fall through silently
-              // and made the click look broken. Hand it to the system instead.
+              // No preview plugin claims this extension — code files, and the
+              // formats the file viewer deliberately leaves out (mkv/avi, Office
+              // formats without a renderer). Hand it to the system instead:
+              // falling through silently made the click look broken.
               openWithSystemApp(path, useUIStore.getState().activeWorkspaceId ?? undefined);
             }
           })

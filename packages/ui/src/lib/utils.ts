@@ -23,12 +23,19 @@ const TEXT_EDITABLE_EXTENSIONS = new Set([
 /** File extensions that have their own structured preview in the right panel */
 const PREVIEWABLE_EXTENSIONS = new Set([
   '.html', '.htm',
-  '.docx', '.xlsx', '.pptx',
+  // Every variant the file viewer's manifest claims. The click handler asks
+  // HERE first: an extension missing from this set never reaches the plugin
+  // routing, it goes straight to the system app.
+  '.docx', '.docm', '.doc',
+  '.xlsx', '.xlsm', '.xls',
+  '.pptx', '.pptm', '.ppt',
   '.pdf',
   // Images
   '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp', '.ico', '.avif',
   // Videos
   '.mp4', '.webm', '.mov', '.m4v', '.ogv', '.mkv', '.avi', '.3gp',
+  // Audio
+  '.mp3', '.m4a', '.wav', '.flac', '.ogg', '.aac',
 ]);
 
 /** Returns true if the file can be opened and edited as text */
