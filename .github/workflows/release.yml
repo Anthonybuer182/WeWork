@@ -120,10 +120,13 @@ jobs:
       # 安装包会把插件市场打进 <resources>/market/。首方插件的 dist/ 未入库，
       # 干净 clone 里 build-market 会失败 —— 那就不带插件出包，但不能因此
       # 让 extraResources 指向一个不存在的目录。
+      # 注意 market-dist/ 必须落在 apps/desktop/ 下：electron-builder.yml 的
+      # extraResources 是相对 app 目录解析的（与 pack:* 脚本一致）。
       # TODO: 插件构建接入 CI 后，这里的兜底自然就不会再走到了。
       - name: Build bundled plugin market
+        working-directory: apps/desktop
         run: |
-          if node scripts/build-market.mjs --skip-state --out market-dist; then
+          if node ../../scripts/build-market.mjs --skip-state --out market-dist; then
             echo "plugin market built"
           else
             echo "::warning::plugins are not buildable in a clean checkout yet — shipping an empty market index"
