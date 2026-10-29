@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, ci/debug]
+    branches: [main]
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
@@ -43,19 +43,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: |
-          set -o pipefail
-          if pnpm build --output-logs=full > /tmp/build.log 2>&1; then
-            echo "build ok"
-          else
-            echo "===== build failed — matching error lines ====="
-            grep -nE "error|Error|ERROR|failed|Failed|✗|Cannot|not found|ENOENT|RollupError|Build failed" /tmp/build.log | head -40
-            echo "===== last 60 lines ====="
-            tail -60 /tmp/build.log
-            echo "===== as annotations ====="
-            grep -E "error|Error|ERROR|✗|Cannot|ENOENT|RollupError|Build failed" /tmp/build.log | tail -8 | cut -c1-400 | sed 's/^/::error::/'
-            exit 1
-          fi
+        run: pnpm build
 
       - name: Typecheck
         run: pnpm typecheck
