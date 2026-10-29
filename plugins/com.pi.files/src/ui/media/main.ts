@@ -27,8 +27,20 @@ const root = document.getElementById('root');
 /** Releases whatever the last render holds (a playing video, a big <img>). */
 let teardown: (() => void) | null = null;
 
-/** Size of the current file, so a later metadata update can keep it in the header. */
+/**
+ * The header is composed from parts that arrive at different times: the type is
+ * known at once, the size comes back from `file.stat`, and a picture's
+ * dimensions only exist after it decodes. Each writer updates its own part and
+ * recomposes. A single `setMeta` written from both sides raced — the stat reply
+ * is slower, so it used to overwrite the dimensions that had just arrived.
+ */
+let extLabel = '';
+let dimsLabel = '';
 let sizeLabel = '';
+
+function refreshMeta(): void {
+  setMeta([extLabel, dimsLabel, sizeLabel].filter(Boolean).join(' · '));
+}
 
 boot();
 
@@ -66,22 +78,25 @@ async function render(path: string): Promise<void> {
   drop();
   const ext = extOf(path);
   const name = path.split('/').pop() ?? path;
-  shell(name, ext.toUpperCase());
+  extLabel = ext.toUpperCase();
+  dimsLabel = '';
+  sizeLabel = '';
+  shell(name, extLabel);
   const body = mountBody();
 
-  // Size for the header; the picture's own dimensions arrive with the image.
-  sizeLabel = '';
+  // Size arrives asynchronously; the picture's own dimensions arrive later
+  // still, with the decode. Both go through refreshMeta.
   backend<{ size?: number }>('file.stat', { path })
     .then((s) => {
       if (typeof s?.size === 'number') {
         sizeLabel = formatSize(s.size);
-        setMeta(`${ext.toUpperCase()}${sizeLabel ? ` · ${sizeLabel}` : ''}`);
+        refreshMeta();
       }
     })
     .catch(() => undefined);
 
-  if (IMAGE_EXTS.includes(ext)) return renderImage(body, path, ext);
-  if (VIDEO_EXTS.includes(ext)) return renderVideo(body, path, ext);
+  if (IMAGE_EXTS.includes(ext)) return renderImage(body, path);
+  if (VIDEO_EXTS.includes(ext)) return renderVideo(body, path);
   if (AUDIO_EXTS.includes(ext)) return renderAudio(body, path, name);
   renderMessage('无法预览', `不支持的媒体格式：.${ext}`, true);
 }
@@ -94,7 +109,7 @@ function drop(): void {
 
 // ── image ───────────────────────────────────────────────────────────────
 
-function renderImage(body: HTMLElement, path: string, ext: string): void {
+function renderImage(body: HTMLElement, path: string): void {
   const stage = document.createElement('div');
   stage.className = 'mv-stage mv-image';
 
@@ -223,8 +238,8 @@ function renderImage(body: HTMLElement, path: string, ext: string): void {
   };
 
   img.addEventListener('load', () => {
-    const dims = `${img.naturalWidth}×${img.naturalHeight}`;
-    setMeta(`${ext.toUpperCase()} · ${dims}${sizeLabel ? ` · ${sizeLabel}` : ''}`);
+    dimsLabel = `${img.naturalWidth}×${img.naturalHeight}`;
+    refreshMeta();
     computeFit();
     apply();
     img.classList.add('mv-ready');
@@ -296,7 +311,7 @@ function mountImageControls(body: HTMLElement): ImageControls {
 
 // ── video / audio ───────────────────────────────────────────────────────
 
-function renderVideo(body: HTMLElement, path: string, ext: string): void {
+function renderVideo(body: HTMLElement, path: string): void {
   const stage = document.createElement('div');
   stage.className = 'mv-stage mv-video';
 
@@ -317,7 +332,8 @@ function renderVideo(body: HTMLElement, path: string, ext: string): void {
   video.addEventListener('loadedmetadata', () => {
     const d = video.duration;
     if (Number.isFinite(d) && d > 0) {
-      setMeta(`${ext.toUpperCase()} · ${formatTime(d)}${sizeLabel ? ` · ${sizeLabel}` : ''}`);
+      dimsLabel = formatTime(d);
+      refreshMeta();
     }
   });
   video.addEventListener('error', () => {
