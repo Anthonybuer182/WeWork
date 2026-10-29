@@ -1,0 +1,197 @@
+name: Release
+
+# 打 tag 触发：先跑与 CI 相同的测试门禁，再在四个平台上打包，最后把安装包
+# 挂到 GitHub Release 的 Assets 上。
+#
+# 版本号真源是 apps/desktop/package.json —— tag 必须与它完全一致，否则在
+# 打包前就失败（省下四台 runner 的时间）。
+#
+# 第一阶段不做代码签名：产物会被 macOS Gatekeeper / Windows SmartScreen
+# 拦一次，用户手动允许即可。
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  # 没有签名证书也照常出包（electron-builder 的自动探测会让位）。
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+jobs:
+  # ── 门禁：与 ci.yml 同一套检查 ──────────────────────────────────────
+  verify:
+    name: Verify (build / typecheck / lint / test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+  # ── 打包：一个平台一个 runner，互不阻塞 ─────────────────────────────
+  build:
+    name: Package (${{ matrix.name }})
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    # Windows 上也要用 bash：下面的脚本与 glob 都是 POSIX 写法。
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-arm64
+            os: macos-15
+            platform: mac
+            arch: arm64
+          # Intel 架构需要 x64 runner，交叉产出不可靠（原生依赖按宿主架构装）。
+          - name: macos-x64
+            os: macos-15-intel
+            platform: mac
+            arch: x64
+          - name: windows-x64
+            os: windows-latest
+            platform: win
+            arch: x64
+          - name: linux-x64
+            os: ubuntu-22.04
+            platform: linux
+            arch: x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Check tag matches apps/desktop/package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(node -p "require('./apps/desktop/package.json').version")"
+          echo "tag:     v${tag}"
+          echo "version: ${version}"
+          if [ "${tag}" != "${version}" ]; then
+            echo "::error::tag v${tag} 与 apps/desktop/package.json 的 version ${version} 不一致：改版本号后重新打 tag。"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # 安装包会把插件市场打进 <resources>/market/。首方插件的 dist/ 未入库，
+      # 干净 clone 里 build-market 会失败 —— 那就不带插件出包，但不能因此
+      # 让 extraResources 指向一个不存在的目录。
+      # TODO: 插件构建接入 CI 后，这里的兜底自然就不会再走到了。
+      - name: Build bundled plugin market
+        run: |
+          if node scripts/build-market.mjs --skip-state --out market-dist; then
+            echo "plugin market built"
+          else
+            echo "::warning::plugins are not buildable in a clean checkout yet — shipping an empty market index"
+            rm -rf market-dist
+            mkdir -p market-dist
+            node -e "require('node:fs').writeFileSync('market-dist/index.json', JSON.stringify({ version: 1, updated: new Date().toISOString(), plugins: [] }, null, 2))"
+          fi
+
+      # Windows 运行时依赖 bash（MinGit busybox），打包前必须下载到 bash-bundle/。
+      - name: Download Windows shell bundle
+        if: matrix.platform == 'win'
+        run: node apps/desktop/scripts/download-bash-bundle.cjs
+
+      # pnpm 的 workspace 软链会让 electron-builder 去包目录外找文件。
+      - name: Prepare packaging
+        run: node apps/desktop/scripts/prepare-pack.cjs
+
+      - name: Package
+        working-directory: apps/desktop
+        run: pnpm exec electron-builder --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+
+      - name: Check expected installers exist
+        run: |
+          case "${{ matrix.platform }}" in
+            mac)   patterns="*.dmg *.zip" ;;
+            win)   patterns="*.exe" ;;
+            linux) patterns="*.AppImage *.deb" ;;
+          esac
+          for pattern in $patterns; do
+            ls apps/desktop/release/$pattern > /dev/null || {
+              echo "::error::packaging produced no ${pattern} for ${{ matrix.name }}"
+              exit 1
+            }
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.name }}
+          # 只收安装包本身，忽略 blockmap / latest*.yml 等更新元数据。
+          path: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.deb
+          if-no-files-found: error
+          compression-level: 0
+
+  # ── 发布：把四个平台的产物挂到同一个 Release ────────────────────────
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      # 唯一需要写权限的 job：创建 Release 并上传 Assets。
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          # v0.2.0-beta.1 这类带后缀的 tag 自动标为预发布。
+          prerelease: ${{ contains(github.ref_name, '-') }}

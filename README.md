@@ -2,6 +2,21 @@
 
 基于 Electron + React 的 AI 编程助手桌面应用，提供 Web 和桌面双端体验。
 
+## 下载
+
+[![下载最新版本](https://img.shields.io/badge/下载-最新版本-2ea44f?style=for-the-badge)](https://github.com/Anthonybuer182/WeWork/releases/latest)
+
+点上面按钮（或直接打开 [Releases](https://github.com/Anthonybuer182/WeWork/releases/latest)），按平台取安装包：
+
+| 平台 | 安装包 |
+|------|--------|
+| macOS（Apple 芯片） | `.dmg`，文件名带 `-arm64` |
+| macOS（Intel） | `.dmg`，文件名不带架构后缀 |
+| Windows（x64） | `.exe` |
+| Linux（x64） | `.AppImage` 或 `.deb` |
+
+> 产物目前未做代码签名：macOS 首次打开需右键 →「打开」，Windows 会出现 SmartScreen 提示，选「更多信息」→「仍要运行」。
+
 ## 主要功能
 
 - **AI 对话** — 多轮对话式编程助手，支持思考过程展示和工具调用可视化
@@ -153,5 +168,28 @@ pnpm plugins:publish --install       # 额外无界面安装到 ~/.pi/agent/plug
 |------|------|
 | `pnpm typecheck` | TypeScript 类型检查 |
 | `pnpm lint` | 代码检查 |
+| `pnpm test` | 跑测试（desktop 的 `node:test` + plugin-sdk 冒烟） |
 | `pnpm format` | 代码格式化 (Prettier) |
 | `pnpm clean` | 清理构建产物 |
+
+## 发版
+
+版本号真源是 `apps/desktop/package.json` 的 `version`。tag 必须与它完全一致，否则发布流程在打包前就会失败。
+
+```bash
+# 1. 改版本号（只改文件，不自动打 tag）
+cd apps/desktop && npm version 0.2.0 --no-git-tag-version && cd ../..
+
+# 2. 提交，打与版本号一致的 tag，push（tag 会触发发布）
+git commit -am "发布 0.2.0"
+git tag v0.2.0
+git push origin HEAD --tags
+```
+
+push tag 后 `.github/workflows/release.yml` 依次执行：
+
+1. **verify** —— 与 CI 相同的 build / typecheck / lint / test，不通过就停在这里；
+2. **build** —— macOS（arm64 + x64）、Windows x64、Linux x64 各出一份安装包；
+3. **publish** —— 创建 GitHub Release，把四个平台的产物挂到 Assets，正文自动生成。
+
+tag 里带 `-`（如 `v0.2.0-beta.1`）会自动标成 prerelease；产物暂未做代码签名。
