@@ -48,10 +48,12 @@ jobs:
           if pnpm build --output-logs=full > /tmp/build.log 2>&1; then
             echo "build ok"
           else
-            echo "===== build failed — tail of log ====="
-            tail -100 /tmp/build.log
+            echo "===== build failed — matching error lines ====="
+            grep -nE "error|Error|ERROR|failed|Failed|✗|Cannot|not found|ENOENT|RollupError|Build failed" /tmp/build.log | head -40
+            echo "===== last 60 lines ====="
+            tail -60 /tmp/build.log
             echo "===== as annotations ====="
-            tail -10 /tmp/build.log | sed 's/^/::error::/'
+            grep -E "error|Error|ERROR|✗|Cannot|ENOENT|RollupError|Build failed" /tmp/build.log | tail -8 | cut -c1-400 | sed 's/^/::error::/'
             exit 1
           fi
 
