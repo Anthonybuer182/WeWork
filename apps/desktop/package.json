@@ -8,6 +8,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-transform-types --import ./tests/support/register.mjs --test tests/*.test.mjs",
     "clean": "rm -rf out dist",
     "start": "electron .",
     "pack:mac": "pnpm build && node ../../scripts/build-market.mjs --skip-state --out market-dist && node scripts/prepare-pack.cjs && electron-builder --mac",

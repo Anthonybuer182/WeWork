@@ -180,13 +180,19 @@ test('context_audit reports the active workspace and refuses cleanly without one
   );
   const config = makeConfig({ base: 100, appended: 0, context: 0, skills: 0, tools: 0 });
   const calls = [];
-  const [tool] = createHostAgentTools({
+  // The host contributes more than one tool now, so look the audited one up by
+  // name instead of depending on the order it happens to be listed in.
+  const tool = createHostAgentTools({
     readContextConfig: async (path, id) => {
       calls.push([path, id]);
       return { ...config, workspace: { ...config.workspace, path } };
     },
-  });
-  assert.equal(tool.name, 'context_audit');
+    // Unused by this case: the todo/ask tools close over their services and
+    // are never executed here.
+    todoService: {},
+    askService: {},
+  }).find((candidate) => candidate.name === 'context_audit');
+  assert.ok(tool, 'context_audit is contributed by the host');
   // Host tools carry no pluginId — in the tool listing they read as built-in,
   // which is what they are.
   assert.equal(tool.pluginId, undefined);
