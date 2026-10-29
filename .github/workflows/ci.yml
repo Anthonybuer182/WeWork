@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, ci/debug]
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
@@ -43,7 +43,17 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: |
+          set -o pipefail
+          if pnpm build --output-logs=full > /tmp/build.log 2>&1; then
+            echo "build ok"
+          else
+            echo "===== build failed — tail of log ====="
+            tail -100 /tmp/build.log
+            echo "===== as annotations ====="
+            tail -10 /tmp/build.log | sed 's/^/::error::/'
+            exit 1
+          fi
 
       - name: Typecheck
         run: pnpm typecheck
