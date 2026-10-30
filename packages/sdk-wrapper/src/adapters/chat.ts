@@ -375,13 +375,22 @@ export function createRealChatService(
     const toolNames = toolNamesOf(customTools);
     for (const name of effectiveDisabled) toolNames.delete(name);
 
+    // `tools` is an ALLOWLIST in the SDK, not just "which built-ins to switch
+    // on": `createAgentSession` turns it into `allowedToolNames`, and
+    // `_refreshToolRegistry` filters custom tools through the same set. Passing
+    // only the built-ins therefore silently dropped every plugin tool and every
+    // host tool (asktool / todotool / context audit) from the model's list —
+    // the agent reported "Tool browser_show not found" while the host's own
+    // aggregate still listed it. So: built-ins we want ON, plus every custom
+    // tool the providers contributed. Disabled names still come off via
+    // `excludeTools`, which is the denylist for both families.
     const { session } = await createAgentSession({
       cwd: workCwd,
       sessionManager,
       modelRegistry: registry, // share registry so custom models are visible
       resourceLoader: await createResourceLoader(workCwd, skills, toolNames),
       settingsManager,         // share settings so shell path is respected
-      tools: [...ACTIVE_BUILTIN_TOOLS],
+      tools: [...ACTIVE_BUILTIN_TOOLS, ...toolNames],
       customTools: customTools as never,
       // `createAgentSession` calls this denylist `excludeTools` (the lower
       // AgentSessionConfig names it `excludedToolNames`); it applies to
