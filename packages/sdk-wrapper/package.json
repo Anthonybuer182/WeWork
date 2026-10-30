@@ -17,7 +17,7 @@
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.78.1",
     "@pi/types": "workspace:*",
-    "adm-zip": "^0.5.17",
+    "adm-zip": "^0.6.1",
     "exceljs": "^4.4.0",
     "zod": "^3.24.1"
   },

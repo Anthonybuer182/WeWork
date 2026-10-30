@@ -39,8 +39,8 @@ importers:
         specifier: ^5.62.8
         version: 5.101.0(react@19.2.7)
       adm-zip:
-        specifier: 0.5.17
-        version: 0.5.17
+        specifier: 0.6.1
+        version: 0.6.1
       playwright-core:
         specifier: ^1.61.1
         version: 1.61.1
@@ -136,8 +136,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
+        specifier: ^0.6.1
+        version: 0.6.1
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
@@ -2057,10 +2057,6 @@ packages:
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
-
-  adm-zip@0.5.17:
-    resolution: {integrity: sha512-+Ut8d9LLqwEvHHJl1+PIHqoyDxFgVN847JTVM3Izi3xHDWPE4UtzzXysMZQs64DMcrJfBeS/uoEP4AD3HQHnQQ==}
-    engines: {node: '>=12.0'}
 
   adm-zip@0.6.1:
     resolution: {integrity: sha512-Xwrja8nx9e5o2N1my4DsKCeKpdrnACyr1wtbPxBDgGzKzKyE9kRtBFA8mWldI+RVlD7CBZNWY/wQ2+ydwOR6kQ==}
@@ -6578,8 +6574,6 @@ snapshots:
   '@xmldom/xmldom@0.9.10': {}
 
   abbrev@1.1.1: {}
-
-  adm-zip@0.5.17: {}
 
   adm-zip@0.6.1: {}
 
