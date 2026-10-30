@@ -20,7 +20,6 @@ import { QueueIndicator } from './queue-indicator';
 import { ModelSelector } from '../model/model-selector';
 import { ThinkLevelSelector } from '../model/think-level-selector';
 import { PermissionModeButton } from './permission-mode-button';
-import { usePermissionStore } from '@/stores/permission-store';
 import { useI18n, type MessageKey } from '@/i18n';
 import { useCommandStore, commandDescription, type RegisteredCommand } from '@/stores/command-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -37,10 +36,6 @@ export function Composer() {
   const executePluginCommand = usePluginStore((s) => s.executePluginCommand);
   const activeSessionId = useUIStore((s) => s.activeSessionId);
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
-  // Session-scoped permission mode (默认 / 完全访问) — mirrored from main.
-  const permissionMode = usePermissionStore(
-    (s) => s.modeBySession[activeSessionId ?? 'default'] ?? 'default',
-  );
   const compactMode = useUIStore((s) => s.compactMode);
   const setCompactMode = useUIStore((s) => s.setCompactMode);
   const disabledSkills = useUIStore((s) => s.disabledSkills);
@@ -1211,9 +1206,10 @@ export function Composer() {
     <div
       className={cn(
         'rounded-3xl border border-border bg-card shadow-sm mx-4 mb-4 overflow-visible transition-colors',
-        // 完全访问 keeps the door visibly open for as long as it is open —
-        // the red ring is the state, not a decoration.
-        !isDragging && permissionMode === 'full' && 'ring-2 ring-destructive/40 border-destructive/50',
+        // 完全访问 states itself on its own control (red icon + label in
+        // PermissionModeButton). Ringing the whole composer reads as "this
+        // input is wrong" and paints every surrounding element red, so the
+        // composer keeps its normal border.
         isDragging && 'ring-2 ring-muted-foreground/30 border-muted-foreground/50',
       )}
     >
