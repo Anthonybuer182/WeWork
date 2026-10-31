@@ -962,6 +962,50 @@ node scripts/build-market.mjs --out ./dist-market
 
 **`description` 写一句话就够**：它每次对话都进上下文，是触发线（"是什么、什么时候调"），不是说明书。操作细节、顺序、坑，写进你的 `PLUGIN.md`——那里按需加载，不占常驻成本。
 
+#### `contract` — 工具能力契约（可选，协议 6）
+
+工具除了长什么样，还要告诉模型**边界**：它能做什么、明确不能做什么、结果最多多大。这些写不进 JSON Schema，写进 `contract`：
+
+```json
+{
+  "tools": [{
+    "name": "query_orders",
+    "description": "Query orders by status",
+    "readOnly": true,
+    "inputSchema": { "type": "object", "properties": { "status": { "type": "string" } }, "required": ["status"] },
+    "contract": {
+      "domain": "orders",
+      "summary": "Query orders by status; returns a bounded page of rows.",
+      "guidelines": [
+        "Call this instead of reading the orders spreadsheet directly."
+      ],
+      "limits": { "maxOutputChars": 20000, "cursorParam": "offset" },
+      "unsupported": [
+        { "operation": "writing or cancelling orders", "alternativeTool": "order_update" }
+      ]
+    }
+  }]
+}
+```
+
+| 字段 | 作用 |
+|---|---|
+| `domain` | 粗粒度领域，用于分组和日志，如 `office` / `browser` / `orders` |
+| `summary` | 一行摘要，进系统提示的 Available tools；不写就从 `description` 第一行推导 |
+| `guidelines` | 追加到系统提示 Guidelines 的短条目，写"什么时候用/别用" |
+| `limits.maxOutputChars` | 返回给模型的文本上限，默认 **50,000 字符** |
+| `limits.maxOutputLines` | 行数上限，默认 **2,000 行** |
+| `limits.cursorParam` | 分页参数名；截断提示会告诉模型传这个参数继续 |
+| `unsupported` | 明确不做的操作。每条会生成一条「不要用它做 X」的提示；有替代工具就写 `alternativeTool` |
+| `requiresModel.input` | 结果依赖的模型能力；`"image"` 表示结果可能含图片，文本模型看不到 |
+
+约定：
+
+- **契约是提示，不是硬拦截。** `unsupported` 让模型提前知道边界，避免退化成 shell/裸改 XML；真正的校验仍由工具自己负责。
+- **只截断返回给模型的文本**，不动 `details`、卡片或插件状态。超限时宿主会在末尾追加 `[output truncated: ...]`，有 `cursorParam` 就提示模型继续取。
+- **可选、向后兼容。** 不写 `contract` 的插件照常加载：宿主会从 `description` 推一行摘要并套默认上限。协议 6 只是加了字段，最低支持版本仍是 3。
+- 第三方插件声明 `apiVersion: 6` 表示"我知道契约"；声明 5 也能在支持契约的宿主上加载，只是新宿主的契约特性用不上。
+
 ### contributes.commands — 斜杠命令
 
 ```json
@@ -1016,6 +1060,7 @@ node scripts/build-market.mjs --out ./dist-market
 - [ ] 带 `PLUGIN.md`，`description` 写的是"用户会说什么"
 - [ ] 工具名带稳定前缀，`description` 一句话、写"什么时候调"
 - [ ] `readOnly` 如实声明
+- [ ] 工具边界写进 `contract`（尤其是"不支持什么、别用什么替代"），输出上限按需收紧
 - [ ] 权限最小化：只声明实际需要的；要用户选文件的地方用了 `dialog.*`
 - [ ] 错误处理：能力调用可能失败，catch 并在面板中显示；工具返回值里把"不支持、别重试"说清楚
 - [ ] 有产出物的工具（创建/修改文件、草稿等）返回声明式卡片，让产出物在对话里可见、可操作

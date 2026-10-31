@@ -4,7 +4,7 @@ import { homedir } from 'os';
 import type { ConfigService } from '../services/config.js';
 import { SettingsManager, AuthStorage, ModelRegistry, getAgentDir, loadSkills } from '@earendil-works/pi-coding-agent';
 import type { Skill as SdkSkill } from '@earendil-works/pi-coding-agent';
-import type { Config, ModelInfo, ModelProvider, ModelsConfig, ProviderEntry, ModelEntry, Skill } from '@pi/types';
+import type { Config, ModelCapabilities, ModelInfo, ModelProvider, ModelsConfig, ProviderEntry, ModelEntry, Skill } from '@pi/types';
 
 // ── Multimodal model auto-detection ──
 
@@ -67,6 +67,28 @@ function normalizeModelInput(model: ModelEntry): ModelEntry {
     return { ...model, input: ['text', 'image'] };
   }
   return model;
+}
+
+/**
+ * The active model's input capabilities, or undefined when the model does not
+ * declare any.
+ *
+ * Undefined is deliberately distinct from "text only": a model with an empty
+ * or missing `input` list is UNKNOWN, and the host uses the neutral capability
+ * prompt for it. Only an explicit list without `image` proves the model cannot
+ * see images.
+ */
+export function modelCapabilitiesOf(
+  model: { input?: string[]; contextWindow?: number; maxTokens?: number } | null | undefined,
+): ModelCapabilities | undefined {
+  const input = model?.input?.filter((value) => typeof value === 'string' && value.trim().length > 0);
+  if (!input || input.length === 0) return undefined;
+  return {
+    input,
+    vision: input.includes('image'),
+    ...(model?.contextWindow !== undefined ? { contextWindow: model.contextWindow } : {}),
+    ...(model?.maxTokens !== undefined ? { maxTokens: model.maxTokens } : {}),
+  };
 }
 
 // Map real SDK thinking levels to our Config thinking levels

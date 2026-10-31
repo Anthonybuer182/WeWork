@@ -1,6 +1,11 @@
 import { WebContentsView, BrowserWindow, session, nativeImage } from 'electron';
 import { readFile } from 'node:fs/promises';
 import { BROWSER_HELPERS_JS } from './browser-helpers';
+import {
+  ensureBrowserSessionCookieWatcher,
+  persistBrowserSessionCookies,
+  scheduleBrowserSessionCookiePersist,
+} from './browser-session';
 import type { VlmAnalyzer } from './vlm-analyzer';
 
 /** Snapshot node — simplified accessibility tree. */
@@ -557,6 +562,9 @@ export class BrowserManager {
   private wireTab(t: BrowserTab): void {
     const wc = t.wc;
 
+    // Start watching the shared profile for login cookies the first time a tab
+    // is wired; the watcher is process-wide and idempotent.
+    ensureBrowserSessionCookieWatcher();
     wc.setUserAgent(ENGINE_UA);
 
     // Ignore certificate errors for user-browsed content (equivalent to
@@ -609,6 +617,8 @@ export class BrowserManager {
       if (url && !url.startsWith('about:')) {
         this.urlChangedCallbacks.forEach((cb) => cb(t.id, url));
       }
+      // A login redirect lands here; persist soon after the page settles.
+      scheduleBrowserSessionCookiePersist();
     });
     wc.on('did-navigate-in-page', (_event, url) => {
       if (url) {
@@ -632,6 +642,9 @@ export class BrowserManager {
         this.injectHelpers(t);
         this.scheduleAutoZoom(t);
       }
+      // Session cookies set by the login flow are memory-only until this
+      // converts them to disk-backed cookies.
+      scheduleBrowserSessionCookiePersist();
       // embedded-view compositing workaround: after a page load (especially
       // SPA navigations like zhipin.com's anti-bot triggered ones), the
       // native composited surface can go blank while the webContents still
@@ -3131,6 +3144,11 @@ export class BrowserManager {
    * reopen into no longer exists.
    */
   async destroy(): Promise<void> {
+    // Capture the session cookies before the views go away: closing every tab
+    // may end the renderer processes that own them.
+    await persistBrowserSessionCookies().catch((err) => {
+      console.warn('[browser-session] destroy persist failed:', err instanceof Error ? err.message : err);
+    });
     for (const id of [...this.tabs.keys()]) {
       this.closeTab(id);
     }

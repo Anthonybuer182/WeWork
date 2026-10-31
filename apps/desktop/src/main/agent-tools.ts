@@ -31,6 +31,7 @@ import { formatAuditText } from '@pi/sdk-wrapper';
 import type { AskService } from './asks';
 import { takeToolSession } from './plugins/session-context';
 import { countTodos, type TodoService } from './todos';
+import { toolContracts } from './tools/contracts';
 
 /** Agent tool definition shape expected by createAgentSession({ customTools }). */
 export interface AgentCustomTool {
@@ -42,6 +43,15 @@ export interface AgentCustomTool {
   parameters: unknown;
   /** From the manifest contribution — true = the tool only observes state. */
   readOnly?: boolean;
+  /**
+   * One-line trigger for the SDK's "Available tools" section. Custom tools
+   * without this are omitted from that section entirely — only the schema
+   * reaches the model — so the host fills it from the tool's contract or
+   * description.
+   */
+  promptSnippet?: string;
+  /** Extra behavior rules appended to the system prompt's Guidelines section. */
+  promptGuidelines?: string[];
   /**
    * Passed through to the SDK's tool registry. A blocking tool asks for
    * 'sequential' so two calls in one assistant message cannot both paint a
@@ -87,7 +97,7 @@ function sessionForToolCall(toolCallId: string): string {
 }
 
 export function createHostAgentTools(deps: HostAgentToolDeps): AgentCustomTool[] {
-  return [
+  const tools: AgentCustomTool[] = [
     createTodoTool(deps.todoService),
     createAskTool(deps.askService),
     {
@@ -134,6 +144,12 @@ export function createHostAgentTools(deps: HostAgentToolDeps): AgentCustomTool[]
       },
     },
   ];
+  for (const tool of tools) {
+    tool.promptSnippet = toolContracts.snippetFor(tool.name, tool.description);
+    const guidelines = toolContracts.guidelinesFor(tool.name);
+    if (guidelines) tool.promptGuidelines = guidelines;
+  }
+  return tools;
 }
 
 // ── todotool ───────────────────────────────────────────────────────────

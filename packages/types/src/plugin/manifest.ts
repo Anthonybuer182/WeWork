@@ -79,6 +79,63 @@ export interface PanelContribution {
 }
 
 /**
+ * Optional capability contract for one agent tool.
+ *
+ * Most of what a model needs to choose a tool is prose (description /
+ * promptSnippet / promptGuidelines). This object adds the parts prose cannot
+ * express reliably: a domain, hard output bounds, operations the tool does
+ * NOT support, and whether the tool is only useful with a particular model
+ * capability. The host enforces `limits` after every call and renders
+ * `summary` / `guidelines` / `unsupported` into the system prompt.
+ *
+ * It is deliberately optional: a manifest without a contract keeps loading,
+ * and the host derives a one-line summary from `description`.
+ */
+export interface ToolContract {
+  /**
+   * Coarse capability domain, e.g. `office`, `browser`, `filesystem`.
+   * Used for grouping in prompts and for metrics; not interpreted by the model.
+   */
+  domain?: string;
+  /**
+   * One-line summary for the system prompt's "Available tools" section.
+   * Falls back to the first line/sentence of `description`.
+   */
+  summary?: string;
+  /** Short bullets appended to the system prompt's Guidelines section. */
+  guidelines?: string[];
+  /** Hard bounds the host enforces on the model-facing result content. */
+  limits?: {
+    /** Default 50_000 characters. */
+    maxOutputChars?: number;
+    /** Default 2_000 lines. */
+    maxOutputLines?: number;
+    /**
+     * Parameter the model can pass to request more output. Included in the
+     * truncation notice, e.g. "pass `offset` to continue".
+     */
+    cursorParam?: string;
+  };
+  /**
+   * Operations this tool deliberately does not implement. The host turns each
+   * entry into a guideline, so the model knows the boundary up front instead
+   * of falling back to a generic (and often unsafe) shell route.
+   */
+  unsupported?: Array<{
+    operation: string;
+    /** Preferred alternative, when one exists. */
+    alternativeTool?: string;
+    /** What to do instead / what to tell the user. */
+    hint?: string;
+  }>;
+  /**
+   * Model capability the tool's result depends on. P0 surfaces this as prompt
+   * guidance only; it does not block calls.
+   */
+  requiresModel?: { input?: 'image' };
+}
+
+/**
  * Agent tool definition. The schema follows the MCP tool format
  * (JSON Schema based `inputSchema`), so external MCP servers can be
  * mounted as headless plugins in the future.
@@ -96,6 +153,11 @@ export interface ToolContribution {
    * `readOnlyHint` annotation.
    */
   readOnly?: boolean;
+  /**
+   * Capability boundaries and output bounds. Optional; omitted means the host
+   * derives a summary from `description` and applies default output limits.
+   */
+  contract?: ToolContract;
 }
 
 export interface CommandContribution {
@@ -183,6 +245,12 @@ export type PluginPermission = string;
  *
  * History:
  *
+ * 6 — added optional `contributes.tools[].contract` (domain, summary,
+ *     guidelines, output limits, unsupported operations, model requirement).
+ *     Purely additive; the host enforces limits and renders the guidance into
+ *     the system prompt, and a manifest without a contract behaves exactly as
+ *     before. Floor stays 3.
+ *
  * 5 — tool-name namespace tightened and `chat.send` attributed. Tool names
  *     are now unique across all plugins: a duplicate WITHIN one manifest
  *     rejects the manifest at scan; a collision ACROSS plugins keeps the
@@ -206,7 +274,7 @@ export type PluginPermission = string;
  *     A manifest still declaring `selectionActions` is now rejected rather than
  *     silently ignored — see the `apiVersion` note on PluginManifest.
  */
-export const PLUGIN_PROTOCOL_VERSION = 5;
+export const PLUGIN_PROTOCOL_VERSION = 6;
 
 /**
  * The OLDEST protocol version this build still loads — the lower bound of the

@@ -6,6 +6,7 @@ import { SettingsManager, ModelRegistry, AuthStorage } from '@earendil-works/pi-
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { ENGINE_UA, VlmAnalyzer } from '@main/browser';
+import { persistBrowserSessionCookies } from '@main/browser/browser-session';
 import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
 import { registerPluginIpcHandlers } from '@main/ipc/plugins';
 import { registerLiveSlotIpcHandlers } from '@main/plugins/slots';
@@ -15,6 +16,7 @@ import { AskService, registerAskIpc } from '@main/asks';
 import { TodoService, registerTodoIpc } from '@main/todos';
 import { ToolSettingsService, registerToolSettingsIpc } from '@main/preferences/tools';
 import { buildToolCatalog } from '@main/tools/catalog';
+import { installToolContractGate } from '@main/tools/contracts';
 import { windows } from '@main/windows';
 import { WindowStateStore } from '@main/window-state';
 import { installApplicationMenu } from '@main/menu';
@@ -191,8 +193,13 @@ if (!gotLock) {
       customToolsProvider: () => [...hostTools, ...pluginSystem.aggregateTools()],
       getGlobalDisabledTools: () => toolSettings.getDisabled(),
       pluginDocsProvider: () => pluginSystem.listPluginDocs(),
-      onSessionCreated: (session, info) =>
-        installPermissionGate(session, info.sessionKey, permissionService),
+      onSessionCreated: (session, info) => {
+        installPermissionGate(session, info.sessionKey, permissionService);
+        // Tool contracts (output bounds, image filtering, error prefix) are a
+        // separate afterToolCall wrapper; it must run under the same session
+        // key as the permission gate.
+        installToolContractGate(session, info.sessionKey);
+      },
       // Deleting a conversation must also settle anything it is blocked on;
       // otherwise the run, the pending promise and the card outlive the file.
       onSessionDeleted: (sessionId) => {
@@ -284,7 +291,26 @@ if (!gotLock) {
     // Window geometry must be written before the windows start closing:
     // destroying the last one would leave the state file empty and the next
     // launch would open a single blank window.
-    app.on('before-quit', () => windows.prepareToQuit());
+    //
+    // The browser's auth cookies are session cookies, which Chromium keeps in
+    // memory only. Give the cookie flush one more chance on quit, but never
+    // let a hung cookie store block the app from exiting.
+    let quitCookiesFlushed = false;
+    app.on('before-quit', (event) => {
+      windows.prepareToQuit();
+      if (quitCookiesFlushed) return;
+      quitCookiesFlushed = true;
+      event.preventDefault();
+      const timeout = new Promise<void>((resolve) => setTimeout(resolve, 1_500));
+      void Promise.race([
+        persistBrowserSessionCookies().then(() => undefined),
+        timeout,
+      ])
+        .catch((err) => {
+          console.warn('[browser-session] quit persist failed:', err instanceof Error ? err.message : err);
+        })
+        .finally(() => app.quit());
+    });
 
     app.on('will-quit', () => {
       // The todo write is debounced; without this, quitting right after the

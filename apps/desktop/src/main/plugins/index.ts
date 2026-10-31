@@ -22,6 +22,7 @@ import { takeToolSession } from './session-context';
 import { registerPluginProtocolHandler } from './protocol';
 import { PluginMarketplace } from './marketplace';
 import type { AgentCustomTool } from '@main/agent-tools';
+import { toolContracts } from '@main/tools/contracts';
 
 /**
  * Where plugin events go now that there can be several windows. `sessionId`
@@ -372,6 +373,11 @@ export class PluginSystem {
           continue;
         }
         seen.set(tool.name, pluginId);
+        // Manifest contract, if any. An empty contract must not erase a core
+        // contract for the same tool (most first-party manifests predate the
+        // field); the registry keeps the stronger source in that case.
+        toolContracts.register(tool.name, tool.contract, 'manifest');
+        const guidelines = toolContracts.guidelinesFor(tool.name);
         tools.push({
           name: tool.name,
           label: tool.name,
@@ -382,6 +388,10 @@ export class PluginSystem {
           pluginId,
           description: tool.description ?? `Plugin tool from ${pluginId}`,
           readOnly: tool.readOnly,
+          // Without this the SDK omits the tool from the system prompt's
+          // Available tools section; only its JSON schema reaches the model.
+          promptSnippet: toolContracts.snippetFor(tool.name, tool.description),
+          ...(guidelines ? { promptGuidelines: guidelines } : {}),
           parameters: tool.inputSchema ?? { type: 'object', properties: {}, additionalProperties: false },
           execute: async (_toolCallId, params) => {
             // The permission gate correlated this call with its session; the

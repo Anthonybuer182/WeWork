@@ -1,14 +1,14 @@
 import * as path from 'path';
 import { statSync, readFileSync } from 'node:fs';
 import type { ChatService, SendMessageParams, StreamChunk } from '../services/chat.js';
-import type { Message, AssistantMessage, ContentBlock, ToolResultBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming, AgentContextConfig, AgentContextReloadResult, AgentToolInfo, AppendSegmentInfo, ContextFileInfo, ContextFileScope, PromptFileInfo } from '@pi/types';
+import type { Message, AssistantMessage, ContentBlock, ToolResultBlock, TokenUsage, ContextUsageInfo, SessionStatsInfo, MessageTiming, AgentContextConfig, AgentContextReloadResult, AgentToolInfo, AppendSegmentInfo, ContextFileInfo, ContextFileScope, PromptFileInfo, ModelCapabilities } from '@pi/types';
 import { ASK_TOOL_NAME, TODO_TOOL_NAME } from '@pi/types';
 import { createAgentSession, SessionManager, ModelRegistry, AuthStorage, DefaultResourceLoader, getAgentDir, SettingsManager, formatSkillsForPrompt } from '@earendil-works/pi-coding-agent';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 import { extractThinkContent } from '../utils/think-parser.js';
 import { deleteFileWithMtimeGuard, writeFileWithMtimeGuard } from '../utils/safe-write.js';
 import { detectWrittenFiles } from '../utils/file-detection.js';
-import { migrateModelsConfig } from './config.js';
+import { migrateModelsConfig, modelCapabilitiesOf } from './config.js';
 
 /**
  * Built-in tools this app activates.
@@ -94,6 +94,52 @@ export const HOST_VISION_PROMPT =
   'You are equipped with vision capabilities. When users attach images or when the read tool loads image files, analyze the visual content directly. This includes: screenshots of code/errors, UI designs, architecture diagrams, charts, photos, and any other images the user shares. Describe what you see clearly and use it to provide better coding assistance.';
 
 /**
+ * The active model explicitly lists its inputs and does not include 'image'.
+ *
+ * Saying this plainly is the point: without it the agent still receives a
+ * silent "image omitted" note and can spend turns screenshotting, installing
+ * image libraries, or cropping a picture it will never see.
+ */
+export const HOST_TEXT_ONLY_PROMPT =
+  'The active model cannot receive images in this session. Images from user attachments or tool results are omitted (or replaced with a short note). Do not plan around seeing screenshots, charts or image files, and do not retry the same visual approach after an image is omitted. Use text or structured APIs instead; if the task genuinely requires inspecting an image, tell the user to switch to a vision-capable model.';
+
+/**
+ * The model did not declare its input modalities. Neither claim — "you have
+ * vision" nor "you cannot see images" — is safe, so state only what the host
+ * actually does when an image cannot be delivered.
+ */
+export const HOST_UNKNOWN_CAPABILITY_PROMPT =
+  'Image support depends on the active model. If a tool result says an image was omitted, do not retry the same visual approach; use a text or structured route instead, or ask the user to switch to a vision-capable model.';
+
+/** The host capability notes, in no particular order. */
+const HOST_CAPABILITY_PROMPTS = [
+  HOST_VISION_PROMPT,
+  HOST_TEXT_ONLY_PROMPT,
+  HOST_UNKNOWN_CAPABILITY_PROMPT,
+] as const;
+
+/** True for whichever capability note a session's prompt used. */
+export function isHostCapabilityPrompt(text: string): boolean {
+  return HOST_CAPABILITY_PROMPTS.includes(text as (typeof HOST_CAPABILITY_PROMPTS)[number]);
+}
+
+/** Where the capability note starts in an assembled prompt, or -1. */
+function capabilityPromptIndex(text: string): number {
+  let first = -1;
+  for (const prompt of HOST_CAPABILITY_PROMPTS) {
+    const at = text.indexOf(prompt);
+    if (at >= 0 && (first < 0 || at < first)) first = at;
+  }
+  return first;
+}
+
+/** The single host capability note for a model's declared inputs. */
+export function capabilityPromptFor(capabilities?: ModelCapabilities | null): string {
+  if (!capabilities) return HOST_UNKNOWN_CAPABILITY_PROMPT;
+  return capabilities.vision ? HOST_VISION_PROMPT : HOST_TEXT_ONLY_PROMPT;
+}
+
+/**
  * The interaction tools' standing policy.
  *
  * Their descriptions already say what they do; this block is the behavioral
@@ -169,11 +215,16 @@ function sameNames(a: string[], b: string[]): boolean {
 export function buildHostAppendSystemPrompt(
   pluginDocs: string,
   toolNames?: ReadonlySet<string>,
+  capabilities?: ModelCapabilities | null,
 ): string[] {
   const interaction = buildInteractionPrompt(toolNames);
   // A switched-off tool is absent from the tool list AND from this block: the
   // model should not be told about a capability the user turned off.
-  return [HOST_VISION_PROMPT, ...(interaction ? [interaction] : []), ...(pluginDocs ? [pluginDocs] : [])];
+  return [
+    capabilityPromptFor(capabilities),
+    ...(interaction ? [interaction] : []),
+    ...(pluginDocs ? [pluginDocs] : []),
+  ];
 }
 
 /**
@@ -193,8 +244,12 @@ export function buildHostAppendSystemPrompt(
 export function buildAppendSystemPromptOverride(
   pluginDocs: string,
   toolNames?: ReadonlySet<string>,
+  capabilities?: ModelCapabilities | null,
 ): (discovered: string[]) => string[] {
-  return (discovered) => [...buildHostAppendSystemPrompt(pluginDocs, toolNames), ...discovered];
+  return (discovered) => [
+    ...buildHostAppendSystemPrompt(pluginDocs, toolNames, capabilities),
+    ...discovered,
+  ];
 }
 
 export interface RealChatServiceOptions {
@@ -231,6 +286,8 @@ export function createRealChatService(
       cwd: string;
       skills?: string[];
       disabledTools?: string[];
+      /** The model capability the standing prompt was built for. */
+      capabilityKey?: 'vision' | 'text' | 'unknown';
     }
   >();
   /**
@@ -288,6 +345,7 @@ export function createRealChatService(
     workCwd: string,
     selectedSkillIds?: string[],
     toolNames?: ReadonlySet<string>,
+    capabilities?: ModelCapabilities | null,
   ) {
     // Read at session creation, not cached: enabling a plugin takes effect on
     // the next conversation instead of needing an app restart.
@@ -295,7 +353,7 @@ export function createRealChatService(
     const resourceLoader = new DefaultResourceLoader({
       cwd: workCwd,
       agentDir: getAgentDir(),
-      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocs, toolNames),
+      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocs, toolNames, capabilities),
       skillsOverride: selectedSkillIds
         ? (base) => {
             const enabledNames = new Set(
@@ -316,19 +374,36 @@ export function createRealChatService(
     sessionId?: string,
     workspaceCwd?: string,
     skills?: string[],
+    capabilities?: ModelCapabilities | null,
   ): Promise<AgentSession> {
     const key = sessionId || 'default';
     const workCwd = workspaceCwd || cwd;
-
-    // A session invalidated mid-run is rebuilt only once it is idle — and the
-    // rebuild has to happen here, before the "reuse the cache" decision, or a
-    // steer would keep using the stale tool/plugin set forever.
+    // undefined means "the caller has no opinion" (steer/followUp and other
+    // post-creation calls); null means "explicitly unknown" (a send without a
+    // model id). Only a real key may invalidate a cached session.
+    //
+    // A stale rebuild can be triggered by a steer, which passes no
+    // capabilities. Recover them from the session being replaced BEFORE it is
+    // dropped; otherwise the rebuilt loader falls back to the neutral prompt
+    // even though the session's model is still known.
+    let effectiveCapabilities = capabilities;
     const stale = activeSessions.get(key);
     if (stale && staleSessions.has(key) && !stale.session.isStreaming) {
+      if (effectiveCapabilities === undefined && stale.session.model) {
+        effectiveCapabilities = modelCapabilitiesOf(stale.session.model) ?? null;
+      }
       try { stale.unsubscribe(); } catch { /* best-effort */ }
       activeSessions.delete(key);
       staleSessions.delete(key);
     }
+    const capabilityKey: 'vision' | 'text' | 'unknown' | undefined =
+      effectiveCapabilities === undefined
+        ? undefined
+        : effectiveCapabilities === null
+          ? 'unknown'
+          : effectiveCapabilities.vision
+            ? 'vision'
+            : 'text';
 
     // Tool availability is a global setting only. Settings → 工具 is the single
     // source; there is no per-conversation tool list (a stable set also keeps
@@ -352,10 +427,22 @@ export function createRealChatService(
       const toolsChanged =
         !cached.session.isStreaming &&
         !sameNames(cached.disabledTools ?? [], effectiveDisabled);
-      if ((!workspaceCwd || cached.cwd === workspaceCwd) && !skillsChanged && !toolsChanged) {
+      // A model switch changes the standing capability note. Rebuild only when
+      // idle: a steer must not construct a second writer mid-run, and the
+      // current turn may keep the old (still accurate for that run) prompt.
+      const capabilityChanged =
+        capabilityKey !== undefined &&
+        cached.capabilityKey !== capabilityKey &&
+        !cached.session.isStreaming;
+      if (
+        (!workspaceCwd || cached.cwd === workspaceCwd) &&
+        !skillsChanged &&
+        !toolsChanged &&
+        !capabilityChanged
+      ) {
         return cached.session;
       }
-      // cwd / skills / tools mismatch — tear down and create a new session
+      // cwd / skills / tools / capabilities mismatch — tear down and create a new session
       cached.unsubscribe();
       activeSessions.delete(key);
     }
@@ -388,7 +475,7 @@ export function createRealChatService(
       cwd: workCwd,
       sessionManager,
       modelRegistry: registry, // share registry so custom models are visible
-      resourceLoader: await createResourceLoader(workCwd, skills, toolNames),
+      resourceLoader: await createResourceLoader(workCwd, skills, toolNames, effectiveCapabilities),
       settingsManager,         // share settings so shell path is respected
       tools: [...ACTIVE_BUILTIN_TOOLS, ...toolNames],
       customTools: customTools as never,
@@ -412,6 +499,7 @@ export function createRealChatService(
       cwd: workCwd,
       skills,
       disabledTools: effectiveDisabled,
+      capabilityKey: capabilityKey ?? 'unknown',
     });
     return session;
   }
@@ -552,13 +640,6 @@ export function createRealChatService(
     // subtract the global switches, not a per-conversation choice.
     for (const name of options?.getGlobalDisabledTools?.() ?? []) toolNames.delete(name);
     const interactionPrompt = buildInteractionPrompt(toolNames);
-    const hostSegments = buildHostAppendSystemPrompt(pluginDocsBlock, toolNames);
-    const loader = new DefaultResourceLoader({
-      cwd: resolvedWorkspace,
-      agentDir: getAgentDir(),
-      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocsBlock, toolNames),
-    });
-    await loader.reload();
 
     // A live session for this workspace is the only source of the assembled
     // prompt: the SDK's buildSystemPrompt is not exported, so the built-in base
@@ -577,6 +658,17 @@ export function createRealChatService(
       }
     }
 
+    // The standing capability note is chosen from the conversation's model;
+    // with no live session we cannot know it, so the neutral variant is shown.
+    const capabilities = live?.model ? modelCapabilitiesOf(live.model) : undefined;
+    const hostSegments = buildHostAppendSystemPrompt(pluginDocsBlock, toolNames, capabilities);
+    const loader = new DefaultResourceLoader({
+      cwd: resolvedWorkspace,
+      agentDir: getAgentDir(),
+      appendSystemPromptOverride: buildAppendSystemPromptOverride(pluginDocsBlock, toolNames, capabilities),
+    });
+    await loader.reload();
+
     // ── appended segments (host vision line + plugin index + the user's own
     // APPEND_SYSTEM.md, in the order the override builds them) ──
     const promptFiles = collectPromptFiles(resolvedWorkspace);
@@ -584,8 +676,8 @@ export function createRealChatService(
       // Identify host segments by content, not by position: the interaction
       // paragraph is absent when both tools are switched off, and an index-based
       // label would then claim the plugin index was something else.
-      if (text === HOST_VISION_PROMPT) {
-        return { label: '视觉能力说明', source: 'host' as const, text, chars: text.length };
+      if (isHostCapabilityPrompt(text)) {
+        return { label: '模型能力说明', source: 'host' as const, text, chars: text.length };
       }
       if (interactionPrompt && text === interactionPrompt) {
         return { label: '交互工具说明', source: 'host' as const, text, chars: text.length };
@@ -680,7 +772,7 @@ export function createRealChatService(
       // Anchor on the vision line: the append override places the host's segments
       // immediately after the base prompt, so everything before it is the base —
       // whether that is the SDK's built-in text or a SYSTEM.md replacing it.
-      const anchor = text.indexOf(HOST_VISION_PROMPT);
+      const anchor = capabilityPromptIndex(text);
       if (anchor > 0) {
         baseText = text.slice(0, anchor).trimEnd();
         baseNote = activeSystemFile
@@ -842,26 +934,24 @@ export function createRealChatService(
     },
 
     async sendMessage(params: SendMessageParams): Promise<Message> {
+      // Refresh the registry BEFORE the session is built: the standing prompt
+      // depends on the requested model's input modalities, and a model added
+      // to models.json since startup must be resolvable here.
+      migrateModelsConfig();
+      registry.refresh();
+      const requestedModel = params.modelId ? findModelById(params.modelId) : undefined;
+      if (params.modelId && !requestedModel) {
+        throw new Error(`Model "${params.modelId}" not found. Please configure a valid model in Settings or set the correct API key environment variable.`);
+      }
       const session = await getOrCreateAgentSession(
         params.sessionId,
         params.workspaceCwd,
         params.skills,
+        requestedModel ? modelCapabilitiesOf(requestedModel) : null,
       );
 
       try {
-        // Auto-migrate and always refresh so the in-memory registry
-        // picks up any models.json changes (e.g. manually patched multimodal models).
-        migrateModelsConfig();
-        registry.refresh();
-
-        // Switch to the requested model if specified
-        if (params.modelId) {
-          const model = findModelById(params.modelId);
-          if (!model) {
-            throw new Error(`Model "${params.modelId}" not found. Please configure a valid model in Settings or set the correct API key environment variable.`);
-          }
-          await session.setModel(model);
-        }
+        if (requestedModel) await session.setModel(requestedModel);
 
         const images = params.attachments?.length
           ? params.attachments
@@ -912,10 +1002,21 @@ export function createRealChatService(
       onChunk: (chunk: StreamChunk) => void,
       signal?: AbortSignal,
     ): Promise<Message> {
+      // Same ordering as sendMessage: refresh, resolve the requested model,
+      // then build the session with that model's capability note.
+      migrateModelsConfig();
+      registry.refresh();
+      const requestedModel = params.modelId ? findModelById(params.modelId) : undefined;
+      if (params.modelId && !requestedModel) {
+        const errMsg = `Model "${params.modelId}" not found. Please configure a valid model in Settings or set the correct API key environment variable.`;
+        onChunk({ type: 'error', error: errMsg });
+        throw new Error(errMsg);
+      }
       const session = await getOrCreateAgentSession(
         params.sessionId,
         params.workspaceCwd,
         params.skills,
+        requestedModel ? modelCapabilitiesOf(requestedModel) : null,
       );
       const sessionKey = params.sessionId || 'default';
       const workspaceCwd = params.workspaceCwd;
@@ -1272,20 +1373,7 @@ export function createRealChatService(
       }
 
       try {
-        // Auto-migrate and always refresh registry
-        migrateModelsConfig();
-        registry.refresh();
-
-        // Switch to the requested model if specified
-        if (params.modelId) {
-          const model = findModelById(params.modelId);
-          if (!model) {
-            const errMsg = `Model "${params.modelId}" not found. Please configure a valid model in Settings or set the correct API key environment variable.`;
-            safeChunk({ type: 'error', error: errMsg });
-            throw new Error(errMsg);
-          }
-          await session.setModel(model);
-        }
+        if (requestedModel) await session.setModel(requestedModel);
 
         // Build image content array for vision models
         const images = params.attachments?.length

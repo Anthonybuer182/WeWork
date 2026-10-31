@@ -37,5 +37,20 @@ export async function resolve(specifier, context, nextResolve) {
     }
   }
 
+  // TypeScript sources use ESM-style `./x.js` specifiers that a bundler maps
+  // back to `./x.ts`. Node's type stripping does not, so tests that import
+  // the app's source need the same remap.
+  if (
+    RELATIVE.test(specifier) &&
+    specifier.endsWith('.js') &&
+    context.parentURL
+  ) {
+    const base = new URL(specifier.slice(0, -3), context.parentURL);
+    for (const suffix of ['.ts', '.tsx']) {
+      const candidate = new URL(`${base.href}${suffix}`);
+      if (isFile(candidate)) return { url: candidate.href, shortCircuit: true };
+    }
+  }
+
   return nextResolve(specifier, context);
 }
