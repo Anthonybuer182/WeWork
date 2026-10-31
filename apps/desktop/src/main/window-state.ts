@@ -14,6 +14,12 @@ import { dirname, join } from 'path';
  * produce an off-screen window.
  */
 export interface PersistedWindowState {
+  /**
+   * Stable identity for renderer-side per-window state (which panels are
+   * open). Window ids are reassigned 1..N on every launch, so they cannot key
+   * persisted layout; this id is generated once and travels with the window.
+   */
+  layoutId?: string;
   bounds: Rectangle;
   maximized: boolean;
   workspaceId: string | null;

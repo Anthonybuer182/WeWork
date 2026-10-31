@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron';
 import type { Rectangle, WebContents } from 'electron';
+import { randomUUID } from 'node:crypto';
 import { basename } from 'path';
 import { createMainWindow } from './window-manager';
 import { WindowStateStore, type PersistedWindowState } from './window-state';
@@ -23,6 +24,12 @@ import type { PluginSystem } from './plugins';
 export interface WindowContext {
   /** 1..N, never reused in-process. Exposed to the renderer as `windowId`. */
   windowId: number;
+  /**
+   * Stable across restarts, used by the renderer to key its OWN persisted
+   * state (open panels). A NEW window gets a fresh one, so it never inherits
+   * another window's panels.
+   */
+  layoutId: string;
   win: BrowserWindow;
   /**
    * Captured at creation: after `closed`, `win.webContents` is unusable, and
@@ -49,6 +56,8 @@ export interface CreateWindowOptions {
   /** Restored geometry (multi-window restore). */
   bounds?: Rectangle;
   maximized?: boolean;
+  /** Restored per-window renderer-state id; a new window omits it. */
+  layoutId?: string;
 }
 
 export interface WindowHooks {
@@ -132,6 +141,7 @@ export class WindowRegistry implements BrowserRouter {
         workspaceId: state.workspaceId,
         workspacePath: state.workspacePath,
         sessionId: state.sessionId,
+        layoutId: state.layoutId,
         bounds,
         maximized: state.maximized,
       });
@@ -162,6 +172,7 @@ export class WindowRegistry implements BrowserRouter {
     for (const ctx of this.byWindowId.values()) {
       if (ctx.win.isDestroyed()) continue;
       windows.push({
+        layoutId: ctx.layoutId,
         bounds: ctx.win.getBounds(),
         maximized: ctx.win.isMaximized(),
         workspaceId: ctx.workspaceId,
@@ -199,9 +210,13 @@ export class WindowRegistry implements BrowserRouter {
     }
 
     const windowId = this.nextWindowId++;
+    // Restored windows keep the identity their renderer state is keyed by; a
+    // genuinely new window starts with a blank slate.
+    const layoutId = opts.layoutId ?? randomUUID();
     const browserManager = new BrowserManager({ idPrefix: `w${windowId}` });
     const win = createMainWindow({
       windowId,
+      layoutId,
       workspaceId: opts.workspaceId ?? null,
       sessionId: opts.sessionId ?? null,
       title: opts.workspacePath ? `${basename(opts.workspacePath)} — Pi Coding Agent` : undefined,
@@ -211,6 +226,7 @@ export class WindowRegistry implements BrowserRouter {
 
     const ctx: WindowContext = {
       windowId,
+      layoutId,
       win,
       browserWindowId: win.id,
       hostWebContentsId: win.webContents.id,

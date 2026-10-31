@@ -16,6 +16,8 @@ export interface CreateWindowOptions {
   workspaceId?: string | null;
   /** Session the window opens on (absolute transcript path). */
   sessionId?: string | null;
+  /** Stable per-window renderer-state id (see WindowStateStore.layoutId). */
+  layoutId?: string | null;
   /** Window title (workspace name), set by the registry once it knows one. */
   title?: string;
   /** Restored geometry from the last run. Absent = place a new window. */
@@ -80,6 +82,8 @@ export function createMainWindow(options: CreateWindowOptions = {}): BrowserWind
   if (options.windowId != null) query.piWin = String(options.windowId);
   if (options.workspaceId) query.piWs = options.workspaceId;
   if (options.sessionId) query.piSession = options.sessionId;
+  // Stable across restarts (unlike windowId, which is 1..N by creation order).
+  if (options.layoutId) query.piLayout = options.layoutId;
 
   // In development, load from vite dev server
   if (process.env.ELECTRON_RENDERER_URL) {

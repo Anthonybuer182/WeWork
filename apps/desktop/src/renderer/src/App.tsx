@@ -87,25 +87,10 @@ function AppContent() {
     setHostPanels(HOST_PANELS);
   }, [setHostPanels]);
 
-  // The right side defaults to the icon rail only. When it becomes visible
-  // with no active panel (e.g. toggled open), restore the last-used panel —
-  // or the plugin center — instead of an empty placeholder.
-  useEffect(() => {
-    if (!rightPanelOpen) return;
-    const panelState = usePanelStore.getState();
-    if (panelState.openPanelIds.right.length > 0) return;
-    const rightPanels = panelState.panels.filter((p) => p.region === 'right');
-    // Fallback must be a GLOBAL panel: a session panel opened here would
-    // arrive without its conversation's params (its file stays behind with
-    // the session it was opened in) and leak that session's artifact.
-    const fallback =
-      panelState.recency.find(
-        (id) => rightPanels.some((p) => p.id === id && p.scope !== 'session'),
-      ) ??
-      rightPanels.find((p) => p.id === 'host:plugins')?.id ??
-      rightPanels.find((p) => p.scope !== 'session')?.id;
-    if (fallback) panelState.openPanel(fallback, { focus: true });
-  }, [rightPanelOpen]);
+  // Opening the right side does NOT select a panel: the tab strip is the
+  // switcher, and the body stays empty until the user picks one. (It used to
+  // fall back to the plugin center, which made every new window look like it
+  // had opened the plugin center on its own.)
 
   // ── Plugin system: discovery + events + command contributions ──
   const loadPlugins = usePluginStore((s) => s.loadPlugins);

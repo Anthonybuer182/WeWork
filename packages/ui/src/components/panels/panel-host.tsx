@@ -284,6 +284,14 @@ export function PanelHost({
             )}
           </>
         )}
+        {ordered.length === 0 && (
+          <div
+            data-panel-empty={region}
+            className="flex flex-1 items-center justify-center px-6 text-center text-xs text-muted-foreground"
+          >
+            {t('从上方标签选择一个面板')}
+          </div>
+        )}
       </div>
     </div>
   );

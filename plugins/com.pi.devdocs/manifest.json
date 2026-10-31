@@ -16,7 +16,8 @@
         "icon": "knowledge",
         "entry": "./ui/index.html",
         "keepAlive": "lru",
-        "region": "right"
+        "region": "right",
+        "order": 900
       }
     ]
   }

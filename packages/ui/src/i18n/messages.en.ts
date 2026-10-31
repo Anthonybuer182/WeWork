@@ -506,6 +506,7 @@ export const EN_MESSAGES = {
   自定义: 'Custom',
   更多选项: 'More options',
   条: 'msgs',
+  从上方标签选择一个面板: 'Pick a panel from the tabs above',
   选择工作区: 'Select workspace',
   创建工作区: 'Create workspace',
   '选择工作区…': 'Select workspace…',

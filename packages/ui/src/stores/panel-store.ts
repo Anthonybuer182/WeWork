@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import type { StateStorage } from 'zustand/middleware';
-import { getDesktopWindowId } from '@/lib/window-identity';
+import { getDesktopLayoutId, getDesktopWindowId } from '@/lib/window-identity';
 import type { PluginInfo, PluginPanelStatus, PanelRegion, PanelAnchor, PanelScope } from '@pi/types';
 
 export type PanelKeepAlive = 'always' | 'lru' | 'never';
@@ -86,9 +86,6 @@ const LRU_KEEP = 2;
  */
 const TAB_MOUNT_CAP = 6;
 
-/** Preferred right-region panel when there is no prior selection. */
-const DEFAULT_ACTIVE_PANEL = 'host:plugins';
-
 const EMPTY_FOCUSED: Record<PanelRegion, string | null> = { left: null, right: null };
 const EMPTY_TABS: Record<PanelRegion, string[]> = { left: [], right: [] };
 
@@ -103,13 +100,13 @@ function regionPanels(panels: PanelEntry[], region: PanelRegion): PanelEntry[] {
     });
 }
 
-/** The panel a region falls back to when nothing is selected. */
+/**
+ * The panel the LEFT column falls back to when nothing is selected. The right
+ * column deliberately has no fallback: its tab strip is the switcher and an
+ * empty body is the honest "you have not opened anything yet".
+ */
 function defaultActiveFor(panels: PanelEntry[], region: PanelRegion): string | null {
-  const inRegion = regionPanels(panels, region);
-  if (region === 'right') {
-    return inRegion.find((p) => p.id === DEFAULT_ACTIVE_PANEL)?.id ?? inRegion[0]?.id ?? null;
-  }
-  return inRegion[0]?.id ?? null;
+  return regionPanels(panels, region)[0]?.id ?? null;
 }
 
 function computeMounted(
@@ -180,9 +177,8 @@ function computeMounted(
  * Per region: keep the focused panel if it survived, else focus the first
  * remaining selection. A region left with no selection behaves differently:
  * left re-seeds its default view (a single-select container has no meaningful
- * empty state and no close gesture), right stays empty — the column-open
- * effect opens the fallback as a selection, so "nothing is selected" stays
- * honest.
+ * empty state and no close gesture), right stays empty — the column opens
+ * with the tab strip and no active panel until the user picks one.
  *
  * Unknown ids (panel not in the list yet) survive until the plugin registry
  * has synced once: at boot, host panels register before plugin panels, and
@@ -291,19 +287,30 @@ function reconcile(
 }
 
 /**
- * Panel layout is scoped to the WORKSPACE, not the window (VS Code keeps a
- * folder's layout with the folder): reopening the same directory in any
- * window — or restarting into it — restores the same panel arrangement.
- * Until a workspace is known (first paint, empty state) it falls back to a
- * per-window key so two empty windows do not share a layout.
+ * Panel state lives in two scopes.
+ *
+ *  - ARRANGEMENT (tab order, pane widths) belongs to the WORKSPACE: VS Code
+ *    keeps a folder's layout with the folder, so reopening it anywhere — or
+ *    restarting into it — restores the same arrangement.
+ *  - WHICH PANELS ARE OPEN belongs to the WINDOW, keyed by its stable layout
+ *    id. A restored window comes back the way you left it; a NEW window
+ *    starts empty, so it never inherits another window's panels (the plugin
+ *    center used to appear this way in every new window).
  */
 const PANEL_STORAGE_BASE = 'pi-panel-storage';
 let layoutWorkspace: string | null = null;
 
-function scopedPanelKey(): string {
+function arrangementKey(): string {
   if (layoutWorkspace) return `${PANEL_STORAGE_BASE}:ws:${layoutWorkspace}`;
   const windowId = getDesktopWindowId();
   return windowId == null ? PANEL_STORAGE_BASE : `${PANEL_STORAGE_BASE}:w${windowId}`;
+}
+
+function selectionKey(): string {
+  const layoutId = getDesktopLayoutId();
+  if (layoutId) return `${PANEL_STORAGE_BASE}:sel:${layoutId}`;
+  const windowId = getDesktopWindowId();
+  return windowId == null ? `${PANEL_STORAGE_BASE}:sel` : `${PANEL_STORAGE_BASE}:sel:w${windowId}`;
 }
 
 function legacyPanelKeys(): string[] {
@@ -314,38 +321,69 @@ function legacyPanelKeys(): string[] {
   return keys;
 }
 
+interface StoredBlob {
+  version?: number;
+  state?: Record<string, unknown>;
+}
+
+function readBlob(key: string): StoredBlob | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as StoredBlob) : null;
+  } catch {
+    return null;
+  }
+}
+
 const panelStorage: StateStorage = {
   getItem: (): string | null => {
-    try {
-      const key = scopedPanelKey();
-      const value = localStorage.getItem(key);
-      if (value != null) return value;
-      // First time this workspace is opened after the upgrade: seed its
-      // layout from the layout this window used before the change.
-      if (layoutWorkspace) {
-        for (const legacy of legacyPanelKeys()) {
-          const v = localStorage.getItem(legacy);
-          if (v != null) {
-            localStorage.setItem(key, v);
-            return v;
-          }
-        }
+    let arrangement = readBlob(arrangementKey());
+    // One-time fallback for layouts written before arrangement/selection were
+    // split: the old per-window blob held both.
+    if (!arrangement) {
+      for (const legacy of legacyPanelKeys()) {
+        arrangement = readBlob(legacy);
+        if (arrangement) break;
       }
-      return null;
-    } catch {
-      return null;
     }
+    const selection = readBlob(selectionKey());
+    if (!arrangement && !selection) return null;
+    const state = { ...(arrangement?.state ?? {}), ...(selection?.state ?? {}) };
+    const version = Math.max(arrangement?.version ?? 0, selection?.version ?? 0) || undefined;
+    return JSON.stringify({ state, version });
   },
   setItem: (_name: string, value: string): void => {
     try {
-      localStorage.setItem(scopedPanelKey(), value);
+      const parsed = JSON.parse(value) as StoredBlob;
+      const s = parsed.state ?? {};
+      localStorage.setItem(
+        arrangementKey(),
+        JSON.stringify({
+          version: parsed.version,
+          state: { panelOrder: s.panelOrder, paneFracs: s.paneFracs },
+        }),
+      );
+      localStorage.setItem(
+        selectionKey(),
+        JSON.stringify({
+          version: parsed.version,
+          state: {
+            openPanelIds: s.openPanelIds,
+            focusedId: s.focusedId,
+            currentSessionId: s.currentSessionId,
+            sessionPanels: s.sessionPanels,
+            sessionOrder: s.sessionOrder,
+          },
+        }),
+      );
     } catch {
       /* quota / private mode — best-effort */
     }
   },
   removeItem: (): void => {
     try {
-      localStorage.removeItem(scopedPanelKey());
+      localStorage.removeItem(arrangementKey());
+      localStorage.removeItem(selectionKey());
     } catch {
       /* ignore */
     }
@@ -724,8 +762,8 @@ export const usePanelStore = create<PanelStoreState>()(
     }),
     {
       name: 'pi-panel-storage',
-      version: 6,
-      // Workspace-scoped: see scopedPanelKey() above.
+      version: 9,
+      // Arrangement → workspace key, selections → window key: see panelStorage.
       storage: createJSONStorage(() => panelStorage),
       partialize: (state) => ({
         focusedId: state.focusedId,
@@ -737,86 +775,66 @@ export const usePanelStore = create<PanelStoreState>()(
         sessionOrder: state.sessionOrder,
       }),
       migrate: (persisted) => {
+        // v5..v8 mixed arrangement and "which panels are open" in one blob;
+        // those selections were written before panels were scoped to the
+        // window, so they cannot be attributed reliably. Carry over the
+        // arrangement only; from v9 on both scopes are stored separately.
         const p = (persisted ?? {}) as {
-          activePanelId?: string | null;
-          activePanelIds?: Record<PanelRegion, string | null> | Record<PanelRegion, Record<string, string | null>>;
-          openPanelIds?: Record<PanelRegion, string[]>;
-          focusedId?: Record<PanelRegion, string | null>;
-          sessionPanels?: Record<string, SessionPanelState>;
-          sessionOrder?: string[];
           panelOrder?: Record<PanelRegion, string[]>;
           paneFracs?: Record<string, number>;
-          currentSessionId?: string | null;
         };
-        const sessionState = {
-          currentSessionId: p.currentSessionId ?? null,
-          sessionPanels: {} as Record<string, SessionPanelState>,
-          sessionOrder: p.sessionOrder ?? [],
-        };
-        // Old stash shape (v5: per-slot actives + slotOf) → the new one.
-        for (const [sid, stRaw] of Object.entries(p.sessionPanels ?? {})) {
-          const st = stRaw as unknown as Record<string, unknown>;
-          const tabs = (st.tabs as string[] | undefined) ?? (st.selected as string[] | undefined) ?? [];
-          const active = st.active as Record<string, string | null> | string | null | undefined;
-          const slotFocused =
-            typeof active === 'object' && active !== null
-              ? (active.A ?? active.B ?? null)
-              : ((active as string | null) ?? null);
-          const focused =
-            (st.focused as string | null | undefined) ?? slotFocused ?? (tabs.length ? tabs[tabs.length - 1] : null);
-          sessionState.sessionPanels[sid] = {
-            selected: tabs,
-            focused: focused && tabs.includes(focused) ? focused : null,
-            params: (st.params as SessionPanelState['params']) ?? {},
-          };
+        const DEVDOCS_PANEL = 'plugin:com.pi.devdocs:docs';
+        const order = p.panelOrder ?? { left: [], right: [] };
+        // v7 default: the dev-docs panel is a reference surface, kept last in
+        // the right tab strip unless the user drags it elsewhere.
+        if (Array.isArray(order.right) && order.right.includes(DEVDOCS_PANEL)) {
+          order.right = [...order.right.filter((id) => id !== DEVDOCS_PANEL), DEVDOCS_PANEL];
         }
-
-        const focusedFrom = (): Record<PanelRegion, string | null> => {
-          if (p.focusedId) return p.focusedId;
-          // v5: per-slot actives → the last non-null slot becomes the focus.
-          const bySlot = p.activePanelIds as
-            | Record<PanelRegion, Record<string, string | null>>
-            | Record<PanelRegion, string | null>
-            | undefined;
-          if (bySlot && typeof bySlot === 'object') {
-            const read = (region: PanelRegion): string | null => {
-              const v = bySlot[region];
-              if (typeof v === 'string') return v;
-              if (v && typeof v === 'object') return v.A ?? v.B ?? null;
-              return null;
-            };
-            return { left: read('left'), right: read('right') };
-          }
-          const legacy = p.activePanelId ?? null;
-          return { left: null, right: legacy };
-        };
-
-        const selected = p.openPanelIds ?? {
-          left: [],
-          right: (() => {
-            const f = focusedFrom().right;
-            return f ? [f] : [];
-          })(),
-        };
-        const focused = focusedFrom();
-        // A focus without a selection is dead on arrival.
-        for (const region of ['left', 'right'] as PanelRegion[]) {
-          if (focused[region] && !(selected[region] ?? []).includes(focused[region]!)) {
-            focused[region] = (selected[region] ?? [])[0] ?? null;
-          }
-        }
-
         return {
-          focusedId: focused,
-          openPanelIds: selected,
-          panelOrder: p.panelOrder ?? { left: [], right: [] },
+          panelOrder: order,
           paneFracs: p.paneFracs ?? {},
-          ...sessionState,
         } as never;
       },
     },
   ),
 );
+
+/**
+ * Two windows on the SAME workspace share one layout key, and localStorage is
+ * one blob per key: without this, the other window's next persist write (any
+ * status event is enough) would put its stale arrangement back and the drag a
+ * user just made would quietly revert.
+ *
+ * Only the ARRANGEMENT travels — panelOrder and pane widths. Which panels are
+ * open stays per window: the two windows sit on different conversations, and
+ * syncing selections would drag one window's session panels into the other.
+ * The comparison stops the echo: the write this triggers lands back here as an
+ * identical value, and equal fields are ignored.
+ */
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (!event.newValue || event.key !== arrangementKey()) return;
+    try {
+      const parsed = JSON.parse(event.newValue) as
+        | { state?: { panelOrder?: unknown; paneFracs?: unknown } }
+        | null;
+      const incoming = parsed?.state;
+      if (!incoming) return;
+      const current = usePanelStore.getState();
+      const nextOrder = (incoming.panelOrder ?? current.panelOrder) as PanelStoreState['panelOrder'];
+      const nextFracs = (incoming.paneFracs ?? current.paneFracs) as PanelStoreState['paneFracs'];
+      const sameOrder = JSON.stringify(nextOrder) === JSON.stringify(current.panelOrder);
+      const sameFracs = JSON.stringify(nextFracs) === JSON.stringify(current.paneFracs);
+      if (sameOrder && sameFracs) return;
+      usePanelStore.setState({
+        panelOrder: nextOrder,
+        paneFracs: nextFracs,
+      });
+    } catch {
+      /* malformed payload — keep the current layout */
+    }
+  });
+}
 
 export { pluginPanelId };
 

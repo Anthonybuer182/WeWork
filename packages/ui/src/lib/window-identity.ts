@@ -35,6 +35,24 @@ export function hasDesktopWindowApi(): boolean {
 }
 
 /**
+ * Stable per-window identity for renderer-side persisted state.
+ *
+ * `windowId` is reassigned 1..N on every launch, so it cannot key anything
+ * that must survive a restart; this id is created with the window, saved in
+ * the window-state file and passed back on restore. A NEW window never
+ * shares it, which is what keeps "which panels are open" from leaking into
+ * windows the user just opened.
+ */
+export function getDesktopLayoutId(): string | null {
+  if (getDesktopWindowId() == null) return null;
+  try {
+    return new URLSearchParams(window.location.search).get('piLayout');
+  } catch {
+    return null;
+  }
+}
+
+/**
  * A zustand persist storage scoped to this window.
  *
  * `baseKey` stays the key on the web and on the very first desktop run after
