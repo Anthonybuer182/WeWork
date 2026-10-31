@@ -1,6 +1,6 @@
 import { join } from 'path';
 import type { BrowserWindow, WebContents } from 'electron';
-import { WebContentsView, ipcMain, shell } from 'electron';
+import { WebContentsView, shell } from 'electron';
 import { panelUrl } from '@pi/types';
 import type { BrowserManager } from '@main/browser/browser-manager';
 import type { LiveSlotRegistry } from './slots';
@@ -66,51 +66,84 @@ export class PluginWebViews {
       liveSlots: LiveSlotRegistry;
       getWindow: () => BrowserWindow | null;
       browserManager?: BrowserManager;
+      /** Registry id of the window these views belong to (diagnostics). */
+      windowId?: number;
+      /** Shell theme from before this window existed — replayed to panel views. */
+      initialTheme?: Record<string, string> | null;
     },
-  ) {}
+  ) {
+    this.lastTheme = opts.initialTheme ?? null;
+  }
 
   /**
-   * Relay host-bound traffic from a plugin view (selection, resize) to the
-   * shell renderer.
-   *
+   * Route a `panel.mounted` report to the plugin page's view. The shell owns
+   * the panel's open params; the view owns the MessagePort they must travel
+   * on. Registered once per process by the window registry, which resolves
+   * the sender window first — so two windows mounting the same panel each
+   * deliver to their own view.
    */
-  installIpc(): void {
-    // Theme tokens are collected in the shell (it owns the CSS variables), so
-    // the shell pushes them here and main fans them out to every plugin view.
-    ipcMain.on('pi:plugin:set-theme', (_event, tokens: Record<string, string>) => {
-      if (!tokens || typeof tokens !== 'object') return;
-      this.lastTheme = tokens;
-      for (const view of this.views.values()) {
-        if (view.webContents.isDestroyed()) continue;
-        view.webContents.send('pi:plugin:theme', tokens);
-      }
+  handlePanelMounted(msg: {
+    pluginId?: string;
+    panelId?: string;
+    params?: unknown;
+    sessionId?: string;
+  }): { ok: boolean; error?: string } {
+    const slotId = `${msg?.pluginId}:${msg?.panelId}`;
+    const view = this.views.get(slotId);
+    if (!view || view.webContents.isDestroyed()) {
+      return { ok: false, error: `no view for ${slotId}` };
+    }
+    view.webContents.send('pi:plugin:panel-mounted', {
+      panelId: msg?.panelId,
+      params: msg?.params,
+      sessionId: msg?.sessionId,
     });
+    return { ok: true };
+  }
 
-    /**
-     * The shell raises `panel.mounted` (it owns the panel's open params), but
-     * the port it must travel on belongs to the panel's own view. Route the
-     * event to that view so its preload can put it on the wire.
-     *
-     * `handle`, not `on`: the renderer calls `electronAPI.invoke`, and a
-     * `ipcMain.on` listener would leave that call rejecting with "No handler
-     * registered" — a mismatch that looks like the event simply never arrived.
-     */
-    ipcMain.handle(
-      'pi:plugin:panel-mounted',
-      (_event, msg: { pluginId?: string; panelId?: string; params?: unknown; sessionId?: string }) => {
-        const slotId = `${msg?.pluginId}:${msg?.panelId}`;
-        const view = this.views.get(slotId);
-        if (!view || view.webContents.isDestroyed()) {
-          return { ok: false, error: `no view for ${slotId}` };
-        }
-        view.webContents.send('pi:plugin:panel-mounted', {
-          panelId: msg?.panelId,
-          params: msg?.params,
-          sessionId: msg?.sessionId,
-        });
-        return { ok: true };
-      },
-    );
+  /** Theme tokens are collected by any shell renderer; fan them out to this window's views. */
+  applyTheme(tokens: Record<string, string>): void {
+    if (!tokens || typeof tokens !== 'object') return;
+    this.lastTheme = tokens;
+    for (const view of this.views.values()) {
+      if (view.webContents.isDestroyed()) continue;
+      view.webContents.send('pi:plugin:theme', tokens);
+    }
+  }
+
+  /** True when `wc` is one of this window's panel views. */
+  ownsWebContents(wc: WebContents): boolean {
+    for (const view of this.views.values()) {
+      if (view.webContents === wc) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Window is going away: unregister every slot (this registry is per window),
+   * detach the views from its contentView and close their pages.
+   */
+  dispose(): void {
+    for (const slotId of [...this.registered]) {
+      this.opts.liveSlots.unregister(slotId);
+    }
+    const win = this.opts.getWindow();
+    for (const [slotId, view] of this.views) {
+      try {
+        win?.contentView.removeChildView(view);
+      } catch {
+        /* window already gone */
+      }
+      try {
+        view.webContents.close();
+      } catch {
+        /* already closed */
+      }
+      this.attached.delete(slotId);
+    }
+    this.views.clear();
+    this.registered.clear();
+    this.engineRegistered.clear();
   }
 
   /**

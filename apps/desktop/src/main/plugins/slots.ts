@@ -164,18 +164,33 @@ export class LiveSlotRegistry {
   }
 }
 
-export function registerLiveSlotIpcHandlers(registry: LiveSlotRegistry): void {
-  ipcMain.handle('pi:liveview:attach', (_event, payload: { slotId?: string }) =>
-    registry.attach(String(payload?.slotId ?? '')),
-  );
+/**
+ * Slot reports carry only a slot id — the same `pluginId:panelId` is mounted
+ * in every window that shows that panel. The host therefore resolves the
+ * SENDER window and hands the report to that window's registry; without this,
+ * window B's bounds would reposition window A's view.
+ */
+export interface LiveSlotIpcHost {
+  forSender(sender: Electron.WebContents): LiveSlotRegistry | undefined;
+}
+
+export function registerLiveSlotIpcHandlers(host: LiveSlotIpcHost): void {
+  ipcMain.handle('pi:liveview:attach', (event, payload: { slotId?: string }) => {
+    const registry = host.forSender(event.sender);
+    if (!registry) return { ok: false, error: 'unknown window' };
+    registry.attach(String(payload?.slotId ?? ''));
+    return { ok: true };
+  });
 
   ipcMain.handle(
     'pi:liveview:set-bounds',
     (
-      _event,
+      event,
       payload: { slotId?: string; x?: number; y?: number; width?: number; height?: number; tag?: string },
-    ) =>
-      registry.setBounds(
+    ) => {
+      const registry = host.forSender(event.sender);
+      if (!registry) return { ok: false, error: 'unknown window' };
+      return registry.setBounds(
         String(payload?.slotId ?? ''),
         {
           x: payload?.x ?? 0,
@@ -184,10 +199,14 @@ export function registerLiveSlotIpcHandlers(registry: LiveSlotRegistry): void {
           height: payload?.height ?? 0,
         },
         payload?.tag || undefined,
-      ),
+      );
+    },
   );
 
-  ipcMain.handle('pi:liveview:detach', (_event, payload: { slotId?: string }) =>
-    registry.detach(String(payload?.slotId ?? '')),
-  );
+  ipcMain.handle('pi:liveview:detach', (event, payload: { slotId?: string }) => {
+    const registry = host.forSender(event.sender);
+    if (!registry) return { ok: false, error: 'unknown window' };
+    registry.detach(String(payload?.slotId ?? ''));
+    return { ok: true };
+  });
 }

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronDown, Pencil, Plus, X } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { activateSession } from '@/lib/window-actions';
 import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,7 +31,6 @@ export function SessionHeader() {
   const queryClient = useQueryClient();
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const activeSessionId = useUIStore((s) => s.activeSessionId);
-  const setActiveSession = useUIStore((s) => s.setActiveSession);
   const { t } = useI18n();
 
   const { data: sessions } = useQuery({
@@ -65,7 +65,7 @@ export function SessionHeader() {
     onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      setActiveSession(session.id);
+      void activateSession(session.id);
     },
   });
 
@@ -182,7 +182,7 @@ export function SessionHeader() {
               {(sessions ?? []).map((session) => (
                 <DropdownMenuItem
                   key={session.id}
-                  onClick={() => setActiveSession(session.id)}
+                  onClick={() => void activateSession(session.id)}
                   className={cn(
                     'items-center gap-2',
                     session.id === activeSessionId && 'bg-accent/60',

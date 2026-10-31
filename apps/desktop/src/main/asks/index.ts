@@ -34,8 +34,8 @@ interface PendingAsk {
 export interface AskServiceOptions {
   /** Delivers a request to the renderer (webContents.send). */
   sendRequest: (payload: AskRequest) => void;
-  /** Notifies the renderer that a pending card died without an answer. */
-  sendCancelled: (payload: { requestId: string }) => void;
+  /** Notifies the owning renderer that a pending card died without an answer. */
+  sendCancelled: (payload: { requestId: string; sessionId?: string }) => void;
 }
 
 export class AskService {
@@ -152,7 +152,7 @@ export class AskService {
         entry.signal.removeEventListener('abort', entry.abortListener);
       }
       this.pending.delete(id);
-      if (id === activeId) this.options.sendCancelled({ requestId: id });
+      if (id === activeId) this.options.sendCancelled({ requestId: id, sessionId });
       entry.resolve({
         requestId: id,
         answers: entry.payload.questions.map(() => null),
@@ -181,7 +181,7 @@ export class AskService {
       this.active.delete(sessionId);
       // Only a request that was actually shown needs to be retired in the UI;
       // a queued one never painted a card.
-      if (cancelled) this.options.sendCancelled({ requestId });
+      if (cancelled) this.options.sendCancelled({ requestId, sessionId });
       this.activateNext(sessionId);
     }
 
@@ -242,23 +242,41 @@ function normalizeAnswers(raw: unknown, count: number): AskAnswers {
   return out;
 }
 
-/** IPC surface consumed by the renderer's ask store. */
-export function registerAskIpc(service: AskService): void {
+interface AskWindowHost {
+  byWebContents(wc: Electron.WebContents): { windowId: number } | undefined;
+  activeOwnerOf(sessionId: string): { windowId: number } | undefined;
+}
+
+/**
+ * IPC surface consumed by the renderer's ask store. A card lives in exactly
+ * one window; answers and syncs from any other window are ignored.
+ */
+export function registerAskIpc(service: AskService, windows?: AskWindowHost): void {
   ipcMain.handle(
     'pi:ask:resolve',
-    (_event, payload: { requestId?: string; sessionId?: string; answers?: unknown }) => {
+    (event, payload: { requestId?: string; sessionId?: string; answers?: unknown }) => {
       const requestId = typeof payload?.requestId === 'string' ? payload.requestId : '';
       if (!requestId) return { ok: false, error: 'missing requestId' };
-      const ok = service.resolve({
-        requestId,
-        sessionId: typeof payload.sessionId === 'string' ? payload.sessionId : undefined,
-        answers: payload.answers,
-      });
+      const sessionId = typeof payload.sessionId === 'string' ? payload.sessionId : undefined;
+      if (sessionId && windows) {
+        const owner = windows.activeOwnerOf(sessionId);
+        const caller = windows.byWebContents(event.sender);
+        if (owner && caller && owner.windowId !== caller.windowId) {
+          return { ok: false, error: 'session owned by another window' };
+        }
+      }
+      const ok = service.resolve({ requestId, sessionId, answers: payload.answers });
       return ok ? { ok: true } : { ok: false, error: 'request already settled' };
     },
   );
 
-  ipcMain.handle('pi:ask:sync', (_event, sessionId?: string) => {
-    return service.sync(sessionId || 'default');
+  ipcMain.handle('pi:ask:sync', (event, sessionId?: string) => {
+    const key = sessionId || 'default';
+    if (windows) {
+      const owner = windows.activeOwnerOf(key);
+      const caller = windows.byWebContents(event.sender);
+      if (owner && caller && owner.windowId !== caller.windowId) return [];
+    }
+    return service.sync(key);
   });
 }

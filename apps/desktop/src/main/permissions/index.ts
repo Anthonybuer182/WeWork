@@ -59,10 +59,10 @@ export class PermissionService {
   private requestCounter = 0;
 
   constructor(
-    /** Delivers an approval request to the renderer (webContents.send). */
+    /** Delivers an approval request to the renderer that owns the session. */
     private sendRequest: (payload: PermissionRequestPayload) => void,
     /** Notifies the renderer that a pending request died without a verdict (abort). */
-    private sendCancelled: (payload: { requestId: string }) => void = () => {},
+    private sendCancelled: (payload: { requestId: string; sessionId?: string }) => void = () => {},
   ) {}
 
   getMode(sessionKey: string): PermissionMode {
@@ -152,12 +152,38 @@ export class PermissionService {
     entry.resolve(decision);
   }
 
+  /** The session a pending request belongs to (undefined when already settled). */
+  sessionOfRequest(requestId: string): string | undefined {
+    return this.pending.get(requestId)?.payload.sessionId;
+  }
+
   /** Full state for one session — lets a reloaded renderer rebuild its UI. */
   sync(sessionKey: string): {
     mode: PermissionMode;
     pending: PermissionRequestPayload[];
   } {
-    return { mode: this.getMode(sessionKey), pending: [...this.pending.values()].map((e) => e.payload) };
+    // Only THIS session's pending requests. With several windows a reload in
+    // one must not resurrect cards that belong to another conversation.
+    return {
+      mode: this.getMode(sessionKey),
+      pending: [...this.pending.values()]
+        .map((e) => e.payload)
+        .filter((p) => p.sessionId === sessionKey),
+    };
+  }
+
+  /**
+   * Settle every pending request of one session with a denial. Used when the
+   * window that owns it closes: nothing would ever answer those cards, and a
+   * blocked run must not outlive its UI.
+   */
+  cancelSession(sessionKey: string): void {
+    for (const [requestId, entry] of [...this.pending]) {
+      if (entry.payload.sessionId !== sessionKey) continue;
+      this.pending.delete(requestId);
+      this.sendCancelled({ requestId, sessionId: sessionKey });
+      entry.resolve('deny');
+    }
   }
 
   private ask(input: {
@@ -194,7 +220,7 @@ export class PermissionService {
           'abort',
           () => {
             if (this.pending.delete(requestId)) {
-              this.sendCancelled({ requestId });
+              this.sendCancelled({ requestId, sessionId: payload.sessionId });
               resolve('deny');
             }
           },
@@ -257,8 +283,20 @@ export function installPermissionGate(
   };
 }
 
-/** IPC surface consumed by the renderer's permission store. */
-export function registerPermissionIpc(service: PermissionService): void {
+/** The slice of the window registry this file needs (keeps the import a type). */
+interface PermissionWindowHost {
+  byWebContents(wc: Electron.WebContents): { windowId: number } | undefined;
+  activeOwnerOf(sessionId: string): { windowId: number } | undefined;
+}
+
+/**
+ * IPC surface consumed by the renderer's permission store.
+ *
+ * Cards are addressed to one window. `resolve` from another window is ignored
+ * (a stale card in a window that copied the session, or a hostile renderer),
+ * and `sync` never returns another window's pending requests.
+ */
+export function registerPermissionIpc(service: PermissionService, windows?: PermissionWindowHost): void {
   ipcMain.handle(
     'pi:permission:set-mode',
     (_event, payload: { sessionId?: string; mode: PermissionMode }) => {
@@ -270,7 +308,7 @@ export function registerPermissionIpc(service: PermissionService): void {
 
   ipcMain.handle(
     'pi:permission:resolve',
-    (_event, payload: { requestId: string; decision: PermissionDecision }) => {
+    (event, payload: { requestId: string; decision: PermissionDecision }) => {
       // TS types end at the channel boundary. An unrecognized decision must
       // not be forwarded as if it were consent — deny and say why in the log.
       if (!isPermissionDecision(payload?.decision)) {
@@ -280,11 +318,30 @@ export function registerPermissionIpc(service: PermissionService): void {
         service.resolve(payload?.requestId ?? '', 'deny');
         return;
       }
+      const sessionId = service.sessionOfRequest(payload.requestId);
+      if (sessionId && windows) {
+        const owner = windows.activeOwnerOf(sessionId);
+        const caller = windows.byWebContents(event.sender);
+        if (owner && caller && owner.windowId !== caller.windowId) {
+          console.warn(
+            `[permissions] resolve(${payload.requestId}) from window ${caller.windowId} ignored — session owned by window ${owner.windowId}`,
+          );
+          return;
+        }
+      }
       service.resolve(payload.requestId, payload.decision);
     },
   );
 
-  ipcMain.handle('pi:permission:sync', (_event, sessionId?: string) =>
-    service.sync(sessionId ?? 'default'),
-  );
+  ipcMain.handle('pi:permission:sync', (event, sessionId?: string) => {
+    const key = sessionId ?? 'default';
+    if (windows) {
+      const owner = windows.activeOwnerOf(key);
+      const caller = windows.byWebContents(event.sender);
+      if (owner && caller && owner.windowId !== caller.windowId) {
+        return { mode: service.getMode(key), pending: [] };
+      }
+    }
+    return service.sync(key);
+  });
 }

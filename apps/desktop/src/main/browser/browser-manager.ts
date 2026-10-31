@@ -251,7 +251,18 @@ export class BrowserManager {
    */
   private userZoomByOrigin = new Map<string, number>();
 
-  constructor() {}
+  /**
+   * `idPrefix` namespaces tab ids for a multi-window app (`w2:t3`). Tab ids
+   * are reported to plugin backends and carried in host events, so they must
+   * stay unique across windows; the window that owns a tab is resolved by
+   * asking each manager whether it knows the id.
+   */
+  constructor(private readonly opts: { idPrefix?: string } = {}) {}
+
+  /** True when this manager owns (or has an evicted record for) the tab. */
+  knowsTab(tabId: string): boolean {
+    return this.tabs.has(tabId) || this.evictedTabs.has(tabId);
+  }
 
   /** ——— Host window / tab lifecycle ——— */
 
@@ -287,7 +298,8 @@ export class BrowserManager {
 
     this.evictIfNeeded();
 
-    const id = opts.id ?? `t${++this.tabSeq}`;
+    const seq = `t${++this.tabSeq}`;
+    const id = opts.id ?? (this.opts.idPrefix ? `${this.opts.idPrefix}:${seq}` : seq);
     const view = new WebContentsView({ webPreferences: { ...ENGINE_WEB_PREFS } });
     const t = new BrowserTab(id, view);
     this.wireTab(t);
@@ -3112,6 +3124,22 @@ export class BrowserManager {
   }
 
   /** ——— Cleanup ——— */
+
+  /**
+   * Tear down every tab — called when the owning window closes. Unlike
+   * `closeTab` this also forgets LRU-evicted records: the window they would
+   * reopen into no longer exists.
+   */
+  async destroy(): Promise<void> {
+    for (const id of [...this.tabs.keys()]) {
+      this.closeTab(id);
+    }
+    this.evictedTabs.clear();
+    this.splitPartner = null;
+    this.activeTabId = null;
+    await this.disconnect();
+    this.mainWindow = null;
+  }
 
   /** Disconnect the debugger from every tab. */
   async disconnect(): Promise<void> {

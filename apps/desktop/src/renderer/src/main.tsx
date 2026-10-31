@@ -1,7 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
+import { applyInitialWindowContext } from '@pi/ui';
 import '@pi/ui/globals.css';
+
+// Every BrowserWindow is told its workspace/session by main (URL query). Apply
+// it before the first render so a second window never flashes the first
+// window's conversation on the way in. No-op in the web build.
+applyInitialWindowContext();
 
 // ── Content Security Policy ──────────────────────────────────────────
 // file:// (packaged) pages get no CSP by default and Electron warns on

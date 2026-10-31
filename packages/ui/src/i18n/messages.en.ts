@@ -518,6 +518,12 @@ export const EN_MESSAGES = {
   '正在删除…': 'Deleting…',
   '{count} 个会话': '{count} sessions',
   '切换到会话：{title}': 'Switch to session: {title}',
+  '在新窗口打开': 'Open in new window',
+  '该会话已在另一个窗口打开': 'This conversation is already open in another window',
+  '该会话已在另一个窗口打开，已切换到那个窗口':
+    'This conversation is already open in another window — switched to it',
+  '该工作区已在另一个窗口打开，已切换到那个窗口':
+    'This workspace is already open in another window — switched to it',
 
   // ── Misc ──
   引用: 'Quote',

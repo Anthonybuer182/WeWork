@@ -15,13 +15,23 @@ import { PLUGIN_PROTOCOL_VERSION } from '@pi/types';
 import { PluginRegistry } from './registry';
 import { parseFrontmatter } from '@earendil-works/pi-coding-agent';
 import { CapabilityHub } from './capability-hub';
+import type { BrowserRouter } from './capability-hub';
 import type { VlmAnalyzer } from '@main/browser/vlm-analyzer';
 import { PluginProcess, spawnBackend } from './plugin-process';
 import { takeToolSession } from './session-context';
 import { registerPluginProtocolHandler } from './protocol';
 import { PluginMarketplace } from './marketplace';
-import type { BrowserManager } from '@main/browser/browser-manager';
 import type { AgentCustomTool } from '@main/agent-tools';
+
+/**
+ * Where plugin events go now that there can be several windows. `sessionId`
+ * null means "the focused window".
+ */
+export interface PluginEventSink {
+  broadcast(channel: string, payload: unknown): void;
+  sendToSession(sessionId: string | null, channel: string, payload: unknown): void;
+  sendToFocused(channel: string, payload: unknown): void;
+}
 
 export { registerPluginSchemePrivileges, PI_PLUGIN_SCHEME } from './protocol';
 export { PluginRegistry } from './registry';
@@ -84,19 +94,24 @@ export class PluginSystem {
    * broadcasts only reach processes that already run.
    */
   private activeSessionId: string | null = null;
+  /** Renderer delivery; null falls back to broadcasting to every window. */
+  private readonly eventSink?: PluginEventSink;
 
   constructor(opts?: {
     agentDir?: string;
-    browserManager?: BrowserManager;
+    browserRouter?: BrowserRouter;
     vlmAnalyzer?: VlmAnalyzer;
     sendToRenderer?: (channel: string, payload: unknown) => void;
     getPermissionMode?: (sessionId: string) => 'default' | 'full';
+    /** Renderer delivery for plugin events (one PluginEvent has one target). */
+    eventSink?: PluginEventSink;
   }) {
+    this.eventSink = opts?.eventSink;
     this.registry = new PluginRegistry({ ...opts, appVersion: app.getVersion() });
     this.capabilityHub = new CapabilityHub({
       registry: this.registry,
       emitEvent: (evt) => this.emitEvent(evt),
-      browserManager: opts?.browserManager,
+      browserRouter: opts?.browserRouter,
       vlmAnalyzer: opts?.vlmAnalyzer,
       sendToRenderer: opts?.sendToRenderer,
       getPermissionMode: opts?.getPermissionMode,
@@ -747,7 +762,21 @@ export class PluginSystem {
     return `pi-plugin://${pluginId}/${entry.replace(/^\/+/, '')}`;
   }
 
+  /**
+   * Deliver a plugin event to the renderer that owns it.
+   *
+   * Kernel state (which plugins exist, install progress) is the same
+   * everywhere and goes to every window. Panel events are conversation
+   * events: a background backend opening a panel must not open the same panel
+   * in an unrelated window, so they follow the active-session owner.
+   */
   private emitEvent(evt: PluginEvent): void {
+    const global = evt.type === 'state-changed' || evt.type === 'plugins-changed' || evt.type === 'install-phase';
+    if (this.eventSink) {
+      if (global) this.eventSink.broadcast('pi:plugin:event', evt);
+      else this.eventSink.sendToSession(this.activeSessionId, 'pi:plugin:event', evt);
+      return;
+    }
     for (const win of BrowserWindow.getAllWindows()) {
       if (!win.isDestroyed()) {
         win.webContents.send('pi:plugin:event', evt);

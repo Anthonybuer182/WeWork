@@ -248,14 +248,17 @@ export function plugin(handlers: PluginHandlers): void {
 
   let panelPort: PanelPort | null = null;
   /**
-   * All live panel ports by panel id. A plugin may serve SEVERAL panels at
-   * once — the viewer's split pane is a second native view of the same plugin
-   * page, so a second port arrives while the first is alive. Ports carry no
-   * panel id at transfer time; each port's panel is learned from its first
-   * inbound tagged message. `panelPort` (the most recent transfer) stays as
-   * the fallback for traffic that has no routing information.
+   * All live panel ports by panel id. One panel id can have SEVERAL ports:
+   * the viewer's split pane is a second native view of the same page, and —
+   * with multiple app windows — EVERY window that shows the panel mounts its
+   * own view and transfers its own port. Backend → panel traffic is fanned
+   * out to all of them, so a background window's panel still receives
+   * `ctx.send()` / status events. Ports carry no panel id at transfer time;
+   * each port's panel is learned from its first inbound tagged message.
+   * `panelPort` (the most recent transfer) is the fallback for traffic with
+   * no routing information.
    */
-  const panelPorts = new Map<string, PanelPort>();
+  const panelPorts = new Map<string, Set<PanelPort>>();
   const portPanel = new Map<PanelPort, string>();
   let pluginId = '';
   let dataDir = '';
@@ -270,13 +273,13 @@ export function plugin(handlers: PluginHandlers): void {
   let probeSeq = 0;
   const pendingProbes = new Map<string, () => void>();
 
-  /** The port a panel's traffic should use. */
-  function routeFor(panelId?: string): PanelPort | null {
+  /** Every port a panel's traffic should reach (one per mounted view). */
+  function routeFor(panelId?: string): PanelPort[] {
     if (panelId) {
-      const p = panelPorts.get(panelId);
-      if (p) return p;
+      const ports = panelPorts.get(panelId);
+      if (ports && ports.size > 0) return [...ports];
     }
-    return panelPort;
+    return panelPort ? [panelPort] : [];
   }
 
   const post = (message: unknown): void => host.postMessage(message);
@@ -304,19 +307,27 @@ export function plugin(handlers: PluginHandlers): void {
       });
     },
     send(panelId: string, event: string, data?: unknown): boolean {
-      // No port, or the port has closed: the message goes nowhere. Deliberately
-      // not logged — see the interface comment. Returning false is how a caller
-      // finds out.
-      const port = routeFor(panelId);
-      if (!port) return false;
-      port.postMessage({ kind: 'event', event, panelId, data });
-      return true;
+      // No port, or every port has closed: the message goes nowhere.
+      // Deliberately not logged — see the interface comment. Returning false
+      // is how a caller finds out.
+      const ports = routeFor(panelId);
+      if (ports.length === 0) return false;
+      let delivered = false;
+      for (const port of ports) {
+        try {
+          port.postMessage({ kind: 'event', event, panelId, data });
+          delivered = true;
+        } catch {
+          /* this view went away between the lookup and the send */
+        }
+      }
+      return delivered;
     },
     panelAlive(panelId: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<boolean> {
-      // No port, or the port has closed: nothing to ask, and asking would be a
-      // postMessage into a dead peer, which succeeds silently.
-      const port = routeFor(panelId);
-      if (!port) return Promise.resolve(false);
+      // No port, or every port has closed: nothing to ask, and asking would be
+      // a postMessage into a dead peer, which succeeds silently.
+      const ports = routeFor(panelId);
+      if (ports.length === 0) return Promise.resolve(false);
       const id = 'probe-' + ++probeSeq;
       return new Promise<boolean>((resolve) => {
         const timer = setTimeout(() => {
@@ -327,7 +338,14 @@ export function plugin(handlers: PluginHandlers): void {
           clearTimeout(timer);
           resolve(true);
         });
-        port.postMessage({ kind: 'event', event: 'pi.probe', panelId, data: { id } });
+        // Any one mounted view answering is enough: the panel is alive.
+        for (const port of ports) {
+          try {
+            port.postMessage({ kind: 'event', event: 'pi.probe', panelId, data: { id } });
+          } catch {
+            /* dead port */
+          }
+        }
       });
     },
     async openPanel(panelId: string, options?: { focus?: boolean }): Promise<unknown> {
@@ -408,8 +426,8 @@ export function plugin(handlers: PluginHandlers): void {
       const method = String(msg.method ?? '');
       const panelId = msg.panelId ?? '';
       // Replies go back on the port the request CAME from — with several
-      // panels alive there is no single "the panel port".
-      const replyPort = sourcePort ?? routeFor(panelId);
+      // panels (or windows) alive there is no single "the panel port".
+      const replyPort = sourcePort ?? routeFor(panelId)[0];
       const reply = (ok: boolean, error?: string, result?: unknown): void => {
         replyPort?.postMessage({ kind: 'response', id, ok, panelId, error, result });
       };
@@ -597,7 +615,9 @@ export function plugin(handlers: PluginHandlers): void {
           const pid = (e.data as { panelId?: string } | null)?.panelId;
           if (pid) {
             portPanel.set(port, pid);
-            panelPorts.set(pid, port);
+            const ports = panelPorts.get(pid) ?? new Set<PanelPort>();
+            ports.add(port);
+            panelPorts.set(pid, ports);
           }
           void onPanelMessage(e.data, port);
         });
@@ -606,10 +626,15 @@ export function plugin(handlers: PluginHandlers): void {
         try {
           port.on('close', () => {
             const pid = portPanel.get(port);
-            if (pid && panelPorts.get(pid) === port) panelPorts.delete(pid);
+            if (pid) {
+              const ports = panelPorts.get(pid);
+              ports?.delete(port);
+              if (ports && ports.size === 0) panelPorts.delete(pid);
+            }
             portPanel.delete(port);
             if (panelPort === port) {
-              panelPort = panelPorts.size > 0 ? [...panelPorts.values()][panelPorts.size - 1] : null;
+              const last = [...panelPorts.values()].at(-1);
+              panelPort = last ? [...last].at(-1) ?? null : null;
               if (!panelPort) portClosed = true;
             }
           });

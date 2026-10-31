@@ -1,34 +1,24 @@
-import { app, BrowserWindow, WebContentsView } from 'electron';
-import { createMainWindow } from '@main/window-manager';
+import { app } from 'electron';
 import { registerIpcHandlers } from '@main/ipc/index';
 import { registerNativeIpcHandlers } from '@main/ipc/native';
+import { registerWindowIpcHandlers } from '@main/ipc/windows';
 import { SettingsManager, ModelRegistry, AuthStorage } from '@earendil-works/pi-coding-agent';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { BrowserManager, ENGINE_UA, VlmAnalyzer } from '@main/browser';
+import { ENGINE_UA, VlmAnalyzer } from '@main/browser';
 import { PluginSystem, registerPluginSchemePrivileges } from '@main/plugins';
 import { registerPluginIpcHandlers } from '@main/ipc/plugins';
-import { registerLiveSlotIpcHandlers, LiveSlotRegistry } from '@main/plugins/slots';
-import { PluginWebViews } from '@main/plugins/plugin-webview';
+import { registerLiveSlotIpcHandlers } from '@main/plugins/slots';
 import { createHostAgentTools, type AgentCustomTool } from '@main/agent-tools';
 import { PermissionService, installPermissionGate, registerPermissionIpc } from '@main/permissions';
 import { AskService, registerAskIpc } from '@main/asks';
 import { TodoService, registerTodoIpc } from '@main/todos';
 import { ToolSettingsService, registerToolSettingsIpc } from '@main/preferences/tools';
 import { buildToolCatalog } from '@main/tools/catalog';
+import { windows } from '@main/windows';
+import { WindowStateStore } from '@main/window-state';
+import { installApplicationMenu } from '@main/menu';
 import type { ToolCatalogEntry } from '@pi/types';
-
-let mainWindow: BrowserWindow | null = null;
-
-// BrowserManager instance — one singleton behind the plugin capability surface
-// (browser.*) and the engine live slot the browser plugin's panel embeds via
-// piSDK.liveSlot. Agent tools and user clicks drive the same view and the same
-// persist session.
-export const browserManager = new BrowserManager();
-
-// Native-view slots. Each slot owns its own WebContentsView; the renderer only
-// reports where its slot sits, and the registry positions the view to match.
-export const liveSlots = new LiveSlotRegistry();
 
 // Enable Chrome DevTools Protocol so external tooling (Playwright, DevTools)
 // can connect to the app's own webContents (including the embedded browser
@@ -75,11 +65,8 @@ registerPluginSchemePrivileges();
 if (!gotLock) {
   app.quit();
 } else {
-  app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
+  app.on('second-instance', (_event, argv) => {
+    windows.handleLaunchArgs(argv, { secondInstance: true });
   });
 
   app.whenReady().then(async () => {
@@ -94,60 +81,26 @@ if (!gotLock) {
 
     injectBundledShell(settingsManager);
 
-    mainWindow = createMainWindow();
-
-    // The embedded browser is a SET of WebContentsViews now — one per tab, all
-    // sharing the persist:pi-browser profile (one Chromium profile, one
-    // renderer process per tab). The manager creates them lazily; boot creates
-    // the first via connect() below. Like the old single view it attaches
-    // through `contentView.addChildView`, which can hold more than one view.
-    // (No setAutoResize: WebContentsView keeps exactly the bounds it is given,
-    // which is what we want — the renderer owns layout.)
-    browserManager.attach(mainWindow);
-
-    // The engine view has no host panel of its own any more: the browser
-    // plugin's panel embeds it via piSDK.liveSlot, and plugin-webview.ts
-    // registers the `<pluginId>:page` slot for it.
-
-    // A renderer reload never runs React cleanup, so slots vanish without
-    // calling detach — their views would keep stale bounds and invisibly
-    // occlude the UI (eating real mouse clicks). Reset every slot on any
-    // renderer navigation; each slot re-reports its bounds after remounting.
-    mainWindow.webContents.on('did-start-navigation', () => {
-      console.log('[slots] renderer navigation — hiding all native views (stale-overlay guard)');
-      liveSlots.hideAll();
+    // Handlers the renderer calls during its first paint must exist before
+    // any window loads: a packaged build loads file:// in milliseconds and
+    // would otherwise hit "No handler registered" on its first invoke.
+    registerNativeIpcHandlers(windows);
+    registerWindowIpcHandlers(windows);
+    registerLiveSlotIpcHandlers({
+      forSender: (wc) => windows.byWebContents(wc)?.liveSlots,
     });
 
-    // Warm up the CDP connection at boot. The legacy preview panel used to do
-    // this on mount; with the browser now plugin-owned, pre-connect here so
-    // the first browser.* capability call doesn't pay the attach latency.
-    browserManager.connect().catch(() => {});
-
-    registerNativeIpcHandlers();
-
-    // Plugin kernel: scan ~/.pi/agent/plugins (plus the dev root when set),
-    // spawn backend UtilityProcesses, serve pi-plugin:// and expose IPC.
-    // Created BEFORE the SDK IPC handlers so plugin tools can be injected
-    // into the agent session (customTools).
-    // Permission modes are created below (they need the window for their
-    // approval card), but the plugin kernel is built first. This indirection
-    // lets the browser capability ask for a session's mode at call time.
-    let permissionModeFor: (sessionId: string) => 'default' | 'full' = () => 'default';
-
     /**
-     * Renderer push that survives a closed window.
+     * Renderer push routed to the window that owns the conversation.
      *
-     * On macOS a closed window leaves the app running with a destroyed
-     * BrowserWindow; an unguarded `webContents.send` throws, which would turn
-     * a successful todotool state change into a tool error (and leave a pending
-     * ask entry behind).
+     * A session can be shown in one window while its run was started in that
+     * same window (the claim protocol), or — after a session switch — the run
+     * belongs to the window that started it (`lastRunOwners`). Either way the
+     * card must not land in an unrelated window, and must definitely not be
+     * dropped just because the "main" window was closed.
      */
-    const sendToWindow = (channel: string, payload: unknown): void => {
-      if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
-        return;
-      }
-      mainWindow.webContents.send(channel, payload);
-    };
+    const sendToSession = (sessionId: string | null | undefined, channel: string, payload: unknown) =>
+      windows.sendToSession(sessionId, channel, payload);
 
     // Permission modes (默认 / 完全访问). Per-session choices live in main,
     // keyed by session; the last picked mode seeds every session with no
@@ -156,11 +109,11 @@ if (!gotLock) {
     // agent until the renderer's inline approval card answers; 完全访问 lets
     // everything through but leaves an audit line behind.
     const permissionService = new PermissionService(
-      (payload) => sendToWindow('pi:permission:request', payload),
-      (payload) => sendToWindow('pi:permission:cancelled', payload),
+      (payload) => sendToSession(payload.sessionId, 'pi:permission:request', payload),
+      (payload) => sendToSession(payload.sessionId, 'pi:permission:cancelled', payload),
     );
-    registerPermissionIpc(permissionService);
-    permissionModeFor = (sessionId) => permissionService.getMode(sessionId);
+    registerPermissionIpc(permissionService, windows);
+    const permissionModeFor = (sessionId: string) => permissionService.getMode(sessionId);
 
     // ── Agent interaction tools (todotool / asktool) ──
     // Both hold state that outlives a single tool call: the checklist survives
@@ -169,15 +122,15 @@ if (!gotLock) {
     // process (fixed RPC timeout, no cancellation, no abort forwarding).
     const todoService = new TodoService(
       join(app.getPath('userData'), 'agent-todos.json'),
-      (snapshot) => sendToWindow('pi:todo:changed', snapshot),
+      (snapshot) => sendToSession(snapshot.sessionId, 'pi:todo:changed', snapshot),
     );
     registerTodoIpc(todoService);
 
     const askService = new AskService({
-      sendRequest: (payload) => sendToWindow('pi:ask:request', payload),
-      sendCancelled: (payload) => sendToWindow('pi:ask:cancelled', payload),
+      sendRequest: (payload) => sendToSession(payload.sessionId, 'pi:ask:request', payload),
+      sendCancelled: (payload) => sendToSession(payload.sessionId, 'pi:ask:cancelled', payload),
     });
-    registerAskIpc(askService);
+    registerAskIpc(askService, windows);
 
     // Tool availability (Settings → 工具). Main-authoritative and read when a
     // session is created, so a switched-off tool is filtered before the model
@@ -192,41 +145,40 @@ if (!gotLock) {
     );
     registerToolSettingsIpc(toolSettings, () => toolCatalog);
 
+    // Now that every handler the renderer's boot sequence touches exists,
+    // reopen the windows from the previous run (VS Code's `restoreWindows:
+    // all` behaviour). Each window's geometry is validated against the
+    // displays that exist now. With no saved state, one default window.
+    windows.attachStateStore(new WindowStateStore());
+    if (windows.restoreWindows() === 0) {
+      windows.create({ ...(windows.lastState ?? {}) });
+    }
+
+    // Plugin kernel: scan ~/.pi/agent/plugins (plus the dev root when set),
+    // spawn backend UtilityProcesses, serve pi-plugin:// and expose IPC.
+    // Created BEFORE the SDK IPC handlers so plugin tools can be injected
+    // into the agent session (customTools).
+    //
+    // Backends stay process-global (one per plugin); what became per-window
+    // is the browser engine and the panel views. `browserRouter` picks the
+    // window a `browser.*` call runs against, and `eventSink` decides which
+    // window a plugin event is shown in.
     const pluginSystem = new PluginSystem({
-      browserManager,
+      browserRouter: windows,
       vlmAnalyzer,
       // chat.send: relay a plugin's message to the renderer, which owns the composer.
-      sendToRenderer: (channel, payload) => mainWindow?.webContents.send(channel, payload),
+      sendToRenderer: (channel, payload) => windows.sendToFocused(channel, payload),
       getPermissionMode: (sessionId) => permissionModeFor(sessionId),
+      eventSink: {
+        broadcast: (channel, payload) => windows.broadcast(channel, payload),
+        sendToSession: (sessionId, channel, payload) => windows.sendToSession(sessionId, channel, payload),
+        sendToFocused: (channel, payload) => windows.sendToFocused(channel, payload),
+      },
     });
     // Register IPC handlers BEFORE init completes — the file:// renderer loads
     // in milliseconds in packaged builds, and its first `pi:plugin:list` must
     // queue behind kernel boot (whenReady) instead of rejecting outright.
-    registerPluginIpcHandlers(pluginSystem);
-    await pluginSystem.init();
-    registerLiveSlotIpcHandlers(liveSlots);
-
-    // Plugin web panels are hosted in native views, not iframes: a panel gets a
-    // real top-level frame (correct IME, working print/alert/download, its own
-    // renderer process). Registered against the same live-slot registry as the
-    // browser preview, so `hideAll()`'s renderer-navigation guard covers them.
-    const pluginWebViews = new PluginWebViews({
-      registry: pluginSystem.registry,
-      liveSlots,
-      getWindow: () => mainWindow,
-      browserManager,
-    });
-    pluginWebViews.installIpc();
-    pluginWebViews.sync();
-
-    // A reused panel view never re-requests its backend port (its page did not
-    // reload), so the host pushes a fresh pair whenever a backend (re)starts —
-    // disable→enable, install, rollback, crash restart.
-    pluginSystem.onBackendStarted = (pluginId) => {
-      pluginWebViews.rewirePluginPorts(pluginId, (wc) => {
-        pluginSystem.ensureUiPort(pluginId, wc);
-      });
-    };
+    registerPluginIpcHandlers(pluginSystem, windows);
 
     // Host-contributed tools are built after the chat service exists, but the
     // provider is only *called* when a session is created — so the array is
@@ -246,13 +198,62 @@ if (!gotLock) {
       onSessionDeleted: (sessionId) => {
         askService.cancelSession(sessionId);
         todoService.remove(sessionId);
+        windows.releaseActiveSession(sessionId);
       },
     });
     hostTools = createHostAgentTools({
       readContextConfig: chatService.getAgentContextConfig.bind(chatService),
       todoService,
       askService,
+      resolveWorkspace: (sessionId) => {
+        const ctx = windows.forSession(sessionId) ?? windows.focused();
+        if (!ctx?.workspacePath) return null;
+        return { id: ctx.workspaceId ?? ctx.workspacePath, path: ctx.workspacePath };
+      },
     });
+
+    // Plugin kernel boot. The SDK IPC handlers above are already live, so a
+    // fast file:// renderer never sees a missing handler while backends spawn.
+    await pluginSystem.init();
+
+    // Every window gets its own panel views now; windows created later get
+    // theirs inside WindowRegistry.create().
+    windows.bindPlugins(pluginSystem);
+
+    // A reused panel view never re-requests its backend port (its page did not
+    // reload), so each window pushes a fresh pair whenever a backend
+    // (re)starts — disable→enable, install, rollback, crash restart.
+    pluginSystem.onBackendStarted = (pluginId) => {
+      for (const ctx of windows.all()) {
+        ctx.pluginWebViews?.rewirePluginPorts(pluginId, (wc) => {
+          pluginSystem.ensureUiPort(pluginId, wc);
+        });
+      }
+    };
+
+    // ── Window focus / close policy ──
+    // Plugin backends see one "current conversation": the focused window's.
+    // Closing a window must not leave agents blocked on cards nobody will see;
+    // it aborts/cancels only sessions no other window still holds.
+    windows.setHooks({
+      onFocus: (ctx) => {
+        const sessionId = ctx?.activeSessionId ?? null;
+        pluginSystem.setActiveSession(sessionId);
+        pluginSystem.pushHostEvent('session.changed', undefined, { sessionId });
+      },
+      onClosed: (ctx, sessions) => {
+        for (const sessionId of sessions) {
+          if (windows.hasOtherOwner(sessionId, ctx.windowId)) continue;
+          permissionService.cancelSession(sessionId);
+          askService.cancelSession(sessionId);
+          void chatService.stopGeneration(sessionId).catch(() => {});
+        }
+      },
+    });
+    // The hooks were registered after the first window focused; seed the
+    // backend session now so a freshly spawned backend learns it.
+    const focusedCtx = windows.focused();
+    pluginSystem.setActiveSession(focusedCtx?.activeSessionId ?? null);
 
     const refreshToolCatalog = () => {
       toolCatalog = buildToolCatalog(
@@ -265,31 +266,25 @@ if (!gotLock) {
     refreshToolCatalog();
     // The renderer may have fetched the catalog before plugin boot finished
     // (the IPC handler is registered early to avoid a "no handler" race), so
-    // announce the now-complete list and let it re-sync.
-    sendToWindow('pi:tools:changed', {});
+    // announce the now-complete list and let every window re-sync.
+    windows.broadcast('pi:tools:changed', {});
 
     // Plugin tool/doc set changed at runtime → rebuild agent sessions and the
     // tool catalog, and pick up panels of plugins that were just installed.
+    // Every window syncs: each one hosts its own panel views.
     pluginSystem.onExtensionsChanged = () => {
-      pluginWebViews.sync();
+      for (const ctx of windows.all()) ctx.pluginWebViews?.sync();
       refreshToolCatalog();
-      sendToWindow('pi:tools:changed', {});
+      windows.broadcast('pi:tools:changed', {});
       chatService.invalidateSessions?.();
     };
 
-    // Push browser URL changes to plugin backends holding "browser" permission.
-    // The tab id rides along — a backend with several tabs routes the record to
-    // the conversation that owns the tab.
-    browserManager.onUrlChanged((tabId, url) => {
-      pluginSystem.pushHostEvent('browser.urlChanged', 'browser', { tabId, url });
-    });
-    // window.open / target=_blank attempts open as a NEW TAB (the handler in the
-    // engine denies the native window), in the SAME conversation's bucket as the
-    // opener; the plugin hears it and can record it.
-    browserManager.onWindowOpen((url, _disposition, sourceTabId) => {
-      const t = pluginSystem.capabilityHub.tabRegistry.newTabFromPopup(sourceTabId, url);
-      pluginSystem.pushHostEvent('browser.tabOpened', 'browser', { tabId: t.id, url });
-    });
+    installApplicationMenu(windows);
+
+    // Window geometry must be written before the windows start closing:
+    // destroying the last one would leave the state file empty and the next
+    // launch would open a single blank window.
+    app.on('before-quit', () => windows.prepareToQuit());
 
     app.on('will-quit', () => {
       // The todo write is debounced; without this, quitting right after the
@@ -300,8 +295,8 @@ if (!gotLock) {
     });
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        mainWindow = createMainWindow();
+      if (windows.all().length === 0) {
+        if (windows.restoreWindows() === 0) windows.create({ ...(windows.lastState ?? {}) });
       }
     });
   });

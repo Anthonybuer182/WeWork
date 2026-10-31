@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FolderGit2, Trash2 } from 'lucide-react';
+import { FolderGit2, SquareArrowOutUpRight, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
 import { switchWorkspace } from '@/lib/switch-workspace';
+import { openWorkspaceInNewWindow } from '@/lib/window-actions';
+import { hasDesktopWindowApi } from '@/lib/window-context';
 import { useI18n } from '@/i18n';
 import {
   Select,
@@ -111,6 +113,20 @@ export function WorkspaceDropdown() {
                   </span>
                 </div>
               </SelectItem>
+              {hasDesktopWindowApi() && (
+                <button
+                  className="shrink-0 p-1 rounded hover:bg-accent transition-colors"
+                  aria-label={t('在新窗口打开')}
+                  title={t('在新窗口打开')}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openWorkspaceInNewWindow(ws.id);
+                  }}
+                >
+                  <SquareArrowOutUpRight className="h-3.5 w-3.5" />
+                </button>
+              )}
               <button
                 className="shrink-0 p-1 mr-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
                 aria-label={t('删除工作区 {name}', { name: ws.name })}

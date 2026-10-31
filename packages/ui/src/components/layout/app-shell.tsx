@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { useLanguageSync } from '@/i18n';
+import { Toaster } from '@/components/common/toaster';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ export function AppShell({ children, className }: AppShellProps) {
   return (
     <div className={cn('flex h-screen flex-col overflow-hidden bg-background', className)}>
       {children}
+      <Toaster />
     </div>
   );
 }

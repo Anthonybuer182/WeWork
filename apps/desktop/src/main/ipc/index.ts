@@ -1,4 +1,5 @@
 import { ipcMain, dialog, app } from 'electron';
+import type { IpcMainInvokeEvent } from 'electron';
 import { ModelRegistry, AuthStorage, SettingsManager } from '@earendil-works/pi-coding-agent';
 import {
   createRealWorkspaceService,
@@ -9,7 +10,8 @@ import {
 } from '@pi/sdk-wrapper/adapters';
 import type { PluginDoc, RealChatServiceOptions } from '@pi/sdk-wrapper/adapters';
 import type { WorkspaceService, SessionService, FileService, ConfigService, ChatService, SendMessageParams, FileSearchOptions } from '@pi/sdk-wrapper';
-import { setActiveWorkspace } from '@main/agent-tools';
+import { windows } from '@main/windows';
+import { hostWindowOf } from './guard';
 
 // Services are created during registerIpcHandlers() (called from app.whenReady)
 // to avoid module-load-time initialization in packaged builds.
@@ -66,12 +68,18 @@ export function registerIpcHandlers(
   });
 
   // The renderer owns "which workspace is on screen" — a view fact, not a
-  // session one — so main has no other way to learn it. Recorded here because
-  // host agent tools (and the context panel) default to the active workspace.
+  // session one — so main has no other way to learn it. Each window reports
+  // into its own context: with several windows open, "the active workspace"
+  // is the focused window's, never a module-level global.
   ipcMain.handle(
     'pi:agent:set-active-workspace',
-    (_event, workspace: { id?: string; path?: string } | null) => {
-      setActiveWorkspace(workspace?.path ? { id: workspace.id ?? '', path: workspace.path } : null);
+    (event, workspace: { id?: string; path?: string } | null) => {
+      const ctx = hostWindowOf(event);
+      if (!ctx) return;
+      windows.setWorkspace(
+        ctx.windowId,
+        workspace?.path ? { id: workspace.id ?? '', path: workspace.path } : null,
+      );
     },
   );
 
@@ -80,10 +88,13 @@ export function registerIpcHandlers(
   // other plugin IPC (registerPluginIpcHandlers), which holds the PluginSystem.
 
   // ── Standard request/response ──
-  ipcMain.handle('pi:sdk:request', async (_event, request: SdkRequest) => {
+  ipcMain.handle('pi:sdk:request', async (event, request: SdkRequest) => {
     const { id, method, params } = request;
     try {
-      const result = await routeRequest(method, params);      return { id, result };
+      if (!hostWindowOf(event)) throw new Error('untrusted IPC sender');
+      enforceSessionOwnership(event, method, params);
+      const result = await routeRequest(method, params, event);
+      return { id, result };
     } catch (error) {
       return {
         id,
@@ -109,6 +120,8 @@ export function registerIpcHandlers(
     const p = params as unknown as SendMessageParams;
 
     try {
+      if (!hostWindowOf(event)) throw new Error('untrusted IPC sender');
+      enforceSessionOwnership(event, method, params);
       await chatService.sendMessageStream(
         p,
         (chunk) => {
@@ -132,7 +145,44 @@ export function registerIpcHandlers(
   return { chatService };
 }
 
-async function routeRequest(method: string, params: unknown): Promise<unknown> {
+/**
+ * Chat actions that write to a conversation's transcript or run. A session is
+ * claimed by exactly one window, so a call for a session owned by a window
+ * other than the caller's is refused — otherwise two windows could steer (or
+ * abort) one live AgentSession.
+ */
+const WRITE_CHAT_ACTIONS = new Set([
+  'sendMessage',
+  'sendMessageStream',
+  'steer',
+  'followUp',
+  'navigateTree',
+  'compact',
+  'stopGeneration',
+]);
+
+function enforceSessionOwnership(event: IpcMainInvokeEvent, method: string, params: unknown): void {
+  const [service, action] = method.split('.');
+  if (service !== 'chat' || !WRITE_CHAT_ACTIONS.has(action)) return;
+  const sessionId = (params as { sessionId?: unknown } | null)?.sessionId;
+  if (typeof sessionId !== 'string' || !sessionId) return;
+
+  const caller = windows.byWebContents(event.sender);
+  if (!caller) return; // plugin view / unknown sender: legacy behaviour
+  const owner = windows.activeOwnerOf(sessionId);
+  if (owner && owner.windowId !== caller.windowId) {
+    throw new Error('该会话已在另一个窗口打开，请在那个窗口里继续');
+  }
+  // A run belongs to the window that started it, even after the user
+  // navigates that window to another conversation.
+  windows.touchRunOwner(sessionId, caller.windowId);
+}
+
+async function routeRequest(
+  method: string,
+  params: unknown,
+  event?: IpcMainInvokeEvent,
+): Promise<unknown> {
   const [service, action] = method.split('.');
   if (!service || !action) {
     throw new Error(`Invalid method format: ${method}`);
@@ -144,7 +194,7 @@ async function routeRequest(method: string, params: unknown): Promise<unknown> {
     case 'chat': return handleChat(action, params);
     case 'file': return handleFile(action, params);
     case 'config': return handleConfig(action, params);
-    case 'system': return handleSystem(action);
+    case 'system': return handleSystem(action, event);
     default:
       throw new Error(`Unknown service: ${service}`);
   }
@@ -174,6 +224,9 @@ async function handleSession(action: string, params: unknown): Promise<unknown> 
       // and a card), and deleting the file under a live writer is worse.
       try { await chatService.stopGeneration(id); } catch { /* best-effort */ }
       onSessionDeletedHook?.(id);
+      // No window owns a deleted conversation any more; if it was open
+      // elsewhere, that window falls back to the workspace's next session.
+      windows.releaseActiveSession(id);
       return sessionService.delete(id);
     }
     case 'updateTitle': return sessionService.updateTitle(p.id as string, p.title as string);
@@ -260,13 +313,19 @@ async function handleConfig(action: string, params: unknown): Promise<unknown> {
   }
 }
 
-async function handleSystem(action: string): Promise<unknown> {
+async function handleSystem(action: string, event?: IpcMainInvokeEvent): Promise<unknown> {
   switch (action) {
     case 'selectDirectory': {
-      const result = await dialog.showOpenDialog({
+      // Parent the picker to the window that asked; an unparented dialog on
+      // macOS floats free of the window it belongs to.
+      const parent = event ? windows.byWebContents(event.sender)?.win : undefined;
+      const options: Electron.OpenDialogOptions = {
         title: 'Select workspace folder',
         properties: ['openDirectory', 'createDirectory'],
-      });
+      };
+      const result = parent
+        ? await dialog.showOpenDialog(parent, options)
+        : await dialog.showOpenDialog(options);
       if (result.canceled || result.filePaths.length === 0) {
         return null;
       }

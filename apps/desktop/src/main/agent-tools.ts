@@ -58,17 +58,6 @@ export interface AgentCustomTool {
   }>;
 }
 
-/** The workspace the renderer is showing. Only the renderer knows this. */
-let activeWorkspace: { id: string; path: string } | null = null;
-
-export function setActiveWorkspace(workspace: { id: string; path: string } | null): void {
-  activeWorkspace = workspace;
-}
-
-export function getActiveWorkspace(): { id: string; path: string } | null {
-  return activeWorkspace;
-}
-
 export interface HostAgentToolDeps {
   readContextConfig: (
     workspacePath: string,
@@ -77,6 +66,12 @@ export interface HostAgentToolDeps {
   ) => Promise<AgentContextConfig>;
   todoService: TodoService;
   askService: AskService;
+  /**
+   * The workspace the calling conversation is shown in. With several windows
+   * there is no single "active workspace" any more: each window has its own,
+   * so the answer is resolved from the session (or the focused window).
+   */
+  resolveWorkspace?: (sessionId: string | undefined) => { id: string; path: string } | null;
 }
 
 /**
@@ -106,18 +101,19 @@ export function createHostAgentTools(deps: HostAgentToolDeps): AgentCustomTool[]
       parameters: { type: 'object', properties: {}, additionalProperties: false },
       execute: async (toolCallId, params) => {
         const explicit = typeof params.workspacePath === 'string' ? params.workspacePath.trim() : '';
-        const target = explicit || activeWorkspace?.path;
+        // Pin the report to the calling conversation; otherwise a neighbouring
+        // session in the same workspace can supply the tool list.
+        const sessionId = takeToolSession(toolCallId);
+        const workspace = explicit ? null : (deps.resolveWorkspace?.(sessionId) ?? null);
+        const target = explicit || workspace?.path;
         if (!target) {
           throw new Error(
             'context_audit: no active workspace — open a workspace in the app, or pass workspacePath',
           );
         }
-        // Pin the report to the calling conversation; otherwise a neighbouring
-        // session in the same workspace can supply the tool list.
-        const sessionId = takeToolSession(toolCallId);
         const config = await deps.readContextConfig(
           target,
-          explicit ? undefined : activeWorkspace?.id,
+          explicit ? undefined : workspace?.id,
           explicit ? undefined : sessionId,
         );
         return {

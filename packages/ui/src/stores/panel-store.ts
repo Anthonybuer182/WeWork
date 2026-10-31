@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import type { StateStorage } from 'zustand/middleware';
+import { getDesktopWindowId } from '@/lib/window-identity';
 import type { PluginInfo, PluginPanelStatus, PanelRegion, PanelAnchor, PanelScope } from '@pi/types';
 
 export type PanelKeepAlive = 'always' | 'lru' | 'never';
@@ -287,6 +289,68 @@ function reconcile(
     mountedIds: computeMounted(panels, { left: left.focused, right: right.focused }, { left: left.selected, right: right.selected }, recency),
   };
 }
+
+/**
+ * Panel layout is scoped to the WORKSPACE, not the window (VS Code keeps a
+ * folder's layout with the folder): reopening the same directory in any
+ * window — or restarting into it — restores the same panel arrangement.
+ * Until a workspace is known (first paint, empty state) it falls back to a
+ * per-window key so two empty windows do not share a layout.
+ */
+const PANEL_STORAGE_BASE = 'pi-panel-storage';
+let layoutWorkspace: string | null = null;
+
+function scopedPanelKey(): string {
+  if (layoutWorkspace) return `${PANEL_STORAGE_BASE}:ws:${layoutWorkspace}`;
+  const windowId = getDesktopWindowId();
+  return windowId == null ? PANEL_STORAGE_BASE : `${PANEL_STORAGE_BASE}:w${windowId}`;
+}
+
+function legacyPanelKeys(): string[] {
+  const keys: string[] = [];
+  const windowId = getDesktopWindowId();
+  if (windowId != null) keys.push(`${PANEL_STORAGE_BASE}:w${windowId}`);
+  keys.push(PANEL_STORAGE_BASE);
+  return keys;
+}
+
+const panelStorage: StateStorage = {
+  getItem: (): string | null => {
+    try {
+      const key = scopedPanelKey();
+      const value = localStorage.getItem(key);
+      if (value != null) return value;
+      // First time this workspace is opened after the upgrade: seed its
+      // layout from the layout this window used before the change.
+      if (layoutWorkspace) {
+        for (const legacy of legacyPanelKeys()) {
+          const v = localStorage.getItem(legacy);
+          if (v != null) {
+            localStorage.setItem(key, v);
+            return v;
+          }
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (_name: string, value: string): void => {
+    try {
+      localStorage.setItem(scopedPanelKey(), value);
+    } catch {
+      /* quota / private mode — best-effort */
+    }
+  },
+  removeItem: (): void => {
+    try {
+      localStorage.removeItem(scopedPanelKey());
+    } catch {
+      /* ignore */
+    }
+  },
+};
 
 export const usePanelStore = create<PanelStoreState>()(
   persist(
@@ -661,6 +725,8 @@ export const usePanelStore = create<PanelStoreState>()(
     {
       name: 'pi-panel-storage',
       version: 6,
+      // Workspace-scoped: see scopedPanelKey() above.
+      storage: createJSONStorage(() => panelStorage),
       partialize: (state) => ({
         focusedId: state.focusedId,
         openPanelIds: state.openPanelIds,
@@ -839,4 +905,19 @@ export interface PanelStoreState {
   enterSession: (sessionId: string | null) => void;
   setPanelStatus: (status: PluginPanelStatus) => void;
   clearPending: (id: string) => void;
+}
+
+/**
+ * Point the panel store at a workspace's layout and load it.
+ *
+ * Called by the UI store whenever the active workspace changes (and once at
+ * boot after rehydration). The workspace's saved panels become the store's
+ * state; switching back re-reads the same key, so layout follows the folder —
+ * the way VS Code remembers a folder's layout rather than a window's.
+ */
+export function setPanelLayoutWorkspace(workspaceId: string | null): void {
+  const next = workspaceId ?? null;
+  if (layoutWorkspace === next) return;
+  layoutWorkspace = next;
+  void usePanelStore.persist.rehydrate();
 }

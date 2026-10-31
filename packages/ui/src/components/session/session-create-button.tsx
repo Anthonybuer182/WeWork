@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { activateSession } from '@/lib/window-actions';
 import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -14,7 +15,6 @@ export function SessionCreateButton({ className }: SessionCreateButtonProps) {
   const sdk = useSDK();
   const queryClient = useQueryClient();
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
-  const setActiveSession = useUIStore((s) => s.setActiveSession);
   const { t } = useI18n();
 
   const createMutation = useMutation({
@@ -25,7 +25,7 @@ export function SessionCreateButton({ className }: SessionCreateButtonProps) {
     onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      setActiveSession(session.id);
+      void activateSession(session.id);
     },
   });
 

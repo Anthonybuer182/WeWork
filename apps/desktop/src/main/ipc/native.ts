@@ -1,13 +1,32 @@
 import { ipcMain, dialog, shell, clipboard, app, BrowserWindow, nativeImage, Menu } from 'electron';
+import type { IpcMainInvokeEvent } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { TITLE_BAR_HEIGHT } from '../window-manager.js';
+import type { WindowRegistry } from '../windows.js';
 
-export function registerNativeIpcHandlers(): void {
+/**
+ * The window a call came from. `fromWebContents` covers shell renderers and
+ * engine views; the registry fallback covers plugin panel views, which are
+ * WebContentsViews and therefore not "the window" themselves. Focused-window
+ * lookups are wrong here: with two windows open, a title-bar click in the
+ * background window would otherwise act on the front one.
+ */
+function senderWindow(windows: WindowRegistry, event: IpcMainInvokeEvent): BrowserWindow | null {
+  const win = BrowserWindow.fromWebContents(event.sender) ?? windows.byWebContents(event.sender)?.win ?? null;
+  if (!win) return null;
+  // Only the top frame of a known renderer may act: a subframe must never be
+  // able to minimise/close someone else's window.
+  const frame = event.senderFrame;
+  if (!frame || frame !== event.sender.mainFrame) return null;
+  return win;
+}
+
+export function registerNativeIpcHandlers(windows: WindowRegistry): void {
   // ── Window Management ──
 
-  ipcMain.handle('pi:window:minimize', () => {
-    BrowserWindow.getFocusedWindow()?.minimize();
+  ipcMain.handle('pi:window:minimize', (event) => {
+    senderWindow(windows, event)?.minimize();
   });
 
   // ── Native context menus ──
@@ -29,7 +48,7 @@ export function registerNativeIpcHandlers(): void {
         items?: { id?: string; label: string; enabled?: boolean; separatorBefore?: boolean }[];
       },
     ) => {
-      const win = BrowserWindow.fromWebContents(event.sender);
+      const win = senderWindow(windows, event);
       if (!win) return { ok: false };
       const template: Electron.MenuItemConstructorOptions[] = [];
       for (const item of payload.items ?? []) {
@@ -84,8 +103,8 @@ export function registerNativeIpcHandlers(): void {
   );
 
 
-  ipcMain.handle('pi:window:maximize', () => {
-    const win = BrowserWindow.getFocusedWindow();
+  ipcMain.handle('pi:window:maximize', (event) => {
+    const win = senderWindow(windows, event);
     if (win?.isMaximized()) {
       win.unmaximize();
     } else {
@@ -93,20 +112,20 @@ export function registerNativeIpcHandlers(): void {
     }
   });
 
-  ipcMain.handle('pi:window:close', () => {
-    BrowserWindow.getFocusedWindow()?.close();
+  ipcMain.handle('pi:window:close', (event) => {
+    senderWindow(windows, event)?.close();
   });
 
-  ipcMain.handle('pi:window:isMaximized', () => {
-    return BrowserWindow.getFocusedWindow()?.isMaximized() ?? false;
+  ipcMain.handle('pi:window:isMaximized', (event) => {
+    return senderWindow(windows, event)?.isMaximized() ?? false;
   });
 
   // Keep the Windows titleBarOverlay in step with the app theme. Throws (and is
   // swallowed) on macOS/Linux, which have no overlay to update.
   ipcMain.handle(
     'pi:window:setTitleBarOverlay',
-    (_event, options: { color: string; symbolColor: string }) => {
-      const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+    (event, options: { color: string; symbolColor: string }) => {
+      const win = senderWindow(windows, event);
       if (!win) return;
       try {
         win.setTitleBarOverlay({
@@ -122,8 +141,8 @@ export function registerNativeIpcHandlers(): void {
 
   // ── File Dialogs ──
 
-  ipcMain.handle('pi:dialog:openFile', async (_event, options?: Electron.OpenDialogOptions) => {
-    const win = BrowserWindow.getFocusedWindow();
+  ipcMain.handle('pi:dialog:openFile', async (event, options?: Electron.OpenDialogOptions) => {
+    const win = senderWindow(windows, event);
     if (!win) return { canceled: true, filePaths: [] };
     return dialog.showOpenDialog(win, {
       properties: ['openFile'],
@@ -131,8 +150,8 @@ export function registerNativeIpcHandlers(): void {
     });
   });
 
-  ipcMain.handle('pi:dialog:openDirectory', async (_event, options?: Electron.OpenDialogOptions) => {
-    const win = BrowserWindow.getFocusedWindow();
+  ipcMain.handle('pi:dialog:openDirectory', async (event, options?: Electron.OpenDialogOptions) => {
+    const win = senderWindow(windows, event);
     if (!win) return { canceled: true, filePaths: [] };
     return dialog.showOpenDialog(win, {
       properties: ['openDirectory'],
@@ -140,8 +159,8 @@ export function registerNativeIpcHandlers(): void {
     });
   });
 
-  ipcMain.handle('pi:dialog:saveFile', async (_event, options?: Electron.SaveDialogOptions) => {
-    const win = BrowserWindow.getFocusedWindow();
+  ipcMain.handle('pi:dialog:saveFile', async (event, options?: Electron.SaveDialogOptions) => {
+    const win = senderWindow(windows, event);
     if (!win) return { canceled: true, filePath: undefined };
     return dialog.showSaveDialog(win, options ?? {});
   });

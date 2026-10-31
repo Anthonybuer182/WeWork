@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { usePanelStore } from './panel-store';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { setPanelLayoutWorkspace, usePanelStore } from './panel-store';
+import { windowScopedStorage, hasDesktopWindowApi } from '@/lib/window-identity';
 import { openWithSystemApp } from '@/lib/utils';
 
 type ConnectionStatus = 'connected' | 'disconnected' | 'connecting';
@@ -89,9 +90,16 @@ export const useUIStore = create<UIState>()(
       disabledSkills: [],
       connectionStatus: 'connecting',
 
-      setActiveWorkspace: (id) => set({ activeWorkspaceId: id, activeSessionId: null }),
-      setActiveWorkspaceAndSession: (workspaceId, sessionId) =>
-        set({ activeWorkspaceId: workspaceId, activeSessionId: sessionId }),
+      // A workspace change also switches which saved panel layout applies —
+      // layouts belong to the folder, not to the window.
+      setActiveWorkspace: (id) => {
+        set({ activeWorkspaceId: id, activeSessionId: null });
+        setPanelLayoutWorkspace(id);
+      },
+      setActiveWorkspaceAndSession: (workspaceId, sessionId) => {
+        set({ activeWorkspaceId: workspaceId, activeSessionId: sessionId });
+        setPanelLayoutWorkspace(workspaceId);
+      },
       setActiveSession: (id) => set({ activeSessionId: id }),
       // File selection routes through the filePreview contribution chain:
       // a plugin panel claims the extension — there is no host fallback
@@ -145,9 +153,25 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'pi-ui-storage',
+      // One set of layout preferences per window: two windows of the same app
+      // share localStorage, so an unscoped key would make them fight.
+      storage: createJSONStorage(() => windowScopedStorage('pi-ui-storage')),
+      // Web (and any first launch before a window context arrives) restores
+      // its workspace from this store — point the panel layout at it too.
+      onRehydrateStorage: () => (state) => {
+        if (state?.activeWorkspaceId) setPanelLayoutWorkspace(state.activeWorkspaceId);
+      },
       partialize: (state) => ({
-        activeWorkspaceId: state.activeWorkspaceId,
-        activeSessionId: state.activeSessionId,
+        // Which conversation a window shows is owned by MAIN (window state +
+        // the session claim) and delivered over pi:window:context. Persisting
+        // it per window would make it a second, silently diverging source of
+        // truth; the web build has no main process, so it keeps persisting.
+        ...(hasDesktopWindowApi()
+          ? {}
+          : {
+              activeWorkspaceId: state.activeWorkspaceId,
+              activeSessionId: state.activeSessionId,
+            }),
         sidebarOpen: state.sidebarOpen,
         // rightPanelOpen is intentionally NOT persisted: the right side
         // defaults to the icon rail only — panels open on explicit action

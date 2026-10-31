@@ -1,6 +1,20 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+/** `--pi-window-id=<n>` is injected per BrowserWindow via additionalArguments. */
+function readWindowId(): number | null {
+  const hit = process.argv.find((arg) => arg.startsWith('--pi-window-id='));
+  if (!hit) return null;
+  const id = Number(hit.slice('--pi-window-id='.length));
+  return Number.isFinite(id) ? id : null;
+}
+
 export interface ElectronAPI {
+  /**
+   * This window's registry id (null outside the desktop shell). Two windows
+   * of the same app are separate renderers with separate state; this is the
+   * only fact that tells them apart.
+   */
+  windowId: number | null;
   invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
   on: (channel: string, callback: (...args: unknown[]) => void) => void;
   removeListener: (channel: string, callback: (...args: unknown[]) => void) => void;
@@ -11,6 +25,28 @@ export interface ElectronAPI {
     maximize: () => Promise<void>;
     close: () => Promise<void>;
     isMaximized: () => Promise<boolean>;
+    /** Open a new window on this window's workspace, with a fresh session. */
+    newWindow: () => Promise<{ ok: boolean; windowId?: number }>;
+    /** Open a workspace: focuses the window already showing it unless `forceNew`. */
+    openWorkspace: (
+      workspaceId: string,
+      options?: { forceNew?: boolean },
+    ) => Promise<{ ok: boolean; windowId?: number; focusedExisting?: boolean }>;
+    /** True when another window already shows this workspace (and was focused). */
+    focusWorkspaceElsewhere: (workspaceId: string) => Promise<{ focused: boolean }>;
+    openSession: (
+      sessionId: string,
+      workspaceId: string,
+    ) => Promise<{ ok: boolean; windowId?: number; ownerWindowId?: number; error?: string }>;
+    /**
+     * Claim a conversation for this window. `{ok:false, ownerWindowId}` means
+     * another window already shows it and has been focused — do not switch.
+     */
+    activateSession: (
+      sessionId: string | null,
+    ) => Promise<{ ok: boolean; ownerWindowId?: number; error?: string }>;
+    /** This window's view state, as main remembers it. */
+    context: () => Promise<{ windowId: number; workspaceId: string | null; sessionId: string | null } | null>;
   };
 
   /**
@@ -90,6 +126,7 @@ export interface DirEntry {
 }
 
 const electronAPI: ElectronAPI = {
+  windowId: readWindowId(),
   invoke: (channel: string, ...args: unknown[]): Promise<unknown> => {
     return ipcRenderer.invoke(channel, ...args);
   },
@@ -104,6 +141,19 @@ const electronAPI: ElectronAPI = {
     maximize: () => ipcRenderer.invoke('pi:window:maximize'),
     close: () => ipcRenderer.invoke('pi:window:close'),
     isMaximized: () => ipcRenderer.invoke('pi:window:isMaximized'),
+    newWindow: () => ipcRenderer.invoke('pi:window:new'),
+    openWorkspace: (workspaceId: string, options?: { forceNew?: boolean }) =>
+      ipcRenderer.invoke('pi:window:open-workspace', {
+        workspaceId,
+        forceNew: options?.forceNew === true,
+      }),
+    focusWorkspaceElsewhere: (workspaceId: string) =>
+      ipcRenderer.invoke('pi:window:focus-workspace', { workspaceId }),
+    openSession: (sessionId: string, workspaceId: string) =>
+      ipcRenderer.invoke('pi:window:open-session', { sessionId, workspaceId }),
+    activateSession: (sessionId: string | null) =>
+      ipcRenderer.invoke('pi:window:activate-session', { sessionId }),
+    context: () => ipcRenderer.invoke('pi:window:context'),
   },
 
   chrome: {

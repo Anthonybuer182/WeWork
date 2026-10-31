@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { activateSession } from '@/lib/window-actions';
 import { useComposerStore } from '@/stores/composer-store';
 import { ComposerInput } from './composer-input';
 import { SendButton } from './send-button';
@@ -36,6 +37,7 @@ export function Composer() {
   const executePluginCommand = usePluginStore((s) => s.executePluginCommand);
   const activeSessionId = useUIStore((s) => s.activeSessionId);
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
+  const connectionStatus = useUIStore((s) => s.connectionStatus);
   const compactMode = useUIStore((s) => s.compactMode);
   const setCompactMode = useUIStore((s) => s.setCompactMode);
   const disabledSkills = useUIStore((s) => s.disabledSkills);
@@ -51,7 +53,11 @@ export function Composer() {
   // session list until the first message, so this produces no clutter even if
   // you switch workspaces without typing.
   useEffect(() => {
-    if (activeSessionId || !activeWorkspaceId) return;
+    // A window that opens on a workspace but no session (Cmd+N) reaches this
+    // effect before the transport connects; creating there fails with
+    // "IPC transport not connected" and is silently swallowed. Wait for the
+    // connection — the status flip re-runs the effect.
+    if (activeSessionId || !activeWorkspaceId || connectionStatus !== 'connected') return;
     let cancelled = false;
     (async () => {
       try {
@@ -64,7 +70,7 @@ export function Composer() {
         if (cancelled) return;
         queryClient.setQueryData(['session', created.id], session);
         queryClient.invalidateQueries({ queryKey: ['sessions'] });
-        setActiveSession(created.id);
+        void activateSession(created.id);
       } catch {
         // Leave the empty state in place; the next workspace change retries.
       }
@@ -72,7 +78,7 @@ export function Composer() {
     return () => {
       cancelled = true;
     };
-  }, [activeSessionId, activeWorkspaceId, sdk, queryClient, setActiveSession]);
+  }, [activeSessionId, activeWorkspaceId, connectionStatus, sdk, queryClient, setActiveSession]);
 
   const {
     value,
@@ -795,7 +801,7 @@ export function Composer() {
         sdk.session.create(activeWorkspaceId).then((session) => {
           queryClient.invalidateQueries({ queryKey: ['sessions'] });
           queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-          setActiveSession(session.id);
+          void activateSession(session.id);
         });
         return true;
       }

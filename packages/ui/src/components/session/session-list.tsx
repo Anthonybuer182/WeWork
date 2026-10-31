@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { useSDK } from '@/hooks/use-sdk';
 import { useUIStore } from '@/stores/ui-store';
+import { activateSession, openSessionInNewWindow } from '@/lib/window-actions';
+import { hasDesktopWindowApi } from '@/lib/window-context';
 import { useI18n } from '@/i18n';
 import { SessionItem } from './session-item';
 import { SessionCreateButton } from './session-create-button';
@@ -83,8 +85,13 @@ export function SessionList() {
           <SessionItem
             session={session}
             isActive={session.id === activeSessionId}
-            onClick={() => setActiveSession(session.id)}
+            onClick={() => void activateSession(session.id)}
             onDelete={() => deleteSession.mutate(session.id)}
+            onOpenInNewWindow={
+              hasDesktopWindowApi() && activeWorkspaceId
+                ? () => void openSessionInNewWindow(session.id, activeWorkspaceId)
+                : undefined
+            }
           />
         )}
       />

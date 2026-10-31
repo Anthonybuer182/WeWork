@@ -1,6 +1,8 @@
-import { ipcMain, BrowserWindow, app } from 'electron';
+import { ipcMain } from 'electron';
 import type { InstallPhase } from '@pi/types';
 import type { PluginSystem } from '@main/plugins';
+import type { WindowRegistry } from '@main/windows';
+import { hostWindowOf } from './guard';
 
 /**
  * IPC surface for the renderer (see preload `pluginBridge`):
@@ -15,18 +17,26 @@ import type { PluginSystem } from '@main/plugins';
  *   pi:plugin:set-enabled     → InstallResult
  *   pi:plugin:event           ← push channel (status/state/plugins-changed/install-phase)
  */
-export function registerPluginIpcHandlers(system: PluginSystem): void {
+export function registerPluginIpcHandlers(system: PluginSystem, windows?: WindowRegistry): void {
   // The renderer owns "which conversation is on screen" — a view fact, not a
-  // session one (the same reasoning as the workspace in registerIpcHandlers,
-  // but this handler needs the PluginSystem). Broadcast as a host event so
-  // session-scoped backends can re-target "the current document/page" to the
-  // conversation on screen; the value is also recorded for backends spawned
-  // later, which replay it instead of missing the broadcast.
-  ipcMain.handle('pi:agent:set-active-session', (_event, session: { id?: string } | null) => {
-    system.setActiveSession(session?.id ?? null);
-    system.pushHostEvent('session.changed', undefined, {
-      sessionId: session?.id ?? null,
-    });
+  // session one. Each window reports its own; the backend-visible value is the
+  // FOCUSED window's conversation, and only the focused window's report is
+  // broadcast (a background window switching sessions must not re-target the
+  // plugin backends of the window the user is looking at).
+  ipcMain.handle('pi:agent:set-active-session', (event, session: { id?: string } | null) => {
+    const sessionId = session?.id ?? null;
+
+    if (windows) {
+      const ctx = hostWindowOf(event);
+      if (!ctx) return { ok: false, error: 'untrusted sender' };
+      const claim = windows.claimActiveSession(ctx.windowId, sessionId);
+      // The claim hook (focused window only) already pushed session.changed;
+      // a refused claim focuses the owner and must not overwrite its state.
+      return claim;
+    }
+
+    system.setActiveSession(sessionId);
+    system.pushHostEvent('session.changed', undefined, { sessionId });
   });
 
   // `list`/`list-all`/`ensure-port` gate on kernel boot — in packaged builds the
@@ -86,12 +96,10 @@ export function registerPluginIpcHandlers(system: PluginSystem): void {
   ipcMain.handle('pi:plugin:market:install', async (event, payload: { pluginId?: string }) => {
     const pluginId = payload?.pluginId;
     if (!pluginId) return { ok: false, error: 'missing pluginId' };
+    // Install progress is kernel-wide: every window may show it, and each
+    // window's plugin store applies it independently.
     const pushPhase = (phase: InstallPhase) => {
-      for (const win of BrowserWindow.getAllWindows()) {
-        if (!win.isDestroyed()) {
-          win.webContents.send('pi:plugin:event', { type: 'install-phase', pluginId, phase });
-        }
-      }
+      windows?.broadcast('pi:plugin:event', { type: 'install-phase', pluginId, phase });
     };
     return system.installFromMarket(pluginId, pushPhase);
   });

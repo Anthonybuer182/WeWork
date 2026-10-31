@@ -175,11 +175,13 @@ test('a shadowed prompt file is reported as having no effect', () => {
 // the "no active workspace" message a user would otherwise meet as a raw throw.
 
 test('context_audit reports the active workspace and refuses cleanly without one', async () => {
-  const { createHostAgentTools, setActiveWorkspace } = await import(
-    '../src/main/agent-tools.ts'
-  );
+  const { createHostAgentTools } = await import('../src/main/agent-tools.ts');
   const config = makeConfig({ base: 100, appended: 0, context: 0, skills: 0, tools: 0 });
   const calls = [];
+  // With several windows there is no module-level "active workspace" any
+  // more: the host resolves it from the calling conversation (or the focused
+  // window). The test stands in for the window registry.
+  let resolved = { id: 'w1', path: '/w' };
   // The host contributes more than one tool now, so look the audited one up by
   // name instead of depending on the order it happens to be listed in.
   const tool = createHostAgentTools({
@@ -187,6 +189,7 @@ test('context_audit reports the active workspace and refuses cleanly without one
       calls.push([path, id]);
       return { ...config, workspace: { ...config.workspace, path } };
     },
+    resolveWorkspace: () => resolved,
     // Unused by this case: the todo/ask tools close over their services and
     // are never executed here.
     todoService: {},
@@ -197,7 +200,6 @@ test('context_audit reports the active workspace and refuses cleanly without one
   // which is what they are.
   assert.equal(tool.pluginId, undefined);
 
-  setActiveWorkspace({ id: 'w1', path: '/w' });
   const result = await tool.execute('call-1', {});
   assert.deepEqual(calls, [['/w', 'w1']]);
   assert.match(result.content[0].text, /Standing context for workspace \/w/);
@@ -207,7 +209,7 @@ test('context_audit reports the active workspace and refuses cleanly without one
   await tool.execute('call-2', { workspacePath: '/other' });
   assert.deepEqual(calls[1], ['/other', undefined]);
 
-  setActiveWorkspace(null);
+  resolved = null;
   await assert.rejects(() => tool.execute('call-3', {}), /no active workspace/);
 });
 

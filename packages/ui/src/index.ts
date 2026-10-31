@@ -24,6 +24,24 @@ export { Slot } from './components/ui/slot';
 
 export { cn, isTextEditableFile, isPreviewableInRightPanel, openWithSystemApp } from './lib/utils';
 
+// Multi-window helpers (no-ops in the web build).
+export {
+  applyInitialWindowContext,
+  fetchWindowContext,
+  getDesktopWindowId,
+  hasDesktopWindowApi,
+  readInitialWindowContext,
+  syncWindowContext,
+} from './lib/window-context';
+export { useToastStore, toast } from './stores/toast-store';
+export { Toaster } from './components/common/toaster';
+export {
+  activateSession,
+  openNewWindow,
+  openSessionInNewWindow,
+  openWorkspaceInNewWindow,
+} from './lib/window-actions';
+
 export { useI18n, useLanguageSync, useLanguageStore, translate, t } from './i18n';
 export type { Language, MessageKey } from './i18n';
 

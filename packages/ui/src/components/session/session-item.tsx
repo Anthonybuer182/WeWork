@@ -1,4 +1,4 @@
-import { MessageSquare, MoreHorizontal, Trash2 } from 'lucide-react';
+import { MessageSquare, MoreHorizontal, SquareArrowOutUpRight, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,9 +15,17 @@ interface SessionItemProps {
   isActive: boolean;
   onClick: () => void;
   onDelete?: () => void;
+  /** Desktop only: open this conversation in its own window. */
+  onOpenInNewWindow?: () => void;
 }
 
-export function SessionItem({ session, isActive, onClick, onDelete }: SessionItemProps) {
+export function SessionItem({
+  session,
+  isActive,
+  onClick,
+  onDelete,
+  onOpenInNewWindow,
+}: SessionItemProps) {
   const { t } = useI18n();
   return (
     <div
@@ -52,6 +60,12 @@ export function SessionItem({ session, isActive, onClick, onDelete }: SessionIte
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
+          {onOpenInNewWindow && (
+            <DropdownMenuItem onClick={() => onOpenInNewWindow()}>
+              <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+              {t('在新窗口打开')}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             className="text-destructive"
             onClick={() => onDelete?.()}
